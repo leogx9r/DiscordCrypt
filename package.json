@@ -1,0 +1,17 @@
+{
+  "name": "discordcrypt",
+  "version": "1.0.0",
+  "description": "Secure messaging for the Discord app.",
+  "main": "",
+  "scripts": {
+    "test_scrypt": "node tests/scrypt-test.js",
+    "test": "npm run test_scrypt"
+  },
+  "author": "Leonardo Gates",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "latest",
+    "nodeunit": "^0.11.2",
+    "process": "latest"
+  }
+}
