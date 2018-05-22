@@ -13,7 +13,7 @@
         * [*Message Authentication*](#user-message-authentication)
     * [***Public Key Format***](#public-key-format)
     * [***Byte Encoding***](#byte-encoding)
-* [**General Encryption & Decryption Process**](#general-encryption-decryption-process)
+* [**General Encryption & Decryption Process**](#general-encryption-and-decryption-process)
 * [**Master Database Encryption**](#master-database-encryption)
 * [**Key Exchange Process**](#key-exchange-process)
 * [**Known Vulnerabilities**](#known-vulnerabilities)
@@ -29,7 +29,7 @@ which is also exposed by NodeJS.
 
 Every algorithm used in this plugin is directly provided by NodeJS. The only things manually implemented are:
 
-* [Cipher Padding Modes](#cipher-padding-modes)
+* [Cipher Padding Modes](#cipher-padding)
 * [Scrypt Hashing Algorithm](https://en.wikipedia.org/wiki/Scrypt)
 
 #### Ciphers
@@ -51,7 +51,6 @@ The supported modes are:
 - [Cipher Block Chaining](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_(CBC)) ( **Default Block Mode** )
 - [Cipher Feedback Mode](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Feedback_(CFB))
 - [Output Feedback Mode](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Output_Feedback_(OFB))
-- [Electronic Codebook](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Electronic_Codebook_(ECB))
 
 ##### Cipher Padding
 
@@ -237,7 +236,7 @@ These methods do a 1-1 substituion as follows:
 | Base 64           | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=`                                                                  |
 | Chinese           | `㐀㐁㐂㐃㐄㐅㐇㐒㐓㐔㐕㐖㐗㐜㐞㐡㐣㐥㐧㐨㐩㐫㐪㐭㐰㐱㐲㐳㐴㐶㐷㐹㐼㐽㐿㑁㑂㑃㑅㑇㑈㑉㑊㑏㑑㑒㑓㑕㑣㑢㑡㑠㑟㑞㑝㑜㑤㑥㑦㑧㑨㑩㑪㑫㑵` |
 
-## General Encryption & Decryption Process
+## General Encryption And Decryption Process
 
 Encryption and decryption follows [OpenSSL](https://en.wikipedia.org/wiki/OpenSSL)'s method of deriving keys.
 
@@ -291,7 +290,7 @@ This derives a 256-bit key which is used in conjunction with the `aes256_encrypt
 
 ## Key Exchange Process
 
-**DiscordCrypt** uses the Diffie-Hellman exchange algorithm to derive a unique [shared secret](#https://en.wikipedia.org/wiki/Shared_secret).
+**DiscordCrypt** uses the Diffie-Hellman exchange algorithm to derive a unique [shared secret](https://en.wikipedia.org/wiki/Shared_secret).
 
 Once both parties post a public key, a shared secret of the algorithm's bit length is derived.
 
