@@ -3710,6 +3710,129 @@ class discordCrypt
         return discordCrypt.__decrypt('aes-256', cipher_mode, padding_mode, message, key, output_format, is_message_hex, keySize, blockSize);
     }
 
+    /* AES-256 decrypts a message in GCM mode. Expects message to be a modulo of the block size and key & iv to be the same block size. */
+    static aes256_encrypt_gcm(
+        /* string|Buffer|Array */ message,
+        /* string|Buffer|Array */ key,
+        /* string */              padding_mode,
+        /* boolean */             to_hex = false,
+        /* boolean */             is_message_hex = undefined,
+        /* string|Buffer|Array */ additional_data = undefined
+    ){
+        const block_cipher_size = 128, key_size_bits = 256;
+        const cipher_name = 'aes-256-gcm';
+        const crypto = require('crypto');
+
+        let _message, _key, _iv, _salt, _derived, _encrypt;
+
+        /* Pad the message to the nearest block boundary. */
+        _message = discordCrypt.__padMessage(message, padding_mode, key_size_bits, is_message_hex);
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV(key, key_size_bits);
+
+        /* Generate a unique salt to derive a unique key and IV. */
+        _salt = crypto.randomBytes(8);
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
+            (block_cipher_size / 8) + (key_size_bits / 8), 1000);
+
+        /* Slice off the IV. */
+        _iv = _derived.slice(0, block_cipher_size / 8);
+
+        /* Slice off the key. */
+        _key = _derived.slice(block_cipher_size / 8, (block_cipher_size / 8) + (key_size_bits / 8));
+
+        /* Create the cipher with derived IV and key. */
+        _encrypt = crypto.createCipheriv(cipher_name, _key, _iv);
+
+        /* Add the additional data if necessary. */
+        if(additional_data !== undefined)
+            _encrypt.setAAD(discordCrypt.__toBuffer(additional_data));
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _encrypt.setAutoPadding(false);
+
+        /* Get the cipher text. */
+        let _ct = _encrypt.update(_message, undefined, 'hex');
+        _ct += _encrypt.final('hex');
+
+        /* Return the auth tag prepended with the salt to the message. */
+        return new Buffer(
+            _encrypt.getAuthTag().toString('hex') + _salt.toString('hex') + _ct,
+            'hex'
+        ).toString(to_hex ? 'hex' : 'base64');
+    }
+
+    /* AES-256 decrypts a message in GCM mode. Expects message to be a modulo of the block size and key & iv to be the same block size. */
+    static aes256_decrypt_gcm(
+        /* string|Buffer|Array */ message,
+        /* string|Buffer|Array */ key,
+        /* string */              padding_mode,
+        /* string */              output_format = 'utf8',
+        /* boolean */             is_message_hex = undefined,
+        /* string|Buffer|Array */ additional_data = undefined
+    ){
+        const block_cipher_size = 128, key_size_bits = 256;
+        const cipher_name = 'aes-256-gcm';
+        const crypto = require('crypto');
+
+        /* Buffered parameters. */
+        let _message, _key, _iv, _salt, _authTag, _derived, _decrypt;
+
+        /* Get the message as a buffer. */
+        _message = discordCrypt.__validateMessage(message, is_message_hex);
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV(key, key_size_bits);
+
+        /* Retrieve the auth tag. */
+        _authTag = _message.slice(0, block_cipher_size / 8);
+
+        /* Splice the message. */
+        _message = _message.slice(block_cipher_size / 8);
+
+        /* Retrieve the 64-bit salt. */
+        _salt = _message.slice(0, 8);
+
+        /* Splice the message. */
+        _message = _message.slice(8);
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
+            (block_cipher_size / 8) + (key_size_bits / 8), 1000);
+
+        /* Slice off the IV. */
+        _iv = _derived.slice(0, block_cipher_size / 8);
+
+        /* Slice off the key. */
+        _key = _derived.slice(block_cipher_size / 8, (block_cipher_size / 8) + (key_size_bits / 8));
+
+        /* Create the cipher with IV. */
+        _decrypt = crypto.createDecipheriv(cipher_name, _key, _iv);
+
+        /* Set the authentication tag. */
+        _decrypt.setAuthTag(_authTag);
+
+        /* Set the additional data for verification if necessary. */
+        if(additional_data !== undefined)
+            _decrypt.setAAD(discordCrypt.__toBuffer(additional_data));
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _decrypt.setAutoPadding(false);
+
+        /* Decrypt the cipher text. */
+        let _pt = _decrypt.update(_message, undefined, 'hex');
+        _pt += _decrypt.final('hex');
+
+        /* Unpad the message. */
+        _pt = discordCrypt.__padMessage(_pt, padding_mode, key_size_bits, true, true);
+
+        /* Return the buffer. */
+        return _pt.toString(output_format);
+    }
+
     /* Camellia-256 encrypts a message. If the key specified is not 256 bits in length, it is hashed via SHA-256. */
     static camellia256_encrypt(
         /* string|Buffer|Array */   message,
