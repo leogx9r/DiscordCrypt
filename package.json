@@ -4,14 +4,13 @@
   "description": "Secure messaging for the Discord app.",
   "main": "",
   "scripts": {
-    "test_scrypt": "node tests/scrypt-test.js",
-    "test": "npm run test_scrypt"
+    "test": "node tests/perform-tests.js"
   },
   "author": "Leonardo Gates",
   "license": "MIT",
   "dependencies": {
     "electron": "latest",
     "nodeunit": "^0.11.2",
-    "process": "latest"
+    "process": "^0.11.10"
   }
 }
