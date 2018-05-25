@@ -1,5 +1,5 @@
 //META{"name":"discordCrypt"}*//
-﻿
+
 /*******************************************************************************
  * MIT License
  *
@@ -35,7 +35,7 @@ class discordCrypt
 
     /* Version & Author. */
     getAuthor() { return 'Leonardo Gates'; }
-    getVersion() { return '1.0.1'; }
+    getVersion() { return '1.0.2'; }
 
     /* ============================================================== */
 
@@ -49,6 +49,8 @@ class discordCrypt
          * These will usually be the culprit if the plugin breaks.
          */
 
+        /* Used to scan each message. */
+        this.messageMarkupClass = '.markup';
         /* Used to inject the toolbar. */
         this.searchUiClass = '.search .search-bar';
         /* Used to hook messages being sent. */
@@ -93,7 +95,6 @@ class discordCrypt
             'CBC',          /* Cipher Block-Chaining */
             'CFB',          /* Cipher Feedback Mode */
             'OFB',          /* Output Feedback Mode */
-            'ECB',          /* Electronic Codebook */
         ];
 
         /* Padding modes for block ciphers. */
@@ -154,6 +155,7 @@ class discordCrypt
                 font-family: monospace;
                 font-size: 12px;
                 color: #ffffff;
+                background: #000;
                 overflow: auto;
                 padding: 5px;
                 resize: none;
@@ -532,14 +534,7 @@ class discordCrypt
         /* Try parsing the decrypted data. */
         try{
             this.configFile = JSON.parse(
-                discordCrypt.aes256_decrypt(
-                    data.data,
-                    this.masterPassword,
-                    'cfb',
-                    'PKC7',
-                    'utf8',
-                    false
-                )
+                discordCrypt.aes256_decrypt_gcm(data.data, this.masterPassword, 'PKC7', 'utf8', false)
             );
         }
         catch(err){
@@ -589,10 +584,9 @@ class discordCrypt
         /* Encrypt the message using the master password and save the encrypted data. */
         bdPluginStorage.set(this.getName(), 'config', {
             data:
-                discordCrypt.aes256_encrypt(
+                discordCrypt.aes256_encrypt_gcm(
                     JSON.stringify(this.configFile),
                     this.masterPassword,
-                    'cfb',
                     'PKC7',
                     false
                 )
@@ -960,7 +954,7 @@ class discordCrypt
         $(document.body).prepend(
             `
             <div id="dc-master-overlay" class="dc-overlay">
-                <div id="dc-overlay-centerfield" class="dc-overlay-centerfield">
+                <div id="dc-overlay-centerfield" class="dc-overlay-centerfield" style="top: 30%">
                     <h2 style="color:#ff0000;">${header_msg}</h2>
                     <br/><br/>
                     
@@ -969,11 +963,15 @@ class discordCrypt
                     <br/>
                     
                     <div class="stat stat-bar">
-                        <span id = "dc-master-status" class="stat-bar-rating" role="stat-bar" style="width: 0;"/>
+                        <span id = "dc-master-status" class="stat-bar-rating" style="width: 0;"/>
                     </div>
 
                     <div class="dc-ruler-align">
                         <button class="dc-button" style="width:100%;" id="dc-unlockdb-btn">${action_msg}</button>
+                    </div>
+                    
+                    <div class="dc-ruler-align">
+                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-cancel-btn">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -981,6 +979,7 @@ class discordCrypt
         );
 
         const pwd_field = $('#dc-db-password');
+        const cancel_btn = $('#dc-cancel-btn');
         const unlock_btn = $('#dc-unlockdb-btn');
         const master_status = $('#dc-master-status');
 
@@ -1094,6 +1093,21 @@ class discordCrypt
                 }
             );
         });
+
+        /* Handle cancel button presses. */
+        cancel_btn.click(function(){
+            /* Use a 300 millisecond delay. */
+            setTimeout(
+                function(){
+                    /* Remove the prompt overlay. */
+                    $('#dc-master-overlay').remove();
+
+                    /* Do some quick cleanup. */
+                    self.masterPassword = null;
+                    self.configFile = null;
+                }, 300
+            );
+        });
     }
 
     /* Performs update checking and handles actually updating. */
@@ -1124,7 +1138,6 @@ class discordCrypt
                         if(err){
                             discordCrypt.log(`Unable to replace the target plugin. ( ${err} )\nDestination: ${replacePath}`, 'error');
                             alert('Failed to apply the update!', 'Error During Update');
-                            return;
                         }
                     });
                 });
@@ -1358,7 +1371,6 @@ class discordCrypt
                                 <option value="cbc">Cipher Block Chaining</option>
                                 <option value="cfb">Cipher Feedback Mode</option>
                                 <option value="ofb">Output Feedback Mode</option>
-                                <option value="ecb">Electronic Codebook</option>
                             </select>
                         </div>
                         
@@ -1546,7 +1558,7 @@ class discordCrypt
                         <br/><br/>
                         
                         <div class="stat stat-bar" style="width:70%;">
-                            <span id="dc-exchange-status" class="stat-bar-rating" role="stat-bar" style="width: 0;"/>
+                            <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>
                         </div><br/>
                         
                         <div class="dc-ruler-align">
@@ -2454,7 +2466,7 @@ class discordCrypt
          *
          *   * 0x0004 - Options - Substituted Base64 encoding of a single word stored in Little Endian.
          *       [ 31 ... 24 ] - Algorithm ( 0-24 = Dual )
-         *       [ 23 ... 16 ] - Block Mode ( 0 = CBC | 1 = CFB | 2 = OFB | 3 = ECB )
+         *       [ 23 ... 16 ] - Block Mode ( 0 = CBC | 1 = CFB | 2 = OFB )
          *       [ 15 ... 08 ] - Padding Mode ( #2 )
          *       [ 07 ... 00 ] - Random Padding Byte
          *
@@ -2610,7 +2622,7 @@ class discordCrypt
             this.configFile.passList[id].secondary : this.configFile.defaultPassword;
 
         /* Look through each markup element to find an embedDescription. */
-        $('.markup').each(function(){
+        $(this.messageMarkupClass).each(function(){
             /* Skip classes with no embeds. */
             if(!this.className.includes('embedDescription'))
                 return;
@@ -3133,14 +3145,11 @@ class discordCrypt
         const crypto = require('crypto');
 
         /* Buffered parameters. */
-        let _message, _key, _iv, _salt, _derived, _useIv, _encrypt;
+        let _message, _key, _iv, _salt, _derived, _encrypt;
 
         /* Make sure the cipher name and mode is valid first. */
-        if(!discordCrypt.__isValidCipher(cipher_name) || ['cbc', 'cfb', 'ofb', 'ecb'].indexOf(block_mode.toLowerCase()) === -1)
+        if(!discordCrypt.__isValidCipher(cipher_name) || ['cbc', 'cfb', 'ofb'].indexOf(block_mode.toLowerCase()) === -1)
             return null;
-
-        /* Determine whether we need to append a salt to this cipher mode. This only applies to ECB modes. */
-        _useIv = block_mode.toLowerCase() !== 'ecb';
 
         /* Pad the message to the nearest block boundary. */
         _message = discordCrypt.__padMessage(message, padding_scheme, key_size_bits, is_message_hex);
@@ -3148,27 +3157,21 @@ class discordCrypt
         /* Get the key as a buffer. */
         _key = discordCrypt.__validateKeyIV(key, key_size_bits);
 
-        /* If we need to use an IV, create a salted IV and Key via a KDF. */
-        if(_useIv){
-            /* Generate a random salt to derive the key and IV. */
-            _salt = crypto.randomBytes(8);
+        /* Generate a random salt to derive the key and IV. */
+        _salt = crypto.randomBytes(8);
 
-            /* Derive the key length and IV length. */
-            _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
-                (block_cipher_size / 8) + (key_size_bits / 8), 1000);
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
+            (block_cipher_size / 8) + (key_size_bits / 8), 1000);
 
-            /* Slice off the IV. */
-            _iv = _derived.slice(0, block_cipher_size / 8);
+        /* Slice off the IV. */
+        _iv = _derived.slice(0, block_cipher_size / 8);
 
-            /* Slice off the key. */
-            _key = _derived.slice(block_cipher_size / 8, (block_cipher_size / 8) + (key_size_bits / 8));
+        /* Slice off the key. */
+        _key = _derived.slice(block_cipher_size / 8, (block_cipher_size / 8) + (key_size_bits / 8));
 
-            /* Create the cipher with derived IV and key. */
-            _encrypt = crypto.createCipheriv(cipher_name, _key, _iv);
-        }
-        else
-        /* Create the cipher with just a key. */
-            _encrypt = crypto.createCipher(cipher_name, _key);
+        /* Create the cipher with derived IV and key. */
+        _encrypt = crypto.createCipheriv(cipher_name, _key, _iv);
 
         /* Disable automatic PKCS #7 padding. We do this in-house. */
         _encrypt.setAutoPadding(false);
@@ -3177,8 +3180,8 @@ class discordCrypt
         let _ct = _encrypt.update(_message, undefined, 'hex');
         _ct += _encrypt.final('hex');
 
-        /* Return the result optionally with the prepended IV. */
-        return new Buffer((_useIv ? _salt.toString('hex') : '') + _ct, 'hex').toString(convert_to_hex ? 'hex' : 'base64');
+        /* Return the result with the prepended salt. */
+        return new Buffer(_salt.toString('hex') + _ct, 'hex').toString(convert_to_hex ? 'hex' : 'base64');
     }
 
     /* Decrypts the given cipher-text message using the algorithm specified. */
@@ -3197,15 +3200,12 @@ class discordCrypt
         const crypto = require('crypto');
 
         /* Buffered parameters. */
-        let _message, _key, _iv, _salt, _derived, _useIv, _decrypt;
+        let _message, _key, _iv, _salt, _derived, _decrypt;
 
         /* Make sure the cipher name and mode is valid first. */
-        if(!discordCrypt.__isValidCipher(cipher_name) || ['cbc', 'ofb', 'cfb', 'ecb']
+        if(!discordCrypt.__isValidCipher(cipher_name) || ['cbc', 'ofb', 'cfb']
             .indexOf(block_mode.toLowerCase()) === -1)
             return null;
-
-        /* Determine whether we need to append a salt to this cipher mode. This only applies to ECB modes. */
-        _useIv = block_mode.toLowerCase() !== 'ecb';
 
         /* Get the message as a buffer. */
         _message = discordCrypt.__validateMessage(message, is_message_hex);
@@ -3213,30 +3213,24 @@ class discordCrypt
         /* Get the key as a buffer. */
         _key = discordCrypt.__validateKeyIV(key, key_size_bits);
 
-        /* Extract the IV from the front of the message and split it. */
-        if(_useIv){
-            /* Retrieve the 64-bit salt. */
-            _salt = _message.slice(0, 8);
+        /* Retrieve the 64-bit salt. */
+        _salt = _message.slice(0, 8);
 
-            /* Derive the key length and IV length. */
-            _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
-                (block_cipher_size / 8) + (key_size_bits / 8), 1000);
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
+            (block_cipher_size / 8) + (key_size_bits / 8), 1000);
 
-            /* Slice off the IV. */
-            _iv = _derived.slice(0, block_cipher_size / 8);
+        /* Slice off the IV. */
+        _iv = _derived.slice(0, block_cipher_size / 8);
 
-            /* Slice off the key. */
-            _key = _derived.slice(block_cipher_size / 8, (block_cipher_size / 8) + (key_size_bits / 8));
+        /* Slice off the key. */
+        _key = _derived.slice(block_cipher_size / 8, (block_cipher_size / 8) + (key_size_bits / 8));
 
-            /* Splice the message. */
-            _message = _message.slice(8);
+        /* Splice the message. */
+        _message = _message.slice(8);
 
-            /* Create the cipher with IV. */
-            _decrypt = crypto.createDecipheriv(cipher_name, _key, _iv);
-        }
-        else
-        /* Create the cipher with just a key. */
-            _decrypt = crypto.createDecipher(cipher_name, _key);
+        /* Create the cipher with IV. */
+        _decrypt = crypto.createDecipheriv(cipher_name, _key, _iv);
 
         /* Disable automatic PKCS #7 padding. We do this in-house. */
         _decrypt.setAutoPadding(false);
@@ -3729,6 +3723,129 @@ class discordCrypt
         return discordCrypt.__decrypt('aes-256', cipher_mode, padding_mode, message, key, output_format, is_message_hex, keySize, blockSize);
     }
 
+    /* AES-256 decrypts a message in GCM mode. Expects message to be a modulo of the block size and key & iv to be the same block size. */
+    static aes256_encrypt_gcm(
+        /* string|Buffer|Array */ message,
+        /* string|Buffer|Array */ key,
+        /* string */              padding_mode,
+        /* boolean */             to_hex = false,
+        /* boolean */             is_message_hex = undefined,
+        /* string|Buffer|Array */ additional_data = undefined
+    ){
+        const block_cipher_size = 128, key_size_bits = 256;
+        const cipher_name = 'aes-256-gcm';
+        const crypto = require('crypto');
+
+        let _message, _key, _iv, _salt, _derived, _encrypt;
+
+        /* Pad the message to the nearest block boundary. */
+        _message = discordCrypt.__padMessage(message, padding_mode, key_size_bits, is_message_hex);
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV(key, key_size_bits);
+
+        /* Generate a unique salt to derive a unique key and IV. */
+        _salt = crypto.randomBytes(8);
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
+            (block_cipher_size / 8) + (key_size_bits / 8), 1000);
+
+        /* Slice off the IV. */
+        _iv = _derived.slice(0, block_cipher_size / 8);
+
+        /* Slice off the key. */
+        _key = _derived.slice(block_cipher_size / 8, (block_cipher_size / 8) + (key_size_bits / 8));
+
+        /* Create the cipher with derived IV and key. */
+        _encrypt = crypto.createCipheriv(cipher_name, _key, _iv);
+
+        /* Add the additional data if necessary. */
+        if(additional_data !== undefined)
+            _encrypt.setAAD(discordCrypt.__toBuffer(additional_data));
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _encrypt.setAutoPadding(false);
+
+        /* Get the cipher text. */
+        let _ct = _encrypt.update(_message, undefined, 'hex');
+        _ct += _encrypt.final('hex');
+
+        /* Return the auth tag prepended with the salt to the message. */
+        return new Buffer(
+            _encrypt.getAuthTag().toString('hex') + _salt.toString('hex') + _ct,
+            'hex'
+        ).toString(to_hex ? 'hex' : 'base64');
+    }
+
+    /* AES-256 decrypts a message in GCM mode. Expects message to be a modulo of the block size and key & iv to be the same block size. */
+    static aes256_decrypt_gcm(
+        /* string|Buffer|Array */ message,
+        /* string|Buffer|Array */ key,
+        /* string */              padding_mode,
+        /* string */              output_format = 'utf8',
+        /* boolean */             is_message_hex = undefined,
+        /* string|Buffer|Array */ additional_data = undefined
+    ){
+        const block_cipher_size = 128, key_size_bits = 256;
+        const cipher_name = 'aes-256-gcm';
+        const crypto = require('crypto');
+
+        /* Buffered parameters. */
+        let _message, _key, _iv, _salt, _authTag, _derived, _decrypt;
+
+        /* Get the message as a buffer. */
+        _message = discordCrypt.__validateMessage(message, is_message_hex);
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV(key, key_size_bits);
+
+        /* Retrieve the auth tag. */
+        _authTag = _message.slice(0, block_cipher_size / 8);
+
+        /* Splice the message. */
+        _message = _message.slice(block_cipher_size / 8);
+
+        /* Retrieve the 64-bit salt. */
+        _salt = _message.slice(0, 8);
+
+        /* Splice the message. */
+        _message = _message.slice(8);
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
+            (block_cipher_size / 8) + (key_size_bits / 8), 1000);
+
+        /* Slice off the IV. */
+        _iv = _derived.slice(0, block_cipher_size / 8);
+
+        /* Slice off the key. */
+        _key = _derived.slice(block_cipher_size / 8, (block_cipher_size / 8) + (key_size_bits / 8));
+
+        /* Create the cipher with IV. */
+        _decrypt = crypto.createDecipheriv(cipher_name, _key, _iv);
+
+        /* Set the authentication tag. */
+        _decrypt.setAuthTag(_authTag);
+
+        /* Set the additional data for verification if necessary. */
+        if(additional_data !== undefined)
+            _decrypt.setAAD(discordCrypt.__toBuffer(additional_data));
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _decrypt.setAutoPadding(false);
+
+        /* Decrypt the cipher text. */
+        let _pt = _decrypt.update(_message, undefined, 'hex');
+        _pt += _decrypt.final('hex');
+
+        /* Unpad the message. */
+        _pt = discordCrypt.__padMessage(_pt, padding_mode, key_size_bits, true, true);
+
+        /* Return the buffer. */
+        return _pt.toString(output_format);
+    }
+
     /* Camellia-256 encrypts a message. If the key specified is not 256 bits in length, it is hashed via SHA-256. */
     static camellia256_encrypt(
         /* string|Buffer|Array */   message,
@@ -3773,10 +3890,6 @@ class discordCrypt
         /* Size constants for TripleDES-192. */
         const keySize = 192, blockSize = 64;
 
-        /* TripleDES ECB mode is just defined as TripleDES. */
-        if(cipher_mode.toLowerCase() === 'ecb')
-            cipher_mode = undefined;
-
         /* Perform the encryption. */
         return discordCrypt.__encrypt('des-ede3', cipher_mode, padding_mode, message, key, to_hex, is_message_hex, keySize, blockSize);
     }
@@ -3792,10 +3905,6 @@ class discordCrypt
     ){
         /* Size constants for TripleDES-192. */
         const keySize = 192, blockSize = 64;
-
-        /* TripleDES ECB mode is just defined as TripleDES. */
-        if(cipher_mode.toLowerCase() === 'ecb')
-            cipher_mode = undefined;
 
         /* Return the unpadded message. */
         return discordCrypt.__decrypt('des-ede3', cipher_mode, padding_mode, message, key, output_format, is_message_hex, keySize, blockSize);
@@ -4192,7 +4301,7 @@ class discordCrypt
 
         /* Parse the next 8 bits. */
         if(typeof cipherModeIndex === 'string')
-            cipherModeIndex = ['cbc', 'cfb', 'ofb', 'ecb'].indexOf(cipherModeIndex.toLowerCase());
+            cipherModeIndex = ['cbc', 'cfb', 'ofb'].indexOf(cipherModeIndex.toLowerCase());
         buf[1] = cipherModeIndex;
 
         /* Parse the next 8 bits. */
@@ -4355,8 +4464,6 @@ class discordCrypt
             mode = 'cfb';
         else if(block_mode === 2)
             mode = 'ofb';
-        else if(block_mode === 3)
-            mode = 'ecb';
         else return '';
 
         /* Convert the padding. */

@@ -200,7 +200,7 @@ The following tips should be adhered to for maximium privacy between users.
     * We recommend using a [password manager](https://en.wikipedia.org/wiki/Password_manager) such as KeePass/KeePassXC, OnePass or LastPass to generate and safely store strong passwords.
 * Use AES as either the primary or secondary ciphers for encryption. AES is a cipher developed in 1998 and is still considered one of the most secure methods of sending and receiving confidential information to this day.
 * If you require absolute secrecy which is not vulnerable to MiTM attacks, use a strong password generator, encrypt these using PGP and send them to your partner over a non-Discord channel.
-* 
+
  
 
 # Frequently Asked Questions ( FAQs )
