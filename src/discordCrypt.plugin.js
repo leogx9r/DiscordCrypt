@@ -954,7 +954,7 @@ class discordCrypt
         $(document.body).prepend(
             `
             <div id="dc-master-overlay" class="dc-overlay">
-                <div id="dc-overlay-centerfield" class="dc-overlay-centerfield">
+                <div id="dc-overlay-centerfield" class="dc-overlay-centerfield" style="top: 30%">
                     <h2 style="color:#ff0000;">${header_msg}</h2>
                     <br/><br/>
                     
@@ -963,7 +963,7 @@ class discordCrypt
                     <br/>
                     
                     <div class="stat stat-bar">
-                        <span id = "dc-master-status" class="stat-bar-rating" role="stat-bar" style="width: 0;"/>
+                        <span id = "dc-master-status" class="stat-bar-rating" style="width: 0;"/>
                     </div>
 
                     <div class="dc-ruler-align">
@@ -1558,7 +1558,7 @@ class discordCrypt
                         <br/><br/>
                         
                         <div class="stat stat-bar" style="width:70%;">
-                            <span id="dc-exchange-status" class="stat-bar-rating" role="stat-bar" style="width: 0;"/>
+                            <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>
                         </div><br/>
                         
                         <div class="dc-ruler-align">
