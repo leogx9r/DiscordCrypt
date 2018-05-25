@@ -1,5 +1,7 @@
 Version 1.0.2
 
+- NOTE: This version introduces a change which will require you to delete your old configuration file.
+
 - Added Scrypt and hash based tests for verified functionality.
 - Added GCM ( Galois Counter Mode ) for AES-256 encryption and decryption for internal use.
 - Added the ability to ignore database unlocking upon startup to avoid loading the plugin if not needed.
