@@ -35,7 +35,7 @@ class discordCrypt
 
     /* Version & Author. */
     getAuthor() { return 'Leonardo Gates'; }
-    getVersion() { return '1.0.2'; }
+    getVersion() { return '1.0.3'; }
 
     /* ============================================================== */
 
@@ -698,14 +698,8 @@ class discordCrypt
         /* function(file_data, short_hash, new_version, full_changelog) */ onUpdateCallback
     ){
         /* Update URL and request method. */
-        const update_url =
-            'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/discordCrypt.plugin.js?r=' +
-            /* Requests had a nasty habit of being cached in the past so this is an ugly work-around. */
-            parseInt(new Buffer(require('crypto').randomBytes(4)).toString('hex'), 16).toString();
-        const changelog_url =
-            'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG?r=' +
-            /* Requests had a nasty habit of being cached in the past so this is an ugly work-around. */
-            parseInt(new Buffer(require('crypto').randomBytes(4)).toString('hex'), 16).toString();
+        const update_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/discordCrypt.plugin.js';
+        const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
 
         /* Make sure the callback is a function. */
         if(typeof onUpdateCallback !== 'function')
@@ -714,7 +708,7 @@ class discordCrypt
         /* Perform the request. */
         try{
             /* Download the update. */
-            discordCrypt.__getAjaxSync(update_url, (statusCode, errorString, data) => {
+            discordCrypt.__getRequest(update_url, (statusCode, errorString, data) => {
                 /* Make sure no error occurred. */
                 if(statusCode !== 200) {
                     /* Log the error accordingly. */
@@ -769,21 +763,19 @@ class discordCrypt
                 catch(e){}
 
                 /* Now get the changelog. */
-                let changelog = '';
                 try{
                     /* Fetch the changelog from the URL. */
-                    discordCrypt.__getAjaxSync(changelog_url, (statusCode, errorString, data) => {
-                        /* Skip if not valid. */
-                        if(statusCode !== 200)
-                            discordCrypt.log('Error fetching the changelog with error: ' + errorString, 'warn');
-                        else
-                            changelog = data;
+                    discordCrypt.__getRequest(changelog_url, (statusCode, errorString, data) => {
+                        /* Perform the callback. */
+                        onUpdateCallback(data, shortHash, version_number, statusCode == 200 ? data : '');
                     });
                 }
-                catch(e){ discordCrypt.log('Error fetching the changelog.', 'warn'); }
+                catch(e){
+                    discordCrypt.log('Error fetching the changelog.', 'warn');
 
-                /* Perform the callback. */
-                onUpdateCallback(data, shortHash, version_number, changelog);
+                    /* Perform the callback without a changelog. */
+                    onUpdateCallback(data, shortHash, version_number, '');
+                }
             });
         }
         catch(ex) {
@@ -2645,22 +2637,11 @@ class discordCrypt
 
     /* ======================= UTILITIES ======================= */
 
-    /* Performs a CORS request to the specified URL in a synchronous manner and returns the result to the callback. */
-    static __getAjaxSync(/* string */ url, /* function(statusCode, errorString, data) */ callback){
+    /* Performs an HTTP request returns the result to the callback. */
+    static __getRequest( /* string */ url, /* function(statusCode, errorString, data) */ callback){
         try{
-            $.ajax({
-                url: 'https://cors.io?' + url,
-                crossDomain: true,
-                timeout: 30000,
-                method: 'GET',
-                async: false,
-                cache: false,
-                statusCode: {
-                    404: () => { callback(404, 'Not Found'); },
-                    403: () => { callback(403, 'Forbidden'); },
-                },
-                error: (jqXHR, textStatus) => { callback(jqXHR.status, textStatus); },
-                success: (data, textStatus, jqXHR) => { callback(jqXHR.status, textStatus, data); },
+            require('request')(url, (error, response, result) => {
+                callback(response.statusCode, response.statusMessage, result);
             });
         }
         catch(ex){ callback(-1, ex.toString()); }
