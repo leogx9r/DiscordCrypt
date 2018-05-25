@@ -277,16 +277,62 @@ This message is then sent to Discord's servers in an embedded message.
 
 ## Master Database Encryption
 
-The master database uses an AES-256 bit key for encryption and decryption in `CBC` mode derived from the password the user inputs.
+The master database uses an AES-256 bit key for encryption and decryption in `GCM` mode derived from the password the 
+user inputs. The database is first converted to a string via `JSON.stringify` and then padded using the `PKCS #7` 
+scheme.
 
 Its derivation is done by using the [Scrypt](https://en.wikipedia.org/wiki/Scrypt) hashing algorithm with the following parameters.
 
-- N = 1536 ( The work factor variable. Memory and CPU usage scale linearly with this. )
-- r = 8 ( The block size parameter used to tune memory reading. )
-- p = 1 ( Parallelization factor. Indicates the number of mixing functions to be run simultaneously. )
-- dkLen = 32 ( The output size of the hash produced. Must satisfy dkLen ≤ (2^32− 1) * 32 )
+- N = `1536`   ( The work factor variable. Memory and CPU usage scale linearly with this. )
+- r = `8`      ( The block size parameter used to tune memory reading. )
+- p = `1`      ( Parallelization factor. Indicates the number of mixing functions to be run simultaneously. )
+- dkLen = `32` ( The output size of the hash produced. Must satisfy dkLen ≤ (2^32− 1) * 32 )
 
-This derives a 256-bit key which is used in conjunction with the `aes256_encrypt`/`aes256_decrypt` functions.
+This derives a 256-bit key which is used in conjunction with the `aes256_encrypt_gcm`/`aes256_decrypt_gcm` functions.
+
+Please note that this AES-256 bit key also undergoes the OpenSSL process of derived key stretching.
+
+That is:
+
+- `random_salt = crypto.randomBytes( size: 8 )`
+- `derived_length = aes_block_size + aes_256_key_size`
+- `derived_string = PBKF2_SHA256( input: scrypt_password, salt: random_salt, length: derived_length, iterations: 1000 )`
+- `derived_iv = derived_string.slice( 0, aes_block_size )`
+- `derived_key = derived_string.slice( aes_block_size )`
+
+Following this, the `GCM` encryption process is as follows:
+
+```javascript
+/* Convert the database to a string format. */
+let database_config_string = JSON.stringify( database_config_object );
+
+/* Pad the message to the AES block size. */
+database_config_string = __padMessage( database_config_string, 'PKCS-7', aes_block_size );
+
+/* Create the cipher with derived IV and key. */
+let _encrypt = crypto.createCipheriv( 'aes-256-gcm', derived_key, derived_iv );
+
+/* Disable automatic PKCS #7 padding. We do this in-house. */
+_encrypt.setAutoPadding( false );
+
+/* Get the cipher text. */
+let _ct = _encrypt.update( database_config_string, undefined, 'hex' );
+_ct += _encrypt.final('hex');
+
+/* Finally, the authentication tag and the random salt used is prepended to the message. */
+_ct = _encrypt.getAuthTag().toString('hex') + random_salt.toString('hex') + _ct;
+
+/* Return the encrypted data as Base64 text. */
+return _ct.toString('base64');
+```
+
+During decryption, the authentication tag is stripped off as well as the random salt.
+
+The `scrypt` derived password is then used with the one-time salt to derive a `key` and `iv` using the same 
+`PBKDF-SHA256` process.
+
+Finally, the authentication tag is assigned to `GCM` and verified which either throws an error if invalid or returns 
+the plaintext message.
 
 ## Key Exchange Process
 
