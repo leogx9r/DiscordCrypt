@@ -765,9 +765,9 @@ class discordCrypt
                 /* Now get the changelog. */
                 try{
                     /* Fetch the changelog from the URL. */
-                    discordCrypt.__getRequest(changelog_url, (statusCode, errorString, data) => {
+                    discordCrypt.__getRequest(changelog_url, (statusCode, errorString, changelog) => {
                         /* Perform the callback. */
-                        onUpdateCallback(data, shortHash, version_number, statusCode == 200 ? data : '');
+                        onUpdateCallback(data, shortHash, version_number, statusCode == 200 ? changelog : '');
                     });
                 }
                 catch(e){
