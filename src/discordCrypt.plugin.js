@@ -976,12 +976,17 @@ class discordCrypt
                     <div class="dc-ruler-align">
                         <button class="dc-button" style="width:100%;" id="dc-unlockdb-btn">${action_msg}</button>
                     </div>
+                    
+                    <div class="dc-ruler-align">
+                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-cancel-btn">Cancel</button>
+                    </div>
                 </div>
             </div>
             `
         );
 
         const pwd_field = $('#dc-db-password');
+        const cancel_btn = $('#dc-cancel-btn');
         const unlock_btn = $('#dc-unlockdb-btn');
         const master_status = $('#dc-master-status');
 
@@ -1093,6 +1098,21 @@ class discordCrypt
 
                     return false;
                 }
+            );
+        });
+
+        /* Handle cancel button presses. */
+        cancel_btn.click(function(){
+            /* Use a 300 millisecond delay. */
+            setTimeout(
+                function(){
+                    /* Remove the prompt overlay. */
+                    $('#dc-master-overlay').remove();
+
+                    /* Do some quick cleanup. */
+                    self.masterPassword = null;
+                    self.configFile = null;
+                }, 300
             );
         });
     }
