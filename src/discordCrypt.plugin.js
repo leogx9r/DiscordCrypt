@@ -155,6 +155,7 @@ class discordCrypt
                 font-family: monospace;
                 font-size: 12px;
                 color: #ffffff;
+                background: #000;
                 overflow: auto;
                 padding: 5px;
                 resize: none;
