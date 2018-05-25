@@ -533,14 +533,7 @@ class discordCrypt
         /* Try parsing the decrypted data. */
         try{
             this.configFile = JSON.parse(
-                discordCrypt.aes256_decrypt(
-                    data.data,
-                    this.masterPassword,
-                    'cfb',
-                    'PKC7',
-                    'utf8',
-                    false
-                )
+                discordCrypt.aes256_decrypt_gcm(data.data, this.masterPassword, 'PKC7', 'utf8', false)
             );
         }
         catch(err){
@@ -590,10 +583,9 @@ class discordCrypt
         /* Encrypt the message using the master password and save the encrypted data. */
         bdPluginStorage.set(this.getName(), 'config', {
             data:
-                discordCrypt.aes256_encrypt(
+                discordCrypt.aes256_encrypt_gcm(
                     JSON.stringify(this.configFile),
                     this.masterPassword,
-                    'cfb',
                     'PKC7',
                     false
                 )
