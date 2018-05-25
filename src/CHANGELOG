@@ -1,3 +1,12 @@
+Version 1.0.2
+
+- Added Scrypt and hash based tests for verified functionality.
+- Added GCM ( Galois Counter Mode ) for AES-256 encryption and decryption for internal use.
+- Added the ability to ignore database unlocking upon startup to avoid loading the plugin if not needed.
+- Database is now encrypted using Authenticated Encryption via AES-256 in GCM mode ensuring authenticity.
+- Removed the ECB ( Electronic Codebook ) block cipher mode as it's deemed insecure.
+- Fixed a bug where users not using standard dark themes would not be able to see the update changelog.
+
 Version 1.0.1
 
 - Removed some old code from the plugin not needed since public.
