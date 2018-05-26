@@ -468,6 +468,7 @@ function main(){
             case 'cipher':
                 /* Run cipher tests. */
                 addCipherTests(loaded_blob, unit_tests, process.argv.length >= 4 ? process.argv[3] : '');
+                break;
             default:
                 throw 'Executing all tests.';
         }
