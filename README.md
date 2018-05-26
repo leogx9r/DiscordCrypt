@@ -1,5 +1,7 @@
 # Overview
 
+[![pipeline status](https://gitlab.com/leogx9r/DiscordCrypt/badges/master/pipeline.svg)](https://gitlab.com/leogx9r/DiscordCrypt/commits/master)
+
 * [**Introduction**](#discordcrypt)
 * [**Installation**](#installation)
     * [***Windows***](#windows)
