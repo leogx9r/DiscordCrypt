@@ -23,6 +23,7 @@ Test Ciphers:
   stage: test
   script:
   - node ./tests/perform-tests.js cipher
+  allow_failure: true
 
 Test Scrypt Implementation:
   stage: test
