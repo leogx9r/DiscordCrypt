@@ -1,0 +1,26 @@
+image: node:latest
+
+# This folder is cached between builds
+# http://docs.gitlab.com/ce/ci/yaml/README.html#cache
+cache:
+  paths:
+  - node_modules/
+
+# Main stage
+stages:
+- test
+
+Test Scrypt Implementation:
+  stage: test
+  script:
+   - npm install
+   - node ./tests/perform-tests.js scrypt
+  allow_failure: true
+   
+Test PBKDF2:
+  stage: test
+  script:
+   - npm install
+   - node ./tests/perform-tests.js pbkdf2
+  allow_failure: true
+
