@@ -10,17 +10,23 @@ cache:
 stages:
 - test
 
-Test Scrypt Implementation:
-  stage: test
-  script:
-   - npm install
-   - node ./tests/perform-tests.js scrypt
-  allow_failure: true
+before_script:
+- npm install
    
 Test PBKDF2:
   stage: test
   script:
-   - npm install
    - node ./tests/perform-tests.js pbkdf2
   allow_failure: true
 
+Test Ciphers:
+  stage: test
+  script:
+  - node ./tests/perform-tests.js cipher
+  allow_failure: true
+
+Test Scrypt Implementation:
+  stage: test
+  script:
+   - node ./tests/perform-tests.js scrypt
+  allow_failure: true
