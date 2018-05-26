@@ -10,11 +10,11 @@ function addScryptTests(loaded_blob, unit_tests){
      * Expected Results:
      *
      * discordCrypt_scrypt
-     * ✔ Test #0: [ N: 16 p: 1 r: 1 ]
-     * ✔ Test #1: [ N: 1024 p: 16 r: 8 ]
-     * ✔ Test #2: [ N: 16384 p: 1 r: 8 ]
-     * ✔ Test #3: [ N: 1048576 p: 1 r: 8 ]
-     * ✔ Test #4: [ N: 262144 p: 1 r: 8 ]
+     * ✔ Test #1: [ N: 16 p: 1 r: 1 ]
+     * ✔ Test #2: [ N: 1024 p: 16 r: 8 ]
+     * ✔ Test #3: [ N: 16384 p: 1 r: 8 ]
+     * ✔ Test #4: [ N: 1048576 p: 1 r: 8 ]
+     * ✔ Test #5: [ N: 262144 p: 1 r: 8 ]
      */
 
     /* Prepare the unit tests. */
@@ -23,7 +23,7 @@ function addScryptTests(loaded_blob, unit_tests){
     /* Loop over all tests. */
     for (let i = 0; i < vectors.length; i++){
         let v = vectors[i],
-            k = `Test #${Object.keys(unit_tests.discordCrypt_scrypt).length}: [ N: ${v.N} p: ${v.p} r: ${v.r} ]`;
+            k = `Test #${Object.keys(unit_tests.discordCrypt_scrypt).length+1}: [ N: ${v.N} p: ${v.p} r: ${v.r} ]`;
 
         /* Create a function callback for this test name. */
         unit_tests.discordCrypt_scrypt[k] = (ut) => {
@@ -58,7 +58,6 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
      * Expected:
      *
      * discordCrypt_pbkdf2
-     * ✔ sha1: Test #0
      * ✔ sha1: Test #1
      * ✔ sha1: Test #2
      * ✔ sha1: Test #3
@@ -66,7 +65,7 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
      * ✔ sha1: Test #5
      * ✔ sha1: Test #6
      * ✔ sha1: Test #7
-     * ✔ sha256: Test #8
+     * ✔ sha1: Test #8
      * ✔ sha256: Test #9
      * ✔ sha256: Test #10
      * ✔ sha256: Test #11
@@ -74,7 +73,7 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
      * ✔ sha256: Test #13
      * ✔ sha256: Test #14
      * ✔ sha256: Test #15
-     * ✔ sha512: Test #16
+     * ✔ sha256: Test #16
      * ✔ sha512: Test #17
      * ✔ sha512: Test #18
      * ✔ sha512: Test #19
@@ -82,7 +81,7 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
      * ✔ sha512: Test #21
      * ✔ sha512: Test #22
      * ✔ sha512: Test #23
-     * ✔ whirlpool: Test #24
+     * ✔ sha512: Test #24
      * ✔ whirlpool: Test #25
      * ✔ whirlpool: Test #26
      * ✔ whirlpool: Test #27
@@ -90,6 +89,7 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
      * ✔ whirlpool: Test #29
      * ✔ whirlpool: Test #30
      * ✔ whirlpool: Test #31
+     * ✔ whirlpool: Test #32
      */
 
     /* Load the test units. */
@@ -148,11 +148,300 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
         prepare_run(hash_list[i].name, hash_list[i].length, loaded_blob, hash_vectors);
 }
 
+/* Run Cipher tests. */
+function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
+    const vectors = require('./cipher-test-vectors.json');
+
+    /* Adds a cipher test list to be checked. */
+    function addCipherTest(
+        /* Object */     loaded_blob,
+        /* Object */     unit_tests,
+        /* string */     cipher_name,
+        /* Array */      test_vectors,
+        /* function() */ encrypt,
+        /* function() */ decrypt
+    ){
+        /* Loop over each individual test. */
+        for(let i = 0; i < test_vectors.length; i++){
+            /* Loop over the block mode and padding scheme array. */
+            for(let j = 0; j < test_vectors[i].length; j++){
+
+                /* Backup. */
+                let mode = test_vectors[i][j].mode;
+                let scheme = test_vectors[i][j].scheme;
+
+                /* Save this so future changes are easier. */
+                let test_name = `discordCrypt-${cipher_name}-${mode.toUpperCase()}-${scheme.toUpperCase()}`;
+
+                /* Create the test unit. */
+                unit_tests[test_name] = {};
+
+                /* Loop over each individual unit test. */
+                for(let k = 0; k < test_vectors[i][j].r.length; k++){
+                    /* Convert the target strings from hex format to Buffer objects. */
+
+                    console.log(`${k}`);
+                    let plaintext = new Buffer(test_vectors[i][j].r[k].plaintext, 'hex');
+                    let ciphertext = new Buffer(test_vectors[i][j].r[k].ciphertext, 'hex');
+
+                    /* Extract the hex key and salts used. */
+                    let key = new Buffer(test_vectors[i][j].r[k].key, 'hex');
+                    let salt = new Buffer(test_vectors[i][j].r[k].salt, 'hex');
+
+                    /* Backup test ID. */
+                    let test_id = `Test #${k+1}`;
+
+                    /* Create the test callback */
+                    unit_tests[test_name][test_id] =
+                        (ut) => {
+                            /* Calculate the plaintext by doing a decryption cycle. */
+                            let _plaintext = decrypt(ciphertext, key, mode, scheme, 'hex');
+
+                            /* Perform an encryption routine with the predefined key and KDF salt. */
+                            let _ciphertext = encrypt(plaintext, key, mode, scheme, true, false, salt);
+
+                            /* Check if the plaintext and ciphertext calculate match the expected output. */
+                            ut.equal(_ciphertext, test_vectors[i][j].r[k].ciphertext, 'Mismatched ciphertext');
+                            ut.equal(_plaintext, test_vectors[i][j].r[k].plaintext, 'Mismatched plaintext');
+
+                            /* Finish the test. */
+                            ut.done();
+                        };
+                }
+            }
+        }
+
+    }
+
+    /* Locates the given array containing the target's test vectors. */
+    function locateTestVector(/* Array */ list, /* string */ name){
+        for(let i = 0; i < list.length; i++){
+            if(list[i].full_name.toLowerCase() === name.toLowerCase())
+                return list[i];
+        }
+
+        return null;
+    }
+
+    /* Quick sanity check. */
+    if(typeof preferred_cipher !== 'string')
+        preferred_cipher = 'Running all cipher tests';
+
+    let aes_vectors = locateTestVector(vectors, 'aes-256'),
+        camellia_vectors = locateTestVector(vectors, 'camellia-256'),
+        tripledes_vectors = locateTestVector(vectors, 'tripledes-192'),
+        idea_vectors = locateTestVector(vectors, 'idea-128');
+
+    /* Locate the desired cipher. Tons of redundant code here :) */
+    switch(preferred_cipher){
+        case 'aes':
+        case 'aes256':
+        case 'aes-256':
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                aes_vectors.full_name,
+                aes_vectors.tests,
+                loaded_blob['class'].aes256_encrypt,
+                loaded_blob['class'].aes256_decrypt
+            );
+            break;
+        case 'camellia':
+        case 'camellia256':
+        case 'camellia-256':
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                camellia_vectors.full_name,
+                camellia_vectors.tests,
+                loaded_blob['class'].camellia256_encrypt,
+                loaded_blob['class'].camellia256_decrypt
+            );
+            break;
+        case 'tripledes':
+        case 'tripledes192':
+        case 'tripledes-192':
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                tripledes_vectors.full_name,
+                tripledes_vectors.tests,
+                loaded_blob['class'].tripledes192_encrypt,
+                loaded_blob['class'].tripledes192_decrypt
+            );
+            break;
+        case 'idea':
+        case 'idea128':
+        case 'idea-128':
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                idea_vectors.full_name,
+                idea_vectors.tests,
+                loaded_blob['class'].idea128_encrypt,
+                loaded_blob['class'].idea128_decrypt
+            );
+            break;
+        default:
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                aes_vectors.full_name,
+                aes_vectors.tests,
+                loaded_blob['class'].aes256_encrypt,
+                loaded_blob['class'].aes256_decrypt
+            );
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                camellia_vectors.full_name,
+                camellia_vectors.tests,
+                loaded_blob['class'].camellia256_encrypt,
+                loaded_blob['class'].camellia256_decrypt
+            );
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                tripledes_vectors.full_name,
+                tripledes_vectors.tests,
+                loaded_blob['class'].tripledes192_encrypt,
+                loaded_blob['class'].tripledes192_decrypt
+            );
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                idea_vectors.full_name,
+                idea_vectors.tests,
+                loaded_blob['class'].idea128_encrypt,
+                loaded_blob['class'].idea128_decrypt
+            );
+            break;
+    }
+}
+
 /* Load the plugin by simply doing an eval() */
 function loadDiscordCrypt(){
     let load = eval(`( ${require("fs").readFileSync('src/discordCrypt.plugin.js').toString()} )`);
 
     return {'class': load, 'instance': new load()};
+}
+
+/* Generates cipher test vectors. */
+function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25){
+    const ciphers = [
+        {
+            full_name: 'AES-256',
+            name: 'aes-256',
+            block_size: 16,
+            key_size: 32,
+            encryptor: loaded_blob['class'].aes256_encrypt,
+            decryptor: loaded_blob['class'].aes256_decrypt,
+        },
+        {
+            full_name: 'Camellia-256',
+            name: 'camellia-256',
+            block_size: 16,
+            key_size: 32,
+            encryptor: loaded_blob['class'].camellia256_encrypt,
+            decryptor: loaded_blob['class'].camellia256_decrypt,
+        },
+        {
+            full_name: 'TripleDES-192',
+            name: 'des-ede3',
+            block_size: 8,
+            key_size: 24,
+            encryptor: loaded_blob['class'].tripledes192_encrypt,
+            decryptor: loaded_blob['class'].tripledes192_decrypt,
+        },
+        {
+            full_name: 'IDEA-128',
+            name: 'idea',
+            block_size: 8,
+            key_size: 16,
+            encryptor: loaded_blob['class'].idea128_encrypt,
+            decryptor: loaded_blob['class'].idea128_decrypt,
+        }
+    ];
+    const block_modes = [
+        'cbc',
+        'cfb',
+        'ofb'
+    ];
+    const padding_schemes = [
+        'PKC7',
+        'ANS2',
+        'ISO9',
+        'ZR0',
+        /* ISO-10126 cannot be tested due to it generating random padding values. */
+        /*'ISO1',*/
+    ];
+
+    const crypto = require('crypto');
+
+    let unit_tests = [];
+
+    for(let i = 0; i < ciphers.length; i++){
+
+        unit_tests[i] = {};
+
+        unit_tests[i].full_name = ciphers[i].full_name;
+        unit_tests[i].name = ciphers[i].name;
+
+        unit_tests[i].tests = [];
+
+        for(let j = 0; j < block_modes.length; j++){
+
+            unit_tests[i].tests[j] = [];
+
+            for(let k = 0; k < padding_schemes.length; k++){
+
+                unit_tests[i].tests[j][k] = {};
+                unit_tests[i].tests[j][k].mode = block_modes[j];
+                unit_tests[i].tests[j][k].scheme = padding_schemes[k];
+                unit_tests[i].tests[j][k].r = [];
+
+                for(let l = 0; l < num_tests; l++){
+
+                    let plaintext = crypto.randomBytes(ciphers[i].key_size * (l + 1));
+                    let key = crypto.randomBytes(ciphers[i].key_size);
+                    let salt = crypto.randomBytes(8);
+
+                    let ciphertext = ciphers[i].encryptor(
+                        plaintext,
+                        key,
+                        unit_tests[i].tests[j][k].mode,
+                        unit_tests[i].tests[j][k].scheme,
+                        true,
+                        false,
+                        salt
+                    );
+
+                    let _plaintext = ciphers[i].decryptor(
+                        ciphertext,
+                        key,
+                        unit_tests[i].tests[j][k].mode,
+                        unit_tests[i].tests[j][k].scheme,
+                        'hex',
+                        true
+                    );
+
+                    if(_plaintext !== plaintext.toString('hex'))
+                        continue;
+
+                    unit_tests[i].tests[j][k].r[l] = {};
+
+                    unit_tests[i].tests[j][k].r[l].plaintext = plaintext.toString('hex');
+                    unit_tests[i].tests[j][k].r[l].ciphertext = ciphertext;
+
+                    unit_tests[i].tests[j][k].r[l].key = key.toString('hex');
+                    unit_tests[i].tests[j][k].r[l].salt = salt.toString('hex');
+                }
+            }
+        }
+    }
+
+    console.log(JSON.stringify(unit_tests, undefined, '    '));
+    require('fs').writeFileSync('./tests/cipher-test-vectors.json', JSON.stringify(unit_tests, undefined, ' '));
 }
 
 /* Main function. */
@@ -176,6 +465,9 @@ function main(){
                 /* Run Hash/PBKDF2 tests. */
                 addPBKDF2Tests(loaded_blob, unit_tests);
                 break;
+            case 'cipher':
+                /* Run cipher tests. */
+                addCipherTests(loaded_blob, unit_tests, process.argv.length >= 4 ? process.argv[3] : '');
             default:
                 throw 'Executing all tests.';
         }
@@ -186,10 +478,14 @@ function main(){
 
         /* Run Hash/PBKDF2 tests. */
         addPBKDF2Tests(loaded_blob, unit_tests);
+
+        /* Run cipher tests. */
+        addCipherTests(loaded_blob, unit_tests);
     }
 
     /* Actually run all the tests. */
     nodeunit.reporters.default.run(unit_tests);
 }
+
 
 main();
