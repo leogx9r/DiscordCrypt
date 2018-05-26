@@ -3120,7 +3120,8 @@ class discordCrypt
         /* boolean */             convert_to_hex,
         /* boolean */             is_message_hex,
         /* int */                 key_size_bits = 256,
-        /* int */                 block_cipher_size = 128
+        /* int */                 block_cipher_size = 128,
+        /* string|Buffer|Array */ one_time_salt = undefined
     ){
         const cipher_name = symmetric_cipher + (block_mode === undefined ? '' : '-' + block_mode);
         const crypto = require('crypto');
@@ -3138,8 +3139,22 @@ class discordCrypt
         /* Get the key as a buffer. */
         _key = discordCrypt.__validateKeyIV(key, key_size_bits);
 
-        /* Generate a random salt to derive the key and IV. */
-        _salt = crypto.randomBytes(8);
+        /* Check if using a predefined salt. */
+        if(one_time_salt !== undefined){
+            /* Convert the salt to a Buffer. */
+            _salt = discordCrypt.__toBuffer(one_time_salt);
+
+            /* Don't bother continuing if conversions have failed. */
+            if(!_salt || _salt.length === 0)
+                return null;
+
+            /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
+            if(_salt.length !== 8)
+                _salt = new Buffer(discordCrypt.whirlpool64(_salt, true), 'hex');
+        }
+        else
+            /* Generate a random salt to derive the key and IV. */
+            _salt = crypto.randomBytes(8);
 
         /* Derive the key length and IV length. */
         _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
@@ -3647,13 +3662,25 @@ class discordCrypt
         /* string */                cipher_mode,
         /* string */                padding_mode,
         /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined
+        /* boolean */               is_message_hex = undefined,
+        /* string|Buffer|Array */   one_time_salt = undefined
     ){
         /* Size constants for Blowfish. */
         const blockSize = 512, ivSize = 64;
 
         /* Perform the encryption. */
-        return discordCrypt.__encrypt('bf', cipher_mode, padding_mode, message, key, to_hex, is_message_hex, blockSize, ivSize);
+        return discordCrypt.__encrypt(
+            'bf',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            blockSize,
+            ivSize,
+            one_time_salt
+        );
     }
 
     /* Blowfish decrypts a message. If the key specified is not 512 bits in length, it is hashed via Whirlpool. */
@@ -3669,7 +3696,17 @@ class discordCrypt
         const blockSize = 512, ivSize = 64;
 
         /* Return the unpadded message. */
-        return discordCrypt.__decrypt('bf', cipher_mode, padding_mode, message, key, output_format, is_message_hex, blockSize, ivSize);
+        return discordCrypt.__decrypt(
+            'bf',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            blockSize,
+            ivSize
+        );
     }
 
     /* AES-256 encrypts a message. Expects message to be a modulo of the block size and key to be the same block size. */
@@ -3679,13 +3716,25 @@ class discordCrypt
         /* string */                cipher_mode,
         /* string */                padding_mode,
         /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined
+        /* boolean */               is_message_hex = undefined,
+        /* string|Buffer|Array */   one_time_salt = undefined
     ){
         /* Size constants for AES-256. */
         const keySize = 256, blockSize = 128;
 
         /* Perform the encryption. */
-        return discordCrypt.__encrypt('aes-256', cipher_mode, padding_mode, message, key, to_hex, is_message_hex, keySize, blockSize);
+        return discordCrypt.__encrypt(
+            'aes-256',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            keySize,
+            blockSize,
+            one_time_salt
+        );
     }
 
     /* AES-256 decrypts a message. Expects message to be a modulo of the block size and key & iv to be the same block size. */
@@ -3701,7 +3750,17 @@ class discordCrypt
         const keySize = 256, blockSize = 128;
 
         /* Return the unpadded message. */
-        return discordCrypt.__decrypt('aes-256', cipher_mode, padding_mode, message, key, output_format, is_message_hex, keySize, blockSize);
+        return discordCrypt.__decrypt(
+            'aes-256',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            keySize,
+            blockSize
+        );
     }
 
     /* AES-256 decrypts a message in GCM mode. Expects message to be a modulo of the block size and key & iv to be the same block size. */
@@ -3711,7 +3770,8 @@ class discordCrypt
         /* string */              padding_mode,
         /* boolean */             to_hex = false,
         /* boolean */             is_message_hex = undefined,
-        /* string|Buffer|Array */ additional_data = undefined
+        /* string|Buffer|Array */ additional_data = undefined,
+        /* string|Buffer|Array */ one_time_salt = undefined
     ){
         const block_cipher_size = 128, key_size_bits = 256;
         const cipher_name = 'aes-256-gcm';
@@ -3725,8 +3785,22 @@ class discordCrypt
         /* Get the key as a buffer. */
         _key = discordCrypt.__validateKeyIV(key, key_size_bits);
 
-        /* Generate a unique salt to derive a unique key and IV. */
-        _salt = crypto.randomBytes(8);
+        /* Check if using a predefined salt. */
+        if(one_time_salt !== undefined){
+            /* Convert the salt to a Buffer. */
+            _salt = discordCrypt.__toBuffer(one_time_salt);
+
+            /* Don't bother continuing if conversions have failed. */
+            if(!_salt || _salt.length === 0)
+                return null;
+
+            /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
+            if(_salt.length !== 8)
+                _salt = new Buffer(discordCrypt.whirlpool64(_salt, true), 'hex');
+        }
+        else
+            /* Generate a random salt to derive the key and IV. */
+            _salt = crypto.randomBytes(8);
 
         /* Derive the key length and IV length. */
         _derived = discordCrypt.pbkdf2_sha256(_key.toString('hex'), _salt.toString('hex'), true, true, true,
@@ -3834,13 +3908,25 @@ class discordCrypt
         /* string */                cipher_mode,
         /* string */                padding_mode,
         /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined
+        /* boolean */               is_message_hex = undefined,
+        /* string|Buffer|Array */   one_time_salt = undefined
     ){
         /* Size constants for Camellia-256. */
         const keySize = 256, blockSize = 128;
 
         /* Perform the encryption. */
-        return discordCrypt.__encrypt('camellia-256', cipher_mode, padding_mode, message, key, to_hex, is_message_hex, keySize, blockSize);
+        return discordCrypt.__encrypt(
+            'camellia-256',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            keySize,
+            blockSize,
+            one_time_salt
+        );
     }
 
     /* Camellia-256 decrypts a message. If the key specified is not 256 bits in length, it is hashed via SHA-256. */
@@ -3856,7 +3942,17 @@ class discordCrypt
         const keySize = 256, blockSize = 128;
 
         /* Return the unpadded message. */
-        return discordCrypt.__decrypt('camellia-256', cipher_mode, padding_mode, message, key, output_format, is_message_hex, keySize, blockSize);
+        return discordCrypt.__decrypt(
+            'camellia-256',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            keySize,
+            blockSize
+        );
     }
 
     /* TripleDES-192 encrypts a message. If the key specified is not 192 bits in length, it is hashed via Whirlpool-192. */
@@ -3866,13 +3962,25 @@ class discordCrypt
         /* string */                cipher_mode,
         /* string */                padding_mode,
         /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined
+        /* boolean */               is_message_hex = undefined,
+        /* string|Buffer|Array */   one_time_salt = undefined
     ){
         /* Size constants for TripleDES-192. */
         const keySize = 192, blockSize = 64;
 
         /* Perform the encryption. */
-        return discordCrypt.__encrypt('des-ede3', cipher_mode, padding_mode, message, key, to_hex, is_message_hex, keySize, blockSize);
+        return discordCrypt.__encrypt(
+            'des-ede3',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            keySize,
+            blockSize,
+            one_time_salt
+        );
     }
 
     /* TripleDES-192 decrypts a message. If the key specified is not 192 bits in length, it is hashed via Whirlpool-192. */
@@ -3888,7 +3996,17 @@ class discordCrypt
         const keySize = 192, blockSize = 64;
 
         /* Return the unpadded message. */
-        return discordCrypt.__decrypt('des-ede3', cipher_mode, padding_mode, message, key, output_format, is_message_hex, keySize, blockSize);
+        return discordCrypt.__decrypt(
+            'des-ede3',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            keySize,
+            blockSize
+        );
     }
 
     /* IDEA-128 encrypts a message. If the key specified is not 128 bits in length, it is hashed via SHA-512-128. */
@@ -3898,13 +4016,25 @@ class discordCrypt
         /* string */                cipher_mode,
         /* string */                padding_mode,
         /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined
+        /* boolean */               is_message_hex = undefined,
+        /* string|Buffer|Array */   one_time_salt = undefined
     ){
         /* Size constants for IDEA-128. */
         const keySize = 128, blockSize = 64;
 
         /* Perform the encryption. */
-        return discordCrypt.__encrypt('idea', cipher_mode, padding_mode, message, key, to_hex, is_message_hex, keySize, blockSize);
+        return discordCrypt.__encrypt(
+            'idea',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            keySize,
+            blockSize,
+            one_time_salt
+        );
     }
 
     /* IDEA-128 decrypts a message. If the key specified is not 128 bits in length, it is hashed via SHA-512-128. */
@@ -3920,7 +4050,17 @@ class discordCrypt
         const keySize = 128, blockSize = 64;
 
         /* Return the unpadded message. */
-        return discordCrypt.__decrypt('idea', cipher_mode, padding_mode, message, key, output_format, is_message_hex, keySize, blockSize);
+        return discordCrypt.__decrypt(
+            'idea',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            keySize,
+            blockSize
+        );
     }
 
     /* ============== END CRYPTO CIPHER FUNCTIONS ============== */
