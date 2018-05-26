@@ -333,15 +333,19 @@ class discordCrypt
             .stat-bar-rating { @include stat-bar(#cf3a02, #ff4500, top, bottom); }
             `;
 
-        this.unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwM" +
-            "DAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xIDAgMi0uOSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgNyA2aDEuOWMwLTEuNzEgMS4zOS0z" +
-            "LjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAydjEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6bTAgMTJINlYxMGgxMnY" +
-            "xMHoiPjwvcGF0aD48L3N2Zz4=";
-        this.lockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDA" +
-            "vc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI0djI0SDBWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJlZj0iI2EiLz48L2NsaXBQYXRoPj" +
-            "xwYXRoIGNsaXAtcGF0aD0idXJsKCNiKSIgZD0iTTEyIDE3YzEuMSAwIDItLjkgMi0ycy0uOS0yLTItMi0yIC45LTIgMiAuOSAyIDIgMnptNi05aC0xVjZjMC0yLjc2LTIuMjQtNS01LTVTNyAzLjI0IDcgNnYySDZjL" +
-            "TEuMSAwLTIgLjktMiAydjEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6TTguOSA2YzAtMS43MSAxLjM5LTMuMSAzLjEtMy4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlW" +
-            "NnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=";
+        this.unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0I" +
+            "DI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xIDAgMi0u" +
+            "OSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgNyA2aDEuOWM" +
+            "wLTEuNzEgMS4zOS0zLjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAydjEwYzAgMS4xLj" +
+            "kgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6bTAgMTJINlYxMGgxMnYxMHoiPjwvcGF0aD48L3N2Zz4=";
+
+        this.lockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI" +
+            "0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI0djI0SD" +
+            "BWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJlZj0iI2EiL" +
+            "z48L2NsaXBQYXRoPjxwYXRoIGNsaXAtcGF0aD0idXJsKCNiKSIgZD0iTTEyIDE3YzEuMSAwIDItLjkgMi0ycy0uOS0yLTItMi0yIC45" +
+            "LTIgMiAuOSAyIDIgMnptNi05aC0xVjZjMC0yLjc2LTIuMjQtNS01LTVTNyAzLjI0IDcgNnYySDZjLTEuMSAwLTIgLjktMiAydjEwYzA" +
+            "gMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6TTguOSA2YzAtMS43MSAxLjM5LTMuMSAzLjEtMy" +
+            "4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlWNnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=";
     }
 
     /* ============================================================== */
@@ -746,7 +750,9 @@ class discordCrypt
 
                 /* Read the current hash of the plugin and compare them.. */
                 let currentHash = discordCrypt.sha256(localFile);
-                let hash = discordCrypt.sha256(data), shortHash = new Buffer(hash, 'base64').toString('hex').slice(0, 8);
+                let hash = discordCrypt.sha256(data), shortHash = new Buffer(hash, 'base64')
+                    .toString('hex')
+                    .slice(0, 8);
 
                 /* If the hash equals the retrieved one, no update is needed. */
                 if(hash === currentHash){
@@ -938,7 +944,10 @@ class discordCrypt
         const cfg_exists = self.configExists();
 
         /* Use these messages based on whether we're creating a database or unlocking it. */
-        const header_msg = cfg_exists ? '---------- Database Is Locked ----------' : '---------- Database Not Found ----------';
+        const header_msg = cfg_exists ?
+            '---------- Database Is Locked ----------' :
+            '---------- Database Not Found ----------';
+
         const prompt_msg = cfg_exists ? 'Enter Password:' : 'Enter New Password:';
         const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
 
@@ -1119,16 +1128,20 @@ class discordCrypt
                     $('#dc-overlay-password')[0].style.display = 'none';
 
                     /* Update the version info. */
-                    $('#dc-new-version').text(`New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} )`);
+                    $('#dc-new-version')
+                        .text(`New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} )`);
                     $('#dc-old-version').text(`Old Version: ${self.getVersion()}`);
 
                     /* Update the changelog. */
-                    $('#dc-changelog').val(typeof full_changelog === "string" && full_changelog.length > 0 ? full_changelog : 'N/A');
+                    $('#dc-changelog')
+                        .val(typeof full_changelog === "string" && full_changelog.length > 0 ? full_changelog : 'N/A');
 
                     /* Replace the file. */
                     fs.writeFile(replacePath, file_data, (err) => {
                         if(err){
-                            discordCrypt.log(`Unable to replace the target plugin. ( ${err} )\nDestination: ${replacePath}`, 'error');
+                            discordCrypt.log(
+                                `Unable to replace the target plugin. ( ${err} )\nDestination: ${replacePath}`, 'error'
+                            );
                             alert('Failed to apply the update!', 'Error During Update');
                         }
                     });
@@ -1191,7 +1204,8 @@ class discordCrypt
         $(self.searchUiClass).parent().parent().parent().prepend(
             `
             <button type="button" id="dc-settings-btn" style="background-color: transparent;" title="DiscordCrypt Settings">
-                <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32" width="20px" height="20px" xml:space="preserve">
+                <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32" 
+                width="20px" height="20px" xml:space="preserve">
                     <g>
                         <path fill="lightgrey" d="M28,10H18v2h10V10z M14,10H4v10h10V10z M32,0H0v28h15.518c1.614,2.411,4.361,3.999,7.482,4c4.971-0.002,8.998-4.029,9-9   
                         c0-0.362-0.027-0.718-0.069-1.069L32,22V0z M10,2h12v2H10V2z M6,2h2v2H6V2z M2,2h2v2H2V2z M23,29.883   
@@ -1293,7 +1307,8 @@ class discordCrypt
                         <button class="dc-button dc-button-inverse" id="dc-cancel-btn">Cancel</button>
                     </div>
                     
-                    <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">Copy Current Passwords</button>
+                    <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">
+                    Copy Current Passwords</button>
                 </div>
                 <div id="dc-update-overlay" class="dc-overlay-centerfield" style="top: 5%; border: 1px solid;">
                     <span>DiscordCrypt: Update Available</span>
@@ -1311,7 +1326,8 @@ class discordCrypt
                     <br>
                     <div class="dc-ruler-align">
                         <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">Restart Now</button>
-                        <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">Restart Later</button>
+                        <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">
+                        Restart Later</button>
                     </div>
                 </div>
                 <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">
@@ -1384,7 +1400,8 @@ class discordCrypt
                         <div style="font-size: 9px;">
                             <div style="display: flex;">
                                 <div style="width: 30%;"></div>
-                                <p class="dc-hint">The suffix at the end of a typed message to indicate whether to encrypt the text.</p>
+                                <p class="dc-hint">
+                                The suffix at the end of a typed message to indicate whether to encrypt the text.</p>
                             </div>
                             <div style="display: flex;">
                                 <div style="width: 30%;"></div>
@@ -1399,7 +1416,8 @@ class discordCrypt
                         
                         <div class="dc-ruler-align">
                             <button id="dc-settings-save-btn" class="dc-button">Save & Apply</button>
-                            <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">Reset Settings</button>
+                            <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">
+                            Reset Settings</button>
                         </div>
                     </div>
                 </div>
@@ -1418,33 +1436,44 @@ class discordCrypt
                         
                         <strong>What is this used for?</strong>
                         <ul class="dc-list">
-                            <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt requires a secure channel to exchange these keys.</li>
-                            <li>Using this generator, you may create new keys using standard algorithms such as DH or ECDH for manual handshaking.</li>
-                            <li>Follow the steps below and you can generate a password between channels or users while being able to publicly post the messages.</li>
-                            <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with the Scrypt KDF function to derive two keys.</li>
+                            <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt 
+                            requires a secure channel to exchange these keys.</li>
+                            <li>Using this generator, you may create new keys using standard algorithms such as 
+                            DH or ECDH for manual handshaking.</li>
+                            <li>Follow the steps below and you can generate a password between channels or users 
+                            while being able to publicly post the messages.</li>
+                            <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with 
+                            the Scrypt KDF function to derive two keys.</li>
                         </ul>
                         <br/>
                         
                         <strong>How do I use this?</strong>
                         <ul class="dc-list">
-                            <li>Generate a key pair using the specified algorithm and key size on the "Key Generation" tab.</li>
+                            <li>Generate a key pair using the specified algorithm and key size on the 
+                            "Key Generation" tab.</li>
                             <li>Give your partner your public key by clicking the "Send Public Key" button.</li>
                             <li>Ask your partner to give you their public key using the same step above.</li>
-                            <li>Copy your partner's public key and paste it in the "Secret Computation" tab and select "Compute Secret Keys".</li>
-                            <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span> the primary and secondary keys to be generated.</li>
-                            <li>A status bar is provided to easily tell you when both passwords have been generated.</li>
-                            <li>Click the "Apply Generated Passwords" button to apply both passwords to the current user or channel.</li>
+                            <li>Copy your partner's public key and paste it in the "Secret Computation" tab and 
+                            select "Compute Secret Keys".</li>
+                            <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span> the primary and secondary 
+                            keys to be generated.</li>
+                            <li>A status bar is provided to easily tell you when both passwords 
+                            have been generated.</li>
+                            <li>Click the "Apply Generated Passwords" button to apply both passwords to 
+                            the current user or channel.</li>
                         </ul>
                         
                         <strong>Algorithms Supported:</strong>
                         <ul class="dc-list">
                             <li>
                                 <a title="Diffie–Hellman key exchange" 
-                                href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange" target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>
+                                href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"
+                                 target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>
                             </li>
                             <li>
                                 <a title="Elliptic curve Diffie–Hellman" 
-                                href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman" target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>
+                                href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman"
+                                 target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>
                             </li>
                         </ul>
                         
@@ -1452,9 +1481,15 @@ class discordCrypt
                             <strong>DO NOT:</strong>
                         </span>
                         <ul class="dc-list dc-list-red">
-                            <li><strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong></li>
-                            <li><strong>Alter your public key or have your partner alter theirs in any way.</strong></li>
-                            <li><strong>Insert a random public key.</strong></li>
+                            <li>
+                                <strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong>
+                            </li>
+                            <li>
+                                <strong>Alter your public key or have your partner alter theirs in any way.</strong>
+                            </li>
+                            <li>
+                                <strong>Insert a random public key.</strong>
+                            </li>
                         </ul>
                     </div>
                     <div class="tab-content" id="dc-keygen-tab" style="display: block;">
@@ -1490,11 +1525,13 @@ class discordCrypt
                         <br/><br/><br/>
                 
                         <strong>Private Key: ( <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span> )</strong><br/>
-                        <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192" unselectable="on" disabled readonly/>
+                        <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"
+                         unselectable="on" disabled readonly/>
                         <br/><br/>
                 
                         <strong>Public Key:</strong><br/>
-                        <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192" unselectable="on" disabled readonly/>
+                        <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192" 
+                        unselectable="on" disabled readonly/>
                         <br/><br/>
                 
                         <div class="dc-ruler-align">
@@ -1503,9 +1540,11 @@ class discordCrypt
                         <br/>
                         
                         <ul class="dc-list dc-list-red">
-                            <li>Never rely on copying these keys. Use the "Send Public Key" button to send your key.</li>
+                            <li>Never rely on copying these keys. Use the "Send Public Key" button 
+                            to send your key.</li>
                             <li>Public keys are automatically encoded with a random salts.</li>
-                            <li>Posting these keys directly won't work since they aren't encoded in the format required.</li>
+                            <li>Posting these keys directly won't work since they aren't encoded 
+                            in the format required.</li>
                         </ul>
                     </div>
                     <div class="tab-content" id="dc-handshake-tab">
@@ -1521,7 +1560,8 @@ class discordCrypt
                         </p>
                         <ul class="dc-list dc-list-red">
                             <li>Copy your partner's private key EXACTLY as it was posted.</li>
-                            <li>Your last generated private key from the "Key Generation" tab will be used to compute these keys.</li>
+                            <li>Your last generated private key from the "Key Generation" tab 
+                            will be used to compute these keys.</li>
                         </ul>
                         <br/>
                         
@@ -1530,7 +1570,8 @@ class discordCrypt
                         <br/><br/>
                         
                         <div class="dc-ruler-align">
-                            <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">Paste From Clipboard</button>
+                            <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">
+                            Paste From Clipboard</button>
                             <button id="dc-handshake-compute-btn" class="dc-button">Compute Secret Keys</button>
                         </div>
                         
@@ -1542,11 +1583,13 @@ class discordCrypt
                         <br/>
                         
                         <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>
-                        <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768" style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
+                        <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"
+                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
                         <br/><br/>
                         
                         <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>
-                        <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768" style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
+                        <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"
+                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
                         <br/><br/>
                         
                         <div class="stat stat-bar" style="width:70%;">
@@ -1554,8 +1597,10 @@ class discordCrypt
                         </div><br/>
                         
                         <div class="dc-ruler-align">
-                            <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">Copy Keys & Nuke</button>
-                            <button id="dc-handshake-apply-keys-btn" class="dc-button">Apply Generated Passwords</button>
+                            <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">
+                            Copy Keys & Nuke</button>
+                            <button id="dc-handshake-apply-keys-btn" class="dc-button">
+                            Apply Generated Passwords</button>
                         </div>
                     </div>
                 </div>
@@ -1613,7 +1658,8 @@ class discordCrypt
             self.configFile.defaultPassword = $('#dc-settings-default-pwd')[0].value;
             self.configFile.encryptScanDelay = $('#dc-settings-scan-delay')[0].value;
             self.configFile.paddingMode = $('#dc-settings-padding-mode')[0].value;
-            self.configFile.encryptMode = discordCrypt.cipherStringToIndex($('#dc-primary-cipher')[0].value, $('#dc-secondary-cipher')[0].value);
+            self.configFile.encryptMode =
+                discordCrypt.cipherStringToIndex($('#dc-primary-cipher')[0].value, $('#dc-secondary-cipher')[0].value);
             $('#dc-primary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, false);
             $('#dc-secondary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, true);
 
@@ -1792,7 +1838,12 @@ class discordCrypt
             }
 
             /* Sanity check. */
-            if(!key || key === undefined || typeof key.getPrivateKey === 'undefined' || typeof key.getPublicKey === 'undefined')
+            if(
+                !key ||
+                key === undefined ||
+                typeof key.getPrivateKey === 'undefined' ||
+                typeof key.getPublicKey === 'undefined'
+            )
                 return;
 
             /* Copy the private key to this instance. */
@@ -1808,10 +1859,17 @@ class discordCrypt
              ***********************************************************************************/
 
             /* Calculate a random salt length. */
-            salt_len = (parseInt(crypto.randomBytes(1).toString('hex'), 16) % (max_salt_len - min_salt_len)) + min_salt_len;
+            salt_len = (parseInt(crypto.randomBytes(1).toString('hex'), 16) % (max_salt_len - min_salt_len)) +
+                min_salt_len;
 
             /* Copy the buffer. */
-            pub_buffer = new Buffer(key.getPublicKey('hex', $('#dc-keygen-method')[0].value === 'ecdh' ? 'compressed' : undefined), 'hex');
+            pub_buffer = new Buffer(
+                key.getPublicKey('hex', $('#dc-keygen-method')[0].value === 'ecdh' ?
+                    'compressed' :
+                    undefined
+                ),
+                'hex'
+            );
 
             /* Create a blank payload. */
             raw_buffer = Buffer.alloc(2 + salt_len + pub_buffer.length);
@@ -1881,7 +1939,7 @@ class discordCrypt
             let isUserSaltPrimary;
 
             /* Provide some way of showing the user the result without actually giving it away. */
-            function displaySecretSecure(input_hex){
+            function displaySecret(input_hex){
                 const charset = "!@#$%^&*()_-+=[{]}\\|'\";:/?.>,<";
                 let output = '';
 
@@ -1918,7 +1976,7 @@ class discordCrypt
                 /* Decode the message. */
                 let bin_str = atob(discordCrypt.substituteMessage(blob));
 
-                /* I'm so thankful that Javascript doesn't directly have a RELIABLE method to convert from a binary string to a Buffer(). */
+                /* Convert from a binary string to a Buffer(). */
                 value = new Buffer(bin_str.length);
                 for(let i = 0; i < bin_str.length; i++)
                     value.writeUInt8(bin_str.charCodeAt(i), i);
@@ -1953,7 +2011,8 @@ class discordCrypt
             }
 
             /* Update the algorithm text. */
-            $('#dc-handshake-algorithm')[0].innerText = 'Exchange Algorithm: ' + discordCrypt.indexToExchangeAlgorithmString(algorithm);
+            $('#dc-handshake-algorithm')[0].innerText = 'Exchange Algorithm: ' +
+                discordCrypt.indexToExchangeAlgorithmString(algorithm);
 
             /* Get the salt length. */
             salt_len = value.readInt8(1);
@@ -1977,7 +2036,7 @@ class discordCrypt
 
             /* Update the salt text. */
             $('#dc-handshake-salts')[0].innerText =
-                `Salts: [ ${displaySecretSecure(salt.toString('hex'))}, ${displaySecretSecure(user_salt.toString('hex'))} ]`;
+                `Salts: [ ${displaySecret(salt.toString('hex'))}, ${displaySecret(user_salt.toString('hex'))} ]`;
 
             /* Read the public key and convert it to a hex string. */
             payload = new Buffer(value.subarray(2 + salt_len)).toString('hex');
@@ -1992,7 +2051,8 @@ class discordCrypt
             }
 
             /* Compute the local secret as a hex string. */
-            let derived_secret = discordCrypt.computeExchangeSharedSecret(discordCrypt.privateExchangeKey, payload, false, false);
+            let derived_secret =
+                discordCrypt.computeExchangeSharedSecret(discordCrypt.privateExchangeKey, payload, false, false);
 
             /* Show error and quit if derivation fails. */
             if(!derived_secret || !derived_secret.length){
@@ -2004,9 +2064,13 @@ class discordCrypt
 
             /* Display the first 32 characters of it. */
             $('#dc-handshake-secret')[0].innerText =
-                `Derived Secret: [ ${displaySecretSecure(derived_secret.length > 64 ? derived_secret.substring(0, 64) : derived_secret)} ]`;
+                `Derived Secret: [ ${displaySecret(derived_secret.length > 64 ?
+                    derived_secret.substring(0, 64) :
+                    derived_secret)
+            } ]`;
 
-            /* We have two salts. We can't know which one is our primary salt so just do a simple check on which Salt32 is bigger. */
+            /* We have two salts. We can't know which one is our primary salt so just do a simple check on which
+             Salt32 is bigger. */
             if(user_salt_len === salt_len){
                 for(let i = 2; i < parseInt(user_salt_len / 4); i += 4){
                     let usl = user_salt.readUInt32BE(i), sl = salt.readUInt32BE(i);
@@ -2022,7 +2086,12 @@ class discordCrypt
                 if(isUserSaltPrimary === undefined){
                     /* Update the text. */
                     $('#dc-handshake-compute-btn')[0].innerText = 'Both Salts Are Equal ?!';
-                    setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
+                    setTimeout(
+                        function(){
+                            $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys';
+                        },
+                        1000
+                    );
                     return;
                 }
             }
@@ -2037,11 +2106,23 @@ class discordCrypt
             let primary_progress = 0, secondary_progress = 0;
 
             /* Calculate the primary key. */
-            discordCrypt.scrypt(new Buffer(derived_secret + secondary_hash.toString('hex'), 'hex'), primary_hash, 256, 3072, 16, 2, (error, progress, key) => {
+            discordCrypt.scrypt(
+                new Buffer(derived_secret + secondary_hash.toString('hex'), 'hex'),
+                primary_hash,
+                256,
+                3072,
+                16,
+                2,
+                (error, progress, key) => {
                 if(error){
                     /* Update the text. */
                     $('#dc-handshake-compute-btn')[0].innerText = 'Failed Generating Primary Key!';
-                    setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
+                    setTimeout(
+                        function(){
+                            $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys';
+                            },
+                        1000
+                    );
                     return true;
                 }
 
@@ -2053,11 +2134,13 @@ class discordCrypt
 
                 if(key){
                     /* Generate a quality report and apply the password. */
-                    $('#dc-handshake-prim-lbl').text(`Primary Key: ( Quality - ${discordCrypt.entropicBitLength(key.toString('base64'))} Bits )`);
+                    $('#dc-handshake-prim-lbl').text(`Primary Key: ( Quality - ${
+                        discordCrypt.entropicBitLength(key.toString('base64'))
+                    } Bits )`);
                     $('#dc-handshake-primary-key')[0].value = key.toString('base64');
 
-                    /* Since more iterations are done for the primary key, this takes 4x as long thus will always finish second. */
-                    /* We can thus restore the original Generate text for the button once this is done. */
+                    /* Since more iterations are done for the primary key, this takes 4x as long thus will always
+                     finish second. We can thus restore the original Generate text for the button once this is done. */
                     $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys';
 
                     /* Now we clear the additional information. */
@@ -2068,19 +2151,26 @@ class discordCrypt
                 }
 
                 return false;
-            });
+                }
+            );
 
             /* Calculate all salts needed. */
             let primary_salt = isUserSaltPrimary ? user_salt : salt;
             let secondary_salt = isUserSaltPrimary ? salt : user_salt;
-            let secondary_password = new Buffer(primary_salt.toString('hex') + derived_secret + secondary_salt.toString('hex'), 'hex');
+            let secondary_password =
+                new Buffer(primary_salt.toString('hex') + derived_secret + secondary_salt.toString('hex'), 'hex');
 
             /* Calculate the secondary key. */
             discordCrypt.scrypt(secondary_password, secondary_hash, 256, 3072, 8, 1, (error, progress, key) => {
                 if(error){
                     /* Update the text. */
                     $('#dc-handshake-compute-btn')[0].innerText = 'Failed Generating Secondary Key!';
-                    setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
+                    setTimeout(
+                        function(){
+                            $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys';
+                            },
+                        1000
+                    );
                     return true;
                 }
 
@@ -2091,7 +2181,9 @@ class discordCrypt
 
                 if(key){
                     /* Generate a quality report and apply the password. */
-                    $('#dc-handshake-sec-lbl').text(`Secondary Key: ( Quality - ${discordCrypt.entropicBitLength(key.toString('base64'))} Bits )`);
+                    $('#dc-handshake-sec-lbl').text(`Secondary Key: ( Quality - ${
+                        discordCrypt.entropicBitLength(key.toString('base64'))
+                    } Bits )`);
                     $('#dc-handshake-secondary-key')[0].value = key.toString('base64');
                 }
 
@@ -2143,7 +2235,10 @@ class discordCrypt
                 return;
 
             /* Create the password object and nuke. */
-            let pwd = discordCrypt.createPassword($('#dc-handshake-primary-key')[0].value, $('#dc-handshake-secondary-key')[0].value);
+            let pwd = discordCrypt.createPassword(
+                $('#dc-handshake-primary-key')[0].value,
+                $('#dc-handshake-secondary-key')[0].value
+            );
             $('#dc-handshake-primary-key')[0].value = $('#dc-handshake-secondary-key')[0].value = '';
 
             /* Apply the passwords and save the config. */
@@ -2299,7 +2394,8 @@ class discordCrypt
 
     /* Attached a handler for message events. */
     attachHandler(){
-        /* Let's use a maximum message size of 1200 instead of 2000 to account for encoding, new line feeds & packet header. */
+        /* Let's use a maximum message size of 1200 instead of 2000 to account for encoding, new line feeds & packet
+         header. */
         const maximum_encoded_data = 1200;
 
         /* Add the message signal handler. */
@@ -2415,8 +2511,10 @@ class discordCrypt
                 let packets = discordCrypt.__splitStringChunks(cleaned, maximum_encoded_data);
                 for(let i = 0; i < packets.length; i++){
                     /* Encrypt the message. */
-                    let msg = discordCrypt.symmetricEncrypt(packets[i], password, secondary, self.configFile.encryptMode,
-                        self.configFile.encryptBlockMode, self.configFile.paddingMode, true);
+                    let msg = discordCrypt.symmetricEncrypt(packets[i], password, secondary,
+                        self.configFile.encryptMode, self.configFile.encryptBlockMode, self.configFile.paddingMode,
+                        true
+                    );
 
                     /* Append the header to the message normally. */
                     msg = self.encodedMessageHeader + discordCrypt.metaDataEncode
@@ -2431,7 +2529,13 @@ class discordCrypt
                     msg = msg.replace(/(.{32})/g, (e) => { return e + "\r\n" });
 
                     /* Send the message. */
-                    discordCrypt.sendEmbeddedMessage(msg, self.messageHeader, 'v' + self.getVersion(), 0x551A8B, i === 0 ? user_tags : '');
+                    discordCrypt.sendEmbeddedMessage(
+                        msg,
+                        self.messageHeader,
+                        'v' + self.getVersion(),
+                        0x551A8B,
+                        i === 0 ? user_tags : ''
+                    );
                 }
             }
 
@@ -2449,8 +2553,8 @@ class discordCrypt
         let message = $(obj);
         let dataMsg;
 
-        /***************************************************************************************************************
-         *   ------------- MESSAGE FORMAT -------------
+        /**************************************************************************************************************
+         *   MESSAGE FORMAT:
          *
          *   + 0x0000 [ 4        Chars ] - Message Magic | Key Magic
          *   + 0x0004 [ 8 ( #4 ) Chars ] - Message Metadata ( #1 ) | Key Data ( #3 )
@@ -2467,8 +2571,7 @@ class discordCrypt
          *   #3 - Substitute( Base64( ( Key Algorithm Type & 0xff ) + Public Key ) )
          *   #4 - 8 Byte Metadata For Messages Only
          *
-         *   ------------------------------------------
-         ***************************************************************************************************************/
+         **************************************************************************************************************/
 
         /* Skip if the message is <= size of the total header. */
         if(message.text().length <= 12)
@@ -3090,7 +3193,8 @@ class discordCrypt
                     hash = use_whirlpool !== undefined ? discordCrypt.sha512 : discordCrypt.whirlpool;
                     break;
                 default:
-                    throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys are supported.';
+                    throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys' +
+                    ' are supported.';
             }
             /* Hash the key and return it as a buffer. */
             return new Buffer(hash(key, true), 'hex');
@@ -3130,7 +3234,10 @@ class discordCrypt
         let _message, _key, _iv, _salt, _derived, _encrypt;
 
         /* Make sure the cipher name and mode is valid first. */
-        if(!discordCrypt.__isValidCipher(cipher_name) || ['cbc', 'cfb', 'ofb'].indexOf(block_mode.toLowerCase()) === -1)
+        if(
+            !discordCrypt.__isValidCipher(cipher_name) || ['cbc', 'cfb', 'ofb']
+                .indexOf(block_mode.toLowerCase()) === -1
+        )
             return null;
 
         /* Pad the message to the nearest block boundary. */
@@ -3272,7 +3379,12 @@ class discordCrypt
 
         /* PBKDF2-HMAC-SHA256 Helper. */
         function PBKDF2_SHA256(input, salt, size, iterations){
-            try{ return new Buffer(discordCrypt.pbkdf2_sha256(input, salt, true, undefined, undefined, size, iterations), 'hex'); }
+            try{
+                return new Buffer(
+                    discordCrypt.pbkdf2_sha256(input, salt, true, undefined, undefined, size, iterations),
+                    'hex'
+                );
+            }
             catch(e){ discordCrypt.log(e.toString(), 'error'); return new Buffer(); }
         }
 
@@ -3364,7 +3476,11 @@ class discordCrypt
             /* Initialize the input. */
             for (let i = 0; i < B.length; i++) {
                 let j = i * 4;
-                B[i] = ((b[j + 3] & 0xff) << 24) | ((b[j + 2] & 0xff) << 16) | ((b[j + 1] & 0xff) << 8) | ((b[j] & 0xff) << 0);
+                B[i] =
+                    ((b[j + 3] & 0xff) << 24) |
+                    ((b[j + 2] & 0xff) << 16) |
+                    ((b[j + 1] & 0xff) << 8)  |
+                    ((b[j] & 0xff) << 0);
             }
 
             let XY = new Uint32Array(64 * r);
@@ -3620,7 +3736,17 @@ class discordCrypt
         /* int */                   iterations = 5000,
         /* function(err, hash) */   callback = undefined
     ){
-        return discordCrypt.__pbkdf2(message, salt, to_hex, message_is_hex, salt_is_hex, callback, 'sha256', key_length, iterations);
+        return discordCrypt.__pbkdf2(
+            message,
+            salt,
+            to_hex,
+            message_is_hex,
+            salt_is_hex,
+            callback,
+            'sha256',
+            key_length,
+            iterations
+        );
     }
 
     /* Computes a derived digest using the PBKDF2 algorithm and SHA-512 as primitives. */
@@ -3634,7 +3760,17 @@ class discordCrypt
         /* int */                   iterations = 5000,
         /* function(err, hash) */   callback = undefined
     ){
-        return discordCrypt.__pbkdf2(message, salt, to_hex, message_is_hex, salt_is_hex, callback, 'sha512', key_length, iterations);
+        return discordCrypt.__pbkdf2(
+            message,
+            salt,
+            to_hex,
+            message_is_hex,
+            salt_is_hex,
+            callback,
+            'sha512',
+            key_length,
+            iterations
+        );
     }
 
     /* Computes a derived digest using the PBKDF2 algorithm and Whirlpool-512 as primitives. */
@@ -3648,7 +3784,17 @@ class discordCrypt
         /* int */                   iterations = 5000,
         /* function(err, hash) */   callback = undefined
     ){
-        return discordCrypt.__pbkdf2(message, salt, to_hex, message_is_hex, salt_is_hex, callback, 'whirlpool', key_length, iterations);
+        return discordCrypt.__pbkdf2(
+            message,
+            salt,
+            to_hex,
+            message_is_hex,
+            salt_is_hex,
+            callback,
+            'whirlpool',
+            key_length,
+            iterations
+        );
     }
 
     /* ============ END NODE CRYPTO HASH PRIMITIVES ============ */
@@ -3709,7 +3855,7 @@ class discordCrypt
         );
     }
 
-    /* AES-256 encrypts a message. Expects message to be a modulo of the block size and key to be the same block size. */
+    /* AES-256 encrypts a message. Message must be a modulo of the block size and key to be the same block size. */
     static aes256_encrypt(
         /* string|Buffer|Array */   message,
         /* string|Buffer|Array */   key,
@@ -3737,7 +3883,7 @@ class discordCrypt
         );
     }
 
-    /* AES-256 decrypts a message. Expects message to be a modulo of the block size and key & iv to be the same block size. */
+    /* AES-256 decrypts a message. Message must be a modulo of the block size and key & iv to be the same block size. */
     static aes256_decrypt(
         /* string|Buffer|Array */   message,
         /* string|Buffer|Array */   key,
@@ -3763,7 +3909,8 @@ class discordCrypt
         );
     }
 
-    /* AES-256 decrypts a message in GCM mode. Expects message to be a modulo of the block size and key & iv to be the same block size. */
+    /* AES-256 decrypts a message in GCM mode. Message must be a modulo of the block size and key & iv to be the
+     same block size. */
     static aes256_encrypt_gcm(
         /* string|Buffer|Array */ message,
         /* string|Buffer|Array */ key,
@@ -3833,7 +3980,8 @@ class discordCrypt
         ).toString(to_hex ? 'hex' : 'base64');
     }
 
-    /* AES-256 decrypts a message in GCM mode. Expects message to be a modulo of the block size and key & iv to be the same block size. */
+    /* AES-256 decrypts a message in GCM mode. Message must be a modulo of the block size and key & iv to be the same
+     block size. */
     static aes256_decrypt_gcm(
         /* string|Buffer|Array */ message,
         /* string|Buffer|Array */ key,
@@ -3955,7 +4103,8 @@ class discordCrypt
         );
     }
 
-    /* TripleDES-192 encrypts a message. If the key specified is not 192 bits in length, it is hashed via Whirlpool-192. */
+    /* TripleDES-192 encrypts a message. If the key specified is not 192 bits in length, it is hashed via
+     Whirlpool-192. */
     static tripledes192_encrypt(
         /* string|Buffer|Array */   message,
         /* string|Buffer|Array */   key,
@@ -3983,7 +4132,8 @@ class discordCrypt
         );
     }
 
-    /* TripleDES-192 decrypts a message. If the key specified is not 192 bits in length, it is hashed via Whirlpool-192. */
+    /* TripleDES-192 decrypts a message. If the key specified is not 192 bits in length, it is hashed via
+     Whirlpool-192. */
     static tripledes192_decrypt(
         /* string|Buffer|Array */   message,
         /* string|Buffer|Array */   key,
@@ -4184,7 +4334,10 @@ class discordCrypt
 
     /* Retrieves UTF-16 charset as an Array Object. */
     static getUtf16(){
-        return Array.from("㐀㐁㐂㐃㐄㐅㐇㐒㐓㐔㐕㐖㐗㐜㐞㐡㐣㐥㐧㐨㐩㐫㐪㐭㐰㐱㐲㐳㐴㐶㐷㐹㐼㐽㐿㑁㑂㑃㑅㑇㑈㑉㑊㑏㑑㑒㑓㑕㑣㑢㑡㑠㑟㑞㑝㑜㑤㑥㑦㑧㑨㑩㑪㑫㑵");
+        return Array.from(
+            "㐀㐁㐂㐃㐄㐅㐇㐒㐓㐔㐕㐖㐗㐜㐞㐡㐣㐥㐧㐨㐩㐫㐪㐭㐰㐱㐲㐳㐴㐶㐷㐹㐼㐽㐿㑁㑂㑃㑅㑇㑈㑉㑊㑏㑑㑒㑓㑕㑣㑢㑡㑠㑟㑞㑝㑜㑤" +
+            "㑥㑦㑧㑨㑩㑪㑫㑵"
+        );
     }
 
     /* Determines if a string has all valid UTF-16 characters. */
@@ -4514,15 +4667,50 @@ class discordCrypt
 
         /* Dual-encrypt the segment. */
         if(cipher_index >= 0 && cipher_index <= 4)
-            msg = discordCrypt.blowfish512_encrypt(handleEncodeSegment(message, primary_key, cipher_index, mode, pad), secondary_key, mode, pad, use_hmac, false);
+            msg = discordCrypt.blowfish512_encrypt(
+                handleEncodeSegment(message, primary_key, cipher_index, mode, pad),
+                secondary_key,
+                mode,
+                pad,
+                use_hmac,
+                false
+            );
         else if(cipher_index >= 5 && cipher_index <= 9)
-            msg = discordCrypt.aes256_encrypt(handleEncodeSegment(message, primary_key, cipher_index - 5, mode, pad), secondary_key, mode, pad, use_hmac, false);
+            msg = discordCrypt.aes256_encrypt(
+                handleEncodeSegment(message, primary_key, cipher_index - 5, mode, pad),
+                secondary_key,
+                mode,
+                pad,
+                use_hmac,
+                false
+            );
         else if(cipher_index >= 10 && cipher_index <= 14)
-            msg = discordCrypt.camellia256_encrypt(handleEncodeSegment(message, primary_key, cipher_index - 10, mode, pad), secondary_key, mode, pad, use_hmac, false);
+            msg = discordCrypt.camellia256_encrypt(
+                handleEncodeSegment(message, primary_key, cipher_index - 10, mode, pad),
+                secondary_key,
+                mode,
+                pad,
+                use_hmac,
+                false
+            );
         else if(cipher_index >= 15 && cipher_index <= 19)
-            msg = discordCrypt.idea128_encrypt(handleEncodeSegment(message, primary_key, cipher_index - 15, mode, pad), secondary_key, mode, pad, use_hmac, false);
+            msg = discordCrypt.idea128_encrypt(
+                handleEncodeSegment(message, primary_key, cipher_index - 15, mode, pad),
+                secondary_key,
+                mode,
+                pad,
+                use_hmac,
+                false
+            );
         else if(cipher_index >= 20 && cipher_index <= 24)
-            msg = discordCrypt.tripledes192_encrypt(handleEncodeSegment(message, primary_key, cipher_index - 20, mode, pad), secondary_key, mode, pad, use_hmac, false);
+            msg = discordCrypt.tripledes192_encrypt(
+                handleEncodeSegment(message, primary_key, cipher_index - 20, mode, pad),
+                secondary_key,
+                mode,
+                pad,
+                use_hmac,
+                false
+            );
 
         /* If using HMAC mode, compute the HMAC of the ciphertext and prepend it. */
         if(use_hmac){
@@ -4626,19 +4814,54 @@ class discordCrypt
             /* Dual decrypt the segment. */
             if(cipher_index >= 0 && cipher_index <= 4)
                 return handleDecodeSegment(
-                    discordCrypt.blowfish512_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac), primary_key, cipher_index, mode, pad, 'utf8', false);
+                    discordCrypt.blowfish512_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac),
+                    primary_key,
+                    cipher_index,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
             else if(cipher_index >= 5 && cipher_index <= 9)
                 return handleDecodeSegment(
-                    discordCrypt.aes256_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac), primary_key, cipher_index - 5, mode, pad, 'utf8', false);
+                    discordCrypt.aes256_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac),
+                    primary_key,
+                    cipher_index - 5,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
             else if(cipher_index >= 10 && cipher_index <= 14)
                 return handleDecodeSegment(
-                    discordCrypt.camellia256_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac), primary_key, cipher_index - 10, mode, pad, 'utf8', false);
+                    discordCrypt.camellia256_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac),
+                    primary_key,
+                    cipher_index - 10,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
             else if(cipher_index >= 15 && cipher_index <= 19)
                 return handleDecodeSegment(
-                    discordCrypt.idea128_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac), primary_key, cipher_index - 15, mode, pad, 'utf8', false);
+                    discordCrypt.idea128_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac),
+                    primary_key,
+                    cipher_index - 15,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
             else if(cipher_index >= 20 && cipher_index <= 24)
                 return handleDecodeSegment(
-                    discordCrypt.tripledes192_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac), primary_key, cipher_index - 20, mode, pad, 'utf8', false);
+                    discordCrypt.tripledes192_decrypt(message, secondary_key, mode, pad, 'base64', use_hmac),
+                    primary_key,
+                    cipher_index - 20,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
             return -3;
         }
         catch(e){ return 2; }
