@@ -809,14 +809,8 @@ class discordCrypt
         return  { primary: primary_password, secondary: secondary_password };
     }
 
-    /* Sends an embedded message. */
-    static sendEmbeddedMessage(
-        /* string */ embedded_text,
-        /* string */ embedded_header,
-        /* string */ embedded_footer,
-        /* int */    embedded_color = 0x551A8B,
-        /* string */ message_content = ''
-    ){
+    /* Returns the React modules. */
+    static getReactModules(){
         /* Initializes WebPackModules. [ Credits to the creator. ] */
         const WebpackModules = (() => {
             const req = webpackJsonp(
@@ -860,21 +854,31 @@ class discordCrypt
             return {find, findByUniqueProperties, findByDisplayName};
         })();
 
+        return {
+            ChannelProps: discordCrypt.__getElementReactOwner($('form')[0]).props.channel,
+            MessageParser: WebpackModules.findByUniqueProperties(['createMessage', 'parse', 'unparse']),
+            MessageController: WebpackModules.findByUniqueProperties(["sendClydeError", "sendBotMessage"]),
+            MessageActionTypes: WebpackModules.findByUniqueProperties(["ActionTypes", "ActivityTypes"]),
+            MessageDispatcher: WebpackModules.findByUniqueProperties(["dispatch", "maybeDispatch", "dirtyDispatch"]),
+            MessageQueue: WebpackModules.findByUniqueProperties(["enqueue", "handleSend", "handleResponse"]),
+        };
+    }
+
+    /* Sends an embedded message. */
+    static sendEmbeddedMessage(
+        /* string */ embedded_text,
+        /* string */ embedded_header,
+        /* string */ embedded_footer,
+        /* int */    embedded_color = 0x551A8B,
+        /* string */ message_content = ''
+    ){
+
         /* Finds appropriate React modules. */
-        const MessageParser = WebpackModules.findByUniqueProperties(['createMessage', 'parse', 'unparse']);
-        const MessageController = WebpackModules.findByUniqueProperties(["sendClydeError", "sendBotMessage"]);
-        const MessageActionTypes = WebpackModules.findByUniqueProperties(["ActionTypes", "ActivityTypes"]);
-        const MessageDispatcher = WebpackModules.findByUniqueProperties(["dispatch", "maybeDispatch", "dirtyDispatch"]);
-        const MessageQueue = WebpackModules.findByUniqueProperties(["enqueue", "handleSend", "handleResponse"]);
+        const React = discordCrypt.getReactModules();
 
         /* Parse the message content to the required format if applicable.. */
         if(typeof message_content === 'string' && message_content.length){
-            try{
-                message_content = MessageParser.parse(
-                    discordCrypt.__getElementReactOwner($('form')[0]).props.channel,
-                    message_content
-                ).content;
-            }
+            try{ message_content = React.MessageParser.parse(React.ChannelProps, message_content).content; }
             catch(e){ message_content = ''; }
         }
         else
@@ -887,7 +891,7 @@ class discordCrypt
         let _channel = discordCrypt.getChannelId();
 
         /* Create the message object and add it to the queue. */
-        MessageQueue.enqueue({
+        React.MessageQueue.enqueue({
             type: 'send',
             message: {
                 channelId: _channel,
@@ -896,6 +900,7 @@ class discordCrypt
                 tts: false,
                 embed: {
                     type : "rich",
+                    url: "https://gitlab.com/leogx9r/DiscordCrypt",
                     color: embedded_color === undefined ? 0x551A8B : embedded_color,
                     timestamp: new Date(),
                     output_mime_type: "text/x-html",
@@ -914,11 +919,15 @@ class discordCrypt
         }, (r) => {
             /* Check if an error occurred and inform Clyde bot about it. */
             if(!r.ok){
-                if(r.status >= 400 && r.status < 500 && r.body &&
-                    !MessageController.sendClydeError(discordCrypt.getChannelId(), r.body.code))
+                if(
+                    r.status >= 400 &&
+                    r.status < 500 &&
+                    r.body &&
+                    !React.MessageController.sendClydeError(discordCrypt.getChannelId(), r.body.code)
+                )
                     discordCrypt.log('Error sending message: ' + r.status, 'error');
-                MessageDispatcher.dispatch({
-                    type: MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
+                React.MessageDispatcher.dispatch({
+                    type: React.MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
                     messageId: _nonce,
                     channelId: _channel
                 });
@@ -2702,6 +2711,8 @@ class discordCrypt
         /* Decrypt the message. */
         dataMsg = discordCrypt.symmetricDecrypt(message.text().replace(/\r?\n|\r/g, '')
             .substr(12), password, secondary, metadata[0], metadata[1], metadata[2], true);
+
+        let React = discordCrypt.getReactModules();
 
         /* If decryption didn't fail, set the decoded text along with a green foreground. */
         if ((typeof dataMsg === 'string' || dataMsg instanceof String) && dataMsg !== "") {
