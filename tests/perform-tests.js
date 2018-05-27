@@ -179,8 +179,6 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                 /* Loop over each individual unit test. */
                 for(let k = 0; k < test_vectors[i][j].r.length; k++){
                     /* Convert the target strings from hex format to Buffer objects. */
-
-                    console.log(`${k}`);
                     let plaintext = new Buffer(test_vectors[i][j].r[k].plaintext, 'hex');
                     let ciphertext = new Buffer(test_vectors[i][j].r[k].ciphertext, 'hex');
 
