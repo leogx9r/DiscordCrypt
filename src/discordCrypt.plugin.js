@@ -363,7 +363,7 @@ class discordCrypt
                 "Oops!\r\n\r\n" +
                 "It seems you didn't read discordCrypt's usage guide. :(\r\n" +
                 "You need to name this plugin exactly as follows to allow it to function correctly.\r\n\r\n" +
-                "\tdiscordCrypt.plugin.js\r\n\r\n\r\n" +
+                "\t" + discordCrypt.getPluginName() + "\r\n\r\n\r\n" +
                 "You should probably check the usage guide again just in case you missed anything else. :)",
                 'Hi There! - DiscordCrypt'
             );
@@ -678,10 +678,16 @@ class discordCrypt
 
     /* =================== PROJECT UTILITIES =================== */
 
+    /* Returns the name of the plugin file. */
+    static getPluginName(){
+        return 'discordCrypt.plugin.js';
+    }
+
     /* Check if the plugin is named correctly. */
     static validPluginName(){
         return require('fs')
-            .existsSync(require('path').join(discordCrypt.getPluginsPath(), 'discordCrypt.plugin.js'));
+            .existsSync(require('path')
+                .join(discordCrypt.getPluginsPath(), discordCrypt.getPluginName()));
     }
 
     /* Returns the platform-specific path to BetterDiscord's plugins. */
@@ -702,7 +708,7 @@ class discordCrypt
         /* function(file_data, short_hash, new_version, full_changelog) */ onUpdateCallback
     ){
         /* Update URL and request method. */
-        const update_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/discordCrypt.plugin.js';
+        const update_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/' + discordCrypt.getPluginName();
         const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
 
         /* Make sure the callback is a function. */
@@ -738,7 +744,7 @@ class discordCrypt
                 let localFile = require('fs').readFileSync(
                     require('path').join(
                         discordCrypt.getPluginsPath(),
-                        'discordCrypt.plugin.js'
+                        discordCrypt.getPluginName()
                     )
                 ).toString().replace('\r', '');
 
@@ -1119,7 +1125,8 @@ class discordCrypt
             /* Proxy call. */
             try{
                 discordCrypt.checkForUpdate(self.updateKey, (file_data, short_hash, new_version, full_changelog) => {
-                    const replacePath = require('path').join(discordCrypt.getPluginsPath(), 'discordCrypt.plugin.js');
+                    const replacePath = require('path')
+                        .join(discordCrypt.getPluginsPath(), discordCrypt.getPluginName());
                     const fs = require('fs');
 
                     /* Alert the user of the update and changelog. */
