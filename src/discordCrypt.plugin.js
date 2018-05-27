@@ -35,7 +35,7 @@ class discordCrypt
 
     /* Version & Author. */
     getAuthor() { return 'Leonardo Gates'; }
-    getVersion() { return '1.0.3'; }
+    getVersion() { return '1.0.4'; }
 
     /* ============================================================== */
 

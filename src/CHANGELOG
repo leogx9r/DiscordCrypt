@@ -1,3 +1,9 @@
+Version 1.0.4
+
+- Added basic support for code blocks with highlighting. Single line code blocks are still unsupported.
+- Fixed a bug where the changelog menu is automatically opened if the first button clicked is Password Settings.
+- Minor stability improvements.
+
 Version 1.0.3
 
 - Changed update mechanism to use Node's internal "request" module which should fix issues for some users.
