@@ -17,16 +17,16 @@ Test PBKDF2:
   stage: test
   script:
    - node ./tests/perform-tests.js pbkdf2
-  allow_failure: true
+  allow_failure: false
 
 Test Ciphers:
   stage: test
   script:
   - node ./tests/perform-tests.js cipher
-  allow_failure: true
+  allow_failure: false
 
 Test Scrypt Implementation:
   stage: test
   script:
    - node ./tests/perform-tests.js scrypt
-  allow_failure: true
+  allow_failure: false
