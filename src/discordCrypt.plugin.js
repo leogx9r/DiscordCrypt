@@ -217,6 +217,20 @@ class discordCrypt
                 display: flex;
                 margin: 10px;
             }
+            .dc-code-block {
+                font-family: monospace !important;
+                font-size: 0.875rem;
+                line-height: 1rem;
+                
+                overflow-x: visible;
+                text-indent: 0;
+                
+                background: rgba(0,0,0,0.42)!important;
+                color: hsla(0,0%,100%,0.7)!important;
+                padding: 6px!important;
+                
+                position: relative;            
+            }
             .dc-overlay-main .tab {
                 overflow: hidden;
                 background-color: rgba(0, 0, 0, .9) !important;
@@ -861,6 +875,7 @@ class discordCrypt
             MessageActionTypes: WebpackModules.findByUniqueProperties(["ActionTypes", "ActivityTypes"]),
             MessageDispatcher: WebpackModules.findByUniqueProperties(["dispatch", "maybeDispatch", "dirtyDispatch"]),
             MessageQueue: WebpackModules.findByUniqueProperties(["enqueue", "handleSend", "handleResponse"]),
+            HighlightJS: WebpackModules.findByUniqueProperties(['initHighlighting', 'highlightBlock', 'highlightAuto']),
         };
     }
 
@@ -933,8 +948,8 @@ class discordCrypt
                 });
             }
             else
-            /* Receive the message normally. */
-                MessageController.receiveMessage(_nonce, r.body);
+                /* Receive the message normally. */
+                React.MessageController.receiveMessage(_nonce, r.body);
         });
     }
 
@@ -2433,7 +2448,7 @@ class discordCrypt
         const maximum_encoded_data = 1200;
 
         /* Add the message signal handler. */
-        const escapeCharacters = ["#", "/", ":", '`'];
+        const escapeCharacters = ["#", "/", ":"];
         const crypto = require('crypto');
         const self = this;
 
@@ -2583,7 +2598,7 @@ class discordCrypt
     }
 
     /* Parses a symmetric-key message. */
-    parseSymmetric(/* Object */ obj, /* string */ password, /* string */ secondary){
+    parseSymmetric(/* Object */ obj, /* string */ password, /* string */ secondary, /* Array */ ReactModules){
         let message = $(obj);
         let dataMsg;
 
@@ -2712,11 +2727,33 @@ class discordCrypt
         dataMsg = discordCrypt.symmetricDecrypt(message.text().replace(/\r?\n|\r/g, '')
             .substr(12), password, secondary, metadata[0], metadata[1], metadata[2], true);
 
-        let React = discordCrypt.getReactModules();
-
         /* If decryption didn't fail, set the decoded text along with a green foreground. */
         if ((typeof dataMsg === 'string' || dataMsg instanceof String) && dataMsg !== "") {
-            message.text(dataMsg);
+            /* Expand the message to the maximum width. */
+            message.parent().parent().parent().parent().css('max-width', '100%');
+
+            /* Extract any code blocks from the message. */
+            dataMsg = discordCrypt.__buildCodeBlockMessage(dataMsg);
+
+            /* Set the new HTML. */
+            message[0].innerHTML = dataMsg.html;
+
+            /* If this contains code blocks, highlight them. */
+            if(dataMsg.code){
+                /* The inner element contains a <span></span> class, get all children beneath that. */
+                let elements = $(message.children()[0]).children();
+
+                /* Loop over each element to get the markup division list. */
+                for(let i = 0; i < elements.length; i++){
+                    /* Highlight the element's <pre><code></code></code> block. */
+                    ReactModules.HighlightJS.highlightBlock($(elements[i]).children()[0]);
+
+                    /* Reset the class name. */
+                    $(elements[i]).children()[0].className = 'hljs';
+                }
+            }
+
+            /* Decrypted messages get set to green. */
             message.css('color', 'green');
         }
         else{
@@ -2753,6 +2790,7 @@ class discordCrypt
             this.configFile.passList[id].secondary : this.configFile.defaultPassword;
 
         /* Look through each markup element to find an embedDescription. */
+        let React = discordCrypt.getReactModules();
         $(this.messageMarkupClass).each(function(){
             /* Skip classes with no embeds. */
             if(!this.className.includes('embedDescription'))
@@ -2763,7 +2801,7 @@ class discordCrypt
                 return;
 
             /* Try parsing a symmetric message. */
-            self.parseSymmetric(this, password, secondary);
+            self.parseSymmetric(this, password, secondary, React);
 
             /* Set the flag. */
             $(this).data('dc-parsed', true);
@@ -2921,6 +2959,81 @@ class discordCrypt
 
         /* Return the parsed message and user tags. */
         return [ cleaned_msg.trim(), cleaned_tags.trim() ];
+    }
+
+    /* Extracts raw code blocks from a message. */
+    static __extractCodeBlocks(/* string */ message){
+        /* This regex only extracts code blocks. */
+        let code_block_expr = new RegExp(/^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm), _matched;
+
+        /* Array to store all the extracted blocks from. */
+        let _code_blocks = [];
+
+        /* Loop through each tested RegExp result. */
+        while ((_matched = code_block_expr.exec(message))) {
+            /* Insert the captured data. */
+            _code_blocks.push({
+                start_pos: _matched.index,
+                end_pos: _matched.index + _matched[1].length,
+                language: _matched[3].trim(),
+                raw_code: _matched[4],
+                captured_block: _matched[1]
+            });
+        }
+
+        return _code_blocks;
+    }
+
+    /* Extracts code blocks from a message and formats them accordingly. */
+    static __buildCodeBlockMessage(/* string */ message){
+        try{
+            /* Extract code blocks. */
+            let _extracted = discordCrypt.__extractCodeBlocks(message);
+
+            /* Throw an exception which will be caught to wrap the message normally. */
+            if(!_extracted.length)
+                throw 'No code blocks available.';
+
+            /* Wrap the message in span blocks. */
+            let _html = `<span>${message}</span>`;
+
+            /* Loop over each expanded code block. */
+            for(let i = 0; i < _extracted.length; i++){
+                let _lines = '';
+
+                /* Remove any line-reset characters and split the message into lines. */
+                let _code = _extracted[i].raw_code.replace("\r", '').split("\n");
+
+                /* Wrap each line in list elements. */
+                /* We start from position 1 since the regex leaves us with 2 blank lines. */
+                for(let j = 1; j < _code.length - 1; j++)
+                    _lines += `<li>${_code[j]}</li>`;
+
+                /* Split the HTML message according to the full markdown code block. */
+                _html = _html.split(_extracted[i].captured_block);
+
+                /* Replace the code with an HTML formatted code block. */
+                _html = _html.join(
+                    '<div class="markup line-scanned" data-colour="true" style="color: rgb(111, 0, 0);">' +
+                    `<pre class="hljs"><code class="dc-code-block hljs ${_extracted[i].language}"
+                        style="position: relative;">` +
+                    `<ol>${_lines}</ol></code></pre></div>`
+                );
+            }
+
+            /* Return the parsed message. */
+            return {
+                code: true,
+                html: _html
+            };
+        }
+        catch(e){
+            /* Wrap the message normally. */
+            return {
+                code: false,
+                html: `<span>${message}</span>`
+            };
+        }
     }
 
     /* Returns a string, Buffer() or Array() as a buffered object. */
