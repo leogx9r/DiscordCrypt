@@ -785,7 +785,7 @@ class discordCrypt
 
                 /* Try parsing a version number. */
                 let version_number = '';
-                try{ version_number = data.match(/'[0-9]+\.[0-9]+\.[0-9]+'/i).toString().replace(/'/g, ''); }
+                try{ version_number = data.match(/('[0-9]+\.[0-9]+\.[0-9]+')/gi).toString().replace(/('*')/g, ''); }
                 catch(e){}
 
                 /* Now get the changelog. */
