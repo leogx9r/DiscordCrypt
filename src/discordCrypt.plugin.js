@@ -862,10 +862,10 @@ class discordCrypt
 
         /* Finds appropriate React modules. */
         const MessageParser = WebpackModules.findByUniqueProperties(['createMessage', 'parse', 'unparse']);
-        const MessageController = WebpackModules.findByUniqueProperties(["sendClydeError"]);
-        const MessageActionTypes = WebpackModules.findByUniqueProperties(["ActionTypes"]);
-        const MessageDispatcher = WebpackModules.findByUniqueProperties(["dispatch"]);
-        const MessageQueue = WebpackModules.findByUniqueProperties(["enqueue"]);
+        const MessageController = WebpackModules.findByUniqueProperties(["sendClydeError", "sendBotMessage"]);
+        const MessageActionTypes = WebpackModules.findByUniqueProperties(["ActionTypes", "ActivityTypes"]);
+        const MessageDispatcher = WebpackModules.findByUniqueProperties(["dispatch", "maybeDispatch", "dirtyDispatch"]);
+        const MessageQueue = WebpackModules.findByUniqueProperties(["enqueue", "handleSend", "handleResponse"]);
 
         /* Parse the message content to the required format if applicable.. */
         if(typeof message_content === 'string' && message_content.length){
