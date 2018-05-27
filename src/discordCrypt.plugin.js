@@ -1184,6 +1184,9 @@ class discordCrypt
                     $('#dc-changelog')
                         .val(typeof full_changelog === "string" && full_changelog.length > 0 ? full_changelog : 'N/A');
 
+                    /* Scroll to the top of the changelog. */
+                    $('#dc-changelog').scrollTop(0);
+
                     /* Replace the file. */
                     fs.writeFile(replacePath, file_data, (err) => {
                         if(err){
