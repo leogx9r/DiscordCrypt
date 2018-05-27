@@ -1310,7 +1310,8 @@ class discordCrypt
                     <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">
                     Copy Current Passwords</button>
                 </div>
-                <div id="dc-update-overlay" class="dc-overlay-centerfield" style="top: 5%; border: 1px solid;">
+                <div id="dc-update-overlay" class="dc-overlay-centerfield" 
+                style="top: 5%;border: 1px solid;display: none">
                     <span>DiscordCrypt: Update Available</span>
                     <div class="dc-ruler-align">
                         <strong class="dc-hint dc-update-field" id="dc-new-version"/>
