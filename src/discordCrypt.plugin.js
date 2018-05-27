@@ -4665,7 +4665,6 @@ class discordCrypt
             /* string */                pad
         ){
             switch(cipher){
-                /* Blowfish. */
                 case 0:
                     return discordCrypt.blowfish512_encrypt(message, key, mode, pad);
                 case 1:
@@ -4773,7 +4772,6 @@ class discordCrypt
             /* boolean */             is_message_hex = undefined
         ){
             switch(cipher){
-                /* Blowfish. */
                 case 0:
                     return discordCrypt.blowfish512_decrypt(message, key, mode, pad, output_format, is_message_hex);
                 case 1:
