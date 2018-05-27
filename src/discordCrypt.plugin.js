@@ -435,13 +435,13 @@ class discordCrypt
     /* Called when the script has to load resources. */
     load(){
         /* Inject application CSS. */
-        BdApi.injectCSS('dc-css', this.appCss);
+        discordCrypt.injectCSS('dc-css', this.appCss);
     }
 
     /* Called during application shutdown. */
     unload(){
         /* Clear the injected CSS. */
-        BdApi.clearCSS('dc-css');
+        discordCrypt.clearCSS('dc-css');
     }
 
     /* Triggers when the channel is switched. */
@@ -933,6 +933,23 @@ class discordCrypt
     static log(/* string */ message, /* string */ method = "info") {
         try{ console[method]("%c[DiscordCrypt]%c - " + message, "color: #7f007f; font-weight: bold;", ""); }
         catch(ex) {}
+    }
+
+    /* Injects a CSS style element into the header tag. */
+    static injectCSS(/* string */ id, /* string */ css){
+        /* Inject into the header tag. */
+        $("head")
+            .append($("<style>", { id: id.replace(/^[^a-z]+|[^\w-]+/gi,""), html: css }))
+    }
+
+    /* Clears an injected element via its ID tag. */
+    static clearCSS(/* string */ id = undefined){
+        /* Make sure the ID is a valid string. */
+        if(!id || typeof id !== 'string' || !id.length)
+            return;
+
+        /* Remove the element. */
+        $("#" + id.replace(/^[^a-z]+|[^\w-]+/gi,"")).remove();
     }
 
     /* ================= END PROJECT UTILITIES ================= */
