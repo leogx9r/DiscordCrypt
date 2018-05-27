@@ -35,7 +35,7 @@ class discordCrypt
 
     /* Version & Author. */
     getAuthor() { return 'Leonardo Gates'; }
-    getVersion() { return '1.0.3'; }
+    getVersion() { return '1.0.4'; }
 
     /* ============================================================== */
 
@@ -217,6 +217,20 @@ class discordCrypt
                 display: flex;
                 margin: 10px;
             }
+            .dc-code-block {
+                font-family: monospace !important;
+                font-size: 0.875rem;
+                line-height: 1rem;
+                
+                overflow-x: visible;
+                text-indent: 0;
+                
+                background: rgba(0,0,0,0.42)!important;
+                color: hsla(0,0%,100%,0.7)!important;
+                padding: 6px!important;
+                
+                position: relative;            
+            }
             .dc-overlay-main .tab {
                 overflow: hidden;
                 background-color: rgba(0, 0, 0, .9) !important;
@@ -363,7 +377,7 @@ class discordCrypt
                 "Oops!\r\n\r\n" +
                 "It seems you didn't read discordCrypt's usage guide. :(\r\n" +
                 "You need to name this plugin exactly as follows to allow it to function correctly.\r\n\r\n" +
-                "\tdiscordCrypt.plugin.js\r\n\r\n\r\n" +
+                "\t" + discordCrypt.getPluginName() + "\r\n\r\n\r\n" +
                 "You should probably check the usage guide again just in case you missed anything else. :)",
                 'Hi There! - DiscordCrypt'
             );
@@ -435,13 +449,13 @@ class discordCrypt
     /* Called when the script has to load resources. */
     load(){
         /* Inject application CSS. */
-        BdApi.injectCSS('dc-css', this.appCss);
+        discordCrypt.injectCSS('dc-css', this.appCss);
     }
 
     /* Called during application shutdown. */
     unload(){
         /* Clear the injected CSS. */
-        BdApi.clearCSS('dc-css');
+        discordCrypt.clearCSS('dc-css');
     }
 
     /* Triggers when the channel is switched. */
@@ -678,10 +692,16 @@ class discordCrypt
 
     /* =================== PROJECT UTILITIES =================== */
 
+    /* Returns the name of the plugin file. */
+    static getPluginName(){
+        return 'discordCrypt.plugin.js';
+    }
+
     /* Check if the plugin is named correctly. */
     static validPluginName(){
         return require('fs')
-            .existsSync(require('path').join(discordCrypt.getPluginsPath(), 'discordCrypt.plugin.js'));
+            .existsSync(require('path')
+                .join(discordCrypt.getPluginsPath(), discordCrypt.getPluginName()));
     }
 
     /* Returns the platform-specific path to BetterDiscord's plugins. */
@@ -702,7 +722,7 @@ class discordCrypt
         /* function(file_data, short_hash, new_version, full_changelog) */ onUpdateCallback
     ){
         /* Update URL and request method. */
-        const update_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/discordCrypt.plugin.js';
+        const update_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/' + discordCrypt.getPluginName();
         const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
 
         /* Make sure the callback is a function. */
@@ -738,7 +758,7 @@ class discordCrypt
                 let localFile = require('fs').readFileSync(
                     require('path').join(
                         discordCrypt.getPluginsPath(),
-                        'discordCrypt.plugin.js'
+                        discordCrypt.getPluginName()
                     )
                 ).toString().replace('\r', '');
 
@@ -765,7 +785,7 @@ class discordCrypt
 
                 /* Try parsing a version number. */
                 let version_number = '';
-                try{ version_number = data.match(/'[0-9]+\.[0-9]+\.[0-9]+'/i).toString().replace(/'/g, ''); }
+                try{ version_number = data.match(/('[0-9]+\.[0-9]+\.[0-9]+')/gi).toString().replace(/('*')/g, ''); }
                 catch(e){}
 
                 /* Now get the changelog. */
@@ -803,14 +823,8 @@ class discordCrypt
         return  { primary: primary_password, secondary: secondary_password };
     }
 
-    /* Sends an embedded message. */
-    static sendEmbeddedMessage(
-        /* string */ embedded_text,
-        /* string */ embedded_header,
-        /* string */ embedded_footer,
-        /* int */    embedded_color = 0x551A8B,
-        /* string */ message_content = ''
-    ){
+    /* Returns the React modules. */
+    static getReactModules(){
         /* Initializes WebPackModules. [ Credits to the creator. ] */
         const WebpackModules = (() => {
             const req = webpackJsonp(
@@ -854,21 +868,32 @@ class discordCrypt
             return {find, findByUniqueProperties, findByDisplayName};
         })();
 
+        return {
+            ChannelProps: discordCrypt.__getElementReactOwner($('form')[0]).props.channel,
+            MessageParser: WebpackModules.findByUniqueProperties(['createMessage', 'parse', 'unparse']),
+            MessageController: WebpackModules.findByUniqueProperties(["sendClydeError", "sendBotMessage"]),
+            MessageActionTypes: WebpackModules.findByUniqueProperties(["ActionTypes", "ActivityTypes"]),
+            MessageDispatcher: WebpackModules.findByUniqueProperties(["dispatch", "maybeDispatch", "dirtyDispatch"]),
+            MessageQueue: WebpackModules.findByUniqueProperties(["enqueue", "handleSend", "handleResponse"]),
+            HighlightJS: WebpackModules.findByUniqueProperties(['initHighlighting', 'highlightBlock', 'highlightAuto']),
+        };
+    }
+
+    /* Sends an embedded message. */
+    static sendEmbeddedMessage(
+        /* string */ embedded_text,
+        /* string */ embedded_header,
+        /* string */ embedded_footer,
+        /* int */    embedded_color = 0x551A8B,
+        /* string */ message_content = ''
+    ){
+
         /* Finds appropriate React modules. */
-        const MessageParser = WebpackModules.findByUniqueProperties(['createMessage', 'parse', 'unparse']);
-        const MessageController = WebpackModules.findByUniqueProperties(["sendClydeError"]);
-        const MessageActionTypes = WebpackModules.findByUniqueProperties(["ActionTypes"]);
-        const MessageDispatcher = WebpackModules.findByUniqueProperties(["dispatch"]);
-        const MessageQueue = WebpackModules.findByUniqueProperties(["enqueue"]);
+        const React = discordCrypt.getReactModules();
 
         /* Parse the message content to the required format if applicable.. */
         if(typeof message_content === 'string' && message_content.length){
-            try{
-                message_content = MessageParser.parse(
-                    discordCrypt.__getElementReactOwner($('form')[0]).props.channel,
-                    message_content
-                ).content;
-            }
+            try{ message_content = React.MessageParser.parse(React.ChannelProps, message_content).content; }
             catch(e){ message_content = ''; }
         }
         else
@@ -881,7 +906,7 @@ class discordCrypt
         let _channel = discordCrypt.getChannelId();
 
         /* Create the message object and add it to the queue. */
-        MessageQueue.enqueue({
+        React.MessageQueue.enqueue({
             type: 'send',
             message: {
                 channelId: _channel,
@@ -890,6 +915,7 @@ class discordCrypt
                 tts: false,
                 embed: {
                     type : "rich",
+                    url: "https://gitlab.com/leogx9r/DiscordCrypt",
                     color: embedded_color === undefined ? 0x551A8B : embedded_color,
                     timestamp: new Date(),
                     output_mime_type: "text/x-html",
@@ -908,18 +934,22 @@ class discordCrypt
         }, (r) => {
             /* Check if an error occurred and inform Clyde bot about it. */
             if(!r.ok){
-                if(r.status >= 400 && r.status < 500 && r.body &&
-                    !MessageController.sendClydeError(discordCrypt.getChannelId(), r.body.code))
+                if(
+                    r.status >= 400 &&
+                    r.status < 500 &&
+                    r.body &&
+                    !React.MessageController.sendClydeError(discordCrypt.getChannelId(), r.body.code)
+                )
                     discordCrypt.log('Error sending message: ' + r.status, 'error');
-                MessageDispatcher.dispatch({
-                    type: MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
+                React.MessageDispatcher.dispatch({
+                    type: React.MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
                     messageId: _nonce,
                     channelId: _channel
                 });
             }
             else
-            /* Receive the message normally. */
-                MessageController.receiveMessage(_nonce, r.body);
+                /* Receive the message normally. */
+                React.MessageController.receiveMessage(_nonce, r.body);
         });
     }
 
@@ -927,6 +957,23 @@ class discordCrypt
     static log(/* string */ message, /* string */ method = "info") {
         try{ console[method]("%c[DiscordCrypt]%c - " + message, "color: #7f007f; font-weight: bold;", ""); }
         catch(ex) {}
+    }
+
+    /* Injects a CSS style element into the header tag. */
+    static injectCSS(/* string */ id, /* string */ css){
+        /* Inject into the header tag. */
+        $("head")
+            .append($("<style>", { id: id.replace(/^[^a-z]+|[^\w-]+/gi,""), html: css }))
+    }
+
+    /* Clears an injected element via its ID tag. */
+    static clearCSS(/* string */ id = undefined){
+        /* Make sure the ID is a valid string. */
+        if(!id || typeof id !== 'string' || !id.length)
+            return;
+
+        /* Remove the element. */
+        $("#" + id.replace(/^[^a-z]+|[^\w-]+/gi,"")).remove();
     }
 
     /* ================= END PROJECT UTILITIES ================= */
@@ -1119,7 +1166,8 @@ class discordCrypt
             /* Proxy call. */
             try{
                 discordCrypt.checkForUpdate(self.updateKey, (file_data, short_hash, new_version, full_changelog) => {
-                    const replacePath = require('path').join(discordCrypt.getPluginsPath(), 'discordCrypt.plugin.js');
+                    const replacePath = require('path')
+                        .join(discordCrypt.getPluginsPath(), discordCrypt.getPluginName());
                     const fs = require('fs');
 
                     /* Alert the user of the update and changelog. */
@@ -1135,6 +1183,9 @@ class discordCrypt
                     /* Update the changelog. */
                     $('#dc-changelog')
                         .val(typeof full_changelog === "string" && full_changelog.length > 0 ? full_changelog : 'N/A');
+
+                    /* Scroll to the top of the changelog. */
+                    $('#dc-changelog').scrollTop(0);
 
                     /* Replace the file. */
                     fs.writeFile(replacePath, file_data, (err) => {
@@ -1310,7 +1361,8 @@ class discordCrypt
                     <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">
                     Copy Current Passwords</button>
                 </div>
-                <div id="dc-update-overlay" class="dc-overlay-centerfield" style="top: 5%; border: 1px solid;">
+                <div id="dc-update-overlay" class="dc-overlay-centerfield" 
+                style="top: 5%;border: 1px solid;display: none">
                     <span>DiscordCrypt: Update Available</span>
                     <div class="dc-ruler-align">
                         <strong class="dc-hint dc-update-field" id="dc-new-version"/>
@@ -2399,7 +2451,7 @@ class discordCrypt
         const maximum_encoded_data = 1200;
 
         /* Add the message signal handler. */
-        const escapeCharacters = ["#", "/", ":", '`'];
+        const escapeCharacters = ["#", "/", ":"];
         const crypto = require('crypto');
         const self = this;
 
@@ -2549,7 +2601,7 @@ class discordCrypt
     }
 
     /* Parses a symmetric-key message. */
-    parseSymmetric(/* Object */ obj, /* string */ password, /* string */ secondary){
+    parseSymmetric(/* Object */ obj, /* string */ password, /* string */ secondary, /* Array */ ReactModules){
         let message = $(obj);
         let dataMsg;
 
@@ -2680,7 +2732,31 @@ class discordCrypt
 
         /* If decryption didn't fail, set the decoded text along with a green foreground. */
         if ((typeof dataMsg === 'string' || dataMsg instanceof String) && dataMsg !== "") {
-            message.text(dataMsg);
+            /* Expand the message to the maximum width. */
+            message.parent().parent().parent().parent().css('max-width', '100%');
+
+            /* Extract any code blocks from the message. */
+            dataMsg = discordCrypt.__buildCodeBlockMessage(dataMsg);
+
+            /* Set the new HTML. */
+            message[0].innerHTML = dataMsg.html;
+
+            /* If this contains code blocks, highlight them. */
+            if(dataMsg.code){
+                /* The inner element contains a <span></span> class, get all children beneath that. */
+                let elements = $(message.children()[0]).children();
+
+                /* Loop over each element to get the markup division list. */
+                for(let i = 0; i < elements.length; i++){
+                    /* Highlight the element's <pre><code></code></code> block. */
+                    ReactModules.HighlightJS.highlightBlock($(elements[i]).children()[0]);
+
+                    /* Reset the class name. */
+                    $(elements[i]).children()[0].className = 'hljs';
+                }
+            }
+
+            /* Decrypted messages get set to green. */
             message.css('color', 'green');
         }
         else{
@@ -2717,6 +2793,7 @@ class discordCrypt
             this.configFile.passList[id].secondary : this.configFile.defaultPassword;
 
         /* Look through each markup element to find an embedDescription. */
+        let React = discordCrypt.getReactModules();
         $(this.messageMarkupClass).each(function(){
             /* Skip classes with no embeds. */
             if(!this.className.includes('embedDescription'))
@@ -2727,7 +2804,7 @@ class discordCrypt
                 return;
 
             /* Try parsing a symmetric message. */
-            self.parseSymmetric(this, password, secondary);
+            self.parseSymmetric(this, password, secondary, React);
 
             /* Set the flag. */
             $(this).data('dc-parsed', true);
@@ -2885,6 +2962,81 @@ class discordCrypt
 
         /* Return the parsed message and user tags. */
         return [ cleaned_msg.trim(), cleaned_tags.trim() ];
+    }
+
+    /* Extracts raw code blocks from a message. */
+    static __extractCodeBlocks(/* string */ message){
+        /* This regex only extracts code blocks. */
+        let code_block_expr = new RegExp(/^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm), _matched;
+
+        /* Array to store all the extracted blocks from. */
+        let _code_blocks = [];
+
+        /* Loop through each tested RegExp result. */
+        while ((_matched = code_block_expr.exec(message))) {
+            /* Insert the captured data. */
+            _code_blocks.push({
+                start_pos: _matched.index,
+                end_pos: _matched.index + _matched[1].length,
+                language: _matched[3].trim(),
+                raw_code: _matched[4],
+                captured_block: _matched[1]
+            });
+        }
+
+        return _code_blocks;
+    }
+
+    /* Extracts code blocks from a message and formats them accordingly. */
+    static __buildCodeBlockMessage(/* string */ message){
+        try{
+            /* Extract code blocks. */
+            let _extracted = discordCrypt.__extractCodeBlocks(message);
+
+            /* Throw an exception which will be caught to wrap the message normally. */
+            if(!_extracted.length)
+                throw 'No code blocks available.';
+
+            /* Wrap the message in span blocks. */
+            let _html = `<span>${message}</span>`;
+
+            /* Loop over each expanded code block. */
+            for(let i = 0; i < _extracted.length; i++){
+                let _lines = '';
+
+                /* Remove any line-reset characters and split the message into lines. */
+                let _code = _extracted[i].raw_code.replace("\r", '').split("\n");
+
+                /* Wrap each line in list elements. */
+                /* We start from position 1 since the regex leaves us with 2 blank lines. */
+                for(let j = 1; j < _code.length - 1; j++)
+                    _lines += `<li>${_code[j]}</li>`;
+
+                /* Split the HTML message according to the full markdown code block. */
+                _html = _html.split(_extracted[i].captured_block);
+
+                /* Replace the code with an HTML formatted code block. */
+                _html = _html.join(
+                    '<div class="markup line-scanned" data-colour="true" style="color: rgb(111, 0, 0);">' +
+                    `<pre class="hljs"><code class="dc-code-block hljs ${_extracted[i].language}"
+                        style="position: relative;">` +
+                    `<ol>${_lines}</ol></code></pre></div>`
+                );
+            }
+
+            /* Return the parsed message. */
+            return {
+                code: true,
+                html: _html
+            };
+        }
+        catch(e){
+            /* Wrap the message normally. */
+            return {
+                code: false,
+                html: `<span>${message}</span>`
+            };
+        }
     }
 
     /* Returns a string, Buffer() or Array() as a buffered object. */
@@ -4640,7 +4792,6 @@ class discordCrypt
             /* string */                pad
         ){
             switch(cipher){
-                /* Blowfish. */
                 case 0:
                     return discordCrypt.blowfish512_encrypt(message, key, mode, pad);
                 case 1:
@@ -4748,7 +4899,6 @@ class discordCrypt
             /* boolean */             is_message_hex = undefined
         ){
             switch(cipher){
-                /* Blowfish. */
                 case 0:
                     return discordCrypt.blowfish512_decrypt(message, key, mode, pad, output_format, is_message_hex);
                 case 1:
