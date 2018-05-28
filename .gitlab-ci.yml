@@ -9,33 +9,27 @@ cache:
 # Main stage
 stages:
 - test
+- deply
 
 before_script:
 - npm install
-   
-Test PBKDF2:
+
+Generate Coverage Report:
   stage: test
   script:
-   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js pbkdf2
+   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js
   artifacts:
    paths:
     - coverage/
   allow_failure: false
 
-Test Scrypt Implementation:
-  stage: test
+Deploy Coverage Report:
+  stage: deploy
   script:
-   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js scrypt
+   - mv coverage/ public/
   artifacts:
    paths:
-    - coverage/
-  allow_failure: false
-
-Test Ciphers:
-  stage: test
-  script:
-   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js cipher
-  artifacts:
-   paths:
-    - coverage/
-  allow_failure: false
+    - public
+   expire_in: 30 days
+  only:
+   - coverage_tests
