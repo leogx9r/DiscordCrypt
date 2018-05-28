@@ -14,7 +14,7 @@ stages:
 before_script:
 - npm install
 
-Generate Coverage Report:
+test:
   stage: test
   script:
    - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js
@@ -23,7 +23,7 @@ Generate Coverage Report:
     - coverage/
   allow_failure: false
 
-Deploy Coverage Report:
+pages:
   stage: deploy
   script:
    - mv coverage/ public/
