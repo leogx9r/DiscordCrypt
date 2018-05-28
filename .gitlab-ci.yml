@@ -18,12 +18,15 @@ test:
    - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js
   coverage: '/^Statements *: (\d+\.\d+%)/'
   artifacts:
+   name: plugin-coverage
    paths:
     - coverage/
   allow_failure: false
 
 pages:
   stage: deploy
+  dependencies:
+   - test
   script:
    - mv coverage/lcov-report/ public/
   artifacts:
@@ -31,4 +34,4 @@ pages:
     - public
    expire_in: 30 days
   only:
-   - coverage_tests
+   - master
