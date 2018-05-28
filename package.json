@@ -11,6 +11,7 @@
     "test_camellia": "node tests/perform-tests.js cipher camellia",
     "test_tripledes": "node tests/perform-tests.js cipher tripledes",
     "test_idea": "node tests/perform-tests.js cipher idea",
+    "test_blowfish": "node tests/perform-tests.js cipher blowfish",
     "test": "node tests/perform-tests.js"
   },
   "author": "Leonardo Gates",
