@@ -9,7 +9,7 @@ cache:
 # Main stage
 stages:
 - test
-- deply
+- deploy
 
 before_script:
 - npm install
