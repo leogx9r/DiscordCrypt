@@ -207,6 +207,19 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                                 /* Check if the plaintext and ciphertext calculate match the expected output. */
                                 ut.equal(_ciphertext, test_vectors[i][j].r[k].ciphertext, 'Mismatched ciphertext');
                             }
+                            else{
+                                /* Here, we simply test if the encryption validates. */
+                                let _ciphertext = new Buffer(
+                                    encrypt(plaintext, key, mode, scheme, true, false, salt),
+                                    'hex'
+                                );
+
+                                /* Then we decrypt the ciphertext. */
+                                let _plaintext = decrypt(_ciphertext, key, mode, scheme, 'hex');
+
+                                /* Check if the newly decrypted plaintext is valid. */
+                                ut.equal(_plaintext, test_vectors[i][j].r[k].plaintext, 'Encryption failure');
+                            }
 
                             /* Finish the test. */
                             ut.done();
@@ -345,9 +358,8 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
     }
 }
 
-/* Load the plugin by simply doing an eval() */
+/* Load the plugin from module exports. */
 function loadDiscordCrypt(){
-    //let load = eval(`( ${require("fs").readFileSync('src/discordCrypt.plugin.js').toString()} )`);
     let load = require('../src/discordCrypt.plugin.js');
 
     return {'class': load, 'instance': new load()};
