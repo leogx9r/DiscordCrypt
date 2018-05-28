@@ -19,14 +19,38 @@ Test PBKDF2:
    - node ./tests/perform-tests.js pbkdf2
   allow_failure: false
 
-Test Ciphers:
-  stage: test
-  script:
-  - node ./tests/perform-tests.js cipher
-  allow_failure: false
-
 Test Scrypt Implementation:
   stage: test
   script:
    - node ./tests/perform-tests.js scrypt
+  allow_failure: false
+
+Test Cipher AES-256:
+  stage: test
+  script:
+  - node ./tests/perform-tests.js cipher aes
+  allow_failure: false
+
+Test Cipher Camellia-256:
+  stage: test
+  script:
+  - node ./tests/perform-tests.js cipher camellia
+  allow_failure: false
+
+Test Cipher TripleDES-192:
+  stage: test
+  script:
+  - node ./tests/perform-tests.js cipher tripledes
+  allow_failure: false
+
+Test Cipher IDEA-128:
+  stage: test
+  script:
+  - node ./tests/perform-tests.js cipher idea
+  allow_failure: false
+
+Test Cipher Blowfish-512:
+  stage: test
+  script:
+  - node ./tests/perform-tests.js cipher blowfish
   allow_failure: false
