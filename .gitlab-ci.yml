@@ -11,12 +11,10 @@ stages:
 - test
 - deploy
 
-before_script:
-- npm install
-
 test:
   stage: test
   script:
+   - npm install
    - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js
   artifacts:
    paths:
@@ -26,7 +24,7 @@ test:
 pages:
   stage: deploy
   script:
-   - mv coverage/ public/
+   - mv coverage/lcov-report/ public/
   artifacts:
    paths:
     - public
