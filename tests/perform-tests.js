@@ -347,7 +347,8 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
 
 /* Load the plugin by simply doing an eval() */
 function loadDiscordCrypt(){
-    let load = eval(`( ${require("fs").readFileSync('src/discordCrypt.plugin.js').toString()} )`);
+    //let load = eval(`( ${require("fs").readFileSync('src/discordCrypt.plugin.js').toString()} )`);
+    let load = require('../src/discordCrypt.plugin.js');
 
     return {'class': load, 'instance': new load()};
 }
