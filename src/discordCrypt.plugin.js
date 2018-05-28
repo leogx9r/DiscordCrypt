@@ -5019,3 +5019,6 @@ class discordCrypt
 
     /* ================ END CRYPTO CALLBACKS =================== */
 }
+
+/* Required for code coverage reports. */
+module.exports = discordCrypt;

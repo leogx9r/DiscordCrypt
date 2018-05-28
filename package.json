@@ -18,8 +18,11 @@
   "license": "MIT",
   "dependencies": {
     "electron": "latest",
-    "nodeunit": "^0.11.2",
-    "process": "^0.11.10",
+    "fs": "latest",
+    "istanbul": "latest",
+    "nodeunit": "latest",
+    "path": "latest",
+    "process": "latest",
     "request": "latest"
   }
 }
