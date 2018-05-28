@@ -195,12 +195,18 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                             /* Calculate the plaintext by doing a decryption cycle. */
                             let _plaintext = decrypt(ciphertext, key, mode, scheme, 'hex');
 
-                            /* Perform an encryption routine with the predefined key and KDF salt. */
-                            let _ciphertext = encrypt(plaintext, key, mode, scheme, true, false, salt);
-
-                            /* Check if the plaintext and ciphertext calculate match the expected output. */
-                            ut.equal(_ciphertext, test_vectors[i][j].r[k].ciphertext, 'Mismatched ciphertext');
+                            /* Check if they match. */
                             ut.equal(_plaintext, test_vectors[i][j].r[k].plaintext, 'Mismatched plaintext');
+
+                            /* ISO-10126 uses random padding bytes which we can't predict. */
+                            /* As a result, we only test ciphertext equality in padding schemes that don't do this. */
+                            if(scheme.toLowerCase() !== 'iso1'){
+                                /* Perform an encryption routine with the predefined key and KDF salt. */
+                                let _ciphertext = encrypt(plaintext, key, mode, scheme, true, false, salt);
+
+                                /* Check if the plaintext and ciphertext calculate match the expected output. */
+                                ut.equal(_ciphertext, test_vectors[i][j].r[k].ciphertext, 'Mismatched ciphertext');
+                            }
 
                             /* Finish the test. */
                             ut.done();
@@ -225,10 +231,12 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
     if(typeof preferred_cipher !== 'string')
         preferred_cipher = 'Running all cipher tests';
 
+    /* Fetch all test vectors. */
     let aes_vectors = locateTestVector(vectors, 'aes-256'),
         camellia_vectors = locateTestVector(vectors, 'camellia-256'),
         tripledes_vectors = locateTestVector(vectors, 'tripledes-192'),
-        idea_vectors = locateTestVector(vectors, 'idea-128');
+        idea_vectors = locateTestVector(vectors, 'idea-128'),
+        blowfish_vectors = locateTestVector(vectors, 'blowfish-512');
 
     /* Locate the desired cipher. Tons of redundant code here :) */
     switch(preferred_cipher){
@@ -280,6 +288,18 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                 loaded_blob['class'].idea128_decrypt
             );
             break;
+        case 'blowfish':
+        case 'blowfish512':
+        case 'blowfish-512':
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                blowfish_vectors.full_name,
+                blowfish_vectors.tests,
+                loaded_blob['class'].blowfish512_encrypt,
+                loaded_blob['class'].blowfish512_decrypt
+            );
+            break;
         default:
             addCipherTest(
                 loaded_blob,
@@ -313,6 +333,14 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                 loaded_blob['class'].idea128_encrypt,
                 loaded_blob['class'].idea128_decrypt
             );
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                blowfish_vectors.full_name,
+                blowfish_vectors.tests,
+                loaded_blob['class'].blowfish512_encrypt,
+                loaded_blob['class'].blowfish512_decrypt
+            );
             break;
     }
 }
@@ -345,7 +373,7 @@ function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25)
         },
         {
             full_name: 'TripleDES-192',
-            name: 'des-ede3',
+            name: 'tripledes-192',
             block_size: 8,
             key_size: 24,
             encryptor: loaded_blob['class'].tripledes192_encrypt,
@@ -353,11 +381,19 @@ function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25)
         },
         {
             full_name: 'IDEA-128',
-            name: 'idea',
+            name: 'idea-128',
             block_size: 8,
             key_size: 16,
             encryptor: loaded_blob['class'].idea128_encrypt,
             decryptor: loaded_blob['class'].idea128_decrypt,
+        },
+        {
+            full_name: 'Blowfish-512',
+            name: 'blowfish-512',
+            block_size: 8,
+            key_size: 64,
+            encryptor: loaded_blob['class'].blowfish512_encrypt,
+            decryptor: loaded_blob['class'].blowfish512_decrypt
         }
     ];
     const block_modes = [
@@ -370,10 +406,10 @@ function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25)
         'ANS2',
         'ISO9',
         'ZR0',
-        /* ISO-10126 cannot be tested due to it generating random padding values. */
-        /*'ISO1',*/
+        'ISO1',
     ];
 
+    const process = require('process');
     const crypto = require('crypto');
 
     let unit_tests = [];
@@ -399,10 +435,15 @@ function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25)
                 unit_tests[i].tests[j][k].r = [];
 
                 for(let l = 0; l < num_tests; l++){
-
-                    let plaintext = crypto.randomBytes(ciphers[i].key_size * (l + 1));
+                    let plaintext = crypto.randomBytes((ciphers[i].key_size * (l + 1)) + (l + k + i));
                     let key = crypto.randomBytes(ciphers[i].key_size);
                     let salt = crypto.randomBytes(8);
+
+                    /* Quick sanity check for Zero-Padding which can't end in zeros. */
+                    if(padding_schemes[k].toLowerCase() === 'ZR0'){
+                        do plaintext[plaintext.length - 1] = crypto.randomBytes(1)[0];
+                        while(plaintext[plaintex.length - 1] === 0)
+                    }
 
                     let ciphertext = ciphers[i].encryptor(
                         plaintext,
@@ -423,8 +464,11 @@ function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25)
                         true
                     );
 
-                    if(_plaintext !== plaintext.toString('hex'))
+                    if(_plaintext !== plaintext.toString('hex')){
+                        l--;
+                        console.log(`Invalid test generated for ${ciphers[i].name}.`);
                         continue;
+                    }
 
                     unit_tests[i].tests[j][k].r[l] = {};
 
@@ -438,7 +482,6 @@ function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25)
         }
     }
 
-    console.log(JSON.stringify(unit_tests, undefined, '    '));
     require('fs').writeFileSync('./tests/cipher-test-vectors.json', JSON.stringify(unit_tests, undefined, ' '));
 }
 
@@ -485,6 +528,5 @@ function main(){
     /* Actually run all the tests. */
     nodeunit.reporters.default.run(unit_tests);
 }
-
 
 main();
