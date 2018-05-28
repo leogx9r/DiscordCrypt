@@ -16,41 +16,26 @@ before_script:
 Test PBKDF2:
   stage: test
   script:
-   - node ./tests/perform-tests.js pbkdf2
+   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js pbkdf2
+  artifacts:
+   paths:
+    - coverage/
   allow_failure: false
 
 Test Scrypt Implementation:
   stage: test
   script:
-   - node ./tests/perform-tests.js scrypt
+   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js scrypt
+  artifacts:
+   paths:
+    - coverage/
   allow_failure: false
 
-Test Cipher AES-256:
+Test Ciphers:
   stage: test
   script:
-  - node ./tests/perform-tests.js cipher aes
-  allow_failure: false
-
-Test Cipher Camellia-256:
-  stage: test
-  script:
-  - node ./tests/perform-tests.js cipher camellia
-  allow_failure: false
-
-Test Cipher TripleDES-192:
-  stage: test
-  script:
-  - node ./tests/perform-tests.js cipher tripledes
-  allow_failure: false
-
-Test Cipher IDEA-128:
-  stage: test
-  script:
-  - node ./tests/perform-tests.js cipher idea
-  allow_failure: false
-
-Test Cipher Blowfish-512:
-  stage: test
-  script:
-  - node ./tests/perform-tests.js cipher blowfish
+   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js cipher
+  artifacts:
+   paths:
+    - coverage/
   allow_failure: false
