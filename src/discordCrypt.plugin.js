@@ -752,12 +752,16 @@ class discordCrypt
                 data = data.replace('\r', '');
 
                 /* Get the local file. */
-                let localFile = require('fs').readFileSync(
-                    require('path').join(
-                        discordCrypt.getPluginsPath(),
-                        discordCrypt.getPluginName()
-                    )
-                ).toString().replace('\r', '');
+                let localFile = '//META{"name":"discordCrypt"}*//\n';
+                try{
+                    localFile = require('fs').readFileSync(
+                        require('path').join(
+                            discordCrypt.getPluginsPath(),
+                            discordCrypt.getPluginName()
+                        )
+                    ).toString().replace('\r', '');
+                }
+                catch(e){}
 
                 /* Check the first line which contains the metadata to make sure that they're equal. */
                 if(data.split('\n')[0] !== localFile.split('\n')[0]){
