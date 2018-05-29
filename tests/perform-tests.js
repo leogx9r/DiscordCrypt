@@ -38,7 +38,7 @@ function addScryptTests(loaded_blob, unit_tests){
             loaded_blob['class'].scrypt(password, salt, v.dkLen, v.N, v.r, v.p, (error, progress, key) => {
                 /* On errors, let the user know. */
                 if (error){
-                    console.log(error);
+                    loaded_blob['class'].log(error);
                     return;
                 }
 
@@ -498,6 +498,45 @@ function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25)
     require('fs').writeFileSync('./tests/cipher-test-vectors.json', JSON.stringify(unit_tests, undefined, ' '));
 }
 
+function addGenericTests(loaded_blob, unit_tests){
+    let DiscordCrypt = loaded_blob['instance'];
+    let discordCrypt = loaded_blob['class'];
+
+    unit_tests.generic_tests = {};
+
+    unit_tests.generic_tests['Logging'] = (ut) => {
+        discordCrypt.log('Info', 'info');
+        discordCrypt.log('Error', 'error');
+        discordCrypt.log('Debug', 'debug');
+        discordCrypt.log('Warning', 'warn');
+
+        discordCrypt.log = (/* string */ message, /* string */ method = "info") => {
+            try{ console[method]("[DiscordCrypt] - " + message); }
+            catch(ex) {}
+        };
+
+        ut.done();
+    };
+
+    unit_tests.generic_tests['Plugin Info'] = (ut) => {
+        discordCrypt.log(`Plugin: ${DiscordCrypt.getName()} v${DiscordCrypt.getVersion()}`);
+        discordCrypt.log(`Author: ${DiscordCrypt.getAuthor()}`);
+        discordCrypt.log(`Description: ${DiscordCrypt.getDescription()}`);
+
+        discordCrypt.log(`Configuration:\n${JSON.stringify(DiscordCrypt.getDefaultConfig(), undefined, ' ')}`);
+
+        discordCrypt.log(`Path: ${discordCrypt.getPluginsPath()}`);
+
+        ut.done();
+    };
+
+    unit_tests.generic_tests['Plugin Update'] = (ut) => {
+        discordCrypt.checkForUpdate((file_data, short_hash, new_version, full_changelog) => {
+            ut.done();
+        });
+    };
+}
+
 /* Main function. */
 function main(){
     const process = require('process');
@@ -507,6 +546,9 @@ function main(){
 
     /* Prepare the unit tests. */
     let unit_tests = {};
+
+    /* Add generic tests. */
+    addGenericTests(loaded_blob, unit_tests);
 
     /* Handle which tests to run. */
     try{
