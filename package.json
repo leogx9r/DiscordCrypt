@@ -6,14 +6,24 @@
   "scripts": {
     "test_scrypt": "node tests/perform-tests.js scrypt",
     "test_pbkdf2": "node tests/perform-tests.js pbkdf2",
-    "test": "node tests/perform-tests.js"
+    "test_ciphers": "node tests/perform-tests.js cipher",
+    "test_aes": "node tests/perform-tests.js cipher aes",
+    "test_camellia": "node tests/perform-tests.js cipher camellia",
+    "test_tripledes": "node tests/perform-tests.js cipher tripledes",
+    "test_idea": "node tests/perform-tests.js cipher idea",
+    "test_blowfish": "node tests/perform-tests.js cipher blowfish",
+    "test": "node tests/perform-tests.js",
+    "coverage": "node node_modules/istanbul/lib/cli.js cover tests/perform-tests.js"
   },
   "author": "Leonardo Gates",
   "license": "MIT",
   "dependencies": {
     "electron": "latest",
-    "nodeunit": "^0.11.2",
-    "process": "^0.11.10",
+    "fs": "latest",
+    "istanbul": "latest",
+    "nodeunit": "latest",
+    "path": "latest",
+    "process": "latest",
     "request": "latest"
   }
 }

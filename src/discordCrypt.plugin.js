@@ -3230,14 +3230,14 @@ class discordCrypt
                 crypto.randomBytes(paddingBytes - 1).copy(padded, message.length);
 
                 /* Write the padding length at the last byte. */
-                padded.writeInt8(paddingBytes, message.length + paddingBytes - 1);
+                padded.writeUInt8(paddingBytes, message.length + paddingBytes - 1);
 
                 /* Return the result. */
                 return padded;
             }
             else
-            /* Remove the padding indicated by the last byte. */
-                return message.slice(0, message.length - message.readInt8(message.length - 1));
+                /* Remove the padding indicated by the last byte. */
+                return message.slice(0, message.length - message.readUInt8(message.length - 1));
         }
         /* Pads a message according to the ISO 97971 format. */
         function __ISO97971(message, paddingBytes, remove){
@@ -3964,7 +3964,7 @@ class discordCrypt
         /* string|Buffer|Array */   one_time_salt = undefined
     ){
         /* Size constants for Blowfish. */
-        const blockSize = 512, ivSize = 64;
+        const keySize = 512, blockSize = 64;
 
         /* Perform the encryption. */
         return discordCrypt.__encrypt(
@@ -3975,8 +3975,8 @@ class discordCrypt
             key,
             to_hex,
             is_message_hex,
+            keySize,
             blockSize,
-            ivSize,
             one_time_salt
         );
     }
@@ -3991,7 +3991,7 @@ class discordCrypt
         /* boolean */               is_message_hex = undefined
     ){
         /* Size constants for Blowfish. */
-        const blockSize = 512, ivSize = 64;
+        const keySize = 512, blockSize = 64;
 
         /* Return the unpadded message. */
         return discordCrypt.__decrypt(
@@ -4002,8 +4002,8 @@ class discordCrypt
             key,
             output_format,
             is_message_hex,
-            blockSize,
-            ivSize
+            keySize,
+            blockSize
         );
     }
 
@@ -5019,3 +5019,6 @@ class discordCrypt
 
     /* ================ END CRYPTO CALLBACKS =================== */
 }
+
+/* Required for code coverage reports. */
+module.exports = discordCrypt;
