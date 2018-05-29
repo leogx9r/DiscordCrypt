@@ -717,10 +717,7 @@ class discordCrypt
     }
 
     /* Checks the update server for an encrypted update.  */
-    static checkForUpdate(
-        /* Buffer */ key,
-        /* function(file_data, short_hash, new_version, full_changelog) */ onUpdateCallback
-    ){
+    static checkForUpdate(/* function(file_data, short_hash, new_version, full_changelog) */ onUpdateCallback){
         /* Update URL and request method. */
         const update_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/' + discordCrypt.getPluginName();
         const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
@@ -1165,7 +1162,7 @@ class discordCrypt
         setTimeout(() => {
             /* Proxy call. */
             try{
-                discordCrypt.checkForUpdate(self.updateKey, (file_data, short_hash, new_version, full_changelog) => {
+                discordCrypt.checkForUpdate((file_data, short_hash, new_version, full_changelog) => {
                     const replacePath = require('path')
                         .join(discordCrypt.getPluginsPath(), discordCrypt.getPluginName());
                     const fs = require('fs');
