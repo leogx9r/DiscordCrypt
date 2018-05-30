@@ -1,21 +1,43 @@
+/*******************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 Leonardo Gates
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ******************************************************************************/
+
 /* Required for unit tests. */
 const nodeunit = require('nodeunit');
 
+/* Locates the given array containing the target's test vectors. */
+function locateTestVector(/* Array */ list, /* string */ name){
+    for(let i = 0; i < list.length; i++){
+        if(list[i].full_name.toLowerCase() === name.toLowerCase())
+            return list[i];
+    }
+
+    return null;
+}
+
 /* Runs Scrypt tests. */
 function addScryptTests(loaded_blob, unit_tests){
-    /* Reference: https://tools.ietf.org/html/rfc7914#page-13 */
     const vectors = require('./scrypt-test-vectors');
-
-    /**
-     * Expected Results:
-     *
-     * discordCrypt_scrypt
-     * ✔ Test #1: [ N: 16 p: 1 r: 1 ]
-     * ✔ Test #2: [ N: 1024 p: 16 r: 8 ]
-     * ✔ Test #3: [ N: 16384 p: 1 r: 8 ]
-     * ✔ Test #4: [ N: 1048576 p: 1 r: 8 ]
-     * ✔ Test #5: [ N: 262144 p: 1 r: 8 ]
-     */
 
     /* Prepare the unit tests. */
     unit_tests.discordCrypt_scrypt = {};
@@ -230,16 +252,6 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
 
     }
 
-    /* Locates the given array containing the target's test vectors. */
-    function locateTestVector(/* Array */ list, /* string */ name){
-        for(let i = 0; i < list.length; i++){
-            if(list[i].full_name.toLowerCase() === name.toLowerCase())
-                return list[i];
-        }
-
-        return null;
-    }
-
     /* Quick sanity check. */
     if(typeof preferred_cipher !== 'string')
         preferred_cipher = 'Running all cipher tests';
@@ -358,152 +370,71 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
     }
 }
 
-/* Load the plugin from module exports. */
-function loadDiscordCrypt(){
-    let load = require('../src/discordCrypt.plugin.js');
-
-    return {'class': load, 'instance': new load()};
-}
-
-/* Generates cipher test vectors. */
-function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25){
-    const ciphers = [
+/* Run Diffie-Hellman exchange tests. */
+function addDiffieHellmanTests(loaded_blob, unit_tests){
+    const algorithms = [
         {
-            full_name: 'AES-256',
-            name: 'aes-256',
-            block_size: 16,
-            key_size: 32,
-            encryptor: loaded_blob['class'].aes256_encrypt,
-            decryptor: loaded_blob['class'].aes256_decrypt,
+            name: 'DH',
+            full_name: 'Diffie-Hellman',
+            key_lengths: [ 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192 ],
         },
         {
-            full_name: 'Camellia-256',
-            name: 'camellia-256',
-            block_size: 16,
-            key_size: 32,
-            encryptor: loaded_blob['class'].camellia256_encrypt,
-            decryptor: loaded_blob['class'].camellia256_decrypt,
-        },
-        {
-            full_name: 'TripleDES-192',
-            name: 'tripledes-192',
-            block_size: 8,
-            key_size: 24,
-            encryptor: loaded_blob['class'].tripledes192_encrypt,
-            decryptor: loaded_blob['class'].tripledes192_decrypt,
-        },
-        {
-            full_name: 'IDEA-128',
-            name: 'idea-128',
-            block_size: 8,
-            key_size: 16,
-            encryptor: loaded_blob['class'].idea128_encrypt,
-            decryptor: loaded_blob['class'].idea128_decrypt,
-        },
-        {
-            full_name: 'Blowfish-512',
-            name: 'blowfish-512',
-            block_size: 8,
-            key_size: 64,
-            encryptor: loaded_blob['class'].blowfish512_encrypt,
-            decryptor: loaded_blob['class'].blowfish512_decrypt
+            name: 'ECDH',
+            full_name: 'Elliptic Curve Diffie-Hellman',
+            key_lengths: [ 224, 256, 384, 409, 521, 571 ]
         }
     ];
-    const block_modes = [
-        'cbc',
-        'cfb',
-        'ofb'
-    ];
-    const padding_schemes = [
-        'PKC7',
-        'ANS2',
-        'ISO9',
-        'ZR0',
-        'ISO1',
-    ];
 
-    const process = require('process');
-    const crypto = require('crypto');
+    const tests = 5;
 
-    let unit_tests = [];
+    /* Loop over each algorithm. */
+    for(let i = 0; i < algorithms.length; i++){
+        /* Get the appropriate generator. */
+        let generator = algorithms[i].name === 'DH' ?
+            loaded_blob['class'].generateDH :
+            loaded_blob['class'].generateECDH;
 
-    for(let i = 0; i < ciphers.length; i++){
+        /* Loop over each key size. */
+        for(let j = 0; j < algorithms[i].key_lengths.length; j++){
+            /* Generate a test class. */
+            let test_name = `discordCrypt_${algorithms[i].name}_${algorithms[i].key_lengths[j]}`;
+            unit_tests[test_name] = {};
 
-        unit_tests[i] = {};
+            /* Loop over for the number of tests required. */
+            for(let k = 0; k < tests; k++){
+                /* Create a test. */
+                unit_tests[test_name][`Test #${k}`] = (ut) => {
+                    /* Generate both keys. */
+                    let keyA = generator(algorithms[i].key_lengths[j]);
+                    let keyB = generator(algorithms[i].key_lengths[j]);
 
-        unit_tests[i].full_name = ciphers[i].full_name;
-        unit_tests[i].name = ciphers[i].name;
+                    /* Perform a key exchange and get the shared secret. */
+                    let secretA =
+                        loaded_blob['class'].computeExchangeSharedSecret(keyA, keyB.getPublicKey('hex'), false, true);
 
-        unit_tests[i].tests = [];
+                    /* Get the secret for both keys. */
+                    let secretB =
+                        loaded_blob['class'].computeExchangeSharedSecret(keyB, keyA.getPublicKey('hex'), false, true);
 
-        for(let j = 0; j < block_modes.length; j++){
+                    /* Ensure the secrets match. */
+                    ut.equal(secretA, secretB, `${algorithms[i].full_name}-${algorithms[i].key_lengths[j]} failed`);
 
-            unit_tests[i].tests[j] = [];
-
-            for(let k = 0; k < padding_schemes.length; k++){
-
-                unit_tests[i].tests[j][k] = {};
-                unit_tests[i].tests[j][k].mode = block_modes[j];
-                unit_tests[i].tests[j][k].scheme = padding_schemes[k];
-                unit_tests[i].tests[j][k].r = [];
-
-                for(let l = 0; l < num_tests; l++){
-                    let plaintext = crypto.randomBytes((ciphers[i].key_size * (l + 1)) + (l + k + i));
-                    let key = crypto.randomBytes(ciphers[i].key_size);
-                    let salt = crypto.randomBytes(8);
-
-                    /* Quick sanity check for Zero-Padding which can't end in zeros. */
-                    if(padding_schemes[k].toLowerCase() === 'ZR0'){
-                        do plaintext[plaintext.length - 1] = crypto.randomBytes(1)[0];
-                        while(plaintext[plaintex.length - 1] === 0)
-                    }
-
-                    let ciphertext = ciphers[i].encryptor(
-                        plaintext,
-                        key,
-                        unit_tests[i].tests[j][k].mode,
-                        unit_tests[i].tests[j][k].scheme,
-                        true,
-                        false,
-                        salt
-                    );
-
-                    let _plaintext = ciphers[i].decryptor(
-                        ciphertext,
-                        key,
-                        unit_tests[i].tests[j][k].mode,
-                        unit_tests[i].tests[j][k].scheme,
-                        'hex',
-                        true
-                    );
-
-                    if(_plaintext !== plaintext.toString('hex')){
-                        l--;
-                        console.log(`Invalid test generated for ${ciphers[i].name}.`);
-                        continue;
-                    }
-
-                    unit_tests[i].tests[j][k].r[l] = {};
-
-                    unit_tests[i].tests[j][k].r[l].plaintext = plaintext.toString('hex');
-                    unit_tests[i].tests[j][k].r[l].ciphertext = ciphertext;
-
-                    unit_tests[i].tests[j][k].r[l].key = key.toString('hex');
-                    unit_tests[i].tests[j][k].r[l].salt = salt.toString('hex');
-                }
+                    /* Finish the test. */
+                    ut.done();
+                };
             }
         }
     }
-
-    require('fs').writeFileSync('./tests/cipher-test-vectors.json', JSON.stringify(unit_tests, undefined, ' '));
 }
 
+/* Adds generic plugin tests not classified by other types. */
 function addGenericTests(loaded_blob, unit_tests){
     let DiscordCrypt = loaded_blob['instance'];
     let discordCrypt = loaded_blob['class'];
 
     unit_tests.generic_tests = {};
 
+    /* Test the plugin's ability to log things and overwrite the logger with a non-HTML formatted one. */
     unit_tests.generic_tests['Logging'] = (ut) => {
         discordCrypt.log('Info', 'info');
         discordCrypt.log('Error', 'error');
@@ -518,6 +449,7 @@ function addGenericTests(loaded_blob, unit_tests){
         ut.done();
     };
 
+    /* List general BetterDiscord info. */
     unit_tests.generic_tests['Plugin Info'] = (ut) => {
         discordCrypt.log(`Plugin: ${DiscordCrypt.getName()} v${DiscordCrypt.getVersion()}`);
         discordCrypt.log(`Author: ${DiscordCrypt.getAuthor()}`);
@@ -530,11 +462,26 @@ function addGenericTests(loaded_blob, unit_tests){
         ut.done();
     };
 
+    /* Plugin update test.  */
     unit_tests.generic_tests['Plugin Update'] = (ut) => {
         discordCrypt.checkForUpdate((file_data, short_hash, new_version, full_changelog) => {
-            ut.done();
+            /* Only called if the master branch's hash doesn't match this file's. */
+            ut.equal(file_data.length > 0, true, 'Failed to retrieve update file.');
+            ut.equal(short_hash.length > 0, true, 'Failed to retrieve update file hash.');
+            ut.equal(new_version.length > 0, true, 'Failed to retrieve the update version.');
+            ut.equal(full_changelog.length > 0, true, 'Failed to retrieve the changelog.');
         });
+
+        /* Test will be completed regardless of if an update is found. */
+        ut.done();
     };
+}
+
+/* Load the plugin from module exports. */
+function loadDiscordCrypt(){
+    let load = require('../src/discordCrypt.plugin.js');
+
+    return {'class': load, 'instance': new load()};
 }
 
 /* Main function. */
@@ -546,9 +493,6 @@ function main(){
 
     /* Prepare the unit tests. */
     let unit_tests = {};
-
-    /* Add generic tests. */
-    addGenericTests(loaded_blob, unit_tests);
 
     /* Handle which tests to run. */
     try{
@@ -565,11 +509,22 @@ function main(){
                 /* Run cipher tests. */
                 addCipherTests(loaded_blob, unit_tests, process.argv.length >= 4 ? process.argv[3] : '');
                 break;
+            case 'general':
+                /* Run generic tests. */
+                addGenericTests(loaded_blob, unit_tests);
+                break;
+            case 'exchange':
+                /* Run key exchange tests. */
+                addDiffieHellmanTests(loaded_blob, unit_tests);
+                break;
             default:
                 throw 'Executing all tests.';
         }
     }
     catch(e){
+        /* Run generic tests. */
+        addGenericTests(loaded_blob, unit_tests);
+
         /* Run Scrypt tests. */
         addScryptTests(loaded_blob, unit_tests);
 
@@ -578,6 +533,9 @@ function main(){
 
         /* Run cipher tests. */
         addCipherTests(loaded_blob, unit_tests);
+
+        /* Run key exchange tests. */
+        addDiffieHellmanTests(loaded_blob, unit_tests);
     }
 
     /* Actually run all the tests. */
