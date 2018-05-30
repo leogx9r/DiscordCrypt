@@ -781,9 +781,6 @@ class discordCrypt
                     return true;
                 }
 
-                /* Signal to the user an update is available. */
-                discordCrypt.log('New Update Available: #' + shortHash);
-
                 /* Try parsing a version number. */
                 let version_number = '';
                 try{ version_number = data.match(/('[0-9]+\.[0-9]+\.[0-9]+')/gi).toString().replace(/('*')/g, ''); }
@@ -1182,11 +1179,12 @@ class discordCrypt
                     $('#dc-old-version').text(`Old Version: ${self.getVersion()}`);
 
                     /* Update the changelog. */
-                    $('#dc-changelog')
+                    let dc_changelog = $('#dc-changelog');
+                    dc_changelog
                         .val(typeof full_changelog === "string" && full_changelog.length > 0 ? full_changelog : 'N/A');
 
                     /* Scroll to the top of the changelog. */
-                    $('#dc-changelog').scrollTop(0);
+                    dc_changelog.scrollTop(0);
 
                     /* Replace the file. */
                     fs.writeFile(replacePath, file_data, (err) => {
@@ -1902,14 +1900,14 @@ class discordCrypt
             /* Copy the private key to this instance. */
             discordCrypt.privateExchangeKey = key;
 
-            /***********************************************************************************
+            /*****************************************************************************************
              *   [ PUBLIC PAYLOAD STRUCTURE ]
-             *   +0x00 - Algorithm + Bit size [ 0-5 = DH ( 768, 1024, 1536, 2048, 4096, 8192 ) |
-             *                                  6-11 = ECDH ( 224, 256, 384, 409, 521, 571 ) ]
+             *   +0x00 - Algorithm + Bit size [ 0-6 = DH ( 768, 1024, 1536, 2048, 3072, 4096, 8192 ) |
+             *                                  7-12 = ECDH ( 224, 256, 384, 409, 521, 571 ) ]
              *   +0x01 - Salt length
              *   +0x02 - Salt[ Salt.length ]
              *   +0x02 + Salt.length - Public key
-             ***********************************************************************************/
+             ****************************************************************************************/
 
             /* Calculate a random salt length. */
             salt_len = (parseInt(crypto.randomBytes(1).toString('hex'), 16) % (max_salt_len - min_salt_len)) +
@@ -4553,10 +4551,10 @@ class discordCrypt
 
     /* Computes a secret key from two ECDH or DH keys. One private and one public. */
     static computeExchangeSharedSecret(
-        /* ECDH|DH */ private_key,
-        /* ECDH|DH */ public_key,
-        /* string */  is_base_64,
-        /* string */  to_base_64
+        /* ECDH|DH */  private_key,
+        /* ECDH|DH */  public_key,
+        /* boolean */  is_base_64,
+        /* boolean */  to_base_64
     ){
         let in_form, out_form;
 
