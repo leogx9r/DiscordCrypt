@@ -376,12 +376,12 @@ function addDiffieHellmanTests(loaded_blob, unit_tests){
         {
             name: 'DH',
             full_name: 'Diffie-Hellman',
-            key_lengths: [ 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192 ],
+            key_lengths: loaded_blob['class'].getDHBitSizes(),
         },
         {
             name: 'ECDH',
             full_name: 'Elliptic Curve Diffie-Hellman',
-            key_lengths: [ 224, 256, 384, 409, 521, 571 ]
+            key_lengths: loaded_blob['class'].getECDHBitSizes()
         }
     ];
 
