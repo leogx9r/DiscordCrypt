@@ -4568,7 +4568,7 @@ class discordCrypt
     }
 
     /* Generates a Diffie-Hellman Key. */
-    static generateDH(/* int */ size, /* string */ private_key = undefined){
+    static generateDH(/* int */ size, /* Buffer */ private_key = undefined){
         let groupName, key;
 
         /* Calculate the appropriate group. */
@@ -4618,7 +4618,7 @@ class discordCrypt
     }
 
     /* Generates an Elliptic-Curve Diffie-Hellman Key. */
-    static generateECDH(/* int */ size, /* string */ private_key = undefined){
+    static generateECDH(/* int */ size, /* Buffer */ private_key = undefined){
         let groupName, key;
 
         /* Calculate the appropriate group. */
