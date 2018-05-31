@@ -214,8 +214,13 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                     /* Create the test callback */
                     unit_tests[test_name][test_id] =
                         (ut) => {
-                            /* Calculate the plaintext by doing a decryption cycle. */
-                            let _plaintext = decrypt(ciphertext, key, mode, scheme, 'hex');
+                            let _plaintext, _ciphertext;
+
+                            if(mode !== 'gcm')
+                                /* Calculate the plaintext by doing a decryption cycle. */
+                                _plaintext = decrypt(ciphertext, key, mode, scheme, 'hex');
+                            else
+                                _plaintext = decrypt(ciphertext, key, scheme, 'hex');
 
                             /* Check if they match. */
                             ut.equal(_plaintext, test_vectors[i][j].r[k].plaintext, 'Mismatched plaintext');
@@ -223,21 +228,37 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                             /* ISO-10126 uses random padding bytes which we can't predict. */
                             /* As a result, we only test ciphertext equality in padding schemes that don't do this. */
                             if(scheme.toLowerCase() !== 'iso1'){
-                                /* Perform an encryption routine with the predefined key and KDF salt. */
-                                let _ciphertext = encrypt(plaintext, key, mode, scheme, true, false, salt);
+                                if(mode !== 'gcm')
+                                    /* Perform an encryption routine with the predefined key and KDF salt. */
+                                    _ciphertext = encrypt(plaintext, key, mode, scheme, true, false, salt);
+                                else
+                                    /* Perform an encryption routine with the predefined key and KDF salt. */
+                                    _ciphertext = encrypt(plaintext, key, scheme, true, false, undefined, salt);
 
                                 /* Check if the plaintext and ciphertext calculate match the expected output. */
                                 ut.equal(_ciphertext, test_vectors[i][j].r[k].ciphertext, 'Mismatched ciphertext');
                             }
                             else{
-                                /* Here, we simply test if the encryption validates. */
-                                let _ciphertext = new Buffer(
-                                    encrypt(plaintext, key, mode, scheme, true, false, salt),
-                                    'hex'
-                                );
+                                if(mode !== 'gcm'){
+                                    /* Here, we simply test if the encryption validates. */
+                                    _ciphertext = new Buffer(
+                                        encrypt(plaintext, key, mode, scheme, true, false, salt),
+                                        'hex'
+                                    );
 
-                                /* Then we decrypt the ciphertext. */
-                                let _plaintext = decrypt(_ciphertext, key, mode, scheme, 'hex');
+                                    /* Then we decrypt the ciphertext. */
+                                    _plaintext = decrypt(_ciphertext, key, mode, scheme, 'hex');
+                                }
+                                else{
+                                    /* Here, we simply test if the encryption validates. */
+                                    _ciphertext = new Buffer(
+                                        encrypt(plaintext, key, scheme, true, false, undefined, salt),
+                                        'hex'
+                                    );
+
+                                    /* Then we decrypt the ciphertext. */
+                                    _plaintext = decrypt(_ciphertext, key, scheme, 'hex');
+                                }
 
                                 /* Check if the newly decrypted plaintext is valid. */
                                 ut.equal(_plaintext, test_vectors[i][j].r[k].plaintext, 'Encryption failure');
@@ -258,6 +279,7 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
 
     /* Fetch all test vectors. */
     let aes_vectors = locateTestVector(vectors, 'aes-256'),
+        aes_gcm_vectors = locateTestVector(vectors, 'aes-256-gcm'),
         camellia_vectors = locateTestVector(vectors, 'camellia-256'),
         tripledes_vectors = locateTestVector(vectors, 'tripledes-192'),
         idea_vectors = locateTestVector(vectors, 'idea-128'),
@@ -275,6 +297,14 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                 aes_vectors.tests,
                 loaded_blob['class'].aes256_encrypt,
                 loaded_blob['class'].aes256_decrypt
+            );
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                aes_gcm_vectors.full_name,
+                aes_gcm_vectors.tests,
+                loaded_blob['class'].aes256_encrypt_gcm,
+                loaded_blob['class'].aes256_decrypt_gcm
             );
             break;
         case 'camellia':
@@ -333,6 +363,14 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                 aes_vectors.tests,
                 loaded_blob['class'].aes256_encrypt,
                 loaded_blob['class'].aes256_decrypt
+            );
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                aes_gcm_vectors.full_name,
+                aes_gcm_vectors.tests,
+                loaded_blob['class'].aes256_encrypt_gcm,
+                loaded_blob['class'].aes256_decrypt_gcm
             );
             addCipherTest(
                 loaded_blob,
