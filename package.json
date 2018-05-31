@@ -26,6 +26,8 @@
     "nodeunit": "latest",
     "path": "latest",
     "process": "latest",
-    "request": "latest"
+    "request": "latest",
+    "mime-types": "latest",
+    "form-data": "latest"
   }
 }
