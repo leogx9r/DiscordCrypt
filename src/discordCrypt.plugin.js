@@ -35,7 +35,7 @@ class discordCrypt
 
     /* Version & Author. */
     getAuthor() { return 'Leonardo Gates'; }
-    getVersion() { return '1.0.4'; }
+    getVersion() { return '1.0.4-debug'; }
 
     /* ============================================================== */
 
@@ -151,7 +151,7 @@ class discordCrypt
                 width: 90%; height: 90%;
                 border: 3px solid #3f3f3f;
             }
-            .dc-changelog-textarea {
+            .dc-textarea {
                 font-family: monospace;
                 font-size: 12px;
                 color: #ffffff;
@@ -1371,6 +1371,31 @@ class discordCrypt
         $(document.body).prepend(
             `
             <div id="dc-overlay" class="dc-overlay">
+                <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">
+                    <input type="text" class="dc-input-field" id="dc-file-path" 
+                        style="width: 100%;padding: 2px;margin-left: 4px;" readonly/>    
+                                        
+                    <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea" 
+                        placeholder="Enter any addition text to send with your message ..." maxlength="1100"/>
+                        
+                    <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
+                        <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox">
+                        <span>Send Deletion Link</span>
+                    </div>
+                    
+                    <div class="stat stat-bar">
+                        <span id = "dc-file-upload-status" class="stat-bar-rating" style="width: 0;"/>
+                    </div>
+
+                    <div class="dc-ruler-align">
+                        <button class="dc-button" style="width:100%;" id="dc-file-upload-btn">Upload</button>
+                    </div>
+                    
+                    <div class="dc-ruler-align">
+                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">
+                        Cancel</button>
+                    </div>
+                </div>
                 <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">
                     <span>Primary Password:</span>
                     <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>
@@ -1399,7 +1424,7 @@ class discordCrypt
                     <div class="dc-ruler-align">
                         <strong class="dc-hint dc-update-field">Changelog:</strong></div>
                     <div class="dc-ruler-align">
-                        <textarea class="dc-changelog-textarea" rows="20" cols="128" id="dc-changelog" readonly/>
+                        <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly/>
                     </div>
                     <br>
                     <div class="dc-ruler-align">
@@ -1697,6 +1722,42 @@ class discordCrypt
         $('#dc-settings-cipher-mode')[0].value = self.configFile.encryptBlockMode.toLowerCase();
         $('#dc-primary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, false);
         $('#dc-secondary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, true);
+
+        /* Handle file button clicked. */
+        $('#dc-file-btn').click(function(){
+            /* Create an input element. */
+            let file = require('electron').remote.dialog.showOpenDialog({
+                title: 'Select a file to encrypt and upload',
+                label: 'Select',
+                message: 'Maximum file size is 50 MB',
+                properties: ['openFile', 'showHiddenFiles', 'treatPackageAsDirectory']
+            });
+
+            /* Ignore if no file was selected. */
+            if(!file.length || !file[0].length)
+                return;
+
+            /* Show main background. */
+            $('#dc-overlay')[0].style.display = 'block';
+
+            /* Show the upload overlay. */
+            $('#dc-overlay-upload')[0].style.display = 'block';
+
+            /* Set the file path to the selected path. */
+            $('#dc-file-path').val(file[0]);
+        });
+
+        /* Handle file button cancelled. */
+        $('#dc-file-cancel-btn').click(function(){
+            /* Clear old file name. */
+            $('#dc-file-path').val('');
+
+            /* Show main background. */
+            $('#dc-overlay')[0].style.display = 'none';
+
+            /* Show the upload overlay. */
+            $('#dc-overlay-upload')[0].display = 'none';
+        });
 
         /* Handle Settings tab opening. */
         $('#dc-settings-btn').click(function(){
