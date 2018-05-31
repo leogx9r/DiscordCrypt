@@ -450,6 +450,9 @@ class discordCrypt
     load(){
         /* Inject application CSS. */
         discordCrypt.injectCSS('dc-css', this.appCss);
+
+        /* Inject SJCL. */
+        $(head).append('<script src="https://gitlab.com/riseup/up1-cli-client-nodejs/raw/master/sjcl.js"></script>')
     }
 
     /* Called during application shutdown. */
@@ -517,7 +520,11 @@ class discordCrypt
             /* Default padding mode for blocks. */
             paddingMode: 'PKC7',
             /* Password array of objects for users or channels. */
-            passList: {}
+            passList: {},
+            /* Contains the URL of the Up1 client. */
+            up1Host: 'https://share.riseup.net',
+            /* Contains the API key used for transactions with the Up1 host. */
+            up1ApiKey: '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs'
         };
     }
 
@@ -2825,7 +2832,7 @@ class discordCrypt
     /* ======================= UTILITIES ======================= */
 
     /* Performs an HTTP request returns the result to the callback. */
-    static __getRequest( /* string */ url, /* function(statusCode, errorString, data) */ callback){
+    static __getRequest(/* string */ url, /* function(statusCode, errorString, data) */ callback){
         try{
             require('request')(url, (error, response, result) => {
                 callback(response.statusCode, response.statusMessage, result);
@@ -3511,6 +3518,159 @@ class discordCrypt
 
         /* Return the buffer. */
         return _pt.toString(output_format);
+    }
+
+    /* Returns the string encoded mime type of a file. */
+    static __up1GetMimeType(/* string */ file_path) {
+        /* Look up the Mime type from the file extension. */
+        let type = require( 'mime-types' ).lookup( require( 'path' ).extname( file_path ) );
+
+        /* Default to an octet stream if it fails. */
+        return type === false ? 'application/octet-stream' : type;
+    }
+
+    static __up1EncryptData(
+        /* string */ file_path,
+        /* class */ sjcl,
+        /* function(error_string, encrypted_data, identity, encoded_seed) */ callback
+    ) {
+        const crypto = require( 'crypto' );
+        const path = require( 'path' );
+        const fs = require( 'fs' );
+
+        /* Returns a parameter object from the input seed. */
+        function getParams( /* string|Buffer|Array|Uint8Array */ seed ) {
+            /* Convert the seed either from a string to Base64 or read it via raw bytes. */
+            if ( typeof seed === 'string' )
+                seed = sjcl.codec.base64url.toBits( seed );
+            else
+                seed = sjcl.codec.bytes.toBits( seed );
+
+            /* Compute an SHA-512 hash. */
+            let out = sjcl.hash.sha512.hash( seed );
+
+            /* Calculate the output values based on Up1's specs. */
+            return {
+                seed: seed,
+                key: sjcl.bitArray.bitSlice( out, 0, 256 ),
+                iv: sjcl.bitArray.bitSlice( out, 256, 384 ),
+                ident: sjcl.bitArray.bitSlice( out, 384, 512 )
+            }
+        }
+
+        /* Converts a string to its UTF-16 equivalent in network byte order. */
+        function str2ab( /* string */ str ) {
+            /* UTF-16 requires 2 bytes per UTF-8 byte. */
+            let buf = new Buffer( str.length * 2 );
+
+            /* Loop over each byte. */
+            for ( let i = 0, strLen = str.length; i < strLen; i++ )
+                /* Write the UTF-16 equivalent in Big Endian. */
+                buf.writeUInt16BE( str.charCodeAt( i ), i * 2 );
+            return buf;
+        }
+
+        try{
+            /* Make sure the file size is less than 50 MB. */
+            if ( fs.statSync( file_path ).size > 50000000 ) {
+                callback( 'File size must be < 50 MB.' );
+                return;
+            }
+
+            /* Read the file in an async callback. */
+            fs.readFile( file_path, ( error, file_data ) => {
+                /* Check for any errors. */
+                if ( error !== null ) {
+                    callback( error.toString() );
+                    return;
+                }
+
+                /* Calculate the upload header and append the file data to it prior to encryption. */
+                file_data = Buffer.concat( [
+                    str2ab( JSON.stringify( {
+                        'mime': discordCrypt.__up1GetMimeType( file_path ),
+                        'name': path.basename( file_path )
+                    } ) ),
+                    new Buffer( [ 0, 0 ] ),
+                    file_data
+                ] );
+
+                /* Convert the file to a Uint8Array() then to SJCL's bit buffer. */
+                file_data = sjcl.codec.bytes.toBits( new Uint8Array( file_data ) );
+
+                /* Generate a random 128 bit seed and calculate the key and IV from this. */
+                let params = getParams( crypto.randomBytes( 16 ) );
+
+                /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
+                file_data = sjcl.arrayBuffer.ccm
+                    .compat_encrypt( new sjcl.cipher.aes( params.key ), file_data, params.iv );
+
+                /* Execute the callback. */
+                callback(
+                    null,
+                    new Buffer( sjcl.codec.bytes.fromBits( file_data ) ),
+                    sjcl.codec.base64url.fromBits( params.ident ),
+                    sjcl.codec.base64url.fromBits( params.seed )
+                );
+            } );
+        }
+        catch(ex){ callback(ex.toString()); }
+    }
+
+    static __up1UploadFile(
+        /* string */ file_path,
+        /* string */ up1_host,
+        /* string */ up1_api_key,
+        /* class */ sjcl,
+        /* function(error_string, file_url, deletion_link, encoded_seed) */ callback
+    ) {
+        /* Encrypt the file data first. */
+        this.__up1EncryptData(
+            file_path,
+            sjcl,
+            ( error_string, encrypted_data, identity, encoded_seed ) => {
+                /* Return if there's an error. */
+                if ( error_string !== null ) {
+                    callback( error_string );
+                    return;
+                }
+
+                /* Create a new FormData() object. */
+                let form = new ( require( 'form-data' ) )();
+
+                /* Append the ID and the file data to it. */
+                form.append( 'ident', identity );
+                form.append( 'file', encrypted_data, { filename: 'file', contentType: 'text/plain' } );
+
+                /* Append the API key if necessary. */
+                if ( up1_api_key !== undefined && typeof up1_api_key === 'string' )
+                    form.append( 'api_key', up1_api_key );
+
+                /* Perform the post request. */
+                require( 'request' ).post( {
+                        headers: form.getHeaders(),
+                        uri: up1_host + '/up',
+                        body: form
+                    },
+                    ( err, res, body ) => {
+                        try{
+                            /* Execute the callback if no error has occurred. */
+                            if ( err !== null )
+                                callback( err );
+                            else {
+                                callback(
+                                    null,
+                                    up1_host + '/#' + encoded_seed,
+                                    up1_host + `/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
+                                    encoded_seed
+                                );
+                            }
+                        }
+                        catch(ex){ callback(ex.toString()); }
+                    }
+                );
+            }
+        );
     }
 
     /* ========================================================= */
