@@ -885,13 +885,20 @@ class discordCrypt
         /* int */    embedded_color = 0x551A8B,
         /* string */ message_content = ''
     ){
+        let mention_everyone = false;
 
         /* Finds appropriate React modules. */
         const React = discordCrypt.getReactModules();
 
         /* Parse the message content to the required format if applicable.. */
         if(typeof message_content === 'string' && message_content.length){
-            try{ message_content = React.MessageParser.parse(React.ChannelProps, message_content).content; }
+            try{
+                message_content = React.MessageParser.parse(React.ChannelProps, message_content).content;
+
+                /* Check for @everyone or @here mentions. */
+                if(message_content.includes('@everyone') || message_content.includes('@here'))
+                    mention_everyone = true;
+            }
             catch(e){ message_content = ''; }
         }
         else
@@ -910,6 +917,7 @@ class discordCrypt
                 channelId: _channel,
                 nonce: _nonce,
                 content: message_content,
+                mention_everyone: mention_everyone,
                 tts: false,
                 embed: {
                     type : "rich",
@@ -2950,6 +2958,11 @@ class discordCrypt
             if(this.__isValidUserName(split_msg[i])){
                 user_tags[k++] = split_msg[i];
                 cleaned_msg += split_msg[i].split('#')[0] + ' ';
+            }
+            /* Check for @here or @everyone. */
+            else if(split_msg[i] === '@everyone' || split_msg[i] === '@here'){
+                user_tags[k++] = split_msg[i];
+                cleaned_msg += split_msg[i] + ' ';
             }
             else
                 cleaned_msg += split_msg[i] + ' ';
