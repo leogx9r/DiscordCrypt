@@ -923,7 +923,7 @@ class discordCrypt
                     type : "rich",
                     url: "https://gitlab.com/leogx9r/DiscordCrypt",
                     color: embedded_color === undefined ? 0x551A8B : embedded_color,
-                    timestamp: new Date(),
+                    timestamp: (new Date()).toISOString(),
                     output_mime_type: "text/x-html",
                     encoding: "utf-16",
                     author: {
