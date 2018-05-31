@@ -1923,7 +1923,7 @@ class discordCrypt
             );
 
             /* Create a blank payload. */
-            raw_buffer = Buffer.alloc(2 + salt_len + pub_buffer.length);
+            raw_buffer = new Buffer(2 + salt_len + pub_buffer.length);
 
             /* Write the algorithm index. */
             raw_buffer.writeInt8(index, 0);
