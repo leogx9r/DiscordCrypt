@@ -452,7 +452,8 @@ class discordCrypt
         discordCrypt.injectCSS('dc-css', this.appCss);
 
         /* Inject SJCL. */
-        $(head).append('<script src="https://gitlab.com/riseup/up1-cli-client-nodejs/raw/master/sjcl.js"></script>')
+        $('head').append('<script' +
+            ' src="https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/master/sjcl.js"></script>');
     }
 
     /* Called during application shutdown. */
@@ -1186,7 +1187,6 @@ class discordCrypt
                     /* Alert the user of the update and changelog. */
                     $('#dc-overlay')[0].style.display = 'block';
                     $('#dc-update-overlay')[0].style.display = 'block';
-                    $('#dc-overlay-password')[0].style.display = 'none';
 
                     /* Update the version info. */
                     $('#dc-new-version')
@@ -1268,6 +1268,18 @@ class discordCrypt
         /* Inject the toolbar. */
         $(self.searchUiClass).parent().parent().parent().prepend(
             `
+            <button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File">
+                <svg class="dc-svg" width="24" height="24" viewBox="0 0 1792 1792" fill="lightgrey">
+                    <path d="M768 384v-128h-128v128h128zm128 128v-128h-128v128h128zm-128 
+                        128v-128h-128v128h128zm128 128v-128h-128v128h128zm700-388q28 28 48 
+                        76t20 88v1152q0 40-28 68t-68 28h-1344q-40 0-68-28t-28-68v-1600q0-40 28-68t68-28h896q40 
+                        0 88 20t76 48zm-444-244v376h376q-10-29-22-41l-313-313q-12-12-41-22zm384 1528v-1024h-416q-40 
+                        0-68-28t-28-68v-416h-128v128h-128v-128h-512v1536h1280zm-627-721l107 349q8 27 8 52 0 83-72.5 
+                        137.5t-183.5 54.5-183.5-54.5-72.5-137.5q0-25 8-52 21-63 120-396v-128h128v128h79q22 0 39 
+                        13t23 34zm-141 465q53 0 90.5-19t37.5-45-37.5-45-90.5-19-90.5 19-37.5 45 37.5 45 90.5 19z">
+                    </path>
+                </svg>           
+            </button>
             <button type="button" id="dc-settings-btn" style="background-color: transparent;" title="DiscordCrypt Settings">
                 <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32" 
                 width="20px" height="20px" xml:space="preserve">
@@ -1359,7 +1371,7 @@ class discordCrypt
         $(document.body).prepend(
             `
             <div id="dc-overlay" class="dc-overlay">
-                <div id="dc-overlay-password" class="dc-overlay-centerfield">
+                <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">
                     <span>Primary Password:</span>
                     <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>
                     
@@ -1693,12 +1705,6 @@ class discordCrypt
 
             /* Show the main settings menu. */
             $('#dc-overlay-settings')[0].style.display = 'block';
-
-            /* Hide the password field. */
-            $('#dc-overlay-password')[0].style.display = 'none';
-
-            /* Hide the update window. */
-            $('#dc-update-overlay')[0].style.display = 'none';
         });
 
         /* Handle Settings tab closing. */
@@ -1706,14 +1712,8 @@ class discordCrypt
             /* Hide main background. */
             $('#dc-overlay')[0].style.display = 'none';
 
-            /* Hide the update window. */
-            $('#dc-update-overlay')[0].style.display = 'none';
-
             /* Hide the main settings menu. */
             $('#dc-overlay-settings')[0].style.display = 'none';
-
-            /* Show the password field. ( Still hidden due to parent element. ) */
-            $('#dc-overlay-password')[0].style.display = 'block';
         });
 
         /* Handle Save settings. */
@@ -1791,10 +1791,6 @@ class discordCrypt
             /* Hide the update and changelog. */
             $('#dc-overlay')[0].style.display = 'none';
             $('#dc-update-overlay')[0].style.display = 'none';
-
-            /* Show the password field. ( Still hidden due to parent element. ) */
-            $('#dc-overlay-password')[0].style.display = 'block';
-
         });
 
         /* Handle Info tab switch. */
@@ -1811,14 +1807,8 @@ class discordCrypt
             /* Hide main background. */
             $('#dc-overlay')[0].style.display = 'none';
 
-            /* Hide the update window. */
-            $('#dc-update-overlay')[0].style.display = 'none';
-
             /* Hide the entire exchange key menu. */
             $('#dc-overlay-exchange')[0].style.display = 'none';
-
-            /* Set the password field back to visible. ( Still hidden due to parent element. ) */
-            $('#dc-overlay-password')[0].style.display = 'block';
 
             /* Reset the index to the info tab. */
             discordCrypt.setActiveTab(0);
@@ -1828,12 +1818,6 @@ class discordCrypt
         $('#dc-exchange-btn').click(function(){
             /* Show background. */
             $('#dc-overlay')[0].style.display = 'block';
-
-            /* Hide the update window. */
-            $('#dc-update-overlay')[0].style.display = 'none';
-
-            /* Hide password element. */
-            $('#dc-overlay-password')[0].style.display = 'none';
 
             /* Show main menu. */
             $('#dc-overlay-exchange')[0].style.display = 'block';
@@ -2323,14 +2307,8 @@ class discordCrypt
                 /* Hide main background. */
                 $('#dc-overlay')[0].style.display = 'none';
 
-                /* Hide the update window. */
-                $('#dc-update-overlay')[0].style.display = 'none';
-
                 /* Hide the entire exchange key menu. */
                 $('#dc-overlay-exchange')[0].style.display = 'none';
-
-                /* Set the password field back to visible. ( Still hidden due to parent element. */
-                $('#dc-overlay-password')[0].style.display = 'block';
 
                 /* Reset the index to the info tab. */
                 discordCrypt.setActiveTab(0);
