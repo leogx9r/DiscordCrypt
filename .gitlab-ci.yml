@@ -40,9 +40,10 @@ cover_test:
 pages:
   stage: deploy
   dependencies:
-   - test
+   - cover_test
   script:
    - ls -lah
+   - ls -lah coverage
    - mv coverage/lcov-report/ public/
   artifacts:
    paths:
