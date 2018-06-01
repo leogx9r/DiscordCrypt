@@ -347,6 +347,462 @@ class discordCrypt
             .stat-bar-rating { @include stat-bar(#cf3a02, #ff4500, top, bottom); }
             `;
 
+        this.toolbarHtml =
+            `
+            <button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File">
+                <svg class="dc-svg" width="24" height="24" viewBox="0 0 1792 1792" fill="lightgrey">
+                    <path d="M768 384v-128h-128v128h128zm128 128v-128h-128v128h128zm-128 
+                        128v-128h-128v128h128zm128 128v-128h-128v128h128zm700-388q28 28 48 
+                        76t20 88v1152q0 40-28 68t-68 28h-1344q-40 0-68-28t-28-68v-1600q0-40 28-68t68-28h896q40 
+                        0 88 20t76 48zm-444-244v376h376q-10-29-22-41l-313-313q-12-12-41-22zm384 1528v-1024h-416q-40 
+                        0-68-28t-28-68v-416h-128v128h-128v-128h-512v1536h1280zm-627-721l107 349q8 27 8 52 0 83-72.5 
+                        137.5t-183.5 54.5-183.5-54.5-72.5-137.5q0-25 8-52 21-63 120-396v-128h128v128h79q22 0 39 
+                        13t23 34zm-141 465q53 0 90.5-19t37.5-45-37.5-45-90.5-19-90.5 19-37.5 45 37.5 45 90.5 19z">
+                    </path>
+                </svg>           
+            </button>
+            <button type="button" id="dc-settings-btn" style="background-color: transparent;" title="DiscordCrypt Settings">
+                <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32" 
+                width="20px" height="20px" xml:space="preserve">
+                    <g>
+                        <path fill="lightgrey" d="M28,10H18v2h10V10z M14,10H4v10h10V10z M32,0H0v28h15.518c1.614,2.411,4.361,3.999,7.482,4c4.971-0.002,8.998-4.029,9-9   
+                        c0-0.362-0.027-0.718-0.069-1.069L32,22V0z M10,2h12v2H10V2z M6,2h2v2H6V2z M2,2h2v2H2V2z M23,29.883   
+                        c-3.801-0.009-6.876-3.084-6.885-6.883c0.009-3.801,3.084-6.876,6.885-6.885c3.799,0.009,6.874,3.084,6.883,6.885   
+                        C29.874,26.799,26.799,29.874,23,29.883z M29.999,17.348c-0.57-0.706-1.243-1.324-1.999-1.83V14h-4.99c-0.003,0-0.007,0-0.01,0   
+                        s-0.007,0-0.01,0H18v1.516c-2.412,1.614-4,4.361-4,7.483c0,1.054,0.19,2.061,0.523,3H2V6h27.999V17.348z M30,4h-4V2h4V4z"/>
+                        <path fill="lightgrey" d="M28,24v-2.001h-1.663c-0.063-0.212-0.145-0.413-0.245-0.606l1.187-1.187l-1.416-1.415l-1.165,1.166   
+                        c-0.22-0.123-0.452-0.221-0.697-0.294V18h-2v1.662c-0.229,0.068-0.446,0.158-0.652,0.27l-1.141-1.14l-1.415,1.415l1.14,1.14   
+                        c-0.112,0.207-0.202,0.424-0.271,0.653H18v2h1.662c0.073,0.246,0.172,0.479,0.295,0.698l-1.165,1.163l1.413,1.416l1.188-1.187   
+                        c0.192,0.101,0.394,0.182,0.605,0.245V28H24v-1.665c0.229-0.068,0.445-0.158,0.651-0.27l1.212,1.212l1.414-1.416l-1.212-1.21   
+                        c0.111-0.206,0.201-0.423,0.27-0.651H28z M22.999,24.499c-0.829-0.002-1.498-0.671-1.501-1.5c0.003-0.829,0.672-1.498,1.501-1.501   
+                        c0.829,0.003,1.498,0.672,1.5,1.501C24.497,23.828,23.828,24.497,22.999,24.499z"/>
+                    </g>
+                </svg>
+            </button>
+            <button type="button" id="dc-lock-btn" style="background-color: transparent;"/>
+            <button type="button" id="dc-passwd-btn" style="background-color: transparent;" title="Password Settings">
+                <svg class="dc-svg" version="1.1" viewBox="0 0 32 32" width="20px" height="20px">
+                    <g fill="none" fill-rule="evenodd" stroke="none" stroke-width="1">
+                        <g fill="lightgrey">
+                            <path d="M13.008518,22 L11.508518,23.5 L11.508518,23.5 L14.008518,26 L11.008518,29 L8.50851798,26.5 L6.63305475,28.3754632 C5.79169774,29.2168202 
+                            4.42905085,29.2205817 3.5909158,28.3824466 L3.62607133,28.4176022 C2.78924,27.5807709 2.79106286,26.2174551 3.63305475,25.3754632 L15.7904495,13.2180685
+                             C15.2908061,12.2545997 15.008518,11.1602658 15.008518,10 C15.008518,6.13400656 18.1425245,3 22.008518,3 C25.8745114,3 
+                             29.008518,6.13400656 29.008518,10 C29.008518,13.8659934 25.8745114,17 22.008518,17 C20.8482521,17 19.7539183,16.7177118 18.7904495,16.2180685 
+                             L18.7904495,16.2180685 L16.008518,19 L18.008518,21 L15.008518,24 L13.008518,22 L13.008518,22 L13.008518,22 Z M22.008518,14 C24.2176571,14 
+                             26.008518,12.2091391 26.008518,10 C26.008518,7.79086089 24.2176571,6 22.008518,6 C19.7993789,6 18.008518,7.79086089 18.008518,10 C18.008518,12.2091391 
+                             19.7993789,14 22.008518,14 L22.008518,14 Z" id="key"/>
+                        </g>
+                    </g>
+                </svg>
+            </button>
+            <button type="button" id="dc-exchange-btn" style="background-color: transparent;" title="Key Exchange Menu">
+                <svg class="dc-svg" version="1.1" viewBox="0 0 78 78" width="20px" height="20px">
+                    <path d="M72,4.5H6c-3.299,0-6,2.699-6,6V55.5c0,3.301,2.701,6,6,6h66c3.301,0,6-2.699,6-6V10.5  C78,7.2,75.301,4.5,72,4.5z M72,50.5H6V10.5h66V50.5z 
+                    M52.5,67.5h-27c-1.66,0-3,1.341-3,3v3h33v-3C55.5,68.84,54.16,67.5,52.5,67.5z   M26.991,36.5H36v-12h-9.009v-6.729L15.264,30.5l11.728,12.728V36.5z 
+                    M50.836,43.228L62.563,30.5L50.836,17.771V24.5h-9.009v12  h9.009V43.228z" style="fill:#d3d3d3;"/>
+                </svg>
+            </button>
+            <button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;" title="Generate & Send New Public Key">
+                <svg class="dc-svg iconActive-AKd_jq icon-1R19_H iconMargin-2YXk4F" x="0px" y="0px" viewBox="0 0 58 58">
+                    <path style="fill:#d3d3d3;" d="M27.767,26.73c-2.428-2.291-3.766-5.392-3.766-8.729c0-6.617,5.383-12,12-12s12,5.383,12,12  
+                    c0,3.288-1.372,6.469-3.765,8.728l-1.373-1.455c2.023-1.909,3.138-4.492,3.138-7.272c0-5.514-4.486-10-10-10s-10,4.486-10,10  
+                    c0,2.781,1.114,5.365,3.139,7.274L27.767,26.73z"/>
+                    <path style="fill:#d3d3d3;" d="M56.428,38.815c-0.937-0.695-2.188-0.896-3.435-0.55l-15.29,4.227  
+                    C37.891,42.028,38,41.522,38,40.991c0-2.2-1.794-3.991-3.999-3.991h-9.377c-0.667-1-2.363-4-4.623-4H16v-0.999  
+                    C16,30.347,14.654,29,13,29H9c-1.654,0-3,1.347-3,3v17C6,50.655,7.346,52,9,52h4c1.654,0,3-1.345,3-2.999v-0.753l12.14,8.201  
+                    c1.524,1.031,3.297,1.55,5.075,1.55c1.641,0,3.286-0.441,4.742-1.33l18.172-11.101C57.283,44.864,58,43.587,58,42.233v-0.312  
+                    C58,40.688,57.427,39.556,56.428,38.815z M14,49C14,49.553,13.552,50,13,50h-1v-4h-2v4H9c-0.552,0-1-0.447-1-0.999v-17  
+                    C8,31.449,8.448,31,9,31h4c0.552,0,1,0.449,1,1V49z M56,42.233c0,0.66-0.35,1.284-0.913,1.628L36.915,54.962  
+                    c-2.367,1.443-5.37,1.376-7.655-0.17L16,45.833V35h4c1.06,0,2.469,2.034,3.088,3.409L23.354,39h10.646  
+                    C35.104,39,36,39.892,36,40.988C36,42.098,35.104,43,34,43H29h-5v2h5h5h2l17.525-4.807c0.637-0.18,1.278-0.094,1.71,0.228  
+                    C55.722,40.781,56,41.328,56,41.922V42.233z"/>
+                    <path style="fill:#d3d3d3;" d="M33,25.394v6.607C33,33.655,34.347,35,36,35H38h1h4v-2h-4v-2h2v-2h-2v-3.577  
+                    c3.02-1.186,5-4.079,5-7.422c0-2.398-1.063-4.649-2.915-6.177c-1.85-1.524-4.283-2.134-6.683-1.668  
+                    c-3.155,0.614-5.671,3.153-6.261,6.318C27.39,20.523,29.933,24.041,33,25.394z M30.108,16.84c0.44-2.364,2.319-4.262,4.677-4.721  
+                    c1.802-0.356,3.639,0.104,5.028,1.249S42,16.202,42,18c0,2.702-1.719,5.011-4.276,5.745L37,23.954V33h-0.999  
+                    C35.449,33,35,32.553,35,32v-8.02l-0.689-0.225C31.822,22.943,29.509,20.067,30.108,16.84z"/>
+                    <path d="M36,22c2.206,0,4-1.794,4-4s-1.794-4-4-4s-4,1.794-4,4S33.795,22,36,22z   M36,16c1.103,0,2,0.897,2,2s-0.897,2-2,2s-2-0.897-2-2S34.898,16,36,16z"/>
+                    <circle style="fill:#d3d3d3;" cx="36" cy="18" r="3"/>
+                </svg>
+            </button>
+            `;
+
+        this.masterPasswordHtml =
+            `
+            <div id="dc-master-overlay" class="dc-overlay">
+                <div id="dc-overlay-centerfield" class="dc-overlay-centerfield" style="top: 30%">
+                    <h2 style="color:#ff0000;" id="dc-header-master-msg"></h2>
+                    <br/><br/>
+                    
+                    <span id="dc-prompt-master-msg"></span><br/>
+                    <input type="password" class="dc-password-field" id="dc-db-password"/>
+                    <br/>
+                    
+                    <div class="stat stat-bar">
+                        <span id = "dc-master-status" class="stat-bar-rating" style="width: 0;"/>
+                    </div>
+
+                    <div class="dc-ruler-align">
+                        <button class="dc-button" style="width:100%;" id="dc-unlock-database-btn"/>
+                    </div>
+                    
+                    <div class="dc-ruler-align">
+                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            `;
+
+        this.settingsMenuHtml =
+            `
+            <div id="dc-overlay" class="dc-overlay">
+                <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">
+                    <div class="dc-ruler-align">
+                        <input type="text" class="dc-input-field" id="dc-file-path" 
+                            style="width: 100%;padding: 2px;margin-left: 4px;" readonly/>
+                        <button class="dc-button dc-button-inverse" type="button" id="dc-select-file-path-btn" 
+                            style="top: -8px;"> . . .</button>
+                    </div>
+                    
+                    <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea" 
+                        placeholder="Enter any addition text to send with your message ..." maxlength="1100"/>
+                        
+                    <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
+                        <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox">
+                            <span style="margin-top: 5px;">Send Deletion Link</span>
+                    </div>
+                    <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
+                        <input id="dc-file-name-random-checkbox" class="ui-switch-checkbox" type="checkbox" checked>
+                        <span style="margin-top: 5px;">Randomize File Name</span>
+                    </div>
+                    
+                    <div class="stat stat-bar">
+                        <span id = "dc-file-upload-status" class="stat-bar-rating" style="width: 0;"/>
+                    </div>
+
+                    <div class="dc-ruler-align">
+                        <button class="dc-button" style="width:100%;" id="dc-file-upload-btn">Upload</button>
+                    </div>
+                    
+                    <div class="dc-ruler-align">
+                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">
+                        Cancel</button>
+                    </div>
+                </div>
+                <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">
+                    <span>Primary Password:</span>
+                    <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>
+                    
+                    <span>Secondary Password:</span>
+                    <input type="password" class="dc-password-field" id="dc-password-secondary" placeholder="..."/><br/>
+                    
+                    <div class="dc-ruler-align">
+                        <button class="dc-button" id="dc-save-pwd">Update Passwords</button>
+                        <button class="dc-button dc-button-inverse" id="dc-reset-pwd">Reset Passwords</button>
+                        <button class="dc-button dc-button-inverse" id="dc-cancel-btn">Cancel</button>
+                    </div>
+                    
+                    <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">
+                    Copy Current Passwords</button>
+                </div>
+                <div id="dc-update-overlay" class="dc-overlay-centerfield" 
+                style="top: 5%;border: 1px solid;display: none">
+                    <span>DiscordCrypt: Update Available</span>
+                    <div class="dc-ruler-align">
+                        <strong class="dc-hint dc-update-field" id="dc-new-version"/>
+                    </div>
+                    <div class="dc-ruler-align">
+                        <strong class="dc-hint dc-update-field" id="dc-old-version"/>
+                    </div>
+                    <div class="dc-ruler-align">
+                        <strong class="dc-hint dc-update-field">Changelog:</strong></div>
+                    <div class="dc-ruler-align">
+                        <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly/>
+                    </div>
+                    <br>
+                    <div class="dc-ruler-align">
+                        <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">Restart Now</button>
+                        <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">
+                        Restart Later</button>
+                    </div>
+                </div>
+                <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">
+                    <div class="tab" id="dc-settings-tab">
+                        <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>
+                    </div>
+                    <div class="tab-content" id="dc-settings" style="display: block;">
+                        <p style="text-align: center;">
+                            <b>DiscordCrypt Settings</b>
+                        </p>
+                        <br/><br/>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Primary Cipher:</div>
+                            <select class="dc-input-field" id="dc-primary-cipher">
+                                <option value="bf" selected>Blowfish ( 512-Bit )</option>
+                                <option value="aes">AES ( 256-Bit )</option>
+                                <option value="camel">Camellia ( 256-Bit )</option>
+                                <option value="tdes">TripleDES ( 192-Bit )</option>
+                                <option value="idea">IDEA ( 128-Bit )</option>
+                            </select>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Secondary Cipher:</div>
+                            <select class="dc-input-field" id="dc-secondary-cipher">
+                                <option value="bf">Blowfish ( 512-Bit )</option>
+                                <option value="aes">AES ( 256-Bit )</option>
+                                <option value="camel">Camellia ( 256-Bit )</option>
+                                <option value="idea">IDEA ( 256-Bit )</option>
+                                <option value="tdes">TripleDES ( 192-Bit )</option>
+                            </select>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Padding Mode:</div>
+                            <select class="dc-input-field" id="dc-settings-padding-mode">
+                                <option value="pkc7">PKCS #7</option>
+                                <option value="asn2">ANSI X9.23</option>
+                                <option value="iso1">ISO 10126</option>
+                                <option value="iso9">ISO 97971</option>
+                                <option value="zr0">Zero Padding</option>
+                            </select>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Cipher Operation Mode:</div>
+                            <select class="dc-input-field" id="dc-settings-cipher-mode">
+                                <option value="cbc">Cipher Block Chaining</option>
+                                <option value="cfb">Cipher Feedback Mode</option>
+                                <option value="ofb">Output Feedback Mode</option>
+                            </select>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Default Encryption Password:</div>
+                            <input type="text" class="dc-input-field" id="dc-settings-default-pwd"/>                        
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Encryption Scanning Frequency:</div>
+                            <input type="text" class="dc-input-field" id="dc-settings-scan-delay"/>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Message Trigger:</div>
+                            <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger"/>
+                        </div>
+                        
+                        <div style="font-size: 9px;">
+                            <div style="display: flex;">
+                                <div style="width: 30%;"></div>
+                                <p class="dc-hint">
+                                The suffix at the end of a typed message to indicate whether to encrypt the text.</p>
+                            </div>
+                            <div style="display: flex;">
+                                <div style="width: 30%;"></div>
+                                <p class="dc-hint">Example: <u>This message will be encrypted.|ENC</u></p>
+                            </div>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">New Master Database Password:</div>
+                            <input type="text" class="dc-input-field" id="dc-master-password"/>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <button id="dc-settings-save-btn" class="dc-button">Save & Apply</button>
+                            <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">
+                            Reset Settings</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="dc-overlay-exchange" class="dc-overlay-main" style="display: none;">
+                    <div class="tab" id="dc-exchange-tab">
+                        <button class='dc-tab-link' id="dc-tab-info-btn">Info</button>
+                        <button class='dc-tab-link' id="dc-tab-keygen-btn">Key Generation</button>
+                        <button class='dc-tab-link' id="dc-tab-handshake-btn">Secret Computation</button>
+                        <button class='dc-tab-link' id="dc-exit-exchange-btn" style="float:right;">[ X ]</button>
+                    </div>
+                    <div class="tab-content" id="dc-about-tab" style="display: block;">
+                        <p style="text-align: center;">
+                            <b>Key Exchanger</b>
+                        </p>
+                        <br/>
+                        
+                        <strong>What is this used for?</strong>
+                        <ul class="dc-list">
+                            <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt 
+                            requires a secure channel to exchange these keys.</li>
+                            <li>Using this generator, you may create new keys using standard algorithms such as 
+                            DH or ECDH for manual handshaking.</li>
+                            <li>Follow the steps below and you can generate a password between channels or users 
+                            while being able to publicly post the messages.</li>
+                            <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with 
+                            the Scrypt KDF function to derive two keys.</li>
+                        </ul>
+                        <br/>
+                        
+                        <strong>How do I use this?</strong>
+                        <ul class="dc-list">
+                            <li>Generate a key pair using the specified algorithm and key size on the 
+                            "Key Generation" tab.</li>
+                            <li>Give your partner your public key by clicking the "Send Public Key" button.</li>
+                            <li>Ask your partner to give you their public key using the same step above.</li>
+                            <li>Copy your partner's public key and paste it in the "Secret Computation" tab and 
+                            select "Compute Secret Keys".</li>
+                            <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span> the primary and secondary 
+                            keys to be generated.</li>
+                            <li>A status bar is provided to easily tell you when both passwords 
+                            have been generated.</li>
+                            <li>Click the "Apply Generated Passwords" button to apply both passwords to 
+                            the current user or channel.</li>
+                        </ul>
+                        
+                        <strong>Algorithms Supported:</strong>
+                        <ul class="dc-list">
+                            <li>
+                                <a title="Diffie–Hellman key exchange" 
+                                href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"
+                                 target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>
+                            </li>
+                            <li>
+                                <a title="Elliptic curve Diffie–Hellman" 
+                                href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman"
+                                 target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>
+                            </li>
+                        </ul>
+                        
+                        <span style="text-decoration: underline; color: #ff0000;">
+                            <strong>DO NOT:</strong>
+                        </span>
+                        <ul class="dc-list dc-list-red">
+                            <li>
+                                <strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong>
+                            </li>
+                            <li>
+                                <strong>Alter your public key or have your partner alter theirs in any way.</strong>
+                            </li>
+                            <li>
+                                <strong>Insert a random public key.</strong>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="tab-content" id="dc-keygen-tab" style="display: block;">
+                        <p style="text-align: center;">
+                            <b style="font-size: large;">Secure Key Generation</b>
+                        </p>
+                        <br/>
+                        
+                        <strong>Exchange Algorithm:</strong>
+                        <select id="dc-keygen-method">
+                            <option value="dh" selected>Diffie-Hellman</option>
+                            <option value="ecdh">Elliptic-Curve Diffie-Hellman</option>
+                        </select>
+                        <br/><br/>
+                
+                        <strong>Key Length ( Bits ):</strong>
+                        <select id="dc-keygen-algorithm">
+                            <option value="768">768</option>
+                            <option value="1024">1024</option>
+                            <option value="1536">1536</option>
+                            <option value="2048">2048</option>
+                            <option value="3072">3072</option>
+                            <option value="4096">4096</option>
+                            <option value="6144">6144</option>
+                            <option value="8192" selected>8192</option>
+                        </select>
+                        <br/><br/>
+                
+                        <div class="dc-ruler-align">
+                            <button id="dc-keygen-gen-btn" class="dc-button">Generate</button>
+                            <button id="dc-keygen-clear-btn" class="dc-button dc-button-inverse">Clear</button>
+                        </div>
+                        <br/><br/><br/>
+                
+                        <strong>Private Key: ( <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span> )</strong><br/>
+                        <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"
+                         unselectable="on" disabled readonly/>
+                        <br/><br/>
+                
+                        <strong>Public Key:</strong><br/>
+                        <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192" 
+                        unselectable="on" disabled readonly/>
+                        <br/><br/>
+                
+                        <div class="dc-ruler-align">
+                            <button id="dc-keygen-send-pub-btn" class="dc-button">Send Public Key</button>
+                        </div>
+                        <br/>
+                        
+                        <ul class="dc-list dc-list-red">
+                            <li>Never rely on copying these keys. Use the "Send Public Key" button 
+                            to send your key.</li>
+                            <li>Public keys are automatically encoded with a random salts.</li>
+                            <li>Posting these keys directly won't work since they aren't encoded 
+                            in the format required.</li>
+                        </ul>
+                    </div>
+                    <div class="tab-content" id="dc-handshake-tab">
+                        <p style="text-align: center;">
+                            <b style="font-size: large;">Key Derivation</b>
+                        </p>
+                        <br/>
+                        
+                        <p>
+                            <span style="text-decoration: underline; color: #ff0000;">
+                                <strong>NOTE:</strong>
+                            </span>
+                        </p>
+                        <ul class="dc-list dc-list-red">
+                            <li>Copy your partner's private key EXACTLY as it was posted.</li>
+                            <li>Your last generated private key from the "Key Generation" tab 
+                            will be used to compute these keys.</li>
+                        </ul>
+                        <br/>
+                        
+                        <strong>Partner's Public Key:</strong><br/>
+                        <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384"/>
+                        <br/><br/>
+                        
+                        <div class="dc-ruler-align">
+                            <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">
+                            Paste From Clipboard</button>
+                            <button id="dc-handshake-compute-btn" class="dc-button">Compute Secret Keys</button>
+                        </div>
+                        
+                        <ul class="dc-list dc-list-red">
+                            <li id="dc-handshake-algorithm">...</li>
+                            <li id="dc-handshake-salts">...</li>
+                            <li id="dc-handshake-secret">...</li>
+                        </ul>
+                        <br/>
+                        
+                        <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>
+                        <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"
+                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
+                        <br/><br/>
+                        
+                        <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>
+                        <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"
+                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
+                        <br/><br/>
+                        
+                        <div class="stat stat-bar" style="width:70%;">
+                            <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>
+                        </div><br/>
+                        
+                        <div class="dc-ruler-align">
+                            <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">
+                            Copy Keys & Nuke</button>
+                            <button id="dc-handshake-apply-keys-btn" class="dc-button">
+                            Apply Generated Passwords</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+
         this.unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0I" +
             "DI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xIDAgMi0u" +
             "OSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgNyA2aDEuOWM" +
@@ -1004,46 +1460,30 @@ class discordCrypt
         /* Check if the database exists. */
         const cfg_exists = self.configExists();
 
-        /* Use these messages based on whether we're creating a database or unlocking it. */
-        const header_msg = cfg_exists ?
-            '---------- Database Is Locked ----------' :
-            '---------- Database Not Found ----------';
-
-        const prompt_msg = cfg_exists ? 'Enter Password:' : 'Enter New Password:';
         const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
 
         /* Construct the password updating field. */
-        $(document.body).prepend(
-            `
-            <div id="dc-master-overlay" class="dc-overlay">
-                <div id="dc-overlay-centerfield" class="dc-overlay-centerfield" style="top: 30%">
-                    <h2 style="color:#ff0000;">${header_msg}</h2>
-                    <br/><br/>
-                    
-                    <span>${prompt_msg}</span><br/>
-                    <input type="password" class="dc-password-field" id="dc-db-password"/>
-                    <br/>
-                    
-                    <div class="stat stat-bar">
-                        <span id = "dc-master-status" class="stat-bar-rating" style="width: 0;"/>
-                    </div>
-
-                    <div class="dc-ruler-align">
-                        <button class="dc-button" style="width:100%;" id="dc-unlockdb-btn">${action_msg}</button>
-                    </div>
-                    
-                    <div class="dc-ruler-align">
-                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-cancel-btn">Cancel</button>
-                    </div>
-                </div>
-            </div>
-            `
-        );
+        $(document.body).prepend( this.masterPasswordHtml );
 
         const pwd_field = $('#dc-db-password');
         const cancel_btn = $('#dc-cancel-btn');
-        const unlock_btn = $('#dc-unlockdb-btn');
+        const unlock_btn = $('#dc-unlock-database-btn');
         const master_status = $('#dc-master-status');
+        const master_header_message = $('#dc-header-master-msg');
+        const master_prompt_message = $('#dc-prompt-master-msg');
+
+        /* Use these messages based on whether we're creating a database or unlocking it. */
+        master_header_message.text(
+            cfg_exists ?
+                '---------- Database Is Locked ----------' :
+                '---------- Database Not Found ----------'
+        );
+        master_prompt_message.text(
+            cfg_exists ?
+                'Enter Password:' :
+                'Enter New Password:'
+        );
+        unlock_btn.text(action_msg);
 
         /* Force the database element to load. */
         document.getElementById('dc-master-overlay').style.display = 'block';
@@ -1250,1251 +1690,141 @@ class discordCrypt
     }
 
     /* Adds the password toolbar. */
-    loadToolbar(){
-        const self = this;
-
+    loadToolbar() {
         /* Skip if the configuration hasn't been loaded. */
-        if(!this.configFile)
+        if ( !this.configFile )
             return;
 
         /* Skip if we're not in an active channel. */
-        if(discordCrypt.getChannelId() === '@me')
+        if ( discordCrypt.getChannelId() === '@me' )
             return;
 
         /* Toolbar buttons and their icons if it doesn't exist. */
-        if($('#dc-passwd-btn').length !== 0)
+        if ( $( '#dc-passwd-btn' ).length !== 0 )
             return;
 
         /* Inject the toolbar. */
-        $(self.searchUiClass).parent().parent().parent().prepend(
-            `
-            <button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File">
-                <svg class="dc-svg" width="24" height="24" viewBox="0 0 1792 1792" fill="lightgrey">
-                    <path d="M768 384v-128h-128v128h128zm128 128v-128h-128v128h128zm-128 
-                        128v-128h-128v128h128zm128 128v-128h-128v128h128zm700-388q28 28 48 
-                        76t20 88v1152q0 40-28 68t-68 28h-1344q-40 0-68-28t-28-68v-1600q0-40 28-68t68-28h896q40 
-                        0 88 20t76 48zm-444-244v376h376q-10-29-22-41l-313-313q-12-12-41-22zm384 1528v-1024h-416q-40 
-                        0-68-28t-28-68v-416h-128v128h-128v-128h-512v1536h1280zm-627-721l107 349q8 27 8 52 0 83-72.5 
-                        137.5t-183.5 54.5-183.5-54.5-72.5-137.5q0-25 8-52 21-63 120-396v-128h128v128h79q22 0 39 
-                        13t23 34zm-141 465q53 0 90.5-19t37.5-45-37.5-45-90.5-19-90.5 19-37.5 45 37.5 45 90.5 19z">
-                    </path>
-                </svg>           
-            </button>
-            <button type="button" id="dc-settings-btn" style="background-color: transparent;" title="DiscordCrypt Settings">
-                <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32" 
-                width="20px" height="20px" xml:space="preserve">
-                    <g>
-                        <path fill="lightgrey" d="M28,10H18v2h10V10z M14,10H4v10h10V10z M32,0H0v28h15.518c1.614,2.411,4.361,3.999,7.482,4c4.971-0.002,8.998-4.029,9-9   
-                        c0-0.362-0.027-0.718-0.069-1.069L32,22V0z M10,2h12v2H10V2z M6,2h2v2H6V2z M2,2h2v2H2V2z M23,29.883   
-                        c-3.801-0.009-6.876-3.084-6.885-6.883c0.009-3.801,3.084-6.876,6.885-6.885c3.799,0.009,6.874,3.084,6.883,6.885   
-                        C29.874,26.799,26.799,29.874,23,29.883z M29.999,17.348c-0.57-0.706-1.243-1.324-1.999-1.83V14h-4.99c-0.003,0-0.007,0-0.01,0   
-                        s-0.007,0-0.01,0H18v1.516c-2.412,1.614-4,4.361-4,7.483c0,1.054,0.19,2.061,0.523,3H2V6h27.999V17.348z M30,4h-4V2h4V4z"/>
-                        <path fill="lightgrey" d="M28,24v-2.001h-1.663c-0.063-0.212-0.145-0.413-0.245-0.606l1.187-1.187l-1.416-1.415l-1.165,1.166   
-                        c-0.22-0.123-0.452-0.221-0.697-0.294V18h-2v1.662c-0.229,0.068-0.446,0.158-0.652,0.27l-1.141-1.14l-1.415,1.415l1.14,1.14   
-                        c-0.112,0.207-0.202,0.424-0.271,0.653H18v2h1.662c0.073,0.246,0.172,0.479,0.295,0.698l-1.165,1.163l1.413,1.416l1.188-1.187   
-                        c0.192,0.101,0.394,0.182,0.605,0.245V28H24v-1.665c0.229-0.068,0.445-0.158,0.651-0.27l1.212,1.212l1.414-1.416l-1.212-1.21   
-                        c0.111-0.206,0.201-0.423,0.27-0.651H28z M22.999,24.499c-0.829-0.002-1.498-0.671-1.501-1.5c0.003-0.829,0.672-1.498,1.501-1.501   
-                        c0.829,0.003,1.498,0.672,1.5,1.501C24.497,23.828,23.828,24.497,22.999,24.499z"/>
-                    </g>
-                </svg>
-            </button>
-            <button type="button" id="dc-lock-btn" style="background-color: transparent;"/>
-            <button type="button" id="dc-passwd-btn" style="background-color: transparent;" title="Password Settings">
-                <svg class="dc-svg" version="1.1" viewBox="0 0 32 32" width="20px" height="20px">
-                    <g fill="none" fill-rule="evenodd" stroke="none" stroke-width="1">
-                        <g fill="lightgrey">
-                            <path d="M13.008518,22 L11.508518,23.5 L11.508518,23.5 L14.008518,26 L11.008518,29 L8.50851798,26.5 L6.63305475,28.3754632 C5.79169774,29.2168202 
-                            4.42905085,29.2205817 3.5909158,28.3824466 L3.62607133,28.4176022 C2.78924,27.5807709 2.79106286,26.2174551 3.63305475,25.3754632 L15.7904495,13.2180685
-                             C15.2908061,12.2545997 15.008518,11.1602658 15.008518,10 C15.008518,6.13400656 18.1425245,3 22.008518,3 C25.8745114,3 
-                             29.008518,6.13400656 29.008518,10 C29.008518,13.8659934 25.8745114,17 22.008518,17 C20.8482521,17 19.7539183,16.7177118 18.7904495,16.2180685 
-                             L18.7904495,16.2180685 L16.008518,19 L18.008518,21 L15.008518,24 L13.008518,22 L13.008518,22 L13.008518,22 Z M22.008518,14 C24.2176571,14 
-                             26.008518,12.2091391 26.008518,10 C26.008518,7.79086089 24.2176571,6 22.008518,6 C19.7993789,6 18.008518,7.79086089 18.008518,10 C18.008518,12.2091391 
-                             19.7993789,14 22.008518,14 L22.008518,14 Z" id="key"/>
-                        </g>
-                    </g>
-                </svg>
-            </button>
-            <button type="button" id="dc-exchange-btn" style="background-color: transparent;" title="Key Exchange Menu">
-                <svg class="dc-svg" version="1.1" viewBox="0 0 78 78" width="20px" height="20px">
-                    <path d="M72,4.5H6c-3.299,0-6,2.699-6,6V55.5c0,3.301,2.701,6,6,6h66c3.301,0,6-2.699,6-6V10.5  C78,7.2,75.301,4.5,72,4.5z M72,50.5H6V10.5h66V50.5z 
-                    M52.5,67.5h-27c-1.66,0-3,1.341-3,3v3h33v-3C55.5,68.84,54.16,67.5,52.5,67.5z   M26.991,36.5H36v-12h-9.009v-6.729L15.264,30.5l11.728,12.728V36.5z 
-                    M50.836,43.228L62.563,30.5L50.836,17.771V24.5h-9.009v12  h9.009V43.228z" style="fill:#d3d3d3;"/>
-                </svg>
-            </button>
-            <button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;" title="Generate & Send New Public Key">
-                <svg class="dc-svg iconActive-AKd_jq icon-1R19_H iconMargin-2YXk4F" x="0px" y="0px" viewBox="0 0 58 58">
-                    <path style="fill:#d3d3d3;" d="M27.767,26.73c-2.428-2.291-3.766-5.392-3.766-8.729c0-6.617,5.383-12,12-12s12,5.383,12,12  
-                    c0,3.288-1.372,6.469-3.765,8.728l-1.373-1.455c2.023-1.909,3.138-4.492,3.138-7.272c0-5.514-4.486-10-10-10s-10,4.486-10,10  
-                    c0,2.781,1.114,5.365,3.139,7.274L27.767,26.73z"/>
-                    <path style="fill:#d3d3d3;" d="M56.428,38.815c-0.937-0.695-2.188-0.896-3.435-0.55l-15.29,4.227  
-                    C37.891,42.028,38,41.522,38,40.991c0-2.2-1.794-3.991-3.999-3.991h-9.377c-0.667-1-2.363-4-4.623-4H16v-0.999  
-                    C16,30.347,14.654,29,13,29H9c-1.654,0-3,1.347-3,3v17C6,50.655,7.346,52,9,52h4c1.654,0,3-1.345,3-2.999v-0.753l12.14,8.201  
-                    c1.524,1.031,3.297,1.55,5.075,1.55c1.641,0,3.286-0.441,4.742-1.33l18.172-11.101C57.283,44.864,58,43.587,58,42.233v-0.312  
-                    C58,40.688,57.427,39.556,56.428,38.815z M14,49C14,49.553,13.552,50,13,50h-1v-4h-2v4H9c-0.552,0-1-0.447-1-0.999v-17  
-                    C8,31.449,8.448,31,9,31h4c0.552,0,1,0.449,1,1V49z M56,42.233c0,0.66-0.35,1.284-0.913,1.628L36.915,54.962  
-                    c-2.367,1.443-5.37,1.376-7.655-0.17L16,45.833V35h4c1.06,0,2.469,2.034,3.088,3.409L23.354,39h10.646  
-                    C35.104,39,36,39.892,36,40.988C36,42.098,35.104,43,34,43H29h-5v2h5h5h2l17.525-4.807c0.637-0.18,1.278-0.094,1.71,0.228  
-                    C55.722,40.781,56,41.328,56,41.922V42.233z"/>
-                    <path style="fill:#d3d3d3;" d="M33,25.394v6.607C33,33.655,34.347,35,36,35H38h1h4v-2h-4v-2h2v-2h-2v-3.577  
-                    c3.02-1.186,5-4.079,5-7.422c0-2.398-1.063-4.649-2.915-6.177c-1.85-1.524-4.283-2.134-6.683-1.668  
-                    c-3.155,0.614-5.671,3.153-6.261,6.318C27.39,20.523,29.933,24.041,33,25.394z M30.108,16.84c0.44-2.364,2.319-4.262,4.677-4.721  
-                    c1.802-0.356,3.639,0.104,5.028,1.249S42,16.202,42,18c0,2.702-1.719,5.011-4.276,5.745L37,23.954V33h-0.999  
-                    C35.449,33,35,32.553,35,32v-8.02l-0.689-0.225C31.822,22.943,29.509,20.067,30.108,16.84z"/>
-                    <path d="M36,22c2.206,0,4-1.794,4-4s-1.794-4-4-4s-4,1.794-4,4S33.795,22,36,22z   M36,16c1.103,0,2,0.897,2,2s-0.897,2-2,2s-2-0.897-2-2S34.898,16,36,16z"/>
-                    <circle style="fill:#d3d3d3;" cx="36" cy="18" r="3"/>
-                </svg>
-            </button>
-        `
-        );
+        $( this.searchUiClass ).parent().parent().parent().prepend( this.toolbarHtml );
 
-        /* Set the button class. */
-        $('.dc-svg').attr('class', 'dc-svg');
+        /* Set the SVG button class. */
+        $( '.dc-svg' ).attr( 'class', 'dc-svg' );
 
         /* Set the initial status icon. */
-        if($('#dc-lock-btn').length > 0)
-        {
-            if(this.configFile.encodeAll)
-            {
-                $('#dc-lock-btn').attr('title', 'Disable Message Encryption');
-                $('#dc-lock-btn')[0].innerHTML = atob(this.lockIcon);
+        if ( $( '#dc-lock-btn' ).length > 0 ) {
+            if ( this.configFile.encodeAll ) {
+                $( '#dc-lock-btn' ).attr( 'title', 'Disable Message Encryption' );
+                $( '#dc-lock-btn' )[ 0 ].innerHTML = atob( this.lockIcon );
             }
-            else{
-                $('#dc-lock-btn').attr('title', 'Enable Message Encryption');
-                $('#dc-lock-btn')[0].innerHTML = atob(this.unlockIcon);
+            else {
+                $( '#dc-lock-btn' ).attr( 'title', 'Enable Message Encryption' );
+                $( '#dc-lock-btn' )[ 0 ].innerHTML = atob( this.unlockIcon );
             }
 
             /* Set the button class. */
-            $('.dc-svg').attr('class', 'dc-svg');
+            $( '.dc-svg' ).attr( 'class', 'dc-svg' );
         }
 
         /* Inject the settings. */
-        $(document.body).prepend(
-            `
-            <div id="dc-overlay" class="dc-overlay">
-                <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">
-                    <input type="text" class="dc-input-field" id="dc-file-path" 
-                        style="width: 100%;padding: 2px;margin-left: 4px;" readonly/>    
-                                        
-                    <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea" 
-                        placeholder="Enter any addition text to send with your message ..." maxlength="1100"/>
-                        
-                    <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
-                        <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox">
-                        <span>Send Deletion Link</span>
-                    </div>
-                    
-                    <div class="stat stat-bar">
-                        <span id = "dc-file-upload-status" class="stat-bar-rating" style="width: 0;"/>
-                    </div>
-
-                    <div class="dc-ruler-align">
-                        <button class="dc-button" style="width:100%;" id="dc-file-upload-btn">Upload</button>
-                    </div>
-                    
-                    <div class="dc-ruler-align">
-                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">
-                        Cancel</button>
-                    </div>
-                </div>
-                <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">
-                    <span>Primary Password:</span>
-                    <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>
-                    
-                    <span>Secondary Password:</span>
-                    <input type="password" class="dc-password-field" id="dc-password-secondary" placeholder="..."/><br/>
-                    
-                    <div class="dc-ruler-align">
-                        <button class="dc-button" id="dc-save-pwd">Update Passwords</button>
-                        <button class="dc-button dc-button-inverse" id="dc-reset-pwd">Reset Passwords</button>
-                        <button class="dc-button dc-button-inverse" id="dc-cancel-btn">Cancel</button>
-                    </div>
-                    
-                    <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">
-                    Copy Current Passwords</button>
-                </div>
-                <div id="dc-update-overlay" class="dc-overlay-centerfield" 
-                style="top: 5%;border: 1px solid;display: none">
-                    <span>DiscordCrypt: Update Available</span>
-                    <div class="dc-ruler-align">
-                        <strong class="dc-hint dc-update-field" id="dc-new-version"/>
-                    </div>
-                    <div class="dc-ruler-align">
-                        <strong class="dc-hint dc-update-field" id="dc-old-version"/>
-                    </div>
-                    <div class="dc-ruler-align">
-                        <strong class="dc-hint dc-update-field">Changelog:</strong></div>
-                    <div class="dc-ruler-align">
-                        <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly/>
-                    </div>
-                    <br>
-                    <div class="dc-ruler-align">
-                        <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">Restart Now</button>
-                        <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">
-                        Restart Later</button>
-                    </div>
-                </div>
-                <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">
-                    <div class="tab" id="dc-settings-tab">
-                        <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>
-                    </div>
-                    <div class="tab-content" id="dc-settings" style="display: block;">
-                        <p style="text-align: center;">
-                            <b>DiscordCrypt Settings</b>
-                        </p>
-                        <br/><br/>
-                        
-                        <div class="dc-ruler-align">
-                            <div class="dc-input-label">Primary Cipher:</div>
-                            <select class="dc-input-field" id="dc-primary-cipher">
-                                <option value="bf" selected>Blowfish ( 512-Bit )</option>
-                                <option value="aes">AES ( 256-Bit )</option>
-                                <option value="camel">Camellia ( 256-Bit )</option>
-                                <option value="tdes">TripleDES ( 192-Bit )</option>
-                                <option value="idea">IDEA ( 128-Bit )</option>
-                            </select>
-                        </div>
-                        
-                        <div class="dc-ruler-align">
-                            <div class="dc-input-label">Secondary Cipher:</div>
-                            <select class="dc-input-field" id="dc-secondary-cipher">
-                                <option value="bf">Blowfish ( 512-Bit )</option>
-                                <option value="aes">AES ( 256-Bit )</option>
-                                <option value="camel">Camellia ( 256-Bit )</option>
-                                <option value="idea">IDEA ( 256-Bit )</option>
-                                <option value="tdes">TripleDES ( 192-Bit )</option>
-                            </select>
-                        </div>
-                        
-                        <div class="dc-ruler-align">
-                            <div class="dc-input-label">Padding Mode:</div>
-                            <select class="dc-input-field" id="dc-settings-padding-mode">
-                                <option value="pkc7">PKCS #7</option>
-                                <option value="asn2">ANSI X9.23</option>
-                                <option value="iso1">ISO 10126</option>
-                                <option value="iso9">ISO 97971</option>
-                                <option value="zr0">Zero Padding</option>
-                            </select>
-                        </div>
-                        
-                        <div class="dc-ruler-align">
-                            <div class="dc-input-label">Cipher Operation Mode:</div>
-                            <select class="dc-input-field" id="dc-settings-cipher-mode">
-                                <option value="cbc">Cipher Block Chaining</option>
-                                <option value="cfb">Cipher Feedback Mode</option>
-                                <option value="ofb">Output Feedback Mode</option>
-                            </select>
-                        </div>
-                        
-                        <div class="dc-ruler-align">
-                            <div class="dc-input-label">Default Encryption Password:</div>
-                            <input type="text" class="dc-input-field" id="dc-settings-default-pwd"/>                        
-                        </div>
-                        
-                        <div class="dc-ruler-align">
-                            <div class="dc-input-label">Encryption Scanning Frequency:</div>
-                            <input type="text" class="dc-input-field" id="dc-settings-scan-delay"/>
-                        </div>
-                        
-                        <div class="dc-ruler-align">
-                            <div class="dc-input-label">Message Trigger:</div>
-                            <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger"/>
-                        </div>
-                        
-                        <div style="font-size: 9px;">
-                            <div style="display: flex;">
-                                <div style="width: 30%;"></div>
-                                <p class="dc-hint">
-                                The suffix at the end of a typed message to indicate whether to encrypt the text.</p>
-                            </div>
-                            <div style="display: flex;">
-                                <div style="width: 30%;"></div>
-                                <p class="dc-hint">Example: <u>This message will be encrypted.|ENC</u></p>
-                            </div>
-                        </div>
-                        
-                        <div class="dc-ruler-align">
-                            <div class="dc-input-label">New Master Database Password:</div>
-                            <input type="text" class="dc-input-field" id="dc-master-password"/>
-                        </div>
-                        
-                        <div class="dc-ruler-align">
-                            <button id="dc-settings-save-btn" class="dc-button">Save & Apply</button>
-                            <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">
-                            Reset Settings</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="dc-overlay-exchange" class="dc-overlay-main" style="display: none;">
-                    <div class="tab" id="dc-exchange-tab">
-                        <button class='dc-tab-link' id="dc-tab-info-btn">Info</button>
-                        <button class='dc-tab-link' id="dc-tab-keygen-btn">Key Generation</button>
-                        <button class='dc-tab-link' id="dc-tab-handshake-btn">Secret Computation</button>
-                        <button class='dc-tab-link' id="dc-exit-exchange-btn" style="float:right;">[ X ]</button>
-                    </div>
-                    <div class="tab-content" id="dc-about-tab" style="display: block;">
-                        <p style="text-align: center;">
-                            <b>Key Exchanger</b>
-                        </p>
-                        <br/>
-                        
-                        <strong>What is this used for?</strong>
-                        <ul class="dc-list">
-                            <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt 
-                            requires a secure channel to exchange these keys.</li>
-                            <li>Using this generator, you may create new keys using standard algorithms such as 
-                            DH or ECDH for manual handshaking.</li>
-                            <li>Follow the steps below and you can generate a password between channels or users 
-                            while being able to publicly post the messages.</li>
-                            <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with 
-                            the Scrypt KDF function to derive two keys.</li>
-                        </ul>
-                        <br/>
-                        
-                        <strong>How do I use this?</strong>
-                        <ul class="dc-list">
-                            <li>Generate a key pair using the specified algorithm and key size on the 
-                            "Key Generation" tab.</li>
-                            <li>Give your partner your public key by clicking the "Send Public Key" button.</li>
-                            <li>Ask your partner to give you their public key using the same step above.</li>
-                            <li>Copy your partner's public key and paste it in the "Secret Computation" tab and 
-                            select "Compute Secret Keys".</li>
-                            <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span> the primary and secondary 
-                            keys to be generated.</li>
-                            <li>A status bar is provided to easily tell you when both passwords 
-                            have been generated.</li>
-                            <li>Click the "Apply Generated Passwords" button to apply both passwords to 
-                            the current user or channel.</li>
-                        </ul>
-                        
-                        <strong>Algorithms Supported:</strong>
-                        <ul class="dc-list">
-                            <li>
-                                <a title="Diffie–Hellman key exchange" 
-                                href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"
-                                 target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>
-                            </li>
-                            <li>
-                                <a title="Elliptic curve Diffie–Hellman" 
-                                href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman"
-                                 target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>
-                            </li>
-                        </ul>
-                        
-                        <span style="text-decoration: underline; color: #ff0000;">
-                            <strong>DO NOT:</strong>
-                        </span>
-                        <ul class="dc-list dc-list-red">
-                            <li>
-                                <strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong>
-                            </li>
-                            <li>
-                                <strong>Alter your public key or have your partner alter theirs in any way.</strong>
-                            </li>
-                            <li>
-                                <strong>Insert a random public key.</strong>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="tab-content" id="dc-keygen-tab" style="display: block;">
-                        <p style="text-align: center;">
-                            <b style="font-size: large;">Secure Key Generation</b>
-                        </p>
-                        <br/>
-                        
-                        <strong>Exchange Algorithm:</strong>
-                        <select id="dc-keygen-method">
-                            <option value="dh" selected>Diffie-Hellman</option>
-                            <option value="ecdh">Elliptic-Curve Diffie-Hellman</option>
-                        </select>
-                        <br/><br/>
-                
-                        <strong>Key Length ( Bits ):</strong>
-                        <select id="dc-keygen-algorithm">
-                            <option value="768">768</option>
-                            <option value="1024">1024</option>
-                            <option value="1536">1536</option>
-                            <option value="2048">2048</option>
-                            <option value="3072">3072</option>
-                            <option value="4096">4096</option>
-                            <option value="6144">6144</option>
-                            <option value="8192" selected>8192</option>
-                        </select>
-                        <br/><br/>
-                
-                        <div class="dc-ruler-align">
-                            <button id="dc-keygen-gen-btn" class="dc-button">Generate</button>
-                            <button id="dc-keygen-clear-btn" class="dc-button dc-button-inverse">Clear</button>
-                        </div>
-                        <br/><br/><br/>
-                
-                        <strong>Private Key: ( <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span> )</strong><br/>
-                        <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"
-                         unselectable="on" disabled readonly/>
-                        <br/><br/>
-                
-                        <strong>Public Key:</strong><br/>
-                        <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192" 
-                        unselectable="on" disabled readonly/>
-                        <br/><br/>
-                
-                        <div class="dc-ruler-align">
-                            <button id="dc-keygen-send-pub-btn" class="dc-button">Send Public Key</button>
-                        </div>
-                        <br/>
-                        
-                        <ul class="dc-list dc-list-red">
-                            <li>Never rely on copying these keys. Use the "Send Public Key" button 
-                            to send your key.</li>
-                            <li>Public keys are automatically encoded with a random salts.</li>
-                            <li>Posting these keys directly won't work since they aren't encoded 
-                            in the format required.</li>
-                        </ul>
-                    </div>
-                    <div class="tab-content" id="dc-handshake-tab">
-                        <p style="text-align: center;">
-                            <b style="font-size: large;">Key Derivation</b>
-                        </p>
-                        <br/>
-                        
-                        <p>
-                            <span style="text-decoration: underline; color: #ff0000;">
-                                <strong>NOTE:</strong>
-                            </span>
-                        </p>
-                        <ul class="dc-list dc-list-red">
-                            <li>Copy your partner's private key EXACTLY as it was posted.</li>
-                            <li>Your last generated private key from the "Key Generation" tab 
-                            will be used to compute these keys.</li>
-                        </ul>
-                        <br/>
-                        
-                        <strong>Partner's Public Key:</strong><br/>
-                        <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384"/>
-                        <br/><br/>
-                        
-                        <div class="dc-ruler-align">
-                            <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">
-                            Paste From Clipboard</button>
-                            <button id="dc-handshake-compute-btn" class="dc-button">Compute Secret Keys</button>
-                        </div>
-                        
-                        <ul class="dc-list dc-list-red">
-                            <li id="dc-handshake-algorithm">...</li>
-                            <li id="dc-handshake-salts">...</li>
-                            <li id="dc-handshake-secret">...</li>
-                        </ul>
-                        <br/>
-                        
-                        <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>
-                        <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"
-                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
-                        <br/><br/>
-                        
-                        <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>
-                        <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"
-                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
-                        <br/><br/>
-                        
-                        <div class="stat stat-bar" style="width:70%;">
-                            <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>
-                        </div><br/>
-                        
-                        <div class="dc-ruler-align">
-                            <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">
-                            Copy Keys & Nuke</button>
-                            <button id="dc-handshake-apply-keys-btn" class="dc-button">
-                            Apply Generated Passwords</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            `
-        );
+        $( document.body ).prepend( this.settingsMenuHtml );
 
         /* Also by default, set the about tab to be shown. */
-        discordCrypt.setActiveTab(0);
+        discordCrypt.setActiveTab( 0 );
 
         /* Update all settings from the settings panel. */
-        $('#dc-settings-encrypt-trigger')[0].value = self.configFile.encodeMessageTrigger;
-        $('#dc-settings-default-pwd')[0].value = self.configFile.defaultPassword;
-        $('#dc-settings-scan-delay')[0].value = self.configFile.encryptScanDelay;
-        $('#dc-settings-padding-mode')[0].value = self.configFile.paddingMode.toLowerCase();
-        $('#dc-settings-cipher-mode')[0].value = self.configFile.encryptBlockMode.toLowerCase();
-        $('#dc-primary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, false);
-        $('#dc-secondary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, true);
+        $( '#dc-settings-encrypt-trigger' )[ 0 ].value = this.configFile.encodeMessageTrigger;
+        $( '#dc-settings-default-pwd' )[ 0 ].value = this.configFile.defaultPassword;
+        $( '#dc-settings-scan-delay' )[ 0 ].value = this.configFile.encryptScanDelay;
+        $( '#dc-settings-padding-mode' )[ 0 ].value = this.configFile.paddingMode.toLowerCase();
+        $( '#dc-settings-cipher-mode' )[ 0 ].value = this.configFile.encryptBlockMode.toLowerCase();
+        $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, false );
+        $( '#dc-secondary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, true );
 
         /* Handle file button clicked. */
-        $('#dc-file-btn').click(function(){
-            /* Create an input element. */
-            let file = require('electron').remote.dialog.showOpenDialog({
-                title: 'Select a file to encrypt and upload',
-                label: 'Select',
-                message: 'Maximum file size is 50 MB',
-                properties: ['openFile', 'showHiddenFiles', 'treatPackageAsDirectory']
-            });
+        $( '#dc-file-btn' ).click( discordCrypt.on_file_button_clicked );
 
-            /* Ignore if no file was selected. */
-            if(!file.length || !file[0].length)
-                return;
-
-            /* Show main background. */
-            $('#dc-overlay')[0].style.display = 'block';
-
-            /* Show the upload overlay. */
-            $('#dc-overlay-upload')[0].style.display = 'block';
-
-            /* Set the file path to the selected path. */
-            $('#dc-file-path').val(file[0]);
-        });
+        /* Handle alter file path button. */
+        $( '#dc-select-file-path-btn' ).click( discordCrypt.on_alter_file_button_clicked );
 
         /* Handle file button cancelled. */
-        $('#dc-file-cancel-btn').click(function(){
-            /* Clear old file name. */
-            $('#dc-file-path').val('');
-
-            /* Show main background. */
-            $('#dc-overlay')[0].style.display = 'none';
-
-            /* Show the upload overlay. */
-            $('#dc-overlay-upload')[0].display = 'none';
-        });
+        $( '#dc-file-cancel-btn' ).click( discordCrypt.on_cancel_file_upload_button_clicked );
 
         /* Handle Settings tab opening. */
-        $('#dc-settings-btn').click(function(){
-            /* Show main background. */
-            $('#dc-overlay')[0].style.display = 'block';
-
-            /* Show the main settings menu. */
-            $('#dc-overlay-settings')[0].style.display = 'block';
-        });
+        $( '#dc-settings-btn' ).click( discordCrypt.on_settings_button_clicked );
 
         /* Handle Settings tab closing. */
-        $('#dc-exit-settings-btn').click(function(){
-            /* Hide main background. */
-            $('#dc-overlay')[0].style.display = 'none';
-
-            /* Hide the main settings menu. */
-            $('#dc-overlay-settings')[0].style.display = 'none';
-        });
+        $( '#dc-exit-settings-btn' ).click( discordCrypt.on_settings_close_button_clicked );
 
         /* Handle Save settings. */
-        $('#dc-settings-save-btn').click(function(){
-            /* Update all settings from the settings panel. */
-            self.configFile.encodeMessageTrigger = $('#dc-settings-encrypt-trigger')[0].value;
-            self.configFile.encryptBlockMode = $('#dc-settings-cipher-mode')[0].value;
-            self.configFile.defaultPassword = $('#dc-settings-default-pwd')[0].value;
-            self.configFile.encryptScanDelay = $('#dc-settings-scan-delay')[0].value;
-            self.configFile.paddingMode = $('#dc-settings-padding-mode')[0].value;
-            self.configFile.encryptMode =
-                discordCrypt.cipherStringToIndex($('#dc-primary-cipher')[0].value, $('#dc-secondary-cipher')[0].value);
-            $('#dc-primary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, false);
-            $('#dc-secondary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, true);
-
-            /* Handle master password updates if necessary. */
-            if($('#dc-master-password')[0].value !== ''){
-                let password = $('#dc-master-password')[0].value;
-
-                /* Reset the password field. */
-                $('#dc-master-password')[0].value = '';
-
-                /* Hash the password. */
-                discordCrypt.scrypt
-                (
-                    new Buffer(password),
-                    new Buffer(discordCrypt.whirlpool(password, true), 'hex'),
-                    32, 1536, 8, 1, (error, progress, pwd) => {
-                        if(error){
-                            /* Alert the user. */
-                            alert('Error setting the new database password. Check the console for more info.');
-
-                            discordCrypt.log(error.toString(), 'error');
-                            return true;
-                        }
-
-                        if(pwd){
-                            /* Now update the password. */
-                            self.masterPassword = new Buffer(pwd, 'hex');
-
-                            /* Save the configuration file and update the button text. */
-                            self.saveSettings(this);
-                        }
-
-                        return false;
-                    }
-                );
-            }
-            else
-                /* Save the configuration file and update the button text. */
-                self.saveSettings(this);
-        });
+        $( '#dc-settings-save-btn' ).click( discordCrypt.on_save_settings_button_clicked( this ) );
 
         /* Handle Reset settings. */
-        $('#dc-settings-reset-btn').click(function(){
-            /* Resets the configuration file and update the button text. */
-            self.resetSettings(this);
-
-            /* Update all settings from the settings panel. */
-            $('#dc-master-password')[0].value = '';
-            $('#dc-settings-default-pwd')[0].value = self.configFile.defaultPassword;
-            $('#dc-settings-scan-delay')[0].value = self.configFile.encryptScanDelay;
-            $('#dc-settings-encrypt-trigger')[0].value = self.configFile.encodeMessageTrigger;
-            $('#dc-settings-padding-mode')[0].value = self.configFile.paddingMode.toLowerCase();
-            $('#dc-settings-cipher-mode')[0].value = self.configFile.encryptBlockMode.toLowerCase();
-            $('#dc-primary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, false);
-            $('#dc-secondary-cipher')[0].value = discordCrypt.cipherIndexToString(self.configFile.encryptMode, true);
-        });
+        $( '#dc-settings-reset-btn' ).click( discordCrypt.on_reset_settings_button_clicked( this ) );
 
         /* Handle Restart-Now button clicking. */
-        $('#dc-restart-now-btn').click(function() { location.reload(); });
+        $( '#dc-restart-now-btn' ).click( discordCrypt.on_restart_now_button_clicked );
 
         /* Handle Restart-Later button clicking. */
-        $('#dc-restart-later-btn').click(function() {
-            /* Hide the update and changelog. */
-            $('#dc-overlay')[0].style.display = 'none';
-            $('#dc-update-overlay')[0].style.display = 'none';
-        });
+        $( '#dc-restart-later-btn' ).click( discordCrypt.on_restart_later_button_clicked );
 
         /* Handle Info tab switch. */
-        $('#dc-tab-info-btn').click(function(){ discordCrypt.setActiveTab(0); });
+        $( '#dc-tab-info-btn' ).click( discordCrypt.on_info_tab_button_clicked );
 
         /* Handle Keygen tab switch. */
-        $('#dc-tab-keygen-btn').click(function(){ discordCrypt.setActiveTab(1); });
+        $( '#dc-tab-keygen-btn' ).click( discordCrypt.on_exchange_tab_button_clicked );
 
         /* Handle Handshake tab switch. */
-        $('#dc-tab-handshake-btn').click(function(){ discordCrypt.setActiveTab(2); });
+        $( '#dc-tab-handshake-btn' ).click( discordCrypt.on_handshake_tab_button_clicked );
 
         /* Handle exit tab button. */
-        $('#dc-exit-exchange-btn').click(function(){
-            /* Hide main background. */
-            $('#dc-overlay')[0].style.display = 'none';
-
-            /* Hide the entire exchange key menu. */
-            $('#dc-overlay-exchange')[0].style.display = 'none';
-
-            /* Reset the index to the info tab. */
-            discordCrypt.setActiveTab(0);
-        });
+        $( '#dc-exit-exchange-btn' ).click( discordCrypt.on_close_exchange_button_clicked );
 
         /* Open exchange menu. */
-        $('#dc-exchange-btn').click(function(){
-            /* Show background. */
-            $('#dc-overlay')[0].style.display = 'block';
-
-            /* Show main menu. */
-            $('#dc-overlay-exchange')[0].style.display = 'block';
-        });
+        $( '#dc-exchange-btn' ).click( discordCrypt.on_open_exchange_button_clicked );
 
         /* Quickly generate and send a public key. */
-        $('#dc-quick-exchange-btn').click(function(){
-            /* Don't bother opening a menu. Just generate the key. */
-            $('#dc-keygen-gen-btn').click();
-
-            /* Now send it. */
-            $('#dc-keygen-send-pub-btn').click();
-        });
+        $( '#dc-quick-exchange-btn' ).click( discordCrypt.on_quick_send_public_key_button_clicked );
 
         /* Repopulate the bit length options for the generator when switching handshake algorithms. */
-        $('#dc-keygen-method').change(function(){
-            /* Variable bit lengths. */
-            let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
-
-            /* Clear the old select list. */
-            $('#dc-keygen-algorithm option').each(function(){ $(this).remove(); });
-
-            /* Repopulate the entries. */
-            switch($('#dc-keygen-method')[0].value){
-                case 'dh':
-                    for(let i = 0; i < dh_bl.length; i++){
-                        let v = dh_bl[i];
-                        $('#dc-keygen-algorithm')[0].append(new Option(v, v, i === (dh_bl.length - 1 )));
-                    }
-                    break;
-                case 'ecdh':
-                    for(let i = 0; i < ecdh_bl.length; i++){
-                        let v = ecdh_bl[i];
-                        $('#dc-keygen-algorithm')[0].append(new Option(v, v, i === (ecdh_bl.length - 1)));
-                    }
-                    break;
-                default:
-                    return;
-            }
-        });
+        $( '#dc-keygen-method' ).change( discordCrypt.on_exchange_algorithm_changed );
 
         /* Generate a new key-pair on clicking. */
-        $('#dc-keygen-gen-btn').click(function(){
-            let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
-            let max_salt_len = 32, min_salt_len = 16, salt_len;
-            let index, raw_buffer, pub_buffer;
-            let key, crypto = require('crypto');
-
-            /* Get the current algorithm. */
-            switch($('#dc-keygen-method')[0].value){
-                case 'dh':
-                    /* Generate a new Diffie-Hellman RSA key from the bit size specified. */
-                    key = discordCrypt.generateDH(parseInt($('#dc-keygen-algorithm')[0].value));
-
-                    /* Calculate the index number starting from 0. */
-                    index = dh_bl.indexOf(parseInt($('#dc-keygen-algorithm')[0].value));
-                    break;
-                case 'ecdh':
-                    /* Generate a new Elliptic-Curve Diffie-Hellman key from the bit size specified. */
-                    key = discordCrypt.generateECDH(parseInt($('#dc-keygen-algorithm')[0].value));
-
-                    /* Calculate the index number starting from dh_bl.length. */
-                    index = (ecdh_bl.indexOf(parseInt($('#dc-keygen-algorithm')[0].value)) + dh_bl.length);
-                    break;
-                default:
-                    /* Should never happen. */
-                    return;
-            }
-
-            /* Sanity check. */
-            if(
-                !key ||
-                key === undefined ||
-                typeof key.getPrivateKey === 'undefined' ||
-                typeof key.getPublicKey === 'undefined'
-            )
-                return;
-
-            /* Copy the private key to this instance. */
-            discordCrypt.privateExchangeKey = key;
-
-            /*****************************************************************************************
-             *   [ PUBLIC PAYLOAD STRUCTURE ]
-             *   +0x00 - Algorithm + Bit size [ 0-6 = DH ( 768, 1024, 1536, 2048, 3072, 4096, 8192 ) |
-             *                                  7-12 = ECDH ( 224, 256, 384, 409, 521, 571 ) ]
-             *   +0x01 - Salt length
-             *   +0x02 - Salt[ Salt.length ]
-             *   +0x02 + Salt.length - Public key
-             ****************************************************************************************/
-
-            /* Calculate a random salt length. */
-            salt_len = (parseInt(crypto.randomBytes(1).toString('hex'), 16) % (max_salt_len - min_salt_len)) +
-                min_salt_len;
-
-            /* Copy the buffer. */
-            pub_buffer = new Buffer(
-                key.getPublicKey('hex', $('#dc-keygen-method')[0].value === 'ecdh' ?
-                    'compressed' :
-                    undefined
-                ),
-                'hex'
-            );
-
-            /* Create a blank payload. */
-            raw_buffer = new Buffer(2 + salt_len + pub_buffer.length);
-
-            /* Write the algorithm index. */
-            raw_buffer.writeInt8(index, 0);
-
-            /* Write the salt length. */
-            raw_buffer.writeInt8(salt_len, 1);
-
-            /* Generate a random salt and copy it to the buffer. */
-            crypto.randomBytes(salt_len).copy(raw_buffer, 2);
-
-            /* Copy the public key to the buffer. */
-            pub_buffer.copy(raw_buffer, 2 + salt_len);
-
-            /* Get the public key then display it. */
-            $('#dc-pub-key-ta')[0].value = raw_buffer.toString('hex');
-
-            /* Get the private key then display it. */
-            $('#dc-priv-key-ta')[0].value = key.getPrivateKey('hex');
-        });
+        $( '#dc-keygen-gen-btn' ).click( discordCrypt.on_generate_new_key_pair_button_clicked );
 
         /* Clear the public & private key fields. */
-        $('#dc-keygen-clear-btn').click(function(){
-            /* Clear the key textareas. */
-            $('#dc-pub-key-ta')[0].value = $('#dc-priv-key-ta')[0].value = '';
-        });
+        $( '#dc-keygen-clear-btn' ).click( discordCrypt.on_keygen_clear_button_clicked );
 
         /* Send the public key to the current channel. */
-        $('#dc-keygen-send-pub-btn').click(function(){
-            /* Don't bother if it's empty. */
-            if($('#dc-pub-key-ta')[0].value === '')
-                return;
-
-            /* The text area stores a hex encoded binary. Convert it to a Base64 message to save space. */
-            let message = new Buffer($('#dc-pub-key-ta')[0].value, 'hex').toString('base64');
-
-            /* Add the header to the message and encode it. */
-            message = self.encodedKeyHeader + discordCrypt.substituteMessage(message, true);
-
-            /* Split the message by adding a new line every 32 characters like a standard PGP message. */
-            let formatted_message = message.replace(/(.{32})/g, (e) => { return e + "\r\n" });
-
-            /* Calculate the algorithm string. */
-            let algo_str = ( $('#dc-keygen-method')[0].value !== 'ecdh' ?  'DH-' : 'ECDH-' ) +
-                $('#dc-keygen-algorithm')[0].value;
-
-            /* Send the message. */
-            let header = `-----BEGIN ${algo_str} PUBLIC KEY-----`,
-                footer = `-----END ${algo_str} PUBLIC KEY----- | v${self.getVersion()}`;
-            discordCrypt.sendEmbeddedMessage(formatted_message, header, footer, 0x720000);
-
-            /* Update the button text & reset after 1 second.. */
-            $('#dc-keygen-send-pub-btn')[0].innerText = 'Sent The Public Key!';
-            setTimeout(function(){ $('#dc-keygen-send-pub-btn')[0].innerText = 'Send Public Key'; }, 1000);
-        });
+        $( '#dc-keygen-send-pub-btn' ).click( discordCrypt.on_keygen_send_public_key_button_clicked( this ) );
 
         /* Paste the data from the clipboard to the public key field. */
-        $('#dc-handshake-paste-btn').click(function(){
-            $('#dc-handshake-ppk')[0].value = require('electron').clipboard.readText();
-        });
+        $( '#dc-handshake-paste-btn' ).click( discordCrypt.on_handshake_paste_public_key_button_clicked );
 
         /* Compute the primary and secondary keys. */
-        $('#dc-handshake-compute-btn').click(function(){
-            let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
-            let isUserSaltPrimary;
-
-            /* Provide some way of showing the user the result without actually giving it away. */
-            function displaySecret(input_hex){
-                const charset = "!@#$%^&*()_-+=[{]}\\|'\";:/?.>,<";
-                let output = '';
-
-                for(let i = 0; i < parseInt(input_hex.length / 2); i++)
-                    output += charset[ parseInt(input_hex.substr(i * 2, 2)) & (charset.length - 1) ];
-
-                return output;
-            }
-
-            /* Skip if no public key was entered. */
-            if(!$('#dc-handshake-ppk')[0].value || !$('#dc-handshake-ppk')[0].value.length)
-                return;
-
-            /* Skip if the user hasn't generated a key of their own. */
-            if(!$('#dc-pub-key-ta')[0].value || !$('#dc-pub-key-ta')[0].value.length){
-                /* Update the text. */
-                $('#dc-handshake-compute-btn')[0].innerText = 'You Didn\'t Generate A Key!';
-                setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
-                return;
-            }
-
-            /* Check if the message header is valid. */
-            if($('#dc-handshake-ppk')[0].value.replace(/\r?\n|\r/g,"").slice(0, 4) !== self.encodedKeyHeader)
-                return;
-
-            /* Snip off the header. */
-            let blob = $('#dc-handshake-ppk')[0].value.replace(/\r?\n|\r/g,"").slice(4);
-
-            /* Skip if invalid UTF-16 encoded message. */
-            if(!discordCrypt.isValidUtf16(blob))
-                return;
-
-            try{
-                /* Decode the message. */
-                let bin_str = atob(discordCrypt.substituteMessage(blob));
-
-                /* Convert from a binary string to a Buffer(). */
-                value = new Buffer(bin_str.length);
-                for(let i = 0; i < bin_str.length; i++)
-                    value.writeUInt8(bin_str.charCodeAt(i), i);
-            }
-            catch(e){
-                /* Update the text. */
-                $('#dc-handshake-compute-btn')[0].innerText = 'Invalid Public Key!';
-                setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
-                return;
-            }
-
-            /* Check the algorithm they're using is the same as ours. */
-            algorithm = value.readInt8(0);
-
-            /* Check the algorithm is valid. */
-            if(!discordCrypt.isValidExchangeAlgorithm(algorithm)) {
-                /* Update the text. */
-                $('#dc-handshake-compute-btn')[0].innerText = 'Invalid Algorithm!';
-                setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
-                return;
-            }
-
-            /* Read the user's generated public key. */
-            let user_pub_key = new Buffer($('#dc-pub-key-ta')[0].value, 'hex');
-
-            /* Check the algorithm used is the same as ours. */
-            if(user_pub_key.readInt8(0) !== algorithm){
-                /* Update the text. */
-                $('#dc-handshake-compute-btn')[0].innerText = 'Mismatched Algorithm!';
-                setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
-                return;
-            }
-
-            /* Update the algorithm text. */
-            $('#dc-handshake-algorithm')[0].innerText = 'Exchange Algorithm: ' +
-                discordCrypt.indexToExchangeAlgorithmString(algorithm);
-
-            /* Get the salt length. */
-            salt_len = value.readInt8(1);
-
-            /* Make sure the salt length is valid. */
-            if(salt_len < 16 || salt_len > 32){
-                /* Update the text. */
-                $('#dc-handshake-compute-btn')[0].innerText = 'Invalid Salt Length!';
-                setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
-                return;
-            }
-
-            /* Read the public salt. */
-            salt = new Buffer(value.subarray(2, 2 + salt_len));
-
-            /* Read the user's salt length. */
-            user_salt_len = user_pub_key.readInt8(1);
-
-            /* Read the user salt. */
-            user_salt = new Buffer(user_pub_key.subarray(2, 2 + user_salt_len));
-
-            /* Update the salt text. */
-            $('#dc-handshake-salts')[0].innerText =
-                `Salts: [ ${displaySecret(salt.toString('hex'))}, ${displaySecret(user_salt.toString('hex'))} ]`;
-
-            /* Read the public key and convert it to a hex string. */
-            payload = new Buffer(value.subarray(2 + salt_len)).toString('hex');
-
-            /* Return if invalid. */
-            if(!discordCrypt.privateExchangeKey || discordCrypt.privateExchangeKey === undefined ||
-                typeof discordCrypt.privateExchangeKey.computeSecret === 'undefined'){
-                /* Update the text. */
-                $('#dc-handshake-compute-btn')[0].innerText = 'Failed To Calculate Private Key!';
-                setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
-                return;
-            }
-
-            /* Compute the local secret as a hex string. */
-            let derived_secret =
-                discordCrypt.computeExchangeSharedSecret(discordCrypt.privateExchangeKey, payload, false, false);
-
-            /* Show error and quit if derivation fails. */
-            if(!derived_secret || !derived_secret.length){
-                /* Update the text. */
-                $('#dc-handshake-compute-btn')[0].innerText = 'Failed To Derive Key!';
-                setTimeout(function(){ $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys'; }, 1000);
-                return;
-            }
-
-            /* Display the first 32 characters of it. */
-            $('#dc-handshake-secret')[0].innerText =
-                `Derived Secret: [ ${displaySecret(derived_secret.length > 64 ?
-                    derived_secret.substring(0, 64) :
-                    derived_secret)
-            } ]`;
-
-            /* We have two salts. We can't know which one is our primary salt so just do a simple check on which
-             Salt32 is bigger. */
-            if(user_salt_len === salt_len){
-                for(let i = 2; i < parseInt(user_salt_len / 4); i += 4){
-                    let usl = user_salt.readUInt32BE(i), sl = salt.readUInt32BE(i);
-
-                    if(usl === sl)
-                        continue;
-
-                    isUserSaltPrimary = usl > sl;
-                    break;
-                }
-
-                /* Salts are equal, should never happen. */
-                if(isUserSaltPrimary === undefined){
-                    /* Update the text. */
-                    $('#dc-handshake-compute-btn')[0].innerText = 'Both Salts Are Equal ?!';
-                    setTimeout(
-                        function(){
-                            $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys';
-                        },
-                        1000
-                    );
-                    return;
-                }
-            }
-            else
-                isUserSaltPrimary = user_salt_len > salt_len;
-
-            /* Create hashed salt from the two user-generated salts. */
-            let primary_hash = new Buffer(discordCrypt.sha512(isUserSaltPrimary ? user_salt : salt, true), 'hex');
-            let secondary_hash = new Buffer(discordCrypt.whirlpool(isUserSaltPrimary ? salt : user_salt, true), 'hex');
-
-            /* Global progress for async callbacks. */
-            let primary_progress = 0, secondary_progress = 0;
-
-            /* Calculate the primary key. */
-            discordCrypt.scrypt(
-                new Buffer(derived_secret + secondary_hash.toString('hex'), 'hex'),
-                primary_hash,
-                256,
-                3072,
-                16,
-                2,
-                (error, progress, key) => {
-                if(error){
-                    /* Update the text. */
-                    $('#dc-handshake-compute-btn')[0].innerText = 'Failed Generating Primary Key!';
-                    setTimeout(
-                        function(){
-                            $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys';
-                            },
-                        1000
-                    );
-                    return true;
-                }
-
-                /* Update progress. */
-                if(progress){
-                    primary_progress = progress * 50;
-                    $('#dc-exchange-status').css('width', parseInt(primary_progress + secondary_progress) + '%');
-                }
-
-                if(key){
-                    /* Generate a quality report and apply the password. */
-                    $('#dc-handshake-prim-lbl').text(`Primary Key: ( Quality - ${
-                        discordCrypt.entropicBitLength(key.toString('base64'))
-                    } Bits )`);
-                    $('#dc-handshake-primary-key')[0].value = key.toString('base64');
-
-                    /* Since more iterations are done for the primary key, this takes 4x as long thus will always
-                     finish second. We can thus restore the original Generate text for the button once this is done. */
-                    $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys';
-
-                    /* Now we clear the additional information. */
-                    $('#dc-handshake-algorithm')[0].innerText = '...';
-                    $('#dc-handshake-secret')[0].innerText = '...';
-                    $('#dc-handshake-salts')[0].innerText = '...';
-                    $('#dc-exchange-status').css('width', '0%');
-                }
-
-                return false;
-                }
-            );
-
-            /* Calculate all salts needed. */
-            let primary_salt = isUserSaltPrimary ? user_salt : salt;
-            let secondary_salt = isUserSaltPrimary ? salt : user_salt;
-            let secondary_password =
-                new Buffer(primary_salt.toString('hex') + derived_secret + secondary_salt.toString('hex'), 'hex');
-
-            /* Calculate the secondary key. */
-            discordCrypt.scrypt(secondary_password, secondary_hash, 256, 3072, 8, 1, (error, progress, key) => {
-                if(error){
-                    /* Update the text. */
-                    $('#dc-handshake-compute-btn')[0].innerText = 'Failed Generating Secondary Key!';
-                    setTimeout(
-                        function(){
-                            $('#dc-handshake-compute-btn')[0].innerText = 'Compute Secret Keys';
-                            },
-                        1000
-                    );
-                    return true;
-                }
-
-                if(progress){
-                    secondary_progress = progress * 50;
-                    $('#dc-exchange-status').css('width', parseInt(primary_progress + secondary_progress) + '%');
-                }
-
-                if(key){
-                    /* Generate a quality report and apply the password. */
-                    $('#dc-handshake-sec-lbl').text(`Secondary Key: ( Quality - ${
-                        discordCrypt.entropicBitLength(key.toString('base64'))
-                    } Bits )`);
-                    $('#dc-handshake-secondary-key')[0].value = key.toString('base64');
-                }
-
-                return false;
-            });
-
-            /* Update the text. */
-            $('#dc-handshake-compute-btn')[0].innerText = 'Generating Keys ...';
-
-            /* Finally clear all volatile information. */
-            discordCrypt.privateExchangeKey = undefined;
-            $('#dc-handshake-ppk')[0].value = '';
-            $('#dc-priv-key-ta')[0].value = '';
-            $('#dc-pub-key-ta')[0].value = '';
-        });
+        $( '#dc-handshake-compute-btn' ).click( discordCrypt.on_handshake_compute_button_clicked( this ) );
 
         /* Copy the primary and secondary key to the clipboard. */
-        $('#dc-handshake-cpy-keys-btn').click(function(){
-            /* Don't bother if it's empty. */
-            if($('#dc-handshake-primary-key')[0].value === '' || $('#dc-handshake-secondary-key')[0].value === '')
-                return;
-
-            /* Format the text and copy it to the clipboard. */
-            require('electron').clipboard.writeText(
-                'Primary Key: ' + $('#dc-handshake-primary-key')[0].value + '\r\n\r\n' +
-                'Secondary Key: ' + $('#dc-handshake-secondary-key')[0].value
-            );
-
-            /* Nuke. */
-            $('#dc-handshake-primary-key')[0].value = $('#dc-handshake-secondary-key')[0].value = '';
-
-            /* Update the button text & reset after 1 second. */
-            $('#dc-handshake-cpy-keys-btn')[0].innerText = 'Coped Keys To Clipboard!';
-            setTimeout(function(){
-                $('#dc-handshake-cpy-keys-btn')[0].innerText = 'Copy Keys & Nuke';
-                $('#dc-handshake-prim-lbl').text('Primary Key: ');
-                $('#dc-handshake-sec-lbl').text('Secondary Key: ');
-            }, 1000);
-        });
+        $( '#dc-handshake-cpy-keys-btn' ).click( discordCrypt.on_handshake_copy_keys_button_clicked );
 
         /* Apply generated keys to the current channel. */
-        $('#dc-handshake-apply-keys-btn').click(function(){
-            /* Skip if no primary key was generated. */
-            if(!$('#dc-handshake-primary-key')[0].value || !$('#dc-handshake-primary-key')[0].value.length)
-                return;
-
-            /* Skip if no secondary key was generated. */
-            if(!$('#dc-handshake-secondary-key')[0].value || !$('#dc-handshake-secondary-key')[0].value.length)
-                return;
-
-            /* Create the password object and nuke. */
-            let pwd = discordCrypt.createPassword(
-                $('#dc-handshake-primary-key')[0].value,
-                $('#dc-handshake-secondary-key')[0].value
-            );
-            $('#dc-handshake-primary-key')[0].value = $('#dc-handshake-secondary-key')[0].value = '';
-
-            /* Apply the passwords and save the config. */
-            self.configFile.passList[discordCrypt.getChannelId()] = pwd;
-            self.saveConfig();
-
-            /* Update the text and reset it after 1 second. */
-            $('#dc-handshake-apply-keys-btn')[0].innerText = 'Applied & Saved!';
-            setTimeout(function(){
-                $('#dc-handshake-apply-keys-btn')[0].innerText = 'Apply Generated Passwords';
-
-                /* Reset quality bit length fields. */
-                $('#dc-handshake-prim-lbl').text('Primary Key: ');
-                $('#dc-handshake-sec-lbl').text('Secondary Key: ');
-
-                /* Hide main background. */
-                $('#dc-overlay')[0].style.display = 'none';
-
-                /* Hide the entire exchange key menu. */
-                $('#dc-overlay-exchange')[0].style.display = 'none';
-
-                /* Reset the index to the info tab. */
-                discordCrypt.setActiveTab(0);
-            }, 1000);
-        });
+        $( '#dc-handshake-apply-keys-btn' ).click( discordCrypt.on_handshake_apply_keys_button_clicked( this ) );
 
         /* Show the overlay when clicking the password button. */
-        $('#dc-passwd-btn').click(function() {
-            $('#dc-overlay')[0].style.display = 'block';
-            $('#dc-overlay-password')[0].style.display = 'block';
-        });
+        $( '#dc-passwd-btn' ).click( discordCrypt.on_passwd_button_clicked );
 
         /* Update the password for the user once clicked. */
-        $('#dc-save-pwd').click(function() {
-            let btn = $('#dc-save-pwd');
-
-            /* Update the password and save it. */
-            self.updatePasswords();
-
-            /* Update the text for the button. */
-            btn.text("Saved!");
-
-            /* Reset the text for the password button after a 1 second delay. */
-            setTimeout(function() {
-                /* Reset text. */
-                btn.text("Save Password");
-
-                /* Clear the fields. */
-                $("#dc-password-primary")[0].value = '';
-                $("#dc-password-secondary")[0].value = '';
-
-                /* Close. */
-                $('#dc-overlay')[0].style.display = 'none';
-                $('#dc-overlay-password')[0].style.display = 'none';
-            }, 1000);
-        });
+        $( '#dc-save-pwd' ).click( discordCrypt.on_save_passwords_button_clicked( this ) );
 
         /* Reset the password for the user to the default. */
-        $('#dc-reset-pwd').click(function() {
-            let btn = $('#dc-reset-pwd');
-
-            /* Reset the configuration for this user and save the file. */
-            delete self.configFile.passList[discordCrypt.getChannelId()];
-            self.saveConfig();
-
-            /* Update the text for the button. */
-            btn.text("Password Reset!");
-
-            setTimeout(function() {
-                /* Reset text. */
-                btn.text("Reset Password");
-
-                /* Clear the fields. */
-                $("#dc-password-primary")[0].value = '';
-                $("#dc-password-secondary")[0].value = '';
-
-                /* Close. */
-                $('#dc-overlay')[0].style.display = 'none';
-                $('#dc-overlay-password')[0].style.display = 'none';
-            }, 1000);
-        });
+        $( '#dc-reset-pwd' ).click( discordCrypt.on_reset_passwords_button_clicked( this ) );
 
         /* Hide the overlay when clicking cancel. */
-        $('#dc-cancel-btn').click(function() {
-            /* Clear the fields. */
-            $("#dc-password-primary")[0].value = '';
-            $("#dc-password-secondary")[0].value = '';
-
-            /* Close after a .25 second delay. */
-            setTimeout(function(){
-                /* Close. */
-                $('#dc-overlay')[0].style.display = 'none';
-                $('#dc-overlay-password')[0].style.display = 'none';
-            }, 250);
-        });
+        $( '#dc-cancel-btn' ).click( discordCrypt.on_cancel_password_button_clicked );
 
         /* Copy the current passwords to the clipboard. */
-        $('#dc-cpy-pwds-btn').click(function() {
-            let currentKeys = self.configFile.passList[discordCrypt.getChannelId()];
-
-            /* If no password is currently generated, write the default key. */
-            if(!currentKeys){
-                require('electron').clipboard.writeText('Default Password: ' + self.configFile.defaultPassword);
-                return;
-            }
-
-            /* Write to the clipboard. */
-            require('electron').clipboard.writeText(
-                "Primary Key: " + currentKeys.primary + "\r\n\r\n" +
-                "Secondary Key: " + currentKeys.secondary
-            );
-
-            /* Alter the button text. */
-            $('#dc-cpy-pwds-btn').text('Copied Keys To Clipboard!');
-
-            /* Reset the button after 1 second close the prompt. */
-            setTimeout(function() {
-                /* Reset. */
-                $('#dc-cpy-pwds-btn').text('Copy Current Passwords!');
-
-                /* Close. */
-                $('#dc-cancel-btn').click();
-            }, 1000);
-        });
+        $( '#dc-cpy-pwds-btn' ).click( discordCrypt.on_copy_current_passwords_button_clicked( this ) );
 
         /* Set whether auto-encryption is enabled or disabled. */
-        $('#dc-lock-btn').click(function(){
-            /* Update the icon and toggle. */
-            if(!self.configFile.encodeAll){
-                $('#dc-lock-btn').attr('title', 'Disable Message Encryption');
-                $('#dc-lock-btn')[0].innerHTML = atob(self.lockIcon);
-                self.configFile.encodeAll = true;
-            }
-            else{
-                $('#dc-lock-btn').attr('title', 'Enable Message Encryption');
-                $('#dc-lock-btn')[0].innerHTML = atob(self.unlockIcon);
-                self.configFile.encodeAll = false;
-            }
-
-            /* Set the button class. */
-            $('.dc-svg').attr('class', 'dc-svg');
-
-            /* Save config. */
-            self.saveConfig();
-        });
+        $( '#dc-lock-btn' ).click( discordCrypt.on_lock_button_clicked( this ) );
     }
 
     /* Attached a handler for message events. */
@@ -2863,6 +2193,844 @@ class discordCrypt
             $(this).data('dc-parsed', true);
         });
     }
+
+    /* =============== BEGIN UI HANDLE CALLBACKS =============== */
+
+    static on_file_button_clicked() {
+        /* Create an input element. */
+        let file = require( 'electron' ).remote.dialog.showOpenDialog( {
+            title: 'Select a file to encrypt and upload',
+            label: 'Select',
+            message: 'Maximum file size is 50 MB',
+            properties: [ 'openFile', 'showHiddenFiles', 'treatPackageAsDirectory' ]
+        } );
+
+        /* Ignore if no file was selected. */
+        if ( !file.length || !file[ 0 ].length )
+            return;
+
+        /* Show main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'block';
+
+        /* Show the upload overlay. */
+        $( '#dc-overlay-upload' )[ 0 ].style.display = 'block';
+
+        /* Set the file path to the selected path. */
+        $( '#dc-file-path' ).val( file[ 0 ] );
+    }
+
+    static on_alter_file_button_clicked() {
+        /* Create an input element. */
+        let file = require( 'electron' ).remote.dialog.showOpenDialog( {
+            title: 'Select a file to encrypt and upload',
+            label: 'Select',
+            message: 'Maximum file size is 50 MB',
+            properties: [ 'openFile', 'showHiddenFiles', 'treatPackageAsDirectory' ]
+        } );
+
+        /* Ignore if no file was selected. */
+        if ( !file.length || !file[ 0 ].length )
+            return;
+
+        /* Set the file path to the selected path. */
+        $( '#dc-file-path' ).val( file[ 0 ] );
+    }
+
+    static on_cancel_file_upload_button_clicked() {
+        /* Clear old file name. */
+        $( '#dc-file-path' ).val( '' );
+
+        /* Show main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'none';
+
+        /* Show the upload overlay. */
+        $( '#dc-overlay-upload' )[ 0 ].style.display = 'none';
+    }
+
+    static on_settings_button_clicked() {
+        /* Show main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'block';
+
+        /* Show the main settings menu. */
+        $( '#dc-overlay-settings' )[ 0 ].style.display = 'block';
+    }
+
+    static on_settings_close_button_clicked() {
+        /* Hide main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'none';
+
+        /* Hide the main settings menu. */
+        $( '#dc-overlay-settings' )[ 0 ].style.display = 'none';
+    }
+
+    static on_save_settings_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            /* Update all settings from the settings panel. */
+            self.configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' )[ 0 ].value;
+            self.configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' )[ 0 ].value;
+            self.configFile.defaultPassword = $( '#dc-settings-default-pwd' )[ 0 ].value;
+            self.configFile.encryptScanDelay = $( '#dc-settings-scan-delay' )[ 0 ].value;
+            self.configFile.paddingMode = $( '#dc-settings-padding-mode' )[ 0 ].value;
+            self.configFile.encryptMode = discordCrypt
+                .cipherStringToIndex( $( '#dc-primary-cipher' )[ 0 ].value, $( '#dc-secondary-cipher' )[ 0 ].value );
+
+            $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt
+                .cipherIndexToString( self.configFile.encryptMode, false );
+            $( '#dc-secondary-cipher' )[ 0 ].value = discordCrypt
+                .cipherIndexToString( self.configFile.encryptMode, true );
+
+            /* Handle master password updates if necessary. */
+            if ( $( '#dc-master-password' )[ 0 ].value !== '' ) {
+                let password = $( '#dc-master-password' )[ 0 ].value;
+
+                /* Reset the password field. */
+                $( '#dc-master-password' )[ 0 ].value = '';
+
+                /* Hash the password. */
+                discordCrypt.scrypt
+                (
+                    new Buffer( password ),
+                    new Buffer( discordCrypt.whirlpool( password, true ), 'hex' ),
+                    32, 1536, 8, 1, ( error, progress, pwd ) => {
+                        if ( error ) {
+                            /* Alert the user. */
+                            alert( 'Error setting the new database password. Check the console for more info.' );
+
+                            discordCrypt.log( error.toString(), 'error' );
+                            return true;
+                        }
+
+                        if ( pwd ) {
+                            /* Now update the password. */
+                            self.masterPassword = new Buffer( pwd, 'hex' );
+
+                            /* Save the configuration file and update the button text. */
+                            self.saveSettings( this );
+                        }
+
+                        return false;
+                    }
+                );
+            }
+            else
+            /* Save the configuration file and update the button text. */
+                self.saveSettings( this );
+        };
+    }
+
+    static on_reset_settings_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            /* Resets the configuration file and update the button text. */
+            self.resetSettings( this );
+
+            /* Update all settings from the settings panel. */
+            $( '#dc-master-password' )[ 0 ].value = '';
+            $( '#dc-settings-default-pwd' )[ 0 ].value = self.configFile.defaultPassword;
+            $( '#dc-settings-scan-delay' )[ 0 ].value = self.configFile.encryptScanDelay;
+            $( '#dc-settings-encrypt-trigger' )[ 0 ].value = self.configFile.encodeMessageTrigger;
+            $( '#dc-settings-padding-mode' )[ 0 ].value = self.configFile.paddingMode.toLowerCase();
+            $( '#dc-settings-cipher-mode' )[ 0 ].value = self.configFile.encryptBlockMode.toLowerCase();
+            $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt
+                .cipherIndexToString( self.configFile.encryptMode, false );
+            $( '#dc-secondary-cipher' )[ 0 ].value = discordCrypt
+                .cipherIndexToString( self.configFile.encryptMode, true );
+        };
+    }
+
+    static on_restart_now_button_clicked() {
+        /* Window reload is simple enough. */
+        location.reload();
+    }
+
+    static on_restart_later_button_clicked() {
+        /* Hide the update and changelog. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'none';
+        $( '#dc-update-overlay' )[ 0 ].style.display = 'none';
+    }
+
+    static on_info_tab_button_clicked() {
+        /* Switch to tab 0. */
+        discordCrypt.setActiveTab( 0 );
+    }
+
+    static on_exchange_tab_button_clicked() {
+        /* Switch to tab 1. */
+        discordCrypt.setActiveTab( 1 );
+    }
+
+    static on_handshake_tab_button_clicked() {
+        /* Switch to tab 2. */
+        discordCrypt.setActiveTab( 2 );
+    }
+
+    static on_close_exchange_button_clicked() {
+        /* Hide main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'none';
+
+        /* Hide the entire exchange key menu. */
+        $( '#dc-overlay-exchange' )[ 0 ].style.display = 'none';
+    }
+
+    static on_open_exchange_button_clicked() {
+        /* Show background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'block';
+
+        /* Show main menu. */
+        $( '#dc-overlay-exchange' )[ 0 ].style.display = 'block';
+    }
+
+    static on_quick_send_public_key_button_clicked() {
+        /* Don't bother opening a menu. Just generate the key. */
+        $( '#dc-keygen-gen-btn' ).click();
+
+        /* Now send it. */
+        $( '#dc-keygen-send-pub-btn' ).click();
+    }
+
+    static on_exchange_algorithm_changed() {
+        /* Variable bit lengths. */
+        let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
+
+        /* Clear the old select list. */
+        $( '#dc-keygen-algorithm option' ).each( function () {
+            $( this ).remove();
+        } );
+
+        /* Repopulate the entries. */
+        switch ( $( '#dc-keygen-method' )[ 0 ].value ) {
+            case 'dh':
+                for ( let i = 0; i < dh_bl.length; i++ ) {
+                    let v = dh_bl[ i ];
+                    $( '#dc-keygen-algorithm' )[ 0 ].append( new Option( v, v, i === ( dh_bl.length - 1 ) ) );
+                }
+                break;
+            case 'ecdh':
+                for ( let i = 0; i < ecdh_bl.length; i++ ) {
+                    let v = ecdh_bl[ i ];
+                    $( '#dc-keygen-algorithm' )[ 0 ].append( new Option( v, v, i === ( ecdh_bl.length - 1 ) ) );
+                }
+                break;
+            default:
+                return;
+        }
+    }
+
+    static on_generate_new_key_pair_button_clicked() {
+        let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
+        let max_salt_len = 32, min_salt_len = 16, salt_len;
+        let index, raw_buffer, pub_buffer;
+        let key, crypto = require( 'crypto' );
+
+        /* Get the current algorithm. */
+        switch ( $( '#dc-keygen-method' )[ 0 ].value ) {
+            case 'dh':
+                /* Generate a new Diffie-Hellman RSA key from the bit size specified. */
+                key = discordCrypt.generateDH( parseInt( $( '#dc-keygen-algorithm' )[ 0 ].value ) );
+
+                /* Calculate the index number starting from 0. */
+                index = dh_bl.indexOf( parseInt( $( '#dc-keygen-algorithm' )[ 0 ].value ) );
+                break;
+            case 'ecdh':
+                /* Generate a new Elliptic-Curve Diffie-Hellman key from the bit size specified. */
+                key = discordCrypt.generateECDH( parseInt( $( '#dc-keygen-algorithm' )[ 0 ].value ) );
+
+                /* Calculate the index number starting from dh_bl.length. */
+                index = ( ecdh_bl.indexOf( parseInt( $( '#dc-keygen-algorithm' )[ 0 ].value ) ) + dh_bl.length );
+                break;
+            default:
+                /* Should never happen. */
+                return;
+        }
+
+        /* Sanity check. */
+        if (
+            !key ||
+            key === undefined ||
+            typeof key.getPrivateKey === 'undefined' ||
+            typeof key.getPublicKey === 'undefined'
+        )
+            return;
+
+        /* Copy the private key to this instance. */
+        discordCrypt.privateExchangeKey = key;
+
+        /*****************************************************************************************
+         *   [ PUBLIC PAYLOAD STRUCTURE ]
+         *   +0x00 - Algorithm + Bit size [ 0-6 = DH ( 768, 1024, 1536, 2048, 3072, 4096, 8192 ) |
+         *                                  7-12 = ECDH ( 224, 256, 384, 409, 521, 571 ) ]
+         *   +0x01 - Salt length
+         *   +0x02 - Salt[ Salt.length ]
+         *   +0x02 + Salt.length - Public key
+         ****************************************************************************************/
+
+        /* Calculate a random salt length. */
+        salt_len = ( parseInt( crypto.randomBytes( 1 ).toString( 'hex' ), 16 ) % ( max_salt_len - min_salt_len ) ) +
+            min_salt_len;
+
+        /* Copy the buffer. */
+        pub_buffer = new Buffer(
+            key.getPublicKey( 'hex', $( '#dc-keygen-method' )[ 0 ].value === 'ecdh' ?
+                'compressed' :
+                undefined
+            ),
+            'hex'
+        );
+
+        /* Create a blank payload. */
+        raw_buffer = new Buffer( 2 + salt_len + pub_buffer.length );
+
+        /* Write the algorithm index. */
+        raw_buffer.writeInt8( index, 0 );
+
+        /* Write the salt length. */
+        raw_buffer.writeInt8( salt_len, 1 );
+
+        /* Generate a random salt and copy it to the buffer. */
+        crypto.randomBytes( salt_len ).copy( raw_buffer, 2 );
+
+        /* Copy the public key to the buffer. */
+        pub_buffer.copy( raw_buffer, 2 + salt_len );
+
+        /* Get the public key then display it. */
+        $( '#dc-pub-key-ta' )[ 0 ].value = raw_buffer.toString( 'hex' );
+
+        /* Get the private key then display it. */
+        $( '#dc-priv-key-ta' )[ 0 ].value = key.getPrivateKey( 'hex' );
+    }
+
+    static on_keygen_clear_button_clicked() {
+        /* Clear the key textareas. */
+        $( '#dc-pub-key-ta' )[ 0 ].value = $( '#dc-priv-key-ta' )[ 0 ].value = '';
+    }
+
+    static on_keygen_send_public_key_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            /* Don't bother if it's empty. */
+            if ( $( '#dc-pub-key-ta' )[ 0 ].value === '' )
+                return;
+
+            /* The text area stores a hex encoded binary. Convert it to a Base64 message to save space. */
+            let message = new Buffer( $( '#dc-pub-key-ta' )[ 0 ].value, 'hex' ).toString( 'base64' );
+
+            /* Add the header to the message and encode it. */
+            message = self.encodedKeyHeader + discordCrypt.substituteMessage( message, true );
+
+            /* Split the message by adding a new line every 32 characters like a standard PGP message. */
+            let formatted_message = message.replace( /(.{32})/g, ( e ) => {
+                return e + "\r\n"
+            } );
+
+            /* Calculate the algorithm string. */
+            let algo_str = ( $( '#dc-keygen-method' )[ 0 ].value !== 'ecdh' ? 'DH-' : 'ECDH-' ) +
+                $( '#dc-keygen-algorithm' )[ 0 ].value;
+
+            /* Send the message. */
+            let header = `-----BEGIN ${algo_str} PUBLIC KEY-----`,
+                footer = `-----END ${algo_str} PUBLIC KEY----- | v${self.getVersion()}`;
+
+            discordCrypt.sendEmbeddedMessage( formatted_message, header, footer, 0x720000 );
+
+            /* Update the button text & reset after 1 second.. */
+            $( '#dc-keygen-send-pub-btn' )[ 0 ].innerText = 'Sent The Public Key!';
+
+            setTimeout( function () {
+                $( '#dc-keygen-send-pub-btn' )[ 0 ].innerText = 'Send Public Key';
+            }, 1000 );
+        };
+    }
+
+    static on_handshake_paste_public_key_button_clicked() {
+        $( '#dc-handshake-ppk' )[ 0 ].value = require( 'electron' ).clipboard.readText();
+    }
+
+    static on_handshake_compute_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
+            let isUserSaltPrimary;
+
+            /* Provide some way of showing the user the result without actually giving it away. */
+            function displaySecret( input_hex ) {
+                const charset = "!@#$%^&*()_-+=[{]}\\|'\";:/?.>,<";
+                let output = '';
+
+                for ( let i = 0; i < parseInt( input_hex.length / 2 ); i++ )
+                    output += charset[ parseInt( input_hex.substr( i * 2, 2 ) ) & ( charset.length - 1 ) ];
+
+                return output;
+            }
+
+            /* Skip if no public key was entered. */
+            if ( !$( '#dc-handshake-ppk' )[ 0 ].value || !$( '#dc-handshake-ppk' )[ 0 ].value.length )
+                return;
+
+            /* Skip if the user hasn't generated a key of their own. */
+            if ( !$( '#dc-pub-key-ta' )[ 0 ].value || !$( '#dc-pub-key-ta' )[ 0 ].value.length ) {
+                /* Update the text. */
+                $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'You Didn\'t Generate A Key!';
+                setTimeout( function () {
+                    $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                }, 1000 );
+                return;
+            }
+
+            /* Check if the message header is valid. */
+            if (
+                $( '#dc-handshake-ppk' )[ 0 ].value.replace( /\r?\n|\r/g, "" )
+                    .slice( 0, 4 ) !== self.encodedKeyHeader
+            )
+                return;
+
+            /* Snip off the header. */
+            let blob = $( '#dc-handshake-ppk' )[ 0 ].value.replace( /\r?\n|\r/g, "" ).slice( 4 );
+
+            /* Skip if invalid UTF-16 encoded message. */
+            if ( !discordCrypt.isValidUtf16( blob ) )
+                return;
+
+            try {
+                /* Decode the message. */
+                let bin_str = atob( discordCrypt.substituteMessage( blob ) );
+
+                /* Convert from a binary string to a Buffer(). */
+                value = new Buffer( bin_str.length );
+                for ( let i = 0; i < bin_str.length; i++ )
+                    value.writeUInt8( bin_str.charCodeAt( i ), i );
+            }
+            catch ( e ) {
+                /* Update the text. */
+                $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Invalid Public Key!';
+                setTimeout( function () {
+                    $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                }, 1000 );
+                return;
+            }
+
+            /* Check the algorithm they're using is the same as ours. */
+            algorithm = value.readInt8( 0 );
+
+            /* Check the algorithm is valid. */
+            if ( !discordCrypt.isValidExchangeAlgorithm( algorithm ) ) {
+                /* Update the text. */
+                $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Invalid Algorithm!';
+                setTimeout( function () {
+                    $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                }, 1000 );
+                return;
+            }
+
+            /* Read the user's generated public key. */
+            let user_pub_key = new Buffer( $( '#dc-pub-key-ta' )[ 0 ].value, 'hex' );
+
+            /* Check the algorithm used is the same as ours. */
+            if ( user_pub_key.readInt8( 0 ) !== algorithm ) {
+                /* Update the text. */
+                $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Mismatched Algorithm!';
+                setTimeout( function () {
+                    $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                }, 1000 );
+                return;
+            }
+
+            /* Update the algorithm text. */
+            $( '#dc-handshake-algorithm' )[ 0 ].innerText = 'Exchange Algorithm: ' +
+                discordCrypt.indexToExchangeAlgorithmString( algorithm );
+
+            /* Get the salt length. */
+            salt_len = value.readInt8( 1 );
+
+            /* Make sure the salt length is valid. */
+            if ( salt_len < 16 || salt_len > 32 ) {
+                /* Update the text. */
+                $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Invalid Salt Length!';
+                setTimeout( function () {
+                    $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                }, 1000 );
+                return;
+            }
+
+            /* Read the public salt. */
+            salt = new Buffer( value.subarray( 2, 2 + salt_len ) );
+
+            /* Read the user's salt length. */
+            user_salt_len = user_pub_key.readInt8( 1 );
+
+            /* Read the user salt. */
+            user_salt = new Buffer( user_pub_key.subarray( 2, 2 + user_salt_len ) );
+
+            /* Update the salt text. */
+            $( '#dc-handshake-salts' )[ 0 ].innerText =
+                `Salts: [ ${displaySecret( salt.toString( 'hex' ) )}, ` +
+                `${displaySecret( user_salt.toString( 'hex' ) )} ]`;
+
+            /* Read the public key and convert it to a hex string. */
+            payload = new Buffer( value.subarray( 2 + salt_len ) ).toString( 'hex' );
+
+            /* Return if invalid. */
+            if ( !discordCrypt.privateExchangeKey || discordCrypt.privateExchangeKey === undefined ||
+                typeof discordCrypt.privateExchangeKey.computeSecret === 'undefined' ) {
+                /* Update the text. */
+                $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Failed To Calculate Private Key!';
+                setTimeout( function () {
+                    $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                }, 1000 );
+                return;
+            }
+
+            /* Compute the local secret as a hex string. */
+            let derived_secret =
+                discordCrypt.computeExchangeSharedSecret( discordCrypt.privateExchangeKey, payload, false, false );
+
+            /* Show error and quit if derivation fails. */
+            if ( !derived_secret || !derived_secret.length ) {
+                /* Update the text. */
+                $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Failed To Derive Key!';
+                setTimeout( function () {
+                    $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                }, 1000 );
+                return;
+            }
+
+            /* Display the first 32 characters of it. */
+            $( '#dc-handshake-secret' )[ 0 ].innerText =
+                `Derived Secret: [ ${displaySecret( derived_secret.length > 64 ?
+                    derived_secret.substring( 0, 64 ) :
+                    derived_secret )
+                    } ]`;
+
+            /* We have two salts. We can't know which one is our primary salt so just do a simple check on which
+             Salt32 is bigger. */
+            if ( user_salt_len === salt_len ) {
+                for ( let i = 2; i < parseInt( user_salt_len / 4 ); i += 4 ) {
+                    let usl = user_salt.readUInt32BE( i ), sl = salt.readUInt32BE( i );
+
+                    if ( usl === sl )
+                        continue;
+
+                    isUserSaltPrimary = usl > sl;
+                    break;
+                }
+
+                /* Salts are equal, should never happen. */
+                if ( isUserSaltPrimary === undefined ) {
+                    /* Update the text. */
+                    $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Both Salts Are Equal ?!';
+                    setTimeout(
+                        function () {
+                            $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                        },
+                        1000
+                    );
+                    return;
+                }
+            }
+            else
+                isUserSaltPrimary = user_salt_len > salt_len;
+
+            /* Create hashed salt from the two user-generated salts. */
+            let primary_hash = new Buffer(
+                discordCrypt.sha512( isUserSaltPrimary ? user_salt : salt, true ),
+                'hex'
+            );
+            let secondary_hash = new Buffer(
+                discordCrypt.whirlpool( isUserSaltPrimary ? salt : user_salt, true ),
+                'hex'
+            );
+
+            /* Global progress for async callbacks. */
+            let primary_progress = 0, secondary_progress = 0;
+
+            /* Calculate the primary key. */
+            discordCrypt.scrypt(
+                new Buffer( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
+                primary_hash,
+                256,
+                3072,
+                16,
+                2,
+                ( error, progress, key ) => {
+                    if ( error ) {
+                        /* Update the text. */
+                        $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Failed Generating Primary Key!';
+                        setTimeout(
+                            function () {
+                                $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                            },
+                            1000
+                        );
+                        return true;
+                    }
+
+                    /* Update progress. */
+                    if ( progress ) {
+                        primary_progress = progress * 50;
+
+                        $( '#dc-exchange-status' )
+                            .css( 'width', parseInt( primary_progress + secondary_progress ) + '%' );
+                    }
+
+                    if ( key ) {
+                        /* Generate a quality report and apply the password. */
+                        $( '#dc-handshake-prim-lbl' ).text( `Primary Key: ( Quality - ${
+                            discordCrypt.entropicBitLength( key.toString( 'base64' ) )
+                            } Bits )` );
+                        $( '#dc-handshake-primary-key' )[ 0 ].value = key.toString( 'base64' );
+
+                        /* Since more iterations are done for the primary key, this takes 4x as long thus will
+                           always finish second. We can thus restore the original Generate text for the button once
+                           this is done. */
+                        $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+
+                        /* Now we clear the additional information. */
+                        $( '#dc-handshake-algorithm' )[ 0 ].innerText = '...';
+                        $( '#dc-handshake-secret' )[ 0 ].innerText = '...';
+                        $( '#dc-handshake-salts' )[ 0 ].innerText = '...';
+                        $( '#dc-exchange-status' ).css( 'width', '0%' );
+                    }
+
+                    return false;
+                }
+            );
+
+            /* Calculate all salts needed. */
+            let primary_salt = isUserSaltPrimary ? user_salt : salt;
+            let secondary_salt = isUserSaltPrimary ? salt : user_salt;
+            let secondary_password = new Buffer(
+                primary_salt.toString( 'hex' ) + derived_secret + secondary_salt.toString( 'hex' ),
+                'hex'
+            );
+
+            /* Calculate the secondary key. */
+            discordCrypt.scrypt( secondary_password, secondary_hash, 256, 3072, 8, 1, ( error, progress, key ) => {
+                if ( error ) {
+                    /* Update the text. */
+                    $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Failed Generating Secondary Key!';
+                    setTimeout(
+                        function () {
+                            $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
+                        },
+                        1000
+                    );
+                    return true;
+                }
+
+                if ( progress ) {
+                    secondary_progress = progress * 50;
+                    $( '#dc-exchange-status' ).css( 'width', parseInt( primary_progress + secondary_progress ) + '%' );
+                }
+
+                if ( key ) {
+                    /* Generate a quality report and apply the password. */
+                    $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
+                        discordCrypt.entropicBitLength( key.toString( 'base64' ) )
+                        } Bits )` );
+                    $( '#dc-handshake-secondary-key' )[ 0 ].value = key.toString( 'base64' );
+                }
+
+                return false;
+            } );
+
+            /* Update the text. */
+            $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Generating Keys ...';
+
+            /* Finally clear all volatile information. */
+            discordCrypt.privateExchangeKey = undefined;
+            $( '#dc-handshake-ppk' )[ 0 ].value = '';
+            $( '#dc-priv-key-ta' )[ 0 ].value = '';
+            $( '#dc-pub-key-ta' )[ 0 ].value = '';
+        };
+    }
+
+    static on_handshake_copy_keys_button_clicked() {
+        /* Don't bother if it's empty. */
+        if ( $( '#dc-handshake-primary-key' )[ 0 ].value === '' ||
+            $( '#dc-handshake-secondary-key' )[ 0 ].value === '' )
+            return;
+
+        /* Format the text and copy it to the clipboard. */
+        require( 'electron' ).clipboard.writeText(
+            'Primary Key: ' + $( '#dc-handshake-primary-key' )[ 0 ].value + '\r\n\r\n' +
+            'Secondary Key: ' + $( '#dc-handshake-secondary-key' )[ 0 ].value
+        );
+
+        /* Nuke. */
+        $( '#dc-handshake-primary-key' )[ 0 ].value = $( '#dc-handshake-secondary-key' )[ 0 ].value = '';
+
+        /* Update the button text & reset after 1 second. */
+        $( '#dc-handshake-cpy-keys-btn' )[ 0 ].innerText = 'Coped Keys To Clipboard!';
+
+        setTimeout( function () {
+            $( '#dc-handshake-cpy-keys-btn' )[ 0 ].innerText = 'Copy Keys & Nuke';
+            $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
+            $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
+        }, 1000 );
+    }
+
+    static on_handshake_apply_keys_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            /* Skip if no primary key was generated. */
+            if ( !$( '#dc-handshake-primary-key' )[ 0 ].value || !$( '#dc-handshake-primary-key' )[ 0 ].value.length )
+                return;
+
+            /* Skip if no secondary key was generated. */
+            if ( !$( '#dc-handshake-secondary-key' )[ 0 ].value ||
+                !$( '#dc-handshake-secondary-key' )[ 0 ].value.length )
+                return;
+
+            /* Create the password object and nuke. */
+            let pwd = discordCrypt.createPassword(
+                $( '#dc-handshake-primary-key' )[ 0 ].value,
+                $( '#dc-handshake-secondary-key' )[ 0 ].value
+            );
+            $( '#dc-handshake-primary-key' )[ 0 ].value = $( '#dc-handshake-secondary-key' )[ 0 ].value = '';
+
+            /* Apply the passwords and save the config. */
+            self.configFile.passList[ discordCrypt.getChannelId() ] = pwd;
+            self.saveConfig();
+
+            /* Update the text and reset it after 1 second. */
+            $( '#dc-handshake-apply-keys-btn' )[ 0 ].innerText = 'Applied & Saved!';
+            setTimeout( function () {
+                $( '#dc-handshake-apply-keys-btn' )[ 0 ].innerText = 'Apply Generated Passwords';
+
+                /* Reset quality bit length fields. */
+                $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
+                $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
+
+                /* Hide main background. */
+                $( '#dc-overlay' )[ 0 ].style.display = 'none';
+
+                /* Hide the entire exchange key menu. */
+                $( '#dc-overlay-exchange' )[ 0 ].style.display = 'none';
+
+                /* Reset the index to the info tab. */
+                discordCrypt.setActiveTab( 0 );
+            }, 1000 );
+        }
+    }
+
+    static on_passwd_button_clicked() {
+        $( '#dc-overlay' )[ 0 ].style.display = 'block';
+        $( '#dc-overlay-password' )[ 0 ].style.display = 'block';
+    }
+
+    static on_save_passwords_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            let btn = $( '#dc-save-pwd' );
+
+            /* Update the password and save it. */
+            self.updatePasswords();
+
+            /* Update the text for the button. */
+            btn.text( "Saved!" );
+
+            /* Reset the text for the password button after a 1 second delay. */
+            setTimeout( function () {
+                /* Reset text. */
+                btn.text( "Save Password" );
+
+                /* Clear the fields. */
+                $( "#dc-password-primary" )[ 0 ].value = '';
+                $( "#dc-password-secondary" )[ 0 ].value = '';
+
+                /* Close. */
+                $( '#dc-overlay' )[ 0 ].style.display = 'none';
+                $( '#dc-overlay-password' )[ 0 ].style.display = 'none';
+            }, 1000 );
+        };
+    }
+
+    static on_reset_passwords_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            let btn = $( '#dc-reset-pwd' );
+
+            /* Reset the configuration for this user and save the file. */
+            delete self.configFile.passList[ discordCrypt.getChannelId() ];
+            self.saveConfig();
+
+            /* Update the text for the button. */
+            btn.text( "Password Reset!" );
+
+            setTimeout( function () {
+                /* Reset text. */
+                btn.text( "Reset Password" );
+
+                /* Clear the fields. */
+                $( "#dc-password-primary" )[ 0 ].value = '';
+                $( "#dc-password-secondary" )[ 0 ].value = '';
+
+                /* Close. */
+                $( '#dc-overlay' )[ 0 ].style.display = 'none';
+                $( '#dc-overlay-password' )[ 0 ].style.display = 'none';
+            }, 1000 );
+        };
+    }
+
+    static on_cancel_password_button_clicked() {
+        /* Clear the fields. */
+        $( "#dc-password-primary" )[ 0 ].value = '';
+        $( "#dc-password-secondary" )[ 0 ].value = '';
+
+        /* Close after a .25 second delay. */
+        setTimeout( function () {
+            /* Close. */
+            $( '#dc-overlay' )[ 0 ].style.display = 'none';
+            $( '#dc-overlay-password' )[ 0 ].style.display = 'none';
+        }, 250 );
+    }
+
+    static on_copy_current_passwords_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            let currentKeys = self.configFile.passList[ discordCrypt.getChannelId() ];
+
+            /* If no password is currently generated, write the default key. */
+            if ( !currentKeys ) {
+                require( 'electron' ).clipboard.writeText( 'Default Password: ' + self.configFile.defaultPassword );
+                return;
+            }
+
+            /* Write to the clipboard. */
+            require( 'electron' ).clipboard.writeText(
+                "Primary Key: " + currentKeys.primary + "\r\n\r\n" +
+                "Secondary Key: " + currentKeys.secondary
+            );
+
+            /* Alter the button text. */
+            $( '#dc-cpy-pwds-btn' ).text( 'Copied Keys To Clipboard!' );
+
+            /* Reset the button after 1 second close the prompt. */
+            setTimeout( function () {
+                /* Reset. */
+                $( '#dc-cpy-pwds-btn' ).text( 'Copy Current Passwords!' );
+
+                /* Close. */
+                $( '#dc-cancel-btn' ).click();
+            }, 1000 );
+        };
+    }
+
+    static on_lock_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            /* Update the icon and toggle. */
+            if ( !self.configFile.encodeAll ) {
+                $( '#dc-lock-btn' ).attr( 'title', 'Disable Message Encryption' );
+                $( '#dc-lock-btn' )[ 0 ].innerHTML = atob( self.lockIcon );
+                self.configFile.encodeAll = true;
+            }
+            else {
+                $( '#dc-lock-btn' ).attr( 'title', 'Enable Message Encryption' );
+                $( '#dc-lock-btn' )[ 0 ].innerHTML = atob( self.unlockIcon );
+                self.configFile.encodeAll = false;
+            }
+
+            /* Set the button class. */
+            $( '.dc-svg' ).attr( 'class', 'dc-svg' );
+
+            /* Save config. */
+            self.saveConfig();
+        };
+    }
+
+    /* ================ END UI HANDLE CALLBACKS ================ */
 
     /* =================== END MAIN CALLBACKS ================== */
 
