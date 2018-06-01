@@ -2106,7 +2106,7 @@ class discordCrypt {
     }
 
     /* Processes decrypted text for formatted elements. */
-    static postProcessMessage(/* string */ message) {
+    static postProcessMessage( /* string */ message ) {
         /* Extract any code blocks from the message. */
         let processed = discordCrypt.__buildCodeBlockMessage( message );
         let hasCode = processed.code;
@@ -3359,7 +3359,9 @@ class discordCrypt {
     /* Extracts raw code blocks from a message. */
     static __extractCodeBlocks( /* string */ message ) {
         /* This regex only extracts code blocks. */
-        let code_block_expr = new RegExp( /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm ), _matched;
+        let code_block_expr = new RegExp( /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm ),
+            inline_block_expr = new RegExp( /(`([^`].*?)`)/g ),
+            _matched;
 
         /* Array to store all the extracted blocks in. */
         let _code_blocks = [];
@@ -3370,9 +3372,23 @@ class discordCrypt {
             _code_blocks.push( {
                 start_pos: _matched.index,
                 end_pos: _matched.index + _matched[ 1 ].length,
-                language: _matched[ 3 ].trim(),
+                language: _matched[ 3 ].trim().length === 0 ? 'text' : _matched[ 3 ].trim(),
                 raw_code: _matched[ 4 ],
                 captured_block: _matched[ 1 ]
+            } );
+        }
+
+        /* Match inline code blocks. */
+        while ( ( _matched = inline_block_expr.exec( message ) ) ) {
+            /* Insert the captured data. */
+            _code_blocks.push( {
+                start_pos: _matched.index,
+                end_pos: _matched.index + _matched[ 0 ].length,
+                language: 'inline',
+                raw_code: message
+                    .substr( _matched.index, _matched.index + _matched[ 0 ].length )
+                    .split( '`' )[ 1 ],
+                captured_block: _matched[ 0 ]
             } );
         }
 
@@ -3409,26 +3425,37 @@ class discordCrypt {
 
             /* Loop over each expanded code block. */
             for ( let i = 0; i < _extracted.length; i++ ) {
-                let _lines = '';
+                /* Inline code blocks get styled differently. */
+                if ( _extracted[ i ].language !== 'inline' ) {
+                    let _lines = '';
 
-                /* Remove any line-reset characters and split the message into lines. */
-                let _code = _extracted[ i ].raw_code.replace( "\r", '' ).split( "\n" );
+                    /* Remove any line-reset characters and split the message into lines. */
+                    let _code = _extracted[ i ].raw_code.replace( "\r", '' ).split( "\n" );
 
-                /* Wrap each line in list elements. */
-                /* We start from position 1 since the regex leaves us with 2 blank lines. */
-                for ( let j = 1; j < _code.length - 1; j++ )
-                    _lines += `<li>${_code[ j ]}</li>`;
+                    /* Wrap each line in list elements. */
+                    /* We start from position 1 since the regex leaves us with 2 blank lines. */
+                    for ( let j = 1; j < _code.length - 1; j++ )
+                        _lines += `<li>${_code[ j ]}</li>`;
 
-                /* Split the HTML message according to the full markdown code block. */
-                message = message.split( _extracted[ i ].captured_block );
+                    /* Split the HTML message according to the full markdown code block. */
+                    message = message.split( _extracted[ i ].captured_block );
 
-                /* Replace the code with an HTML formatted code block. */
-                message = message.join(
-                    '<div class="markup line-scanned" data-colour="true" style="color: rgb(111, 0, 0);">' +
-                    `<pre class="hljs"><code class="dc-code-block hljs ${_extracted[ i ].language}"
-                        style="position: relative;">` +
-                    `<ol>${_lines}</ol></code></pre></div>`
-                );
+                    /* Replace the code with an HTML formatted code block. */
+                    message = message.join(
+                        '<div class="markup line-scanned" data-colour="true" style="color: rgb(111, 0, 0);">' +
+                        `<pre class="hljs"><code class="dc-code-block hljs 
+                        ${_extracted[ i ].language === 'text' ? '' : _extracted[ i ].language}"
+                         style="position: relative;">` +
+                        `<ol>${_lines}</ol></code></pre></div>`
+                    );
+                }
+                else {
+                    /* Split the HTML message according to the inline markdown code block. */
+                    message = message.split( _extracted[ i ].captured_block );
+
+                    /* Replace the data with a inline code class. */
+                    message = message.join( `<code class="inline">${_extracted[ i ].raw_code}</code>` );
+                }
             }
 
             /* Return the parsed message. */
