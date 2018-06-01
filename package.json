@@ -21,13 +21,16 @@
   "license": "MIT",
   "dependencies": {
     "electron": "latest",
+    "esdoc": "latest",
+    "esdoc-standard-plugin": "latest",
+    "form-data": "latest",
     "fs": "latest",
     "istanbul": "latest",
+    "mime-types": "latest",
     "nodeunit": "latest",
     "path": "latest",
     "process": "latest",
-    "request": "latest",
-    "mime-types": "latest",
-    "form-data": "latest"
+    "request": "latest"
   }
 }
+

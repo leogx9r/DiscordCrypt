@@ -1,3 +1,8 @@
+Version 1.0.6
+
+- Fixed a bug where file uploads wouldn't be sent if an encrypted channel wasn't already set up.
+- Fixed a bug where the CI pipeline test failed to properly execute.
+
 Version 1.0.5
 
 - Added full support for code blocks in encrypted messages. ( Inline & Block )

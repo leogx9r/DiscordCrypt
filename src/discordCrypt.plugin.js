@@ -24,31 +24,57 @@
  * SOFTWARE.
  ******************************************************************************/
 
-/* Main plugin prototype. */
+/**
+ * @public
+ * @desc Main plugin prototype.
+ */
 class discordCrypt {
     /* ============================================================== */
 
-    /* Standard BetterDiscord Plugin Info. */
+    /**
+     * @public
+     * @desc Returns the name of the plugin.
+     * @returns {string}
+     */
     getName() {
         return 'DiscordCrypt';
     }
 
+    /**
+     * @public
+     * @desc Returns the description of the plugin.
+     * @returns {string}
+     */
     getDescription() {
         return 'Provides secure messaging for Discord using various cryptography standards.';
     }
 
-    /* Version & Author. */
+    /**
+     * @public
+     * @desc Returns the plugin's original author.
+     * @returns {string}
+     */
     getAuthor() {
         return 'Leonardo Gates';
     }
 
+    /**
+     * @public
+     * @desc Returns the current version of the plugin.
+     * @returns {string}
+     */
     getVersion() {
-        return '1.0.5';
+        return '1.0.6';
     }
 
     /* ============================================================== */
 
-    /* Default Constructor */
+    /**
+     * @public
+     * @desc Initializes an instance of DiscordCrypt.
+     * @example
+     * let instance = new discordCrypt();
+     */
     constructor() {
 
         /* ============================================ */
@@ -831,7 +857,10 @@ class discordCrypt {
 
     /* ===================== STANDARD CALLBACKS ===================== */
 
-    /* Starts the script execution. */
+    /**
+     * @public
+     * @desc Starts the script execution. This is called by BetterDiscord if the plugin is enabled.
+     */
     start() {
         /* Backup class instance. */
         const self = this;
@@ -887,7 +916,10 @@ class discordCrypt {
         }
     }
 
-    /* Stops the script execution. */
+    /**
+     * @public
+     * @desc Stops the script execution. This is called by BetterDiscord if the plugin is disabled or during shutdown.
+     */
     stop() {
         /* Nothing needs to be done since start() wouldn't have triggered. */
         if ( !discordCrypt.validPluginName() )
@@ -917,7 +949,10 @@ class discordCrypt {
         this.configFile = null;
     }
 
-    /* Called when the script has to load resources. */
+    /**
+     * @public
+     * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
+     */
     load() {
         /* Inject application CSS. */
         discordCrypt.injectCSS( 'dc-css', this.appCss );
@@ -940,13 +975,19 @@ class discordCrypt {
         );
     }
 
-    /* Called during application shutdown. */
+    /**
+     * @public
+     * @desc Triggered when the script needs to unload its resources. This is called during Discord shutdown.
+     */
     unload() {
         /* Clear the injected CSS. */
         discordCrypt.clearCSS( 'dc-css' );
     }
 
-    /* Triggers when the channel is switched. */
+    /**
+     * @public
+     * @desc Triggered by BetterDiscord when the current channel has been switched.
+     */
     onSwitch() {
         /* Skip if no valid configuration is loaded. */
         if ( !this.configFile )
@@ -964,7 +1005,11 @@ class discordCrypt {
         this.decodeMessages();
     }
 
-    /* Attempt to decode messages once a new message has been received. */
+    /**
+     * @public
+     * @desc Triggered when the current channel or DM adds a new message to the display.
+     *      Attempt to decode messages once a new message has been received.
+     */
     onMessage() {
         /* Skip if no valid configuration is loaded. */
         if ( !this.configFile )
@@ -980,12 +1025,33 @@ class discordCrypt {
 
     /* =================== CONFIGURATION DATA CBS =================== */
 
-    /* Performed when updating a configuration file across versions. */
+    /**
+     * @private
+     * @desc Performed when updating a configuration file across versions.
+     */
     onUpdate() {
         /* Placeholder for future use. */
     }
 
-    /* Returns the default settings. */
+    /**
+     * @private
+     * @desc Returns the default settings for the plugin.
+     * @returns {
+     *  {
+     *      version: string,
+     *      defaultPassword: string,
+     *      encodeMessageTrigger: string,
+     *      encryptScanDelay: number,
+     *      encryptMode: number,
+     *      encryptBlockMode: string,
+     *      encodeAll: boolean,
+     *      paddingMode: string,
+     *      passList: {},
+     *      up1Host: string,
+     *      up1ApiKey: string
+     *  }
+     * }
+     */
     getDefaultConfig() {
         return {
             /* Current Version. */
@@ -1013,7 +1079,11 @@ class discordCrypt {
         };
     }
 
-    /* Checks if the configuration file exists. */
+    /**
+     * @private
+     * @desc Checks if the configuration file exists.
+     * @returns {boolean} Returns true if the configuration file exists.
+     */
     configExists() {
         /* Attempt to parse the configuration file. */
         let data = bdPluginStorage.get( this.getName(), 'config' );
@@ -1022,7 +1092,11 @@ class discordCrypt {
         return data && data !== null && data !== '';
     }
 
-    /* Loads the configuration file. */
+    /**
+     * @private
+     * @desc Loads the configuration file from `discordCrypt.config.json`
+     * @returns {boolean}
+     */
     loadConfig() {
         discordCrypt.log( 'Loading configuration file ...' );
 
@@ -1087,7 +1161,10 @@ class discordCrypt {
         return true;
     }
 
-    /* Saves the configuration file. */
+    /**
+     * @private
+     * @desc Saves the configuration file with the current password using AES-256 in GCM mode.
+     */
     saveConfig() {
         discordCrypt.log( 'Saving configuration file ...' );
 
@@ -1103,8 +1180,12 @@ class discordCrypt {
         } );
     }
 
-    /* Updates and saves the configuration data used and updates a given button's text. */
-    saveSettings( /* Object */ btn ) {
+    /**
+     * @private
+     * @desc Updates and saves the configuration data used and updates a given button's text.
+     * @param {Object} btn The jQuery button to set the update text for.
+     */
+    saveSettings( btn ) {
         /* Save self. */
         const self = this;
 
@@ -1128,8 +1209,12 @@ class discordCrypt {
         }, 1000 );
     }
 
-    /* Resets the default configuration data used and updates a given button's text. */
-    resetSettings( /* Object */ btn ) {
+    /**
+     * @private
+     * @desc Resets the default configuration data used and updates a given button's text.
+     * @param {Object} btn The jQuery button to set the update text for.
+     */
+    resetSettings( btn ) {
         /* Save self. */
         const self = this;
 
@@ -1156,7 +1241,10 @@ class discordCrypt {
         }, 1000 );
     }
 
-    /* Update the current password field and save the config file. */
+    /**
+     * @private
+     * @desc Update the current password field and save the config file.
+     */
     updatePasswords() {
         /* Don't save if the password overlay is not open. */
         if ( $( '#dc-overlay-password' )[ 0 ].style.display !== 'block' )
@@ -1193,19 +1281,32 @@ class discordCrypt {
 
     /* =================== PROJECT UTILITIES =================== */
 
-    /* Returns the name of the plugin file. */
+    /**
+     * @public
+     * @desc Returns the name of the plugin file expected on the disk.
+     * @returns {string}
+     */
     static getPluginName() {
         return 'discordCrypt.plugin.js';
     }
 
-    /* Check if the plugin is named correctly. */
+    /**
+     * @public
+     * @desc Check if the plugin is named correctly by attempting to open the plugin file in the BetterDiscord
+     *      plugin path.
+     * @returns {boolean}
+     */
     static validPluginName() {
         return require( 'fs' )
             .existsSync( require( 'path' )
                 .join( discordCrypt.getPluginsPath(), discordCrypt.getPluginName() ) );
     }
 
-    /* Returns the platform-specific path to BetterDiscord's plugins. */
+    /**
+     * @public
+     * @desc Returns the platform-specific path to BetterDiscord's plugin directory.
+     * @returns {string} The expected path ( which may not exist ) to BetterDiscord's plugin directory.
+     */
     static getPluginsPath() {
         const process = require( 'process' );
         return (
@@ -1217,8 +1318,26 @@ class discordCrypt {
         ) + '/BetterDiscord/plugins/';
     }
 
-    /* Checks the update server for an encrypted update.  */
-    static checkForUpdate( /* function(file_data, short_hash, new_version, full_changelog) */ onUpdateCallback ) {
+    /**
+     * @name updateCallback
+     * @param {string} file_data The update file's data.
+     * @param {string} short_hash A 64-bit SHA-256 checksum of the new update.
+     * @param {string} new_version The new version of the update.
+     * @param {string} full_changelog The full changelog.
+     */
+
+    /**
+     * @public
+     * @desc Checks the update server for an encrypted update.
+     * @param {updateCallback} onUpdateCallback
+     * @returns {boolean}
+     * @example
+     * checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) =>
+     *      console.log( `New Update Available: #${short_hash} - v${new_version}` );
+     *      console.log( `Changelog:\n${full_changelog}` );
+     * } );
+     */
+    static checkForUpdate( onUpdateCallback ) {
         /* Update URL and request method. */
         const update_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/' + discordCrypt.getPluginName();
         const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
@@ -1273,7 +1392,8 @@ class discordCrypt {
 
                 /* Read the current hash of the plugin and compare them.. */
                 let currentHash = discordCrypt.sha256( localFile );
-                let hash = discordCrypt.sha256( data ), shortHash = new Buffer( hash, 'base64' )
+                let hash = discordCrypt.sha256( data );
+                let shortHash = new Buffer( hash, 'base64' )
                     .toString( 'hex' )
                     .slice( 0, 8 );
 
@@ -1316,17 +1436,39 @@ class discordCrypt {
         return true;
     }
 
-    /* Returns the current message ID used by Discord. */
+    /**
+     * @private
+     * @description Returns the current message ID used by Discord.
+     * @returns {string | undefined}
+     */
     static getChannelId() {
         return window.location.pathname.split( '/' ).pop();
     }
 
-    /* Creates a password object using the parameters specified. */
-    static createPassword( /* string */ primary_password, /* string */ secondary_password ) {
+    /**
+     * @public
+     * @desc Creates a password object using a primary and secondary password.
+     * @param {string} primary_password The primary password.
+     * @param {string} secondary_password The secondary password.
+     * @returns {{primary: string, secondary: string}} Object containing the two passwords.
+     */
+    static createPassword( primary_password, secondary_password ) {
         return { primary: primary_password, secondary: secondary_password };
     }
 
-    /* Returns the React modules. */
+    /**
+     * @private
+     * @desc Returns the React modules loaded natively in Discord
+     * @returns {{
+     *      ChannelProps: Object,
+     *      MessageParser: Object,
+     *      MessageController: Object,
+     *      MessageActionTypes: Object,
+     *      MessageDispatcher: Object,
+     *      MessageQueue: Object,
+     *      HighlightJS: Object
+     *  }}
+     */
     static getReactModules() {
         /* Initializes WebPackModules. [ Credits to the creator. ] */
         const WebpackModules = ( () => {
@@ -1389,7 +1531,15 @@ class discordCrypt {
         };
     }
 
-    /* Sends an embedded message. */
+    /**
+     * @private
+     * @desc Sends an embedded message to Discord.
+     * @param {string} embedded_text The message body of the embed.
+     * @param {string} embedded_header The text to display at the top of the embed.
+     * @param {string} embedded_footer The text to display at the bottom of the embed.
+     * @param {string|int} embedded_color A hex color used to outline the left side of the embed.
+     * @param {string} message_content Message content to be attached above the embed.
+     */
     static sendEmbeddedMessage(
         /* string */ embedded_text,
         /* string */ embedded_header,
@@ -1473,8 +1623,27 @@ class discordCrypt {
         } );
     }
 
-    /* Logs a message to the console. */
-    static log( /* string */ message, /* string */ method = "info" ) {
+    /**
+     * @public
+     * @desc Logs a message to the console in HTML coloring. ( For Electron clients. )
+     * @param {string} message The message to log to the console.
+     * @param {string} method The indication level of the message.
+     *      This can be either ['info', 'warn', 'error', 'success']
+     *
+     * @example
+     * log( 'Hello World!' );
+     *
+     * @example
+     * log( 'This is printed in yellow.', 'warn' );
+     *
+     * @example
+     * log( 'This is printed in red.', 'error' );
+     *
+     * @example
+     * log( 'This is printed green.', 'success' );
+     *
+     */
+    static log( message, method = "info" ) {
         try {
             console[ method ]( "%c[DiscordCrypt]%c - " + message, "color: #7f007f; font-weight: bold;", "" );
         }
@@ -1482,15 +1651,28 @@ class discordCrypt {
         }
     }
 
-    /* Injects a CSS style element into the header tag. */
-    static injectCSS( /* string */ id, /* string */ css ) {
+    /**
+     * @private
+     * @desc Injects a CSS style element into the header tag.
+     * @param {string} id The HTML ID string used to identify this CSS style segment.
+     * @param {string} css The actual CSS style excluding the <style> tags.
+     * @example
+     * injectCSS( 'my-css', 'p { font-size: 32px; }' );
+     */
+    static injectCSS( id, css ) {
         /* Inject into the header tag. */
         $( "head" )
             .append( $( "<style>", { id: id.replace( /^[^a-z]+|[^\w-]+/gi, "" ), html: css } ) )
     }
 
-    /* Clears an injected element via its ID tag. */
-    static clearCSS( /* string */ id = undefined ) {
+    /**
+     * @private
+     * @desc Clears an injected element via its ID tag.
+     * @param {string} id The HTML ID string used to identify this CSS style segment.
+     * @example
+     * clearCSS( 'my-css' );
+     */
+    static clearCSS( id = undefined ) {
         /* Make sure the ID is a valid string. */
         if ( !id || typeof id !== 'string' || !id.length )
             return;
@@ -1503,7 +1685,10 @@ class discordCrypt {
 
     /* ================= BEGIN MAIN CALLBACKS ================== */
 
-    /* Adds the master-password field. */
+    /**
+     * @private
+     * @desc Loads the master-password unlocking prompt.
+     */
     loadMasterPassword() {
         const self = this;
 
@@ -1671,7 +1856,10 @@ class discordCrypt {
         } );
     }
 
-    /* Performs update checking and handles actually updating. */
+    /**
+     * @private
+     * @desc Performs an async update checking and handles actually updating the current version if necessary.
+     */
     checkForUpdates() {
         const self = this;
 
@@ -1720,8 +1908,14 @@ class discordCrypt {
         }, 1000 );
     }
 
-    /* Sets the active tab index in the exchange key menu. */
-    static setActiveTab( /* int */ index ) {
+    /**
+     * @private
+     * @desc Sets the active tab index in the exchange key menu.
+     * @param {int} index The index ( 0-2 ) of the page to activate.
+     * @example
+     * setActiveTab( 1 );
+     */
+    static setActiveTab( index ) {
         let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
         let tabs = $( '.dc-tab-link' );
 
@@ -1751,7 +1945,10 @@ class discordCrypt {
         }
     }
 
-    /* Adds the password toolbar. */
+    /**
+     * @private
+     * @desc Inserts the plugin's option toolbar to the current toolbar and handles all triggers.
+     */
     loadToolbar() {
         /* Skip if the configuration hasn't been loaded. */
         if ( !this.configFile )
@@ -1892,7 +2089,10 @@ class discordCrypt {
         $( '#dc-lock-btn' ).click( discordCrypt.on_lock_button_clicked( this ) );
     }
 
-    /* Attached a handler for message events. */
+    /**
+     * @private
+     * @desc Attached a handler to the message area and dispatches encrypted messages if necessary.
+     */
     attachHandler() {
         const self = this;
 
@@ -1932,8 +2132,16 @@ class discordCrypt {
         } );
     }
 
-    /* Parses a symmetric-key message. */
-    parseSymmetric( /* Object */ obj, /* string */ password, /* string */ secondary, /* Array */ ReactModules ) {
+    /**
+     * @private
+     * @desc Parses a message object and attempts to decrypt it..
+     * @param {Object} obj The jQuery object of the current message being examined.
+     * @param {string} password The primary key used to decrypt the message.
+     * @param {string} secondary The secondary key used to decrypt the message.
+     * @param {Object} ReactModules The modules retrieved by calling getReactModules()
+     * @returns {boolean} Returns true if the message has been decrypted.
+     */
+    parseSymmetric( obj, password, secondary, ReactModules ) {
         let message = $( obj );
         let dataMsg;
 
@@ -2106,8 +2314,13 @@ class discordCrypt {
         return true;
     }
 
-    /* Processes decrypted text for formatted elements. */
-    static postProcessMessage( /* string */ message ) {
+    /**
+     * @private
+     * @desc Processes a decrypted message and formats any elements needed in HTML.
+     * @param message The message to process.
+     * @returns {{url: boolean, code: boolean, html: (string|*)}}
+     */
+    static postProcessMessage( message ) {
         /* Extract any code blocks from the message. */
         let processed = discordCrypt.__buildCodeBlockMessage( message );
         let hasCode = processed.code;
@@ -2124,7 +2337,10 @@ class discordCrypt {
         };
     }
 
-    /* Decodes all messages in the correct format. */
+    /**
+     * @private
+     * @desc Iterates all messages in the current channel and tries to decrypt each, skipping cached results.
+     */
     decodeMessages() {
         /* Skip if a valid configuration file has not been loaded. */
         if ( !this.configFile || !this.configFile.version )
@@ -2161,8 +2377,14 @@ class discordCrypt {
         } );
     }
 
-    /* Sends an encrypted message to the current channel. */
-    sendEncryptedMessage( /* string */ message, /* boolean */ force_send = false ) {
+    /**
+     * @private
+     * @desc Sends an encrypted message to the current channel.
+     * @param {string} message The unencrypted message to send.
+     * @param {boolean} force_send Whether to ignore checking for the encryption trigger and always encrypt and send.
+     * @returns {number} Returns 1 if the message failed to be parsed correctly and 0 on success.
+     */
+    sendEncryptedMessage( message, force_send = false ) {
         /* Let's use a maximum message size of 1200 instead of 2000 to account for encoding, new line feeds & packet
          header. */
         const maximum_encoded_data = 1200;
@@ -2298,6 +2520,10 @@ class discordCrypt {
 
     /* =============== BEGIN UI HANDLE CALLBACKS =============== */
 
+    /**
+     * @private
+     * @desc
+     */
     static on_file_button_clicked() {
         /* Show main background. */
         $( '#dc-overlay' )[ 0 ].style.display = 'block';
@@ -2306,6 +2532,10 @@ class discordCrypt {
         $( '#dc-overlay-upload' )[ 0 ].style.display = 'block';
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_alter_file_button_clicked() {
         /* Create an input element. */
         let file = require( 'electron' ).remote.dialog.showOpenDialog( {
@@ -2323,6 +2553,12 @@ class discordCrypt {
         $( '#dc-file-path' ).val( file[ 0 ] );
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_upload_file_button_clicked( /* discordCrypt */ self ) {
         return () => {
             const fs = require( 'fs' );
@@ -2335,7 +2571,7 @@ class discordCrypt {
 
             /* Send the additional text first if it's valid. */
             if ( message_textarea.val().length > 0 )
-                self.sendEncryptedMessage( message_textarea.val() );
+                self.sendEncryptedMessage( message_textarea.val(), true );
 
             /* Clear the message field. */
             message_textarea.val( '' );
@@ -2376,7 +2612,8 @@ class discordCrypt {
 
                     /* Format and send the message. */
                     self.sendEncryptedMessage(
-                        `Link: ${file_url}${send_deletion_link ? '\nDelete URL: ' + deletion_link : ''}`
+                        `Link: ${file_url}${send_deletion_link ? '\nDelete URL: ' + deletion_link : ''}`,
+                        true
                     );
 
                     /* Clear the file path. */
@@ -2399,6 +2636,10 @@ class discordCrypt {
         };
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_cancel_file_upload_button_clicked() {
         /* Clear old file name. */
         $( '#dc-file-path' ).val( '' );
@@ -2410,6 +2651,10 @@ class discordCrypt {
         $( '#dc-overlay-upload' )[ 0 ].style.display = 'none';
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_settings_button_clicked() {
         /* Show main background. */
         $( '#dc-overlay' )[ 0 ].style.display = 'block';
@@ -2418,6 +2663,10 @@ class discordCrypt {
         $( '#dc-overlay-settings' )[ 0 ].style.display = 'block';
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_settings_close_button_clicked() {
         /* Hide main background. */
         $( '#dc-overlay' )[ 0 ].style.display = 'none';
@@ -2426,6 +2675,12 @@ class discordCrypt {
         $( '#dc-overlay-settings' )[ 0 ].style.display = 'none';
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_save_settings_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Update all settings from the settings panel. */
@@ -2481,6 +2736,12 @@ class discordCrypt {
         };
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_reset_settings_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Resets the configuration file and update the button text. */
@@ -2500,32 +2761,56 @@ class discordCrypt {
         };
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_restart_now_button_clicked() {
         /* Window reload is simple enough. */
         location.reload();
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_restart_later_button_clicked() {
         /* Hide the update and changelog. */
         $( '#dc-overlay' )[ 0 ].style.display = 'none';
         $( '#dc-update-overlay' )[ 0 ].style.display = 'none';
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_info_tab_button_clicked() {
         /* Switch to tab 0. */
         discordCrypt.setActiveTab( 0 );
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_exchange_tab_button_clicked() {
         /* Switch to tab 1. */
         discordCrypt.setActiveTab( 1 );
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_handshake_tab_button_clicked() {
         /* Switch to tab 2. */
         discordCrypt.setActiveTab( 2 );
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_close_exchange_button_clicked() {
         /* Hide main background. */
         $( '#dc-overlay' )[ 0 ].style.display = 'none';
@@ -2534,6 +2819,10 @@ class discordCrypt {
         $( '#dc-overlay-exchange' )[ 0 ].style.display = 'none';
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_open_exchange_button_clicked() {
         /* Show background. */
         $( '#dc-overlay' )[ 0 ].style.display = 'block';
@@ -2542,6 +2831,10 @@ class discordCrypt {
         $( '#dc-overlay-exchange' )[ 0 ].style.display = 'block';
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_quick_send_public_key_button_clicked() {
         /* Don't bother opening a menu. Just generate the key. */
         $( '#dc-keygen-gen-btn' ).click();
@@ -2550,6 +2843,10 @@ class discordCrypt {
         $( '#dc-keygen-send-pub-btn' ).click();
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_exchange_algorithm_changed() {
         /* Variable bit lengths. */
         let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
@@ -2578,6 +2875,10 @@ class discordCrypt {
         }
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_generate_new_key_pair_button_clicked() {
         let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
         let max_salt_len = 32, min_salt_len = 16, salt_len;
@@ -2661,11 +2962,21 @@ class discordCrypt {
         $( '#dc-priv-key-ta' )[ 0 ].value = key.getPrivateKey( 'hex' );
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_keygen_clear_button_clicked() {
         /* Clear the key textareas. */
         $( '#dc-pub-key-ta' )[ 0 ].value = $( '#dc-priv-key-ta' )[ 0 ].value = '';
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_keygen_send_public_key_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Don't bother if it's empty. */
@@ -2702,10 +3013,20 @@ class discordCrypt {
         };
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_handshake_paste_public_key_button_clicked() {
         $( '#dc-handshake-ppk' )[ 0 ].value = require( 'electron' ).clipboard.readText();
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_handshake_compute_button_clicked( /* discordCrypt */ self ) {
         return () => {
             let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
@@ -3003,6 +3324,10 @@ class discordCrypt {
         };
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_handshake_copy_keys_button_clicked() {
         /* Don't bother if it's empty. */
         if ( $( '#dc-handshake-primary-key' )[ 0 ].value === '' ||
@@ -3028,6 +3353,12 @@ class discordCrypt {
         }, 1000 );
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_handshake_apply_keys_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Skip if no primary key was generated. */
@@ -3071,11 +3402,21 @@ class discordCrypt {
         }
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_passwd_button_clicked() {
         $( '#dc-overlay' )[ 0 ].style.display = 'block';
         $( '#dc-overlay-password' )[ 0 ].style.display = 'block';
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_save_passwords_button_clicked( /* discordCrypt */ self ) {
         return () => {
             let btn = $( '#dc-save-pwd' );
@@ -3102,6 +3443,12 @@ class discordCrypt {
         };
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_reset_passwords_button_clicked( /* discordCrypt */ self ) {
         return () => {
             let btn = $( '#dc-reset-pwd' );
@@ -3128,6 +3475,10 @@ class discordCrypt {
         };
     }
 
+    /**
+     * @private
+     * @desc
+     */
     static on_cancel_password_button_clicked() {
         /* Clear the fields. */
         $( "#dc-password-primary" )[ 0 ].value = '';
@@ -3141,6 +3492,12 @@ class discordCrypt {
         }, 250 );
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_copy_current_passwords_button_clicked( /* discordCrypt */ self ) {
         return () => {
             let currentKeys = self.configFile.passList[ discordCrypt.getChannelId() ];
@@ -3171,6 +3528,12 @@ class discordCrypt {
         };
     }
 
+    /**
+     * @private
+     * @desc
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
     static on_lock_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Update the icon and toggle. */
@@ -3201,8 +3564,21 @@ class discordCrypt {
 
     /* ======================= UTILITIES ======================= */
 
-    /* Performs an HTTP request returns the result to the callback. */
-    static __getRequest( /* string */ url, /* function(statusCode, errorString, data) */ callback ) {
+    /**
+     * @name getResultCallback
+     * @param {int} statusCode The HTTP static code of the operation.
+     * @param {string|null} The HTTP error string if an error occurred.
+     * @param {string} data The returned data from the request.
+     */
+
+    /**
+     * @public
+     * @desc Performs an HTTP request returns the result to the callback.
+     * @param {string} url The URL of the request.
+     * @param {getResultCallback} callback The callback triggered when the request is complete or an error occurs.
+     * @private
+     */
+    static __getRequest( url, callback ) {
         try {
             require( 'request' )( url, ( error, response, result ) => {
                 callback( response.statusCode, response.statusMessage, result );
@@ -3213,12 +3589,15 @@ class discordCrypt {
         }
     }
 
-    /* Gets the React instance of an element. [ Credits to the creator. ] */
+    /**
+     * @private
+     * @desc Gets the React instance of an element. [ Credits to the creator. ]
+     */
     static __getElementReactOwner(
-        /* Object */    element,
-        /* Array*/      {
-            /* Array */ include,
-            /* Array */ exclude = [ "Popout", "Tooltip", "Scroller", "BackgroundFlash" ]
+        element,
+        {
+            include,
+            exclude = [ "Popout", "Tooltip", "Scroller", "BackgroundFlash" ]
         } = {}
     ) {
         if ( element === undefined )
@@ -3244,8 +3623,18 @@ class discordCrypt {
         return undefined;
     }
 
-    /* Returns the exchange algorithm and bit size for the given metadata. */
-    static __extractKeyInfo( /* string */ key_message, /* boolean */ header_present = false ) {
+    /**
+     * @public
+     * @desc Returns the exchange algorithm and bit size for the given metadata.
+     * @param {string} key_message The encoded metadata to extract the information from.
+     * @param {boolean} header_present Whether the message's magic string is attached to the input.
+     * @returns {{bit_length: int, algorithm: string}|null} Returns the algorithm's bit length and name or null.
+     * @example
+     * __extractKeyInfo( '㑼㑷㑵㑳㐁㑢', true );
+     * @example
+     * __extractKeyInfo( '㐁㑢', false );
+     */
+    static __extractKeyInfo( key_message, header_present = false ) {
         try {
             let output = [];
             let msg = key_message;
@@ -3275,8 +3664,15 @@ class discordCrypt {
         }
     }
 
-    /* Splits the input text into chunks according to the specified length. */
-    static __splitStringChunks( /* string */ input_string, /* int */ max_length ) {
+    /**
+     * @public
+     * @desc Splits the input text into chunks according to the specified length.
+     * @param {string} input_string The input string.
+     * @param {int} max_length The maximum length of the string before splitting.
+     * @returns {Array} An array of split strings.
+     * @private
+     */
+    static __splitStringChunks( input_string, max_length ) {
         /* Sanity check. */
         if ( !max_length || max_length < 0 )
             return input_string;
@@ -3292,8 +3688,21 @@ class discordCrypt {
         return ret;
     }
 
-    /* Determines if the given string is a valid username according to Discord's standards. */
-    static __isValidUserName( /* string */ name ) {
+    /**
+     * @public
+     * @desc Determines if the given string is a valid username according to Discord's standards.
+     * @param {string} name The name of the user and their discriminator.
+     * @returns {boolean} Returns true if the username is valid.
+     * @example
+     * console.log( __isValidUserName( 'Person#1234' ) ); // true
+     * @example
+     * console.log( __isValidUserName( 'Person#123' ) ); // false
+     * @example
+     * console.log( __isValidUserName( 'Person#' ) ); // false
+     * @example
+     * console.log( __isValidUserName( 'Person1234' ) ); // false
+     */
+    static __isValidUserName( name ) {
         /* Make sure this is actually a string. */
         if ( typeof name !== 'string' )
             return false;
@@ -3330,8 +3739,13 @@ class discordCrypt {
         return false;
     }
 
-    /* Extracts all tags from the given message. */
-    static __extractTags( /* string */ message ) {
+    /**
+     * @public
+     * @desc Extracts all tags from the given message and removes any tagged discriminators.
+     * @param {string} message The input message to extract all tags from.
+     * @returns {{ processed_message: string, user_tags: Array }}
+     */
+    static __extractTags( message ) {
         let split_msg = message.split( ' ' );
         let cleaned_tags = '', cleaned_msg = '';
         let user_tags = [];
@@ -3359,8 +3773,23 @@ class discordCrypt {
         return [ cleaned_msg.trim(), cleaned_tags.trim() ];
     }
 
-    /* Extracts raw code blocks from a message. */
-    static __extractCodeBlocks( /* string */ message ) {
+    /**
+     * @name codeBlockDescriptor
+     * @param {int} start_pos The starting position of the code block.
+     * @param {int} end_pos The ending position of the code block.
+     * @param {string} language The language identifier of the code within this block.
+     * @param {string} raw_code The raw code within the code block.
+     * @param {string} captured_block The entire markdown formatted code block.
+     */
+
+    /**
+     * @public
+     * @desc Extracts raw code blocks from a message and returns a descriptive array.
+     *      N.B. This does not remove the code blocks from the message.
+     * @param {string} message The message to extract all code blocks from.
+     * @returns {Array} Returns an array of codeBlockDescriptor() objects.
+     */
+    static __extractCodeBlocks( message ) {
         /* This regex only extracts code blocks. */
         let code_block_expr = new RegExp( /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm ),
             inline_block_expr = new RegExp( /(`([^`].*?)`)/g ),
@@ -3398,8 +3827,15 @@ class discordCrypt {
         return _code_blocks;
     }
 
-    /* Extracts raw URLs from a message. */
-    static __extractUrls( /* string */ message ) {
+    /**
+     * @public
+     * @desc Extracts raw URLs from a message.
+     *      N.B. This does not remove the URLs from the message.
+     * @param {string} message The message to extract the URLs from.
+     * @returns {Array} Returns an array of URLs detected int the message.
+     * @private
+     */
+    static __extractUrls( message ) {
         /* This regex only extracts HTTP/HTTPS/FTP and FILE URLs. */
         let url_expr = new RegExp( /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig ),
             matched;
@@ -3416,8 +3852,13 @@ class discordCrypt {
         return urls;
     }
 
-    /* Extracts code blocks from a message and formats them accordingly. */
-    static __buildCodeBlockMessage( /* string */ message ) {
+    /**
+     * @public
+     * @desc Extracts code blocks from a message and formats them in HTML to the proper format.
+     * @param {string} message The message to format code blocks from.
+     * @returns {{code: boolean, html: string}} Returns whether the message contains code blocks and the formatted HTML.
+     */
+    static __buildCodeBlockMessage( message ) {
         try {
             /* Extract code blocks. */
             let _extracted = discordCrypt.__extractCodeBlocks( message );
@@ -5705,3 +6146,4 @@ class discordCrypt {
 
 /* Required for code coverage reports. */
 module.exports = discordCrypt;
+
