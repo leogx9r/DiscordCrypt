@@ -3463,10 +3463,10 @@ class discordCrypt {
                     message.split( _extracted[ i ] ).join( `<a href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
             }
 
-            /* Wrap the message normally. */
+            /* Wrap the message in span tags. */
             return {
                 url: true,
-                html: message
+                html: `<span>${message}</span>`
             };
         }
         catch ( e ) {
