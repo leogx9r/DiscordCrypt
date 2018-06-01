@@ -1,3 +1,11 @@
+Version 1.0.5
+
+- Added full support for code blocks in encrypted messages. ( Inline & Block )
+- Added URL identification in messages which can now be clicked to open them.
+- Added encrypted file uploading via Up1 services. ( Maximum of 50 MB. )
+- Added the ability to send file deletion links.
+- Code optimizations for faster execution.
+
 Version 1.0.4
 
 - Added basic support for code blocks with highlighting. Single line code blocks are still unsupported.
