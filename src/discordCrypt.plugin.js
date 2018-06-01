@@ -24,7 +24,10 @@
  * SOFTWARE.
  ******************************************************************************/
 
-/* Main plugin prototype. */
+/**
+ * @public
+ * @desc Main plugin prototype.
+ */
 class discordCrypt {
     /* ============================================================== */
 
@@ -6141,6 +6144,4 @@ class discordCrypt {
 }
 
 /* Required for code coverage reports. */
-module.exports = {
-    discordCrypt
-};
+module.exports = discordCrypt;
