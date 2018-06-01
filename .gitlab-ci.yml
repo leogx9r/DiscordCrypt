@@ -42,6 +42,7 @@ pages:
   dependencies:
    - test
   script:
+   - ls -lah
    - mv coverage/lcov-report/ public/
   artifacts:
    paths:

@@ -2612,7 +2612,8 @@ class discordCrypt {
 
                     /* Format and send the message. */
                     self.sendEncryptedMessage(
-                        `Link: ${file_url}${send_deletion_link ? '\nDelete URL: ' + deletion_link : ''}`
+                        `Link: ${file_url}${send_deletion_link ? '\nDelete URL: ' + deletion_link : ''}`,
+                        true
                     );
 
                     /* Clear the file path. */
