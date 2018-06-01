@@ -38,6 +38,9 @@ build/Release
 node_modules/
 jspm_packages/
 
+# Generated documents
+docs/
+
 # TypeScript v1 declaration files
 typings/
 
