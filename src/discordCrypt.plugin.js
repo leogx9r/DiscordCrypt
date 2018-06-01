@@ -1920,7 +1920,8 @@ class discordCrypt {
                 return;
 
             /* Send the encrypted message. */
-            self.sendEncryptedMessage( $( this ).val() );
+            if(self.sendEncryptedMessage( $( this ).val() ) != 0)
+                return;
 
             /* Clear text field. */
             discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).setState( { textValue: '' } );
@@ -2174,7 +2175,7 @@ class discordCrypt {
 
         /* Skip messages starting with pre-defined escape characters. */
         if ( escapeCharacters.indexOf( message[ 0 ] ) !== -1 )
-            return;
+            return 1;
 
         /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
         if ( force_send === false &&
@@ -2187,11 +2188,11 @@ class discordCrypt {
 
             /* Check if the message actually has the split arg. */
             if ( message.length <= 0 )
-                return;
+                return 1;
 
             /* Check if it has the trigger. */
             if ( message[ message.length - 1 ] !== this.configFile.encodeMessageTrigger )
-                return;
+                return 1;
 
             /* Use the first part of the message. */
             cleaned = message[ 0 ];
@@ -2203,7 +2204,7 @@ class discordCrypt {
 
         /* Check if we actually have a message ... */
         if ( cleaned.length === 0 )
-            return;
+            return 1;
 
         /* Try parsing any user-tags. */
         let parsed = discordCrypt.__extractTags( cleaned );
@@ -2291,6 +2292,8 @@ class discordCrypt {
                 );
             }
         }
+
+        return 0;
     }
 
     /* =============== BEGIN UI HANDLE CALLBACKS =============== */
