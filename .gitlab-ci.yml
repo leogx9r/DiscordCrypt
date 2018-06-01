@@ -6,23 +6,37 @@ cache:
   paths:
   - node_modules/
 
-# Main stage
+# Main stages
 stages:
 - test
 - deploy
 
+# Executed on every other branch but the master branch to perform general tests.
 test:
   stage: test
   script:
    - npm install
-   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js
+   - node ./tests/perform-tests.js
+  allow_failure: false
+  except:
+   - master
+
+# Perform code coverage only on the master branch.
+cover_test:
+  stage: test
+  script:
+   - npm install
+   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js coverage
   coverage: '/^Statements *: (\d+\.\d+%)/'
   artifacts:
    name: plugin-coverage
    paths:
     - coverage/
   allow_failure: false
+  only:
+   - master
 
+# Build the code coverage report only on the master branch.
 pages:
   stage: deploy
   dependencies:
