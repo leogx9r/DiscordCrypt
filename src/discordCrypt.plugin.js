@@ -3917,8 +3917,13 @@ class discordCrypt {
         }
     }
 
-    /* Extracts URLs from a message and formats them accordingly. */
-    static __buildUrlMessage( /* string */ message ) {
+    /**
+     * @public
+     * @desc Extracts URLs from a message and formats them accordingly.
+     * @param {string} message The input message to format URLs from.
+     * @returns {{url: boolean, html: string}} Returns whether the message contains URLs and the formatted HTML.
+     */
+    static __buildUrlMessage( message ) {
         try {
             /* Extract the URLs. */
             let _extracted = discordCrypt.__extractUrls( message );
@@ -3931,7 +3936,8 @@ class discordCrypt {
             for ( let i = 0; i < _extracted.length; i++ ) {
                 /* Split the message according to the URL and replace it. */
                 message =
-                    message.split( _extracted[ i ] ).join( `<a href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
+                    message.split( _extracted[ i ] )
+                        .join( `<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
             }
 
             /* Wrap the message in span tags. */
@@ -3949,8 +3955,16 @@ class discordCrypt {
         }
     }
 
-    /* Returns a string, Buffer() or Array() as a buffered object. */
-    static __toBuffer( /* string|Buffer|Array */ input, /* boolean */ is_input_hex = undefined ) {
+    /**
+     * @public
+     * @desc Returns a string, Buffer() or Array() as a buffered object.
+     * @param {string|Buffer|Array} input The input variable.
+     * @param {boolean|undefined} [is_input_hex] If set to true, the input is parsed as a hex string. If false, it is
+     *      parsed as a Base64 string. If this value is undefined, it is parsed as a UTF-8 string.
+     * @returns {Buffer} Returns a Buffer object.
+     * @throws {string} Thrown an unsupported type error if the input is neither a string, Buffer or Array.
+     */
+    static __toBuffer( input, is_input_hex = undefined ) {
         /* If the message is either a Hex, Base64 or UTF-8 encoded string, convert it to a buffer. */
         if ( typeof input === 'string' )
             return new Buffer( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
@@ -3967,14 +3981,23 @@ class discordCrypt {
         throw 'Input is neither an Array(), Buffer() or a string.';
     }
 
-    /* Creates a hash of the specified OpenSSL algorithm and returns either a hex-encoded or base64-encoded digest. */
-    static __createHash(
-        /* string|Buffer|Array */ message,
-        /* string */              algorithm,
-        /* boolean */             to_hex,
-        /* boolean */             hmac,
-        /* string|Buffer|Array */ secret
-    ) {
+    /**
+     * @public
+     * @desc Creates a hash of the specified algorithm and returns either a hex-encoded or base64-encoded digest.
+     * @param {string|Buffer|Array} message The message to perform the hash on.
+     * @param {string} algorithm The specified hash algorithm to use.
+     * @param {boolean} [to_hex] If true, converts the output to hex else it converts it to Base64.
+     * @param {boolean} hmac If this is true, an HMAC hash is created using a secret.
+     * @param {string|Buffer|Array} secret The input secret used for the creation of an HMAC object.
+     * @returns {string} Returns either a Base64 or hex string on success and an empty string on failure.
+     * @example
+     * console.log( __createHash( 'Hello World!', 'sha256', true ) );
+     * // "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
+     * @example
+     * console.log( __createHash( 'Hello World', 'sha256', true, true, 'My Secret' ) );
+     * // "852f78f917c4408000a8a94be61687865000bec5b2b77c0704dc5ad73ea06368"
+     */
+    static __createHash( message, algorithm, to_hex, hmac, secret ) {
         try {
             const crypto = require( 'crypto' );
 
@@ -3993,18 +4016,37 @@ class discordCrypt {
         }
     }
 
-    /* Computes a key-derivation based on the PBKDF2 standard and returns a hex or base64 encoded digest. */
-    static __pbkdf2(
-        /* string|Buffer|Array */ input,
-        /* string|Buffer|Array */ salt,
-        /* boolean */             to_hex,
-        /* boolean */             is_input_hex,
-        /* boolean */             is_salt_hex,
-        /* function(err, hash) */ callback,
-        /* string */              algorithm,
-        /* int*/                  key_length,
-        /* int*/                  iterations
-    ) {
+    /**
+     * @name pbkdf2Callback
+     * @param {string} error The error that occurred during processing or null on success.
+     * @param {string} hash The hash either as a hex or Base64 encoded string ( or null on failure ).
+     */
+
+    /**
+     * @public
+     * @desc Computes a key-derivation based on the PBKDF2 standard and returns a hex or base64 encoded digest.
+     * @param {string|Buffer|Array} input The input value to hash.
+     * @param {string|Buffer|Array} salt The secret value used to derive the hash.
+     * @param {boolean} [to_hex] Whether to conver the result to a hex string or a Base64 string.
+     * @param {boolean} [is_input_hex] Whether to treat the input as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [is_salt_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {pbkdf2Callback} [callback] The callback function if performing an async request.
+     * @param {string} algorithm The name of the hash algorithm to use.
+     * @param {int} key_length The length of the desired key in bytes.
+     * @param {int} iterations The number of recursive iterations to use to produce the resulting hash.
+     * @returns {string} If a callback is not specified, this returns the hex or Base64 result or an empty string on
+     *      failure.
+     * @example
+     * __pbkdf2( 'Hello World!', 'Super Secret', true, undefined, undefined, undefined, 'sha256', 32, 10000 );
+     * // "89205432badb5b1e53c7bb930d428afd0f98e5702c4e549ea2da4cfefe8af254"
+     * @example
+     * __pbkdf2( 'ABC', 'Salty!', true, undefined, undefined, ( e, h ) => { console.log( `Hash: ${h}` ); },
+     *      'sha256', 32, 1000 );
+     * // Hash: f0e110b17b02006bbbcecb8eb295421c69081a6ecda75c94d55d20759dc295b1
+     */
+    static __pbkdf2( input, salt, to_hex, is_input_hex, is_salt_hex, callback, algorithm, key_length, iterations ) {
         const crypto = require( 'crypto' );
         let _input, _salt;
 
@@ -4046,14 +4088,19 @@ class discordCrypt {
             }
     }
 
-    /* Pads or un-pads a given message using the specified encoding format and block size. Returns a Buffer() object. */
-    static __padMessage(
-        /* string|Buffer|Array */ message,
-        /* string */              padding_scheme,
-        /* int */                 block_size,
-        /* boolean */             is_hex = undefined,
-        /* boolean */             remove_padding = undefined
-    ) {
+    /**
+     * @public
+     * @desc Pads or un-pads the input message using the specified encoding format and block size.
+     * @param {string|Buffer|Array} message The input message to either pad or unpad.
+     * @param {string} padding_scheme The padding scheme used. This can be either: [ ZR0, ISO1, ISO9, PKC7, ANS2 ]
+     * @param {int} block_size The block size that the padding scheme must align the message to.
+     * @param {boolean} [is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [remove_padding] Whether to remove the padding applied to the message. If undefined, it is
+     *      treated as false.
+     * @returns {Buffer} Returns the padded or unpadded message as a Buffer object.
+     */
+    static __padMessage( message, padding_scheme, block_size, is_hex = undefined, remove_padding = undefined ) {
         let _message, _padBytes;
 
         /* Returns the number of bytes required to pad a message based on the block size. */
