@@ -25,17 +25,26 @@
  ******************************************************************************/
 
 /* Main plugin prototype. */
-class discordCrypt
-{
+class discordCrypt {
     /* ============================================================== */
 
     /* Standard BetterDiscord Plugin Info. */
-    getName() { return 'DiscordCrypt'; }
-    getDescription() { return 'Provides secure messaging for Discord using various cryptography standards.'; }
+    getName() {
+        return 'DiscordCrypt';
+    }
+
+    getDescription() {
+        return 'Provides secure messaging for Discord using various cryptography standards.';
+    }
 
     /* Version & Author. */
-    getAuthor() { return 'Leonardo Gates'; }
-    getVersion() { return '1.0.5'; }
+    getAuthor() {
+        return 'Leonardo Gates';
+    }
+
+    getVersion() {
+        return '1.0.5-debug';
+    }
 
     /* ============================================================== */
 
@@ -1095,7 +1104,7 @@ class discordCrypt
     }
 
     /* Updates and saves the configuration data used and updates a given button's text. */
-    saveSettings(/* Object */ btn) {
+    saveSettings( /* Object */ btn ) {
         /* Save self. */
         const self = this;
 
@@ -1120,7 +1129,7 @@ class discordCrypt
     }
 
     /* Resets the default configuration data used and updates a given button's text. */
-    resetSettings(/* Object */ btn) {
+    resetSettings( /* Object */ btn ) {
         /* Save self. */
         const self = this;
 
@@ -1209,7 +1218,7 @@ class discordCrypt
     }
 
     /* Checks the update server for an encrypted update.  */
-    static checkForUpdate(/* function(file_data, short_hash, new_version, full_changelog) */ onUpdateCallback) {
+    static checkForUpdate( /* function(file_data, short_hash, new_version, full_changelog) */ onUpdateCallback ) {
         /* Update URL and request method. */
         const update_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/' + discordCrypt.getPluginName();
         const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
@@ -1313,7 +1322,7 @@ class discordCrypt
     }
 
     /* Creates a password object using the parameters specified. */
-    static createPassword(/* string */ primary_password, /* string */ secondary_password) {
+    static createPassword( /* string */ primary_password, /* string */ secondary_password ) {
         return { primary: primary_password, secondary: secondary_password };
     }
 
@@ -1465,7 +1474,7 @@ class discordCrypt
     }
 
     /* Logs a message to the console. */
-    static log(/* string */ message, /* string */ method = "info") {
+    static log( /* string */ message, /* string */ method = "info" ) {
         try {
             console[ method ]( "%c[DiscordCrypt]%c - " + message, "color: #7f007f; font-weight: bold;", "" );
         }
@@ -1474,14 +1483,14 @@ class discordCrypt
     }
 
     /* Injects a CSS style element into the header tag. */
-    static injectCSS(/* string */ id, /* string */ css) {
+    static injectCSS( /* string */ id, /* string */ css ) {
         /* Inject into the header tag. */
         $( "head" )
             .append( $( "<style>", { id: id.replace( /^[^a-z]+|[^\w-]+/gi, "" ), html: css } ) )
     }
 
     /* Clears an injected element via its ID tag. */
-    static clearCSS(/* string */ id = undefined) {
+    static clearCSS( /* string */ id = undefined ) {
         /* Make sure the ID is a valid string. */
         if ( !id || typeof id !== 'string' || !id.length )
             return;
@@ -1712,7 +1721,7 @@ class discordCrypt
     }
 
     /* Sets the active tab index in the exchange key menu. */
-    static setActiveTab(/* int */ index) {
+    static setActiveTab( /* int */ index ) {
         let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
         let tabs = $( '.dc-tab-link' );
 
@@ -1799,7 +1808,7 @@ class discordCrypt
         $( '#dc-select-file-path-btn' ).click( discordCrypt.on_alter_file_button_clicked );
 
         /* Handle file upload button. */
-        $('#dc-file-upload-btn').click( discordCrypt.on_upload_file_button_clicked( this ) );
+        $( '#dc-file-upload-btn' ).click( discordCrypt.on_upload_file_button_clicked( this ) );
 
         /* Handle file button cancelled. */
         $( '#dc-file-cancel-btn' ).click( discordCrypt.on_cancel_file_upload_button_clicked );
@@ -1923,7 +1932,7 @@ class discordCrypt
     }
 
     /* Parses a symmetric-key message. */
-    parseSymmetric(/* Object */ obj, /* string */ password, /* string */ secondary, /* Array */ ReactModules) {
+    parseSymmetric( /* Object */ obj, /* string */ password, /* string */ secondary, /* Array */ ReactModules ) {
         let message = $( obj );
         let dataMsg;
 
@@ -2134,7 +2143,7 @@ class discordCrypt
     }
 
     /* Sends an encrypted message to the current channel. */
-    sendEncryptedMessage(/* string */ message, /* boolean */ force_send = false) {
+    sendEncryptedMessage( /* string */ message, /* boolean */ force_send = false ) {
         /* Let's use a maximum message size of 1200 instead of 2000 to account for encoding, new line feeds & packet
          header. */
         const maximum_encoded_data = 1200;
@@ -2308,7 +2317,7 @@ class discordCrypt
         $( '#dc-file-path' ).val( file[ 0 ] );
     }
 
-    static on_upload_file_button_clicked(/* discordCrypt */ self) {
+    static on_upload_file_button_clicked( /* discordCrypt */ self ) {
         return () => {
             const fs = require( 'fs' );
 
@@ -2411,7 +2420,7 @@ class discordCrypt
         $( '#dc-overlay-settings' )[ 0 ].style.display = 'none';
     }
 
-    static on_save_settings_button_clicked(/* discordCrypt */ self) {
+    static on_save_settings_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Update all settings from the settings panel. */
             self.configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' )[ 0 ].value;
@@ -2466,7 +2475,7 @@ class discordCrypt
         };
     }
 
-    static on_reset_settings_button_clicked(/* discordCrypt */ self) {
+    static on_reset_settings_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Resets the configuration file and update the button text. */
             self.resetSettings( this );
@@ -2651,7 +2660,7 @@ class discordCrypt
         $( '#dc-pub-key-ta' )[ 0 ].value = $( '#dc-priv-key-ta' )[ 0 ].value = '';
     }
 
-    static on_keygen_send_public_key_button_clicked(/* discordCrypt */ self) {
+    static on_keygen_send_public_key_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Don't bother if it's empty. */
             if ( $( '#dc-pub-key-ta' )[ 0 ].value === '' )
@@ -2691,7 +2700,7 @@ class discordCrypt
         $( '#dc-handshake-ppk' )[ 0 ].value = require( 'electron' ).clipboard.readText();
     }
 
-    static on_handshake_compute_button_clicked(/* discordCrypt */ self) {
+    static on_handshake_compute_button_clicked( /* discordCrypt */ self ) {
         return () => {
             let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
             let isUserSaltPrimary;
@@ -3013,7 +3022,7 @@ class discordCrypt
         }, 1000 );
     }
 
-    static on_handshake_apply_keys_button_clicked(/* discordCrypt */ self) {
+    static on_handshake_apply_keys_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Skip if no primary key was generated. */
             if ( !$( '#dc-handshake-primary-key' )[ 0 ].value || !$( '#dc-handshake-primary-key' )[ 0 ].value.length )
@@ -3061,7 +3070,7 @@ class discordCrypt
         $( '#dc-overlay-password' )[ 0 ].style.display = 'block';
     }
 
-    static on_save_passwords_button_clicked(/* discordCrypt */ self) {
+    static on_save_passwords_button_clicked( /* discordCrypt */ self ) {
         return () => {
             let btn = $( '#dc-save-pwd' );
 
@@ -3087,7 +3096,7 @@ class discordCrypt
         };
     }
 
-    static on_reset_passwords_button_clicked(/* discordCrypt */ self) {
+    static on_reset_passwords_button_clicked( /* discordCrypt */ self ) {
         return () => {
             let btn = $( '#dc-reset-pwd' );
 
@@ -3126,7 +3135,7 @@ class discordCrypt
         }, 250 );
     }
 
-    static on_copy_current_passwords_button_clicked(/* discordCrypt */ self) {
+    static on_copy_current_passwords_button_clicked( /* discordCrypt */ self ) {
         return () => {
             let currentKeys = self.configFile.passList[ discordCrypt.getChannelId() ];
 
@@ -3156,7 +3165,7 @@ class discordCrypt
         };
     }
 
-    static on_lock_button_clicked(/* discordCrypt */ self) {
+    static on_lock_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Update the icon and toggle. */
             if ( !self.configFile.encodeAll ) {
@@ -3187,7 +3196,7 @@ class discordCrypt
     /* ======================= UTILITIES ======================= */
 
     /* Performs an HTTP request returns the result to the callback. */
-    static __getRequest(/* string */ url, /* function(statusCode, errorString, data) */ callback) {
+    static __getRequest( /* string */ url, /* function(statusCode, errorString, data) */ callback ) {
         try {
             require( 'request' )( url, ( error, response, result ) => {
                 callback( response.statusCode, response.statusMessage, result );
@@ -3203,7 +3212,7 @@ class discordCrypt
         /* Object */    element,
         /* Array*/      {
             /* Array */ include,
-            /* Array */ exclude = ["Popout", "Tooltip", "Scroller", "BackgroundFlash"]
+            /* Array */ exclude = [ "Popout", "Tooltip", "Scroller", "BackgroundFlash" ]
         } = {}
     ) {
         if ( element === undefined )
@@ -3230,7 +3239,7 @@ class discordCrypt
     }
 
     /* Returns the exchange algorithm and bit size for the given metadata. */
-    static __extractKeyInfo(/* string */ key_message, /* boolean */ header_present = false) {
+    static __extractKeyInfo( /* string */ key_message, /* boolean */ header_present = false ) {
         try {
             let output = [];
             let msg = key_message;
@@ -3261,7 +3270,7 @@ class discordCrypt
     }
 
     /* Splits the input text into chunks according to the specified length. */
-    static __splitStringChunks(/* string */ input_string, /* int */ max_length) {
+    static __splitStringChunks( /* string */ input_string, /* int */ max_length ) {
         /* Sanity check. */
         if ( !max_length || max_length < 0 )
             return input_string;
@@ -3278,7 +3287,7 @@ class discordCrypt
     }
 
     /* Determines if the given string is a valid username according to Discord's standards. */
-    static __isValidUserName(/* string */ name) {
+    static __isValidUserName( /* string */ name ) {
         /* Make sure this is actually a string. */
         if ( typeof name !== 'string' )
             return false;
@@ -3316,7 +3325,7 @@ class discordCrypt
     }
 
     /* Extracts all tags from the given message. */
-    static __extractTags(/* string */ message) {
+    static __extractTags( /* string */ message ) {
         let split_msg = message.split( ' ' );
         let cleaned_tags = '', cleaned_msg = '';
         let user_tags = [];
@@ -3345,7 +3354,7 @@ class discordCrypt
     }
 
     /* Extracts raw code blocks from a message. */
-    static __extractCodeBlocks(/* string */ message) {
+    static __extractCodeBlocks( /* string */ message ) {
         /* This regex only extracts code blocks. */
         let code_block_expr = new RegExp( /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm ), _matched;
 
@@ -3368,7 +3377,7 @@ class discordCrypt
     }
 
     /* Extracts code blocks from a message and formats them accordingly. */
-    static __buildCodeBlockMessage(/* string */ message) {
+    static __buildCodeBlockMessage( /* string */ message ) {
         try {
             /* Extract code blocks. */
             let _extracted = discordCrypt.__extractCodeBlocks( message );
@@ -3420,7 +3429,7 @@ class discordCrypt
     }
 
     /* Returns a string, Buffer() or Array() as a buffered object. */
-    static __toBuffer(/* string|Buffer|Array */ input, /* boolean */ is_input_hex = undefined) {
+    static __toBuffer( /* string|Buffer|Array */ input, /* boolean */ is_input_hex = undefined ) {
         /* If the message is either a Hex, Base64 or UTF-8 encoded string, convert it to a buffer. */
         if ( typeof input === 'string' )
             return new Buffer( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
@@ -3679,7 +3688,7 @@ class discordCrypt
     }
 
     /* Determines whether the passed cipher name is valid. */
-    static __isValidCipher(/* string */ cipher) {
+    static __isValidCipher( /* string */ cipher ) {
         const crypto = require( 'crypto' );
         let isValid = false;
 
@@ -3749,7 +3758,7 @@ class discordCrypt
     }
 
     /* Convert the message to a buffer object. Supported formats are: String, Buffer, Array. */
-    static __validateMessage(/* string|Buffer|Array */ message, /* boolean */ is_message_hex = undefined) {
+    static __validateMessage( /* string|Buffer|Array */ message, /* boolean */ is_message_hex = undefined ) {
         /* Convert the message to a buffer. */
         try {
             return discordCrypt.__toBuffer( message, is_message_hex );
@@ -3895,7 +3904,7 @@ class discordCrypt
     }
 
     /* Returns the string encoded mime type of a file. */
-    static __up1GetMimeType(/* string */ file_path) {
+    static __up1GetMimeType( /* string */ file_path ) {
         /* Look up the Mime type from the file extension. */
         let type = require( 'mime-types' ).lookup( require( 'path' ).extname( file_path ) );
 
@@ -3991,7 +4000,9 @@ class discordCrypt
                 );
             } );
         }
-        catch(ex){ callback(ex.toString()); }
+        catch ( ex ) {
+            callback( ex.toString() );
+        }
     }
 
     static __up1UploadFile(
@@ -4031,7 +4042,7 @@ class discordCrypt
                         body: form
                     },
                     ( err, res, body ) => {
-                        try{
+                        try {
                             /* Execute the callback if no error has occurred. */
                             if ( err !== null )
                                 callback( err );
@@ -4044,7 +4055,9 @@ class discordCrypt
                                 );
                             }
                         }
-                        catch(ex){ callback(ex.toString()); }
+                        catch ( ex ) {
+                            callback( ex.toString() );
+                        }
                     }
                 );
             },
@@ -4386,55 +4399,55 @@ class discordCrypt
     }
 
     /* Returns the first 64 bits of a Whirlpool digest of the message. */
-    static whirlpool64(/* Buffer|Array|string */ message, /* boolean */ to_hex) {
+    static whirlpool64( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
         return new Buffer( discordCrypt.whirlpool( message, true ), 'hex' )
             .slice( 0, 8 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
     /* Returns the first 128 bits of an SHA-512 digest of a message. */
-    static sha512_128(/* Buffer|Array|string */ message, /* boolean */ to_hex) {
+    static sha512_128( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
         return new Buffer( discordCrypt.sha512( message, true ), 'hex' )
             .slice( 0, 16 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
     /* Returns the first 192 bits of a Whirlpool digest of the message. */
-    static whirlpool192(/* Buffer|Array|string */ message, /* boolean */ to_hex) {
+    static whirlpool192( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
         return new Buffer( discordCrypt.sha512( message, true ), 'hex' )
             .slice( 0, 24 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
     /* Returns an SHA-160 digest of the message. */
-    static sha160(/* Buffer|Array|string */ message, /* boolean */ to_hex) {
+    static sha160( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
         return discordCrypt.__createHash( message, 'sha1', to_hex );
     }
 
     /* Returns an SHA-256 digest of the message. */
-    static sha256(/* Buffer|Array|string */ message, /* boolean */ to_hex) {
+    static sha256( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
         return discordCrypt.__createHash( message, 'sha256', to_hex );
     }
 
     /* Returns an SHA-512 digest of the message. */
-    static sha512(/* Buffer|Array|string */ message, /* boolean */ to_hex) {
+    static sha512( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
         return discordCrypt.__createHash( message, 'sha512', to_hex );
     }
 
     /* Returns a Whirlpool-512 digest of the message. */
-    static whirlpool(/* Buffer|Array|string */ message, /* boolean */ to_hex) {
+    static whirlpool( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
         return discordCrypt.__createHash( message, 'whirlpool', to_hex );
     }
 
     /* Returns a HMAC-SHA-256 digest of the message. */
-    static hmac_sha256(/* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex) {
+    static hmac_sha256( /* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex ) {
         return discordCrypt.__createHash( message, 'sha256', to_hex, true, secret );
     }
 
     /* Returns an HMAC-SHA-512 digest of the message. */
-    static hmac_sha512(/* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex) {
+    static hmac_sha512( /* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex ) {
         return discordCrypt.__createHash( message, 'sha512', to_hex, true, secret );
     }
 
     /* Returns an HMAC-Whirlpool-512 digest of the message. */
-    static hmac_whirlpool(/* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex) {
+    static hmac_whirlpool( /* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex ) {
         return discordCrypt.__createHash( message, 'whirlpool', to_hex, true, secret );
     }
 
@@ -4826,7 +4839,7 @@ class discordCrypt
         /* boolean */               to_hex = false,
         /* boolean */               is_message_hex = undefined,
         /* string|Buffer|Array */   one_time_salt = undefined
-    ){
+    ) {
         /* Size constants for TripleDES-192. */
         const keySize = 192, blockSize = 64;
 
@@ -4929,7 +4942,7 @@ class discordCrypt
     /* ============== END CRYPTO CIPHER FUNCTIONS ============== */
 
     /* Converts a cipher string to its appropriate index number. */
-    static cipherStringToIndex(/* string */ primary_cipher, /* string */ secondary_cipher = undefined) {
+    static cipherStringToIndex( /* string */ primary_cipher, /* string */ secondary_cipher = undefined ) {
         let value = 0;
 
         /* Return if already a number. */
@@ -4992,7 +5005,7 @@ class discordCrypt
     }
 
     /* Converts an algorithm index to its appropriate string value. */
-    static cipherIndexToString(/* int */ index, /* boolean */ get_secondary = undefined) {
+    static cipherIndexToString( /* int */ index, /* boolean */ get_secondary = undefined ) {
 
         /* Strip off the secondary. */
         if ( get_secondary !== undefined && get_secondary ) {
@@ -5031,7 +5044,7 @@ class discordCrypt
     }
 
     /* Converts an input string to the approximate entropic bits using Shannon's algorithm. */
-    static entropicBitLength(/* string */ key) {
+    static entropicBitLength( /* string */ key ) {
         let h = Object.create( null ), k;
         let sum = 0, len = key.length;
 
@@ -5056,7 +5069,7 @@ class discordCrypt
     }
 
     /* Determines if a string has all valid UTF-16 characters. */
-    static isValidUtf16(/* string */ message) {
+    static isValidUtf16( /* string */ message ) {
         let c = discordCrypt.getUtf16();
         let m = message.split( '' ).join( '' );
 
@@ -5073,7 +5086,7 @@ class discordCrypt
     }
 
     /* Determines if a string has all valid Base64 characters. */
-    static isValidBase64(/* string */ message) {
+    static isValidBase64( /* string */ message ) {
         try {
             btoa( message );
             return true;
@@ -5093,13 +5106,13 @@ class discordCrypt
     }
 
     /* Determines if a key exchange algorithm's index is valid. */
-    static isValidExchangeAlgorithm(/* int */ index) {
+    static isValidExchangeAlgorithm( /* int */ index ) {
         return index >= 0 &&
             index <= ( discordCrypt.getDHBitSizes().length + discordCrypt.getECDHBitSizes().length - 1 );
     }
 
     /* Converts an algorithm index to a string. */
-    static indexToExchangeAlgorithmString(/* int */ index) {
+    static indexToExchangeAlgorithmString( /* int */ index ) {
         let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
         let base = [ 'DH-', 'ECDH-' ];
 
@@ -5112,7 +5125,7 @@ class discordCrypt
     }
 
     /* Converts an algorithm index to a bit size. */
-    static indexToAlgorithmBitLength(/* int */ index) {
+    static indexToAlgorithmBitLength( /* int */ index ) {
         let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
 
         if ( !discordCrypt.isValidExchangeAlgorithm( index ) )
@@ -5144,7 +5157,7 @@ class discordCrypt
     }
 
     /* Generates a Diffie-Hellman Key. */
-    static generateDH(/* int */ size, /* Buffer */ private_key = undefined) {
+    static generateDH( /* int */ size, /* Buffer */ private_key = undefined ) {
         let groupName, key;
 
         /* Calculate the appropriate group. */
@@ -5198,7 +5211,7 @@ class discordCrypt
     }
 
     /* Generates an Elliptic-Curve Diffie-Hellman Key. */
-    static generateECDH(/* int */ size, /* Buffer */ private_key = undefined) {
+    static generateECDH( /* int */ size, /* Buffer */ private_key = undefined ) {
         let groupName, key;
 
         /* Calculate the appropriate group. */
@@ -5247,7 +5260,7 @@ class discordCrypt
     }
 
     /* Substitutes input Base64 to Chinese character set. */
-    static substituteMessage(/* string */ message, /* boolean */ to_base64) {
+    static substituteMessage( /* string */ message, /* boolean */ to_base64 ) {
         /* Target character set. */
         let subset = discordCrypt.getUtf16();
 
@@ -5291,7 +5304,7 @@ class discordCrypt
     }
 
     /* Encodes the given values as a Base64 encoded 32-bit word. */
-    static metaDataEncode(/* int */ cipherIndex, /* int */ cipherModeIndex, /* int */ paddingIndex, /* int */ pad) {
+    static metaDataEncode( /* int */ cipherIndex, /* int */ cipherModeIndex, /* int */ paddingIndex, /* int */ pad ) {
         /* Buffered word. */
         let buf = new Buffer( 4 );
 
@@ -5333,7 +5346,7 @@ class discordCrypt
     }
 
     /* Decodes an input string and returns a byte array containing index number of options. */
-    static metaDataDecode(/* string */ message) {
+    static metaDataDecode( /* string */ message ) {
         /* Target character set. */
         let subset = discordCrypt.getUtf16();
 
