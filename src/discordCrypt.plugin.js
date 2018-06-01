@@ -2571,7 +2571,7 @@ class discordCrypt {
 
             /* Send the additional text first if it's valid. */
             if ( message_textarea.val().length > 0 )
-                self.sendEncryptedMessage( message_textarea.val() );
+                self.sendEncryptedMessage( message_textarea.val(), true );
 
             /* Clear the message field. */
             message_textarea.val( '' );
