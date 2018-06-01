@@ -1798,6 +1798,9 @@ class discordCrypt
         /* Handle alter file path button. */
         $( '#dc-select-file-path-btn' ).click( discordCrypt.on_alter_file_button_clicked );
 
+        /* Handle file upload button. */
+        $('#dc-file-upload-btn').click( discordCrypt.on_upload_file_button_clicked( this ) );
+
         /* Handle file button cancelled. */
         $( '#dc-file-cancel-btn' ).click( discordCrypt.on_cancel_file_upload_button_clicked );
 
@@ -1885,7 +1888,7 @@ class discordCrypt
         const self = this;
 
         /* Get the text area. */
-        let textarea = $( self.channelTextAreaClass );
+        let textarea = $( this.channelTextAreaClass );
 
         /* Make sure we got one element. */
         if ( textarea.length !== 1 )
@@ -1907,127 +1910,8 @@ class discordCrypt
             if ( e.shiftKey )
                 return;
 
-            /* Get the message text area. */
-            let txt = $( this ).val();
-            let cleaned = "";
-
-            /* Skip messages starting with pre-defined escape characters. */
-            if ( escapeCharacters.indexOf( txt[ 0 ] ) !== -1 )
-                return;
-
-            /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
-            if ( !self.configFile.passList[ discordCrypt.getChannelId() ] ||
-                !self.configFile.passList[ discordCrypt.getChannelId() ].primary ||
-                !self.configFile.encodeAll ) {
-                /* Try splitting via the defined split-arg. */
-                txt = txt.split( '|' );
-
-                /* Check if the message actually has the split arg. */
-                if ( txt.length <= 0 )
-                    return;
-
-                /* Check if it has the trigger. */
-                if ( txt[ txt.length - 1 ] !== self.configFile.encodeMessageTrigger )
-                    return;
-
-                /* Use the first part of the message. */
-                cleaned = txt[ 0 ];
-            }
-            /* Make sure we have a valid password. */
-            else
-            /* Use the whole message. */
-                cleaned = txt;
-
-            /* Check if we actually have a message ... */
-            if ( cleaned.length === 0 )
-                return;
-
-            /* Try parsing any user-tags. */
-            let parsed = discordCrypt.__extractTags( cleaned );
-
-            /* Sanity check for messages with just spaces or new line feeds in it. */
-            if ( parsed[ 0 ].length !== 0 )
-            /* Extract the message to be encrypted. */
-                cleaned = parsed[ 0 ];
-
-            /* Add content tags. */
-            let user_tags = parsed[ 1 ].length > 0 ? parsed[ 1 ] : '';
-
-            /* Get the passwords. */
-            let password = self.configFile.passList[ discordCrypt.getChannelId() ] ?
-                self.configFile.passList[ discordCrypt.getChannelId() ].primary : self.configFile.defaultPassword;
-            let secondary = self.configFile.passList[ discordCrypt.getChannelId() ] ?
-                self.configFile.passList[ discordCrypt.getChannelId() ].secondary : self.configFile.defaultPassword;
-
-            /* Returns the number of bytes a given string is in Base64. */
-            function getBase64EncodedLength( len ) {
-                return parseInt( ( len / 3 ) * 4 ) % 4 === 0 ? ( len / 3 ) * 4 :
-                    parseInt( ( len / 3 ) * 4 ) + 4 - ( parseInt( ( len / 3 ) * 4 ) % 4 );
-            }
-
-            /* If the message length is less than the threshold, we can send it without splitting. */
-            if ( getBase64EncodedLength( cleaned.length ) < maximum_encoded_data ) {
-                /* Encrypt the message. */
-                let msg = discordCrypt.symmetricEncrypt( cleaned, password, secondary, self.configFile.encryptMode,
-                    self.configFile.encryptBlockMode, self.configFile.paddingMode, true );
-
-                /* Append the header to the message normally. */
-                msg = self.encodedMessageHeader + discordCrypt.metaDataEncode
-                (
-                    self.configFile.encryptMode,
-                    self.configFile.encryptBlockMode,
-                    self.configFile.paddingMode,
-                    parseInt( crypto.randomBytes( 1 )[ 0 ] )
-                ) + msg;
-
-                /* Break up the message into lines. */
-                msg = msg.replace( /(.{32})/g, ( e ) => {
-                    return e + "\r\n"
-                } );
-
-                /* Send the message. */
-                discordCrypt.sendEmbeddedMessage(
-                    msg,
-                    self.messageHeader,
-                    'v' + self.getVersion(),
-                    0x551A8B,
-                    user_tags
-                );
-            }
-            else {
-                /* Determine how many packets we need to split this into. */
-                let packets = discordCrypt.__splitStringChunks( cleaned, maximum_encoded_data );
-                for ( let i = 0; i < packets.length; i++ ) {
-                    /* Encrypt the message. */
-                    let msg = discordCrypt.symmetricEncrypt( packets[ i ], password, secondary,
-                        self.configFile.encryptMode, self.configFile.encryptBlockMode, self.configFile.paddingMode,
-                        true
-                    );
-
-                    /* Append the header to the message normally. */
-                    msg = self.encodedMessageHeader + discordCrypt.metaDataEncode
-                    (
-                        self.configFile.encryptMode,
-                        self.configFile.encryptBlockMode,
-                        self.configFile.paddingMode,
-                        parseInt( crypto.randomBytes( 1 )[ 0 ] )
-                    ) + msg;
-
-                    /* Break up the message into lines. */
-                    msg = msg.replace( /(.{32})/g, ( e ) => {
-                        return e + "\r\n"
-                    } );
-
-                    /* Send the message. */
-                    discordCrypt.sendEmbeddedMessage(
-                        msg,
-                        self.messageHeader,
-                        'v' + self.getVersion(),
-                        0x551A8B,
-                        i === 0 ? user_tags : ''
-                    );
-                }
-            }
+            /* Send the encrypted message. */
+            self.sendEncryptedMessage( $( this ).val() );
 
             /* Clear text field. */
             discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).setState( { textValue: '' } );
@@ -2249,6 +2133,139 @@ class discordCrypt
         } );
     }
 
+    /* Sends an encrypted message to the current channel. */
+    sendEncryptedMessage(/* string */ message, /* boolean */ force_send = false) {
+        /* Let's use a maximum message size of 1200 instead of 2000 to account for encoding, new line feeds & packet
+         header. */
+        const maximum_encoded_data = 1200;
+
+        /* Add the message signal handler. */
+        const escapeCharacters = [ "#", "/", ":" ];
+        const crypto = require( 'crypto' );
+
+        let cleaned;
+
+        /* Skip messages starting with pre-defined escape characters. */
+        if ( escapeCharacters.indexOf( message[ 0 ] ) !== -1 )
+            return;
+
+        /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
+        if ( force_send === false &&
+            ( !this.configFile.passList[ discordCrypt.getChannelId() ] ||
+                !this.configFile.passList[ discordCrypt.getChannelId() ].primary ||
+                !this.configFile.encodeAll )
+        ) {
+            /* Try splitting via the defined split-arg. */
+            message = message.split( '|' );
+
+            /* Check if the message actually has the split arg. */
+            if ( message.length <= 0 )
+                return;
+
+            /* Check if it has the trigger. */
+            if ( message[ message.length - 1 ] !== this.configFile.encodeMessageTrigger )
+                return;
+
+            /* Use the first part of the message. */
+            cleaned = message[ 0 ];
+        }
+        /* Make sure we have a valid password. */
+        else
+        /* Use the whole message. */
+            cleaned = message;
+
+        /* Check if we actually have a message ... */
+        if ( cleaned.length === 0 )
+            return;
+
+        /* Try parsing any user-tags. */
+        let parsed = discordCrypt.__extractTags( cleaned );
+
+        /* Sanity check for messages with just spaces or new line feeds in it. */
+        if ( parsed[ 0 ].length !== 0 )
+        /* Extract the message to be encrypted. */
+            cleaned = parsed[ 0 ];
+
+        /* Add content tags. */
+        let user_tags = parsed[ 1 ].length > 0 ? parsed[ 1 ] : '';
+
+        /* Get the passwords. */
+        let password = this.configFile.passList[ discordCrypt.getChannelId() ] ?
+            this.configFile.passList[ discordCrypt.getChannelId() ].primary : this.configFile.defaultPassword;
+        let secondary = this.configFile.passList[ discordCrypt.getChannelId() ] ?
+            this.configFile.passList[ discordCrypt.getChannelId() ].secondary : this.configFile.defaultPassword;
+
+        /* Returns the number of bytes a given string is in Base64. */
+        function getBase64EncodedLength( len ) {
+            return parseInt( ( len / 3 ) * 4 ) % 4 === 0 ? ( len / 3 ) * 4 :
+                parseInt( ( len / 3 ) * 4 ) + 4 - ( parseInt( ( len / 3 ) * 4 ) % 4 );
+        }
+
+        /* If the message length is less than the threshold, we can send it without splitting. */
+        if ( getBase64EncodedLength( cleaned.length ) < maximum_encoded_data ) {
+            /* Encrypt the message. */
+            let msg = discordCrypt.symmetricEncrypt( cleaned, password, secondary, this.configFile.encryptMode,
+                this.configFile.encryptBlockMode, this.configFile.paddingMode, true );
+
+            /* Append the header to the message normally. */
+            msg = this.encodedMessageHeader + discordCrypt.metaDataEncode
+            (
+                this.configFile.encryptMode,
+                this.configFile.encryptBlockMode,
+                this.configFile.paddingMode,
+                parseInt( crypto.randomBytes( 1 )[ 0 ] )
+            ) + msg;
+
+            /* Break up the message into lines. */
+            msg = msg.replace( /(.{32})/g, ( e ) => {
+                return e + "\r\n"
+            } );
+
+            /* Send the message. */
+            discordCrypt.sendEmbeddedMessage(
+                msg,
+                this.messageHeader,
+                'v' + this.getVersion(),
+                0x551A8B,
+                user_tags
+            );
+        }
+        else {
+            /* Determine how many packets we need to split this into. */
+            let packets = discordCrypt.__splitStringChunks( cleaned, maximum_encoded_data );
+            for ( let i = 0; i < packets.length; i++ ) {
+                /* Encrypt the message. */
+                let msg = discordCrypt.symmetricEncrypt( packets[ i ], password, secondary,
+                    this.configFile.encryptMode, this.configFile.encryptBlockMode, this.configFile.paddingMode,
+                    true
+                );
+
+                /* Append the header to the message normally. */
+                msg = this.encodedMessageHeader + discordCrypt.metaDataEncode
+                (
+                    this.configFile.encryptMode,
+                    this.configFile.encryptBlockMode,
+                    this.configFile.paddingMode,
+                    parseInt( crypto.randomBytes( 1 )[ 0 ] )
+                ) + msg;
+
+                /* Break up the message into lines. */
+                msg = msg.replace( /(.{32})/g, ( e ) => {
+                    return e + "\r\n"
+                } );
+
+                /* Send the message. */
+                discordCrypt.sendEmbeddedMessage(
+                    msg,
+                    this.messageHeader,
+                    'v' + this.getVersion(),
+                    0x551A8B,
+                    i === 0 ? user_tags : ''
+                );
+            }
+        }
+    }
+
     /* =============== BEGIN UI HANDLE CALLBACKS =============== */
 
     static on_file_button_clicked() {
@@ -2289,6 +2306,82 @@ class discordCrypt
 
         /* Set the file path to the selected path. */
         $( '#dc-file-path' ).val( file[ 0 ] );
+    }
+
+    static on_upload_file_button_clicked(/* discordCrypt */ self) {
+        return () => {
+            const fs = require( 'fs' );
+
+            let file_path_field = $( '#dc-file-path' );
+            let file_upload_btn = $( '#dc-file-upload-btn' );
+            let message_textarea = $( '#dc-file-message-textarea' );
+            let send_deletion_link = $( '#dc-file-deletion-checkbox' ).is( ':checked' );
+            let randomize_file_name = $( '#dc-file-name-random-checkbox' ).is( ':checked' );
+
+            /* Send the additional text first if it's valid. */
+            if ( message_textarea.val().length > 0 )
+                self.sendEncryptedMessage( message_textarea.val() );
+
+            /* Clear the message field. */
+            message_textarea.val( '' );
+
+            /* Sanity check the file. */
+            if ( !fs.existsSync( file_path_field.val() ) ) {
+                file_path_field.val( '' );
+                return;
+            }
+
+            /* Set the status text. */
+            file_upload_btn.text( 'Uploading ...' );
+            file_upload_btn[ 0 ].className = 'dc-button dc-button-inverse';
+
+            /* Upload the file. */
+            discordCrypt.__up1UploadFile(
+                file_path_field.val(),
+                self.configFile.up1Host,
+                self.configFile.up1ApiKey,
+                sjcl,
+                ( error_string, file_url, deletion_link ) => {
+                    /* Do some sanity checking. */
+                    if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
+                        /* Set the status text. */
+                        file_upload_btn.text( 'Failed to upload the file!' );
+
+                        /* Clear the file path. */
+                        file_path_field.val( '' );
+
+                        /* Reset the status text after 1 second. */
+                        setTimeout( () => {
+                            file_upload_btn.text( 'Upload' );
+                            file_upload_btn[ 0 ].className = 'dc-button';
+                        }, 1000 );
+
+                        return;
+                    }
+
+                    /* Format and send the message. */
+                    self.sendEncryptedMessage(
+                        `Link: ${file_url}${send_deletion_link ? '\nDelete URL: ' + deletion_link : ''}`
+                    );
+
+                    /* Clear the file path. */
+                    file_path_field.val( '' );
+
+                    /* Indicate success. */
+                    file_upload_btn.text( 'Upload Successful!' );
+
+                    /* Reset the status text after 1 second and close the dialog. */
+                    setTimeout( () => {
+                        file_upload_btn.text( 'Upload' );
+                        file_upload_btn[ 0 ].className = 'dc-button';
+
+                        /* Close. */
+                        $( '#dc-file-cancel-btn' ).click();
+                    }, 1000 );
+                },
+                randomize_file_name
+            )
+        };
     }
 
     static on_cancel_file_upload_button_clicked() {
