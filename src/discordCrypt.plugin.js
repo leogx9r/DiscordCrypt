@@ -914,8 +914,21 @@ class discordCrypt
         discordCrypt.injectCSS( 'dc-css', this.appCss );
 
         /* Inject SJCL. */
-        $( 'head' ).append( '<script' +
-            ' src="https://raw.githubusercontent.com/bitwiseshiftleft/sjcl/master/sjcl.js"></script>' );
+        discordCrypt.__getRequest(
+            'https://gitlab.com/riseup/up1-cli-client-nodejs/raw/master/sjcl.js',
+            ( statusCode, errorString, data ) => {
+
+                if ( statusCode !== 200 || typeof data !== 'string' ) {
+                    discordCrypt.log( 'Unable to load SJCL library. Encrypted file uploads will be disabled.', 'warn' );
+                    return;
+                }
+
+                require( 'vm' ).runInThisContext( data, {
+                    filename: 'sjcl.js',
+                    displayErrors: true
+                } );
+            }
+        );
     }
 
     /* Called during application shutdown. */
@@ -1869,13 +1882,6 @@ class discordCrypt
 
     /* Attached a handler for message events. */
     attachHandler() {
-        /* Let's use a maximum message size of 1200 instead of 2000 to account for encoding, new line feeds & packet
-         header. */
-        const maximum_encoded_data = 1200;
-
-        /* Add the message signal handler. */
-        const escapeCharacters = [ "#", "/", ":" ];
-        const crypto = require( 'crypto' );
         const self = this;
 
         /* Get the text area. */
