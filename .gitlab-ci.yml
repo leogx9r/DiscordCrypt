@@ -11,7 +11,7 @@ stages:
 - test
 - deploy
 
-# Executed on every other branch but the master branch to perform general tests.
+# Executed on every other branch but the master branch to perform full tests.
 test:
   stage: test
   script:
@@ -21,7 +21,7 @@ test:
   except:
    - master
 
-# Perform code coverage only on the master branch.
+# Perform code coverage only on the master & development branches.
 cover_test:
   stage: test
   script:
@@ -35,12 +35,13 @@ cover_test:
   allow_failure: false
   only:
    - master
+   - development
 
-# Build the code coverage report only on the master branch.
+# Upload the code coverage report only on the master branch.
 pages:
   stage: deploy
   dependencies:
-   - test
+   - cover_test
   script:
    - mv coverage/lcov-report/ public/
   artifacts:
@@ -49,3 +50,4 @@ pages:
    expire_in: 30 days
   only:
    - master
+
