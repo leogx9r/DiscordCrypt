@@ -513,6 +513,28 @@ function addGenericTests(loaded_blob, unit_tests){
         /* Test will be completed regardless of if an update is found. */
         ut.done();
     };
+
+    /* File upload test. */
+    unit_tests.generic_tests['Encrypted File Upload'] = (ut) => {
+        discordCrypt.__up1UploadFile(
+            './tests/test_generator.js',
+            'https://share.riseup.net',
+            '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
+            require('./sjcl'),
+            (error, file_url, deletion_link, seed) => {
+                /* Succeeds only if the error is null. */
+                ut.equal(error, null);
+
+                /* All these should be strings. */
+                ut.equal(typeof file_url, 'string');
+                ut.equal(typeof deletion_link, 'string');
+
+                ut.equal(typeof seed, 'string');
+            }
+        );
+
+        ut.done();
+    };
 }
 
 /* Load the plugin from module exports. */
