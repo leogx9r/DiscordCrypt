@@ -1,27 +1,50 @@
+/*******************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 Leonardo Gates
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ******************************************************************************/
+
 /* Required for unit tests. */
 const nodeunit = require('nodeunit');
 
-/* Runs Scrypt tests. */
-function addScryptTests(loaded_blob, unit_tests){
-    /* Reference: https://tools.ietf.org/html/rfc7914#page-13 */
-    const vectors = require('./scrypt-test-vectors');
+/* Locates the given array containing the target's test vectors. */
+function locateTestVector(/* Array */ list, /* string */ name){
+    for(let i = 0; i < list.length; i++){
+        if(list[i].full_name.toLowerCase() === name.toLowerCase())
+            return list[i];
+    }
 
-    /**
-     * Expected Results:
-     *
-     * discordCrypt_scrypt
-     * ✔ Test #1: [ N: 16 p: 1 r: 1 ]
-     * ✔ Test #2: [ N: 1024 p: 16 r: 8 ]
-     * ✔ Test #3: [ N: 16384 p: 1 r: 8 ]
-     * ✔ Test #4: [ N: 1048576 p: 1 r: 8 ]
-     * ✔ Test #5: [ N: 262144 p: 1 r: 8 ]
-     */
+    return null;
+}
+
+/* Runs Scrypt tests. */
+function addScryptTests(loaded_blob, unit_tests, coverage){
+    const vectors = require('./scrypt-test-vectors');
 
     /* Prepare the unit tests. */
     unit_tests.discordCrypt_scrypt = {};
 
     /* Loop over all tests. */
-    for (let i = 0; i < vectors.length; i++){
+    let num_tests = coverage === undefined ? vectors.length : 1;
+    for (let i = 0; i < num_tests; i++){
         let v = vectors[i],
             k = `Test #${Object.keys(unit_tests.discordCrypt_scrypt).length+1}: [ N: ${v.N} p: ${v.p} r: ${v.r} ]`;
 
@@ -38,7 +61,7 @@ function addScryptTests(loaded_blob, unit_tests){
             loaded_blob['class'].scrypt(password, salt, v.dkLen, v.N, v.r, v.p, (error, progress, key) => {
                 /* On errors, let the user know. */
                 if (error){
-                    console.log(error);
+                    loaded_blob['class'].log(error);
                     return;
                 }
 
@@ -53,7 +76,7 @@ function addScryptTests(loaded_blob, unit_tests){
 }
 
 /* Run PBKDF2 tests. */
-function addPBKDF2Tests(loaded_blob, unit_tests){
+function addPBKDF2Tests(loaded_blob, unit_tests, coverage){
     /**
      * Expected:
      *
@@ -120,7 +143,7 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
     function prepare_run(name, hash_size, /* Array */ loaded_blob, /* Object */ v){
         let pbkdf2 = loaded_blob['class'].__pbkdf2;
 
-        for(let i = 0; i < v.length; i++){
+        for(let i = 0; i < (coverage === undefined ? v.lengt : 1); i++){
             let format =
                 `${name}: Test #${Object.keys(unit_tests.discordCrypt_pbkdf2).length}`;
 
@@ -149,7 +172,7 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
 }
 
 /* Run Cipher tests. */
-function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
+function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined, coverage){
     const vectors = require('./cipher-test-vectors.json');
 
     /* Adds a cipher test list to be checked. */
@@ -177,7 +200,7 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                 unit_tests[test_name] = {};
 
                 /* Loop over each individual unit test. */
-                for(let k = 0; k < test_vectors[i][j].r.length; k++){
+                for(let k = 0; k < (coverage === undefined ? test_vectors[i][j].r.length : 1); k++){
                     /* Convert the target strings from hex format to Buffer objects. */
                     let plaintext = new Buffer(test_vectors[i][j].r[k].plaintext, 'hex');
                     let ciphertext = new Buffer(test_vectors[i][j].r[k].ciphertext, 'hex');
@@ -192,8 +215,13 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                     /* Create the test callback */
                     unit_tests[test_name][test_id] =
                         (ut) => {
-                            /* Calculate the plaintext by doing a decryption cycle. */
-                            let _plaintext = decrypt(ciphertext, key, mode, scheme, 'hex');
+                            let _plaintext, _ciphertext;
+
+                            if(mode !== 'gcm')
+                                /* Calculate the plaintext by doing a decryption cycle. */
+                                _plaintext = decrypt(ciphertext, key, mode, scheme, 'hex');
+                            else
+                                _plaintext = decrypt(ciphertext, key, scheme, 'hex');
 
                             /* Check if they match. */
                             ut.equal(_plaintext, test_vectors[i][j].r[k].plaintext, 'Mismatched plaintext');
@@ -201,21 +229,37 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                             /* ISO-10126 uses random padding bytes which we can't predict. */
                             /* As a result, we only test ciphertext equality in padding schemes that don't do this. */
                             if(scheme.toLowerCase() !== 'iso1'){
-                                /* Perform an encryption routine with the predefined key and KDF salt. */
-                                let _ciphertext = encrypt(plaintext, key, mode, scheme, true, false, salt);
+                                if(mode !== 'gcm')
+                                    /* Perform an encryption routine with the predefined key and KDF salt. */
+                                    _ciphertext = encrypt(plaintext, key, mode, scheme, true, false, salt);
+                                else
+                                    /* Perform an encryption routine with the predefined key and KDF salt. */
+                                    _ciphertext = encrypt(plaintext, key, scheme, true, false, undefined, salt);
 
                                 /* Check if the plaintext and ciphertext calculate match the expected output. */
                                 ut.equal(_ciphertext, test_vectors[i][j].r[k].ciphertext, 'Mismatched ciphertext');
                             }
                             else{
-                                /* Here, we simply test if the encryption validates. */
-                                let _ciphertext = new Buffer(
-                                    encrypt(plaintext, key, mode, scheme, true, false, salt),
-                                    'hex'
-                                );
+                                if(mode !== 'gcm'){
+                                    /* Here, we simply test if the encryption validates. */
+                                    _ciphertext = new Buffer(
+                                        encrypt(plaintext, key, mode, scheme, true, false, salt),
+                                        'hex'
+                                    );
 
-                                /* Then we decrypt the ciphertext. */
-                                let _plaintext = decrypt(_ciphertext, key, mode, scheme, 'hex');
+                                    /* Then we decrypt the ciphertext. */
+                                    _plaintext = decrypt(_ciphertext, key, mode, scheme, 'hex');
+                                }
+                                else{
+                                    /* Here, we simply test if the encryption validates. */
+                                    _ciphertext = new Buffer(
+                                        encrypt(plaintext, key, scheme, true, false, undefined, salt),
+                                        'hex'
+                                    );
+
+                                    /* Then we decrypt the ciphertext. */
+                                    _plaintext = decrypt(_ciphertext, key, scheme, 'hex');
+                                }
 
                                 /* Check if the newly decrypted plaintext is valid. */
                                 ut.equal(_plaintext, test_vectors[i][j].r[k].plaintext, 'Encryption failure');
@@ -230,22 +274,13 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
 
     }
 
-    /* Locates the given array containing the target's test vectors. */
-    function locateTestVector(/* Array */ list, /* string */ name){
-        for(let i = 0; i < list.length; i++){
-            if(list[i].full_name.toLowerCase() === name.toLowerCase())
-                return list[i];
-        }
-
-        return null;
-    }
-
     /* Quick sanity check. */
     if(typeof preferred_cipher !== 'string')
         preferred_cipher = 'Running all cipher tests';
 
     /* Fetch all test vectors. */
     let aes_vectors = locateTestVector(vectors, 'aes-256'),
+        aes_gcm_vectors = locateTestVector(vectors, 'aes-256-gcm'),
         camellia_vectors = locateTestVector(vectors, 'camellia-256'),
         tripledes_vectors = locateTestVector(vectors, 'tripledes-192'),
         idea_vectors = locateTestVector(vectors, 'idea-128'),
@@ -263,6 +298,14 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                 aes_vectors.tests,
                 loaded_blob['class'].aes256_encrypt,
                 loaded_blob['class'].aes256_decrypt
+            );
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
+                aes_gcm_vectors.full_name,
+                aes_gcm_vectors.tests,
+                loaded_blob['class'].aes256_encrypt_gcm,
+                loaded_blob['class'].aes256_decrypt_gcm
             );
             break;
         case 'camellia':
@@ -325,6 +368,14 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
             addCipherTest(
                 loaded_blob,
                 unit_tests,
+                aes_gcm_vectors.full_name,
+                aes_gcm_vectors.tests,
+                loaded_blob['class'].aes256_encrypt_gcm,
+                loaded_blob['class'].aes256_decrypt_gcm
+            );
+            addCipherTest(
+                loaded_blob,
+                unit_tests,
                 camellia_vectors.full_name,
                 camellia_vectors.tests,
                 loaded_blob['class'].camellia256_encrypt,
@@ -358,144 +409,140 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
     }
 }
 
+/* Run Diffie-Hellman exchange tests. */
+function addDiffieHellmanTests(loaded_blob, unit_tests, coverage){
+    const algorithms = [
+        {
+            name: 'DH',
+            full_name: 'Diffie-Hellman',
+            key_lengths: loaded_blob['class'].getDHBitSizes(),
+        },
+        {
+            name: 'ECDH',
+            full_name: 'Elliptic Curve Diffie-Hellman',
+            key_lengths: loaded_blob['class'].getECDHBitSizes()
+        }
+    ];
+
+    const tests = coverage === undefined ? 5 : 1;
+
+    /* Loop over each algorithm. */
+    for(let i = 0; i < algorithms.length; i++){
+        /* Get the appropriate generator. */
+        let generator = algorithms[i].name === 'DH' ?
+            loaded_blob['class'].generateDH :
+            loaded_blob['class'].generateECDH;
+
+        /* Loop over each key size. */
+        for(let j = 0; j < algorithms[i].key_lengths.length; j++){
+            /* Generate a test class. */
+            let test_name = `discordCrypt_${algorithms[i].name}_${algorithms[i].key_lengths[j]}`;
+            unit_tests[test_name] = {};
+
+            /* Loop over for the number of tests required. */
+            for(let k = 0; k < tests; k++){
+                /* Create a test. */
+                unit_tests[test_name][`Test #${k}`] = (ut) => {
+                    /* Generate both keys. */
+                    let keyA = generator(algorithms[i].key_lengths[j]);
+                    let keyB = generator(algorithms[i].key_lengths[j]);
+
+                    /* Perform a key exchange and get the shared secret. */
+                    let secretA =
+                        loaded_blob['class'].computeExchangeSharedSecret(keyA, keyB.getPublicKey('hex'), false, true);
+
+                    /* Get the secret for both keys. */
+                    let secretB =
+                        loaded_blob['class'].computeExchangeSharedSecret(keyB, keyA.getPublicKey('hex'), false, true);
+
+                    /* Ensure the secrets match. */
+                    ut.equal(secretA, secretB, `${algorithms[i].full_name}-${algorithms[i].key_lengths[j]} failed`);
+
+                    /* Finish the test. */
+                    ut.done();
+                };
+            }
+        }
+    }
+}
+
+/* Adds generic plugin tests not classified by other types. */
+function addGenericTests(loaded_blob, unit_tests){
+    let DiscordCrypt = loaded_blob['instance'];
+    let discordCrypt = loaded_blob['class'];
+
+    unit_tests.generic_tests = {};
+
+    /* Test the plugin's ability to log things and overwrite the logger with a non-HTML formatted one. */
+    unit_tests.generic_tests['Logging'] = (ut) => {
+        discordCrypt.log('Info', 'info');
+        discordCrypt.log('Error', 'error');
+        discordCrypt.log('Debug', 'debug');
+        discordCrypt.log('Warning', 'warn');
+
+        discordCrypt.log = (/* string */ message, /* string */ method = "info") => {
+            try{ console[method]("[DiscordCrypt] - " + message); }
+            catch(ex) {}
+        };
+
+        ut.done();
+    };
+
+    /* List general BetterDiscord info. */
+    unit_tests.generic_tests['Plugin Info'] = (ut) => {
+        discordCrypt.log(`Plugin: ${DiscordCrypt.getName()} v${DiscordCrypt.getVersion()}`);
+        discordCrypt.log(`Author: ${DiscordCrypt.getAuthor()}`);
+        discordCrypt.log(`Description: ${DiscordCrypt.getDescription()}`);
+
+        discordCrypt.log(`Configuration:\n${JSON.stringify(DiscordCrypt.getDefaultConfig(), undefined, ' ')}`);
+
+        discordCrypt.log(`Path: ${discordCrypt.getPluginsPath()}`);
+
+        ut.done();
+    };
+
+    /* Plugin update test.  */
+    unit_tests.generic_tests['Plugin Update'] = (ut) => {
+        discordCrypt.checkForUpdate((file_data, short_hash, new_version, full_changelog) => {
+            /* Only called if the master branch's hash doesn't match this file's. */
+            ut.equal(file_data.length > 0, true, 'Failed to retrieve update file.');
+            ut.equal(short_hash.length > 0, true, 'Failed to retrieve update file hash.');
+            ut.equal(new_version.length > 0, true, 'Failed to retrieve the update version.');
+            ut.equal(full_changelog.length > 0, true, 'Failed to retrieve the changelog.');
+        });
+
+        /* Test will be completed regardless of if an update is found. */
+        ut.done();
+    };
+
+    /* File upload test. */
+    unit_tests.generic_tests['Encrypted File Upload'] = (ut) => {
+        discordCrypt.__up1UploadFile(
+            './tests/test_generator.js',
+            'https://share.riseup.net',
+            '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
+            require('./sjcl'),
+            (error, file_url, deletion_link, seed) => {
+                /* Succeeds only if the error is null. */
+                ut.equal(error, null);
+
+                /* All these should be strings. */
+                ut.equal(typeof file_url, 'string');
+                ut.equal(typeof deletion_link, 'string');
+
+                ut.equal(typeof seed, 'string');
+            }
+        );
+
+        ut.done();
+    };
+}
+
 /* Load the plugin from module exports. */
 function loadDiscordCrypt(){
     let load = require('../src/discordCrypt.plugin.js');
 
     return {'class': load, 'instance': new load()};
-}
-
-/* Generates cipher test vectors. */
-function generateCipherTests(/* Object */ loaded_blob, /* int */ num_tests = 25){
-    const ciphers = [
-        {
-            full_name: 'AES-256',
-            name: 'aes-256',
-            block_size: 16,
-            key_size: 32,
-            encryptor: loaded_blob['class'].aes256_encrypt,
-            decryptor: loaded_blob['class'].aes256_decrypt,
-        },
-        {
-            full_name: 'Camellia-256',
-            name: 'camellia-256',
-            block_size: 16,
-            key_size: 32,
-            encryptor: loaded_blob['class'].camellia256_encrypt,
-            decryptor: loaded_blob['class'].camellia256_decrypt,
-        },
-        {
-            full_name: 'TripleDES-192',
-            name: 'tripledes-192',
-            block_size: 8,
-            key_size: 24,
-            encryptor: loaded_blob['class'].tripledes192_encrypt,
-            decryptor: loaded_blob['class'].tripledes192_decrypt,
-        },
-        {
-            full_name: 'IDEA-128',
-            name: 'idea-128',
-            block_size: 8,
-            key_size: 16,
-            encryptor: loaded_blob['class'].idea128_encrypt,
-            decryptor: loaded_blob['class'].idea128_decrypt,
-        },
-        {
-            full_name: 'Blowfish-512',
-            name: 'blowfish-512',
-            block_size: 8,
-            key_size: 64,
-            encryptor: loaded_blob['class'].blowfish512_encrypt,
-            decryptor: loaded_blob['class'].blowfish512_decrypt
-        }
-    ];
-    const block_modes = [
-        'cbc',
-        'cfb',
-        'ofb'
-    ];
-    const padding_schemes = [
-        'PKC7',
-        'ANS2',
-        'ISO9',
-        'ZR0',
-        'ISO1',
-    ];
-
-    const process = require('process');
-    const crypto = require('crypto');
-
-    let unit_tests = [];
-
-    for(let i = 0; i < ciphers.length; i++){
-
-        unit_tests[i] = {};
-
-        unit_tests[i].full_name = ciphers[i].full_name;
-        unit_tests[i].name = ciphers[i].name;
-
-        unit_tests[i].tests = [];
-
-        for(let j = 0; j < block_modes.length; j++){
-
-            unit_tests[i].tests[j] = [];
-
-            for(let k = 0; k < padding_schemes.length; k++){
-
-                unit_tests[i].tests[j][k] = {};
-                unit_tests[i].tests[j][k].mode = block_modes[j];
-                unit_tests[i].tests[j][k].scheme = padding_schemes[k];
-                unit_tests[i].tests[j][k].r = [];
-
-                for(let l = 0; l < num_tests; l++){
-                    let plaintext = crypto.randomBytes((ciphers[i].key_size * (l + 1)) + (l + k + i));
-                    let key = crypto.randomBytes(ciphers[i].key_size);
-                    let salt = crypto.randomBytes(8);
-
-                    /* Quick sanity check for Zero-Padding which can't end in zeros. */
-                    if(padding_schemes[k].toLowerCase() === 'ZR0'){
-                        do plaintext[plaintext.length - 1] = crypto.randomBytes(1)[0];
-                        while(plaintext[plaintex.length - 1] === 0)
-                    }
-
-                    let ciphertext = ciphers[i].encryptor(
-                        plaintext,
-                        key,
-                        unit_tests[i].tests[j][k].mode,
-                        unit_tests[i].tests[j][k].scheme,
-                        true,
-                        false,
-                        salt
-                    );
-
-                    let _plaintext = ciphers[i].decryptor(
-                        ciphertext,
-                        key,
-                        unit_tests[i].tests[j][k].mode,
-                        unit_tests[i].tests[j][k].scheme,
-                        'hex',
-                        true
-                    );
-
-                    if(_plaintext !== plaintext.toString('hex')){
-                        l--;
-                        console.log(`Invalid test generated for ${ciphers[i].name}.`);
-                        continue;
-                    }
-
-                    unit_tests[i].tests[j][k].r[l] = {};
-
-                    unit_tests[i].tests[j][k].r[l].plaintext = plaintext.toString('hex');
-                    unit_tests[i].tests[j][k].r[l].ciphertext = ciphertext;
-
-                    unit_tests[i].tests[j][k].r[l].key = key.toString('hex');
-                    unit_tests[i].tests[j][k].r[l].salt = salt.toString('hex');
-                }
-            }
-        }
-    }
-
-    require('fs').writeFileSync('./tests/cipher-test-vectors.json', JSON.stringify(unit_tests, undefined, ' '));
 }
 
 /* Main function. */
@@ -523,11 +570,38 @@ function main(){
                 /* Run cipher tests. */
                 addCipherTests(loaded_blob, unit_tests, process.argv.length >= 4 ? process.argv[3] : '');
                 break;
+            case 'general':
+                /* Run generic tests. */
+                addGenericTests(loaded_blob, unit_tests);
+                break;
+            case 'exchange':
+                /* Run key exchange tests. */
+                addDiffieHellmanTests(loaded_blob, unit_tests);
+                break;
+            case 'coverage':
+                /* Run generic tests. */
+                addGenericTests(loaded_blob, unit_tests);
+
+                /* Run one Scrypt test. */
+                addScryptTests(loaded_blob, unit_tests, true);
+
+                /* Run a single Hash/PBKDF2 test of each type. */
+                addPBKDF2Tests(loaded_blob, unit_tests, true);
+
+                /* Run only a single test of each cipher type. */
+                addCipherTests(loaded_blob, unit_tests, undefined, true);
+
+                /* Run key exchange tests once for every key length. */
+                addDiffieHellmanTests(loaded_blob, unit_tests, true);
+                break;
             default:
                 throw 'Executing all tests.';
         }
     }
     catch(e){
+        /* Run generic tests. */
+        addGenericTests(loaded_blob, unit_tests);
+
         /* Run Scrypt tests. */
         addScryptTests(loaded_blob, unit_tests);
 
@@ -536,6 +610,9 @@ function main(){
 
         /* Run cipher tests. */
         addCipherTests(loaded_blob, unit_tests);
+
+        /* Run key exchange tests. */
+        addDiffieHellmanTests(loaded_blob, unit_tests);
     }
 
     /* Actually run all the tests. */
