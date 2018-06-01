@@ -495,7 +495,7 @@ class discordCrypt {
                     
                     <div class="dc-ruler-align">
                         <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">
-                        Cancel</button>
+                        Close</button>
                     </div>
                 </div>
                 <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">
@@ -2066,8 +2066,8 @@ class discordCrypt {
             /* Expand the message to the maximum width. */
             message.parent().parent().parent().parent().css( 'max-width', '100%' );
 
-            /* Extract any code blocks from the message. */
-            dataMsg = discordCrypt.__buildCodeBlockMessage( dataMsg );
+            /* Process the message and apply all necessary element modifications. */
+            dataMsg = discordCrypt.postProcessMessage( dataMsg );
 
             /* Set the new HTML. */
             message[ 0 ].innerHTML = dataMsg.html;
@@ -2103,6 +2103,24 @@ class discordCrypt {
 
         /* Message has been parsed. */
         return true;
+    }
+
+    /* Processes decrypted text for formatted elements. */
+    static postProcessMessage(/* string */ message) {
+        /* Extract any code blocks from the message. */
+        let processed = discordCrypt.__buildCodeBlockMessage( message );
+        let hasCode = processed.code;
+
+        /* Extract any URLs. */
+        processed = discordCrypt.__buildUrlMessage( processed.html );
+        let hasUrl = processed.url;
+
+        /* Return the raw HTML. */
+        return {
+            url: hasUrl,
+            code: hasCode,
+            html: processed.html,
+        };
     }
 
     /* Decodes all messages in the correct format. */
@@ -2278,26 +2296,11 @@ class discordCrypt {
     /* =============== BEGIN UI HANDLE CALLBACKS =============== */
 
     static on_file_button_clicked() {
-        /* Create an input element. */
-        let file = require( 'electron' ).remote.dialog.showOpenDialog( {
-            title: 'Select a file to encrypt and upload',
-            label: 'Select',
-            message: 'Maximum file size is 50 MB',
-            properties: [ 'openFile', 'showHiddenFiles', 'treatPackageAsDirectory' ]
-        } );
-
-        /* Ignore if no file was selected. */
-        if ( !file.length || !file[ 0 ].length )
-            return;
-
         /* Show main background. */
         $( '#dc-overlay' )[ 0 ].style.display = 'block';
 
         /* Show the upload overlay. */
         $( '#dc-overlay-upload' )[ 0 ].style.display = 'block';
-
-        /* Set the file path to the selected path. */
-        $( '#dc-file-path' ).val( file[ 0 ] );
     }
 
     static on_alter_file_button_clicked() {
@@ -3358,7 +3361,7 @@ class discordCrypt {
         /* This regex only extracts code blocks. */
         let code_block_expr = new RegExp( /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm ), _matched;
 
-        /* Array to store all the extracted blocks from. */
+        /* Array to store all the extracted blocks in. */
         let _code_blocks = [];
 
         /* Loop through each tested RegExp result. */
@@ -3376,6 +3379,24 @@ class discordCrypt {
         return _code_blocks;
     }
 
+    /* Extracts raw URLs from a message. */
+    static __extractUrls( /* string */ message ) {
+        /* This regex only extracts HTTP/HTTPS/FTP and FILE URLs. */
+        let url_expr = new RegExp( /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig ),
+            matched;
+
+        /* Array to store all the extracted URLs in. */
+        let urls = [];
+
+        /* Loop through each tested RegExp result. */
+        while ( ( matched = url_expr.exec( message ) ) ) {
+            /* Insert the captured data. */
+            urls.push( matched[ 0 ] );
+        }
+
+        return urls;
+    }
+
     /* Extracts code blocks from a message and formats them accordingly. */
     static __buildCodeBlockMessage( /* string */ message ) {
         try {
@@ -3385,9 +3406,6 @@ class discordCrypt {
             /* Throw an exception which will be caught to wrap the message normally. */
             if ( !_extracted.length )
                 throw 'No code blocks available.';
-
-            /* Wrap the message in span blocks. */
-            let _html = `<span>${message}</span>`;
 
             /* Loop over each expanded code block. */
             for ( let i = 0; i < _extracted.length; i++ ) {
@@ -3402,10 +3420,10 @@ class discordCrypt {
                     _lines += `<li>${_code[ j ]}</li>`;
 
                 /* Split the HTML message according to the full markdown code block. */
-                _html = _html.split( _extracted[ i ].captured_block );
+                message = message.split( _extracted[ i ].captured_block );
 
                 /* Replace the code with an HTML formatted code block. */
-                _html = _html.join(
+                message = message.join(
                     '<div class="markup line-scanned" data-colour="true" style="color: rgb(111, 0, 0);">' +
                     `<pre class="hljs"><code class="dc-code-block hljs ${_extracted[ i ].language}"
                         style="position: relative;">` +
@@ -3416,14 +3434,46 @@ class discordCrypt {
             /* Return the parsed message. */
             return {
                 code: true,
-                html: _html
+                html: message
             };
         }
         catch ( e ) {
             /* Wrap the message normally. */
             return {
                 code: false,
-                html: `<span>${message}</span>`
+                html: message
+            };
+        }
+    }
+
+    /* Extracts URLs from a message and formats them accordingly. */
+    static __buildUrlMessage( /* string */ message ) {
+        try {
+            /* Extract the URLs. */
+            let _extracted = discordCrypt.__extractUrls( message );
+
+            /* Throw an exception which will be caught to wrap the message normally. */
+            if ( !_extracted.length )
+                throw 'No URLs available.';
+
+            /* Loop over each URL and format it. */
+            for ( let i = 0; i < _extracted.length; i++ ) {
+                /* Split the message according to the URL and replace it. */
+                message =
+                    message.split( _extracted[ i ] ).join( `<a href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
+            }
+
+            /* Wrap the message normally. */
+            return {
+                url: true,
+                html: message
+            };
+        }
+        catch ( e ) {
+            /* Wrap the message normally. */
+            return {
+                url: false,
+                html: message
             };
         }
     }
