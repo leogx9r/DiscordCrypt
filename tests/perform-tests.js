@@ -36,14 +36,15 @@ function locateTestVector(/* Array */ list, /* string */ name){
 }
 
 /* Runs Scrypt tests. */
-function addScryptTests(loaded_blob, unit_tests){
+function addScryptTests(loaded_blob, unit_tests, coverage){
     const vectors = require('./scrypt-test-vectors');
 
     /* Prepare the unit tests. */
     unit_tests.discordCrypt_scrypt = {};
 
     /* Loop over all tests. */
-    for (let i = 0; i < vectors.length; i++){
+    let num_tests = coverage === undefined ? vectors.length : 1;
+    for (let i = 0; i < num_tests; i++){
         let v = vectors[i],
             k = `Test #${Object.keys(unit_tests.discordCrypt_scrypt).length+1}: [ N: ${v.N} p: ${v.p} r: ${v.r} ]`;
 
@@ -75,7 +76,7 @@ function addScryptTests(loaded_blob, unit_tests){
 }
 
 /* Run PBKDF2 tests. */
-function addPBKDF2Tests(loaded_blob, unit_tests){
+function addPBKDF2Tests(loaded_blob, unit_tests, coverage){
     /**
      * Expected:
      *
@@ -142,7 +143,7 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
     function prepare_run(name, hash_size, /* Array */ loaded_blob, /* Object */ v){
         let pbkdf2 = loaded_blob['class'].__pbkdf2;
 
-        for(let i = 0; i < v.length; i++){
+        for(let i = 0; i < (coverage === undefined ? v.lengt : 1); i++){
             let format =
                 `${name}: Test #${Object.keys(unit_tests.discordCrypt_pbkdf2).length}`;
 
@@ -171,7 +172,7 @@ function addPBKDF2Tests(loaded_blob, unit_tests){
 }
 
 /* Run Cipher tests. */
-function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
+function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined, coverage){
     const vectors = require('./cipher-test-vectors.json');
 
     /* Adds a cipher test list to be checked. */
@@ -199,7 +200,7 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
                 unit_tests[test_name] = {};
 
                 /* Loop over each individual unit test. */
-                for(let k = 0; k < test_vectors[i][j].r.length; k++){
+                for(let k = 0; k < (coverage === undefined ? test_vectors[i][j].r.length : 1); k++){
                     /* Convert the target strings from hex format to Buffer objects. */
                     let plaintext = new Buffer(test_vectors[i][j].r[k].plaintext, 'hex');
                     let ciphertext = new Buffer(test_vectors[i][j].r[k].ciphertext, 'hex');
@@ -409,7 +410,7 @@ function addCipherTests(loaded_blob, unit_tests, preferred_cipher = undefined){
 }
 
 /* Run Diffie-Hellman exchange tests. */
-function addDiffieHellmanTests(loaded_blob, unit_tests){
+function addDiffieHellmanTests(loaded_blob, unit_tests, coverage){
     const algorithms = [
         {
             name: 'DH',
@@ -423,7 +424,7 @@ function addDiffieHellmanTests(loaded_blob, unit_tests){
         }
     ];
 
-    const tests = 5;
+    const tests = coverage === undefined ? 5 : 1;
 
     /* Loop over each algorithm. */
     for(let i = 0; i < algorithms.length; i++){
@@ -576,6 +577,22 @@ function main(){
             case 'exchange':
                 /* Run key exchange tests. */
                 addDiffieHellmanTests(loaded_blob, unit_tests);
+                break;
+            case 'coverage':
+                /* Run generic tests. */
+                addGenericTests(loaded_blob, unit_tests);
+
+                /* Run one Scrypt test. */
+                addScryptTests(loaded_blob, unit_tests, true);
+
+                /* Run a single Hash/PBKDF2 test of each type. */
+                addPBKDF2Tests(loaded_blob, unit_tests, true);
+
+                /* Run only a single test of each cipher type. */
+                addCipherTests(loaded_blob, unit_tests, undefined, true);
+
+                /* Run key exchange tests once for every key length. */
+                addDiffieHellmanTests(loaded_blob, unit_tests, true);
                 break;
             default:
                 throw 'Executing all tests.';
