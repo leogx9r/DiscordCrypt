@@ -4255,8 +4255,19 @@ class discordCrypt {
         }
     }
 
-    /* Determines whether the passed cipher name is valid. */
-    static __isValidCipher( /* string */ cipher ) {
+    /**
+     * @public
+     * @desc Determines whether the passed cipher name is valid.
+     * @param {string} cipher The name of the cipher to check.
+     * @returns {boolean} Returns true if the cipher name is valid.
+     * @example
+     * console.log( __isValidCipher( 'aes-256-cbc' ) ); // True
+     * @example
+     * console.log( __isValidCipher( 'aes-256-gcm' ) ); // True
+     * @example
+     * console.log( __isValidCipher( 'camellia-256-gcm' ) ); // False
+     */
+    static __isValidCipher( cipher ) {
         const crypto = require( 'crypto' );
         let isValid = false;
 
@@ -4276,12 +4287,15 @@ class discordCrypt {
         return isValid;
     }
 
-    /* Converts a given key or iv into a buffer object. Performs a hash of the key it doesn't match the blockSize. */
-    static __validateKeyIV(
-        /* string|Buffer|Array */ key,
-        /* int */                 key_size_bits = 256,
-        /* boolean */             use_whirlpool = undefined
-    ) {
+    /**
+     * @public
+     * @desc Converts a given key or iv into a buffer object. Performs a hash of the key it doesn't match the blockSize.
+     * @param {string|Buffer|Array} key The key to perform validation on.
+     * @param {int} key_size_bits The bit length of the desired key.
+     * @param {boolean} [use_whirlpool] If the key length is 512-bits, use Whirlpool or SHA-512 hashing.
+     * @returns {Buffer} Returns a Buffer() object containing the key of the desired length.
+     */
+    static __validateKeyIV( key, key_size_bits = 256, use_whirlpool = undefined ) {
         /* Get the designed hashing algorithm. */
         let keyBytes = key_size_bits / 8;
 
@@ -4325,8 +4339,16 @@ class discordCrypt {
         }
     }
 
-    /* Convert the message to a buffer object. Supported formats are: String, Buffer, Array. */
-    static __validateMessage( /* string|Buffer|Array */ message, /* boolean */ is_message_hex = undefined ) {
+    /**
+     * @public
+     * @desc Convert the message to a buffer object.
+     * @param {string|Buffer|Array} message The input message.
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @returns {Buffer} Returns a Buffer() object containing the message.
+     * @throws An exception indicating the input message type is neither an Array(), Buffer() or string.
+     */
+    static __validateMessage( message, is_message_hex = undefined ) {
         /* Convert the message to a buffer. */
         try {
             return discordCrypt.__toBuffer( message, is_message_hex );
@@ -4336,18 +4358,40 @@ class discordCrypt {
         }
     }
 
-    /* Encrypts the given plain-text message using the algorithm specified. */
+    /**
+     * @public
+     * @desc Encrypts the given plain-text message using the algorithm specified.
+     * @param {string} symmetric_cipher The name of the symmetric cipher used to encrypt the message.
+     *      This must be supported by NodeJS's crypto module.
+     * @param {string} block_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_scheme The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {boolean} convert_to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
+     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer|null} Returns a Buffer() object containing the ciphertext or null if the chosen options are
+     *      invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static __encrypt(
-        /* string */              symmetric_cipher,
-        /* string */              block_mode,
-        /* string */              padding_scheme,
-        /* string|Buffer|Array */ message,
-        /* string|Buffer|Array */ key,
-        /* boolean */             convert_to_hex,
-        /* boolean */             is_message_hex,
-        /* int */                 key_size_bits = 256,
-        /* int */                 block_cipher_size = 128,
-        /* string|Buffer|Array */ one_time_salt = undefined
+        symmetric_cipher,
+        block_mode,
+        padding_scheme,
+        message,
+        key,
+        convert_to_hex,
+        is_message_hex,
+        key_size_bits = 256,
+        block_cipher_size = 128,
+        one_time_salt = undefined
     ) {
         const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
         const crypto = require( 'crypto' );
