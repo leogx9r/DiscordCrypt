@@ -4456,17 +4456,37 @@ class discordCrypt {
         return new Buffer( _salt.toString( 'hex' ) + _ct, 'hex' ).toString( convert_to_hex ? 'hex' : 'base64' );
     }
 
-    /* Decrypts the given cipher-text message using the algorithm specified. */
+    /**
+     * @public
+     * @desc Decrypts the given cipher-text message using the algorithm specified.
+     * @param {string} symmetric_cipher The name of the symmetric cipher used to decrypt the message.
+     *      This must be supported by NodeJS's crypto module.
+     * @param {string} block_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_scheme The padding scheme used to unpad the message from the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string|Buffer|Array} message The input ciphertext message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {boolean} output_format The output format of the plaintext.
+     *      Can be either [ 'utf8', 'latin1', 'hex', 'base64' ]
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
+     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
+     * @returns {Buffer|null} Returns a Buffer() object containing the plaintext or null if the chosen options are
+     *      invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static __decrypt(
-        /* string */              symmetric_cipher,
-        /* string */              block_mode,
-        /* string */              padding_scheme,
-        /* string|Buffer|Array */ message,
-        /* string|Buffer|Array */ key,
-        /* string */              output_format,
-        /* boolean */             is_message_hex,
-        /* int */                 key_size_bits = 256,
-        /* int */                 block_cipher_size = 128
+        symmetric_cipher,
+        block_mode,
+        padding_scheme,
+        message,
+        key,
+        output_format,
+        is_message_hex,
+        key_size_bits = 256,
+        block_cipher_size = 128
     ) {
         const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
         const crypto = require( 'crypto' );
@@ -4518,7 +4538,12 @@ class discordCrypt {
         return _pt.toString( output_format );
     }
 
-    /* Returns the string encoded mime type of a file. */
+    /**
+     * @public
+     * @desc Returns the string encoded mime type of a file based on the file extension.
+     * @param {string} file_path The path to the file in question.
+     * @returns {string} Returns the known file extension's MIME type or "application/octet-stream".
+     */
     static __up1GetMimeType( /* string */ file_path ) {
         /* Look up the Mime type from the file extension. */
         let type = require( 'mime-types' ).lookup( require( 'path' ).extname( file_path ) );
@@ -4527,12 +4552,23 @@ class discordCrypt {
         return type === false ? 'application/octet-stream' : type;
     }
 
-    static __up1EncryptData(
-        /* string */ file_path,
-        /* class */ sjcl,
-        /* function(error_string, encrypted_data, identity, encoded_seed) */ callback,
-        /* boolean */ randomize_file_name = false
-    ) {
+    /**
+     * @name encryptedFileCallback
+     * @param {string} error_string The error that occurred during operation or null if no error occurred.
+     * @param {Buffer} encrypted_data The resulting encrypted buffer as a Buffer() object.
+     * @param {string} identity The encoded identity of the encrypted file.
+     * @param {string} seed The initial seed used to decrypt the encryption keys of the file.
+     */
+
+    /**
+     * @private
+     * @desc Performs AES-256 CCM encryption of the given file and converts it to the expected Up1 format.
+     * @param {string} file_path The path to the file to encrypt.
+     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+     * @param {encryptedFileCallback} callback The callback function for when the file has been encrypted.
+     * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+     */
+    static __up1EncryptData( file_path, sjcl, callback, randomize_file_name = false ) {
         const crypto = require( 'crypto' );
         const path = require( 'path' );
         const fs = require( 'fs' );
@@ -4620,6 +4656,24 @@ class discordCrypt {
         }
     }
 
+    /**
+     * @name uploadedFileCallback
+     * @param {string} error_string The error that occurred or null if no error occurred.
+     * @param {string} file_url The URL of the uploaded file/
+     * @param {string} deletion_link The link used to delete the file.
+     * @param {string} encoded_seed The encoded encryption key used to decrypt the file.
+     */
+
+    /**
+     * @public
+     * @desc Uploads the given file path to an Up1 service and returns the file URL and deletion key.
+     * @param {string} file_path The path to the file to encrypt.
+     * @param {string} up1_host The host URL for the Up1 service.
+     * @param {string} [up1_api_key] The optional API key used for the service.
+     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+     * @param {uploadedFileCallback} callback The callback function called on success or failure.
+     * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+     */
     static __up1UploadFile(
         /* string */ file_path,
         /* string */ up1_host,
@@ -4684,28 +4738,30 @@ class discordCrypt {
 
     /* ============== NODE CRYPTO HASH PRIMITIVES ============== */
 
-    /* Performs the Scrypt hash function on the given input.
-     * Original Implementation: https://github.com/ricmoo/scrypt-js
-     * Param: input - Input data. Must be either a Buffer, Array or a UTF-8 encoded string.
-     * Param: salt - Initialization salt. Must be either a Buffer, Array or a UTF-8 encoded string.
-     * Param: dkLen - The length of the derived key.
-     * Param: N - The work factor variable. Memory and CPU usage scale linearly with this.
-     * Param: r - Increases the size of each hash produced by a factor of 2rK-bits.
-     * Param: p - Parallelization factor. Indicates the number of mixing functions to be run simultaneously.
-     * Param: cb(error, progress, key) - Callback function for progress updates.
-     *          Callback must return false repeatedly upon each call to have Scrypt continue running.
-     *          Once [progress] === 1.f AND [key] is defined, no further calls will be made.
-     * Returns: Returns true if successful.
+    /**
+     * @name scryptCallback
+     * @desc Callback must return false repeatedly upon each call to have Scrypt continue running.
+     *      Once [progress] === 1.f AND [key] is defined, no further calls will be made.
+     * @param {string} error The error message encountered or null.
+     * @param {real} progress The percentage of the operation completed. This ranges from [ 0.00 - 1.00 ].
+     * @param {Buffer} result The output result when completed or null if not completed.
+     * @returns Returns false if the operation is to continue running or true if the cancel the running operation.
+     */
+
+    /**
+     * @public
+     * @desc Performs the Scrypt hash function on the given input.
+     *      Original Implementation: https://github.com/ricmoo/scrypt-js
+     * @param {string|Buffer|Array} input The input data to hash.
+     * @param {string|Buffer|Array} salt The unique salt used for hashing.
+     * @param {int} dkLen The desired length of the output in bytes.
+     * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
+     * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
+     * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
+     * @param {scryptCallback} cb Callback function for progress updates.
+     * @returns {boolean} Returns true if successful.
     */
-    static scrypt(
-        /* Buffer|Array|string */               input,
-        /* Buffer|Array|string */               salt,
-        /* int */                               dkLen,
-        /* int */                               N = 16384,
-        /* int */                               r = 8,
-        /* int */                               p = 1,
-        /* function(error, progress, result) */ cb = null
-    ) {
+    static scrypt( input, salt, dkLen, N = 16384, r = 8, p = 1, cb = null ) {
         let _in, _salt;
 
         /* PBKDF2-HMAC-SHA256 Helper. */
@@ -5013,56 +5069,120 @@ class discordCrypt {
         return false;
     }
 
-    /* Returns the first 64 bits of a Whirlpool digest of the message. */
-    static whirlpool64( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns the first 64 bits of a Whirlpool digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static whirlpool64( message, to_hex ) {
         return new Buffer( discordCrypt.whirlpool( message, true ), 'hex' )
             .slice( 0, 8 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
-    /* Returns the first 128 bits of an SHA-512 digest of a message. */
-    static sha512_128( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns the first 128 bits of an SHA-512 digest of a message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha512_128( message, to_hex ) {
         return new Buffer( discordCrypt.sha512( message, true ), 'hex' )
             .slice( 0, 16 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
-    /* Returns the first 192 bits of a Whirlpool digest of the message. */
-    static whirlpool192( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns the first 192 bits of a Whirlpool digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static whirlpool192( message, to_hex ) {
         return new Buffer( discordCrypt.sha512( message, true ), 'hex' )
             .slice( 0, 24 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
-    /* Returns an SHA-160 digest of the message. */
-    static sha160( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns an SHA-160 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha160( message, to_hex ) {
         return discordCrypt.__createHash( message, 'sha1', to_hex );
     }
 
-    /* Returns an SHA-256 digest of the message. */
-    static sha256( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns an SHA-256 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha256( message, to_hex ) {
         return discordCrypt.__createHash( message, 'sha256', to_hex );
     }
 
-    /* Returns an SHA-512 digest of the message. */
-    static sha512( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns an SHA-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha512( message, to_hex ) {
         return discordCrypt.__createHash( message, 'sha512', to_hex );
     }
 
-    /* Returns a Whirlpool-512 digest of the message. */
-    static whirlpool( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns a Whirlpool-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static whirlpool( message, to_hex ) {
         return discordCrypt.__createHash( message, 'whirlpool', to_hex );
     }
 
-    /* Returns a HMAC-SHA-256 digest of the message. */
-    static hmac_sha256( /* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns a HMAC-SHA-256 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} secret The secret input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static hmac_sha256( message, secret, to_hex ) {
         return discordCrypt.__createHash( message, 'sha256', to_hex, true, secret );
     }
 
-    /* Returns an HMAC-SHA-512 digest of the message. */
-    static hmac_sha512( /* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex ) {
+    /*  */
+    /**
+     * @public
+     * @desc Returns an HMAC-SHA-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} secret The secret input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static hmac_sha512( message, secret, to_hex ) {
         return discordCrypt.__createHash( message, 'sha512', to_hex, true, secret );
     }
 
-    /* Returns an HMAC-Whirlpool-512 digest of the message. */
-    static hmac_whirlpool( /* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns an HMAC-Whirlpool-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} secret The secret input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static hmac_whirlpool( message, secret, to_hex ) {
         return discordCrypt.__createHash( message, 'whirlpool', to_hex, true, secret );
     }
 
