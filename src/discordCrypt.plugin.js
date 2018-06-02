@@ -597,7 +597,7 @@ class discordCrypt {
                             <div class="dc-input-label">Padding Mode:</div>
                             <select class="dc-input-field" id="dc-settings-padding-mode">
                                 <option value="pkc7">PKCS #7</option>
-                                <option value="asn2">ANSI X9.23</option>
+                                <option value="ans2">ANSI X9.23</option>
                                 <option value="iso1">ISO 10126</option>
                                 <option value="iso9">ISO 97971</option>
                                 <option value="zr0">Zero Padding</option>
