@@ -4123,9 +4123,10 @@ class discordCrypt {
                 /* Return the result. */
                 return padded;
             }
-            else
-            /* Remove the padding indicated by the last byte. */
+            else {
+                /* Remove the padding indicated by the last byte. */
                 return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
+            }
         }
 
         /* Pads a message with null bytes. N.B. Messages must NOT end with null bytes. */
@@ -4175,9 +4176,10 @@ class discordCrypt {
                 /* Return the result. */
                 return padded;
             }
-            else
-            /* Remove the padding indicated by the last byte. */
+            else {
+                /* Remove the padding indicated by the last byte. */
                 return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
+            }
         }
 
         /* Pads a message according to the ISO 10126 format. */
@@ -4200,9 +4202,10 @@ class discordCrypt {
                 /* Return the result. */
                 return padded;
             }
-            else
-            /* Remove the padding indicated by the last byte. */
+            else {
+                /* Remove the padding indicated by the last byte. */
                 return message.slice( 0, message.length - message.readUInt8( message.length - 1 ) );
+            }
         }
 
         /* Pads a message according to the ISO 97971 format. */
