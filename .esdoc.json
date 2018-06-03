@@ -1,13 +1,22 @@
 {
   "source": "./src",
   "destination": "./docs",
+  "index": "./TECHNICALITIES.md",
   "plugins": [
-    { "name": "esdoc-standard-plugin" }
-  ],
-  "option": {
-    "coverage": {
-      "enable": true
+    { "name": "esdoc-standard-plugin" },
+    { "name": "esdoc-node" },
+    {
+      "name": "esdoc-brand-plugin",
+      "option": {
+        "logo": "./images/app-logo.png",
+        "title": "DiscordCrypt",
+        "description": "Provides secure messaging for Discord using various cryptography standards.",
+        "repository": "https://gitlab.com/leogx9r/DiscordCrypt",
+        "site": "https://leogx9r.gitlab.io/DiscordCrypt",
+        "author": "https://gitlab.com/leogx9r",
+        "image": "https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png"
+      }
     }
-  }
+  ]
 }
 

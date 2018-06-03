@@ -1,4 +1,7 @@
-# Technical Details Overview
+<h1 align="center">
+    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" height="38" width="38">
+    DiscordCrypt Technical Details Overview
+</h1>
 
 * [**Supported Algorithms**](#supported-algorithms)
     * [***Ciphers***](#ciphers)
