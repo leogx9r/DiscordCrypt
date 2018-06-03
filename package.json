@@ -2,6 +2,7 @@
   "name": "discordcrypt",
   "version": "1.0.0",
   "description": "Secure messaging for the Discord app.",
+  "repository": "https://gitlab.com/leogx9r/DiscordCrypt",
   "main": "",
   "scripts": {
     "coverage": "node node_modules/.bin/istanbul cover tests/perform-tests.js coverage",
@@ -17,6 +18,7 @@
   "dependencies": {
     "electron": "latest",
     "esdoc": "latest",
+    "esdoc-brand-plugin": "latest",
     "esdoc-node": "latest",
     "esdoc-standard-plugin": "latest",
     "form-data": "latest",
