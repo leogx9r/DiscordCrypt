@@ -2594,7 +2594,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Opens the file uploading menu.
      */
     static on_file_button_clicked() {
         /* Show main background. */
@@ -2606,7 +2606,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Opens the file menu selection.
      */
     static on_alter_file_button_clicked() {
         /* Create an input element. */
@@ -2627,7 +2627,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc  Uploads the selected file and sends the encrypted link.
      * @param {discordCrypt} self
      * @returns {Function}
      */
@@ -2710,7 +2710,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Closes the file upload dialog.
      */
     static on_cancel_file_upload_button_clicked() {
         /* Clear old file name. */
@@ -2725,7 +2725,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Opens the settings menu.
      */
     static on_settings_button_clicked() {
         /* Show main background. */
@@ -2737,7 +2737,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Closes the settings menu.
      */
     static on_settings_close_button_clicked() {
         /* Hide main background. */
@@ -2749,7 +2749,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Saves all settings.
      * @param {discordCrypt} self
      * @returns {Function}
      */
@@ -2810,7 +2810,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Resets the user settings to their default values.
      * @param {discordCrypt} self
      * @returns {Function}
      */
@@ -2835,7 +2835,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Restarts the app by performing a window.location.reload()
      */
     static on_restart_now_button_clicked() {
         /* Window reload is simple enough. */
@@ -2844,7 +2844,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Closes the upload available panel.
      */
     static on_restart_later_button_clicked() {
         /* Hide the update and changelog. */
@@ -2854,7 +2854,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Switches view to the Info tab.
      */
     static on_info_tab_button_clicked() {
         /* Switch to tab 0. */
@@ -2863,7 +2863,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Switches view to the Key Exchange tab.
      */
     static on_exchange_tab_button_clicked() {
         /* Switch to tab 1. */
@@ -2872,7 +2872,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Switches view to the Handshake tab.
      */
     static on_handshake_tab_button_clicked() {
         /* Switch to tab 2. */
@@ -2881,7 +2881,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Closes the key exchange menu.
      */
     static on_close_exchange_button_clicked() {
         /* Hide main background. */
@@ -2893,7 +2893,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Opens the key exchange menu.
      */
     static on_open_exchange_button_clicked() {
         /* Show background. */
@@ -2905,7 +2905,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Generates and sends a new public key.
      */
     static on_quick_send_public_key_button_clicked() {
         /* Don't bother opening a menu. Just generate the key. */
@@ -2917,7 +2917,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Switches the key lengths to their correct values.
      */
     static on_exchange_algorithm_changed() {
         /* Variable bit lengths. */
@@ -2949,7 +2949,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Generates a new key pair using the selected algorithm.
      */
     static on_generate_new_key_pair_button_clicked() {
         let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
@@ -3036,7 +3036,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Clears any public and private keys generated.
      */
     static on_keygen_clear_button_clicked() {
         /* Clear the key textareas. */
@@ -3045,7 +3045,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Sends the currently generate public key in the correct format.
      * @param {discordCrypt} self
      * @returns {Function}
      */
@@ -3087,7 +3087,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Pastes what is stored in the clipboard to the handshake public key field.
      */
     static on_handshake_paste_public_key_button_clicked() {
         $( '#dc-handshake-ppk' )[ 0 ].value = require( 'electron' ).clipboard.readText();
@@ -3095,7 +3095,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Computes a shared secret and generates passwords based on a DH/ECDH key exchange.
      * @param {discordCrypt} self
      * @returns {Function}
      */
@@ -3398,7 +3398,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Copies the currently generated passwords from a key exchange to the clipboard then erases them.
      */
     static on_handshake_copy_keys_button_clicked() {
         /* Don't bother if it's empty. */
@@ -3427,7 +3427,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Applies the generate passwords to the current channel or DM.
      * @param {discordCrypt} self
      * @returns {Function}
      */
@@ -3476,7 +3476,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Opens the password editor menu.
      */
     static on_passwd_button_clicked() {
         $( '#dc-overlay' )[ 0 ].style.display = 'block';
@@ -3485,7 +3485,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Saves the entered passwords for the current channel or DM.
      * @param {discordCrypt} self
      * @returns {Function}
      */
@@ -3517,7 +3517,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Resets passwords for the current channel or DM to their defaults.
      * @param {discordCrypt} self
      * @returns {Function}
      */
@@ -3549,7 +3549,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Closes the password editor menu.
      */
     static on_cancel_password_button_clicked() {
         /* Clear the fields. */
@@ -3566,7 +3566,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Copies the passwords from the current channel or DM to the clipboard.
      * @param {discordCrypt} self
      * @returns {Function}
      */
@@ -3602,7 +3602,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc
+     * @desc Enables or disables automatic message encryption.
      * @param {discordCrypt} self
      * @returns {Function}
      */
