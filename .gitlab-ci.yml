@@ -32,7 +32,7 @@ test:
    - node ./tests/perform-tests.js
   allow_failure: false
   except:
-   - master
+   - development
 
 # Perform code coverage only on the master & development branches.
 cover_test:
@@ -66,5 +66,5 @@ pages:
     - public
    expire_in: 30 days
   only:
-   - master
+   - development
 
