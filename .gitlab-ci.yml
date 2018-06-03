@@ -57,6 +57,8 @@ pages:
    - docs_gen
    - cover_test
   script:
+   - rm -rf ./public
+   - mkdir public
    - mkdir public/coverage
    - mv coverage/lcov-report/ public/coverage
    - mkdir public/docs
