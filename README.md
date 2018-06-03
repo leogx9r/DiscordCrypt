@@ -1,6 +1,9 @@
-# Overview
+<h1 align="center">
+    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" height="38" width="38">
+    DiscordCrypt
+</h1>
 
-* [**Introduction**](#discordcrypt)
+* [**Introduction**](#introduction)
 * [**Installation**](#installation)
     * [***Windows***](#windows)
     * [***MacOS***](#macos)
@@ -12,7 +15,7 @@
         * [*Personal Conversations*](#personal-conversations)
         * [*Group Conversations / Channels*](#group-conversations-channels)
             * [*Alternative Method*](#alternative-method)
-    * [***Reseting / Updating Conversation Passwords Manually***](#reseting-updating-conversation-passwords-manually)
+    * [***Reseting / Updating Conversation Passwords Manually***](#resetting-updating-conversation-passwords-manually)
 * [**Best Practices**](#best-practices)
 * [**Frequently Asked Questions ( FAQs )**](#frequently-asked-questions-faqs-)
 * [**Known Limitations**](#known-limitations-bugs)
@@ -20,7 +23,7 @@
 
  
 
-# DiscordCrypt
+# Introduction
 
 ![Encrypted Message](images/encrypted-message.png)
 
@@ -62,7 +65,7 @@ For specific operating systems, see below:
 * Save the plugin to the following path: `%APPDATA%\BetterDiscord\plugins`.
 	* *Example: `C:\Users\Jeremy\AppData\Local\BetterDiscord\plugins\discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as `discordCrypt.plugin.js`.
-* Restart Discord by presing: **`Ctrl + R`**.
+* Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
 #### MacOS
@@ -71,7 +74,7 @@ For specific operating systems, see below:
 * Save the plugin to the following path: `~/Library/Preferences/BetterDiscord/plugins`.
 	* *Example: `/home/jeremy/Library/Preferences/BetterDiscord/plugins/discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as `discordCrypt.plugin.js`.
-* Restart Discord by presing: **`Ctrl + R`**.
+* Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
 #### Linux
@@ -84,7 +87,7 @@ The *PTB* and *Canary* versions have **NOT** been tested.
 * Save the plugin to the following path: `~/.config/BetterDiscord/plugins`.
 	* *Example: `/home/jeremy/.config/BetterDiscord/plugins/discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as `discordCrypt.plugin.js`.
-* Restart Discord by presing: **`Ctrl + R`**.
+* Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
  
@@ -176,7 +179,7 @@ There is an alternative process for sharing existing passwords with users but it
 
  
 
-### Reseting / Updating Conversation Passwords Manually
+### Resetting / Updating Conversation Passwords Manually
 
 You may one day end up in a situation where you need to manually reset or update the password for the current conversation.
 

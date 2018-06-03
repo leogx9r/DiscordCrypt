@@ -64,7 +64,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.0.6';
+        return '1.0.7';
     }
 
     /* ============================================================== */
@@ -84,34 +84,76 @@ class discordCrypt {
          * These will usually be the culprit if the plugin breaks.
          */
 
-        /* Used to scan each message. */
+        /**
+         * @desc Used to scan each message for an embedded descriptor.
+         * @type {string}
+         */
         this.messageMarkupClass = '.markup';
-        /* Used to inject the toolbar. */
+        /**
+         * @desc Used to find the search toolbar to inject all option buttons.
+         * @type {string}
+         */
         this.searchUiClass = '.search .search-bar';
-        /* Used to hook messages being sent. */
+        /**
+         * @desc Used to hook messages being sent.
+         * @type {string}
+         */
         this.channelTextAreaClass = '.content textarea';
 
         /* ============================================ */
 
-        /* Defines what an encrypted message starts with. Must be 4x UTF-16 bytes. */
+        /**
+         * @desc Defines what an encrypted message starts with. Must be 4x UTF-16 bytes.
+         * @type {string}
+         */
         this.encodedMessageHeader = "㑳㑵㑷㑼";
 
-        /* Defines what a public key message starts with. Must be 4x UTF-16 bytes. */
+        /**
+         * @desc Defines what a public key message starts with. Must be 4x UTF-16 bytes.
+         * @type {string}
+         */
         this.encodedKeyHeader = "㑼㑷㑵㑳";
 
-        /* Defines what the header of an encrypted message says. */
+        /**
+         * @desc Defines what the header of an encrypted message says.
+         * @type {string}
+         */
         this.messageHeader = '-----ENCRYPTED MESSAGE-----';
 
-        /* Master database password. This uses 256 bits. An AES-256 bit key. */
+        /**
+         * @desc Master database password. This is a Buffer() containing a 256-bit key.
+         * @type {Buffer}
+         */
         this.masterPassword = new Buffer( 32 );
 
-        /* Scanning interval handler. */
+        /**
+         * @desc Message scanning interval handler's index. Used to stop any running handler.
+         * @type {int}
+         */
         this.scanInterval = undefined;
 
-        /* Configuration file. */
+        /**
+         * @desc The index of the handler used to reload the toolbar.
+         * @type {int}
+         */
+        this.toolbarReloadInterval = undefined;
+
+        /**
+         * @desc The index of the handler used for automatic update checking.
+         * @type {int}
+         */
+        this.updateHandlerInterval = undefined;
+
+        /**
+         * @desc The configuration file currently in use. Only valid after decryption of the configuration database.
+         * @type {Object|null}
+         */
         this.configFile = null;
 
-        /* Symmetric encryption modes. */
+        /**
+         * @desc Indexes of each dual-symmetric encryption mode.
+         * @type {int[]}
+         */
         this.encryptModes = [
             /* Blowfish(Blowfish, AES, Camellia, IDEA, TripleDES) */
             0, 1, 2, 3, 4,
@@ -125,14 +167,20 @@ class discordCrypt {
             20, 21, 22, 23, 24
         ];
 
-        /* Symmetric block modes of operation. */
+        /**
+         * @desc Symmetric block modes of operation.
+         * @type {string[]}
+         */
         this.encryptBlockModes = [
             'CBC', /* Cipher Block-Chaining */
             'CFB', /* Cipher Feedback Mode */
             'OFB', /* Output Feedback Mode */
         ];
 
-        /* Padding modes for block ciphers. */
+        /**
+         * @desc Shorthand padding modes for block ciphers referred to in the code.
+         * @type {string[]}
+         */
         this.paddingModes = [
             'PKC7', /* PKCS #7 */
             'ANS2', /* ANSI X.923 */
@@ -141,7 +189,10 @@ class discordCrypt {
             'ZR0', /* Zero-Padding */
         ];
 
-        /* Defines the CSS for the application overlay. */
+        /**
+         * @desc Defines the CSS for the application overlays.
+         * @type {string}
+         */
         this.appCss = `
             .dc-overlay {
                 position: fixed;
@@ -382,6 +433,10 @@ class discordCrypt {
             .stat-bar-rating { @include stat-bar(#cf3a02, #ff4500, top, bottom); }
             `;
 
+        /**
+         * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
+         * @type {string}
+         */
         this.toolbarHtml =
             `
             <button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File">
@@ -462,6 +517,11 @@ class discordCrypt {
             </button>
             `;
 
+        /**
+         * @desc Contains the raw HTML injected into the overlay to prompt for the master password for database
+         *      unlocking.
+         * @type {string}
+         */
         this.masterPasswordHtml =
             `
             <div id="dc-master-overlay" class="dc-overlay">
@@ -488,6 +548,10 @@ class discordCrypt {
             </div>
             `;
 
+        /**
+         * @desc Defines the raw HTML used describing each option menu.
+         * @type {string}
+         */
         this.settingsMenuHtml =
             `
             <div id="dc-overlay" class="dc-overlay">
@@ -597,7 +661,7 @@ class discordCrypt {
                             <div class="dc-input-label">Padding Mode:</div>
                             <select class="dc-input-field" id="dc-settings-padding-mode">
                                 <option value="pkc7">PKCS #7</option>
-                                <option value="asn2">ANSI X9.23</option>
+                                <option value="ans2">ANSI X9.23</option>
                                 <option value="iso1">ISO 10126</option>
                                 <option value="iso9">ISO 97971</option>
                                 <option value="zr0">Zero Padding</option>
@@ -838,12 +902,20 @@ class discordCrypt {
             </div>
             `;
 
+        /**
+         * @desc The Base64 encoded SVG containing the unlocked status icon.
+         * @type {string}
+         */
         this.unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0I" +
             "DI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xIDAgMi0u" +
             "OSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgNyA2aDEuOWM" +
             "wLTEuNzEgMS4zOS0zLjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAydjEwYzAgMS4xLj" +
             "kgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6bTAgMTJINlYxMGgxMnYxMHoiPjwvcGF0aD48L3N2Zz4=";
 
+        /**
+         * @desc The Base64 encoded SVG containing the locked status icon.
+         * @type {string}
+         */
         this.lockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI" +
             "0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI0djI0SD" +
             "BWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJlZj0iI2EiL" +
@@ -1474,7 +1546,7 @@ class discordCrypt {
         const WebpackModules = ( () => {
             const req = webpackJsonp(
                 [],
-                { '__extra_id__': ( module, exports, req ) => exports.default = req },
+                { '__extra_id__': ( module, _export_, req ) => _export_.default = req },
                 [ '__extra_id__' ]
             ).default;
 
@@ -3917,8 +3989,13 @@ class discordCrypt {
         }
     }
 
-    /* Extracts URLs from a message and formats them accordingly. */
-    static __buildUrlMessage( /* string */ message ) {
+    /**
+     * @public
+     * @desc Extracts URLs from a message and formats them accordingly.
+     * @param {string} message The input message to format URLs from.
+     * @returns {{url: boolean, html: string}} Returns whether the message contains URLs and the formatted HTML.
+     */
+    static __buildUrlMessage( message ) {
         try {
             /* Extract the URLs. */
             let _extracted = discordCrypt.__extractUrls( message );
@@ -3931,7 +4008,8 @@ class discordCrypt {
             for ( let i = 0; i < _extracted.length; i++ ) {
                 /* Split the message according to the URL and replace it. */
                 message =
-                    message.split( _extracted[ i ] ).join( `<a href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
+                    message.split( _extracted[ i ] )
+                        .join( `<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
             }
 
             /* Wrap the message in span tags. */
@@ -3949,8 +4027,16 @@ class discordCrypt {
         }
     }
 
-    /* Returns a string, Buffer() or Array() as a buffered object. */
-    static __toBuffer( /* string|Buffer|Array */ input, /* boolean */ is_input_hex = undefined ) {
+    /**
+     * @public
+     * @desc Returns a string, Buffer() or Array() as a buffered object.
+     * @param {string|Buffer|Array} input The input variable.
+     * @param {boolean|undefined} [is_input_hex] If set to true, the input is parsed as a hex string. If false, it is
+     *      parsed as a Base64 string. If this value is undefined, it is parsed as a UTF-8 string.
+     * @returns {Buffer} Returns a Buffer object.
+     * @throws {string} Thrown an unsupported type error if the input is neither a string, Buffer or Array.
+     */
+    static __toBuffer( input, is_input_hex = undefined ) {
         /* If the message is either a Hex, Base64 or UTF-8 encoded string, convert it to a buffer. */
         if ( typeof input === 'string' )
             return new Buffer( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
@@ -3967,14 +4053,23 @@ class discordCrypt {
         throw 'Input is neither an Array(), Buffer() or a string.';
     }
 
-    /* Creates a hash of the specified OpenSSL algorithm and returns either a hex-encoded or base64-encoded digest. */
-    static __createHash(
-        /* string|Buffer|Array */ message,
-        /* string */              algorithm,
-        /* boolean */             to_hex,
-        /* boolean */             hmac,
-        /* string|Buffer|Array */ secret
-    ) {
+    /**
+     * @public
+     * @desc Creates a hash of the specified algorithm and returns either a hex-encoded or base64-encoded digest.
+     * @param {string|Buffer|Array} message The message to perform the hash on.
+     * @param {string} algorithm The specified hash algorithm to use.
+     * @param {boolean} [to_hex] If true, converts the output to hex else it converts it to Base64.
+     * @param {boolean} hmac If this is true, an HMAC hash is created using a secret.
+     * @param {string|Buffer|Array} secret The input secret used for the creation of an HMAC object.
+     * @returns {string} Returns either a Base64 or hex string on success and an empty string on failure.
+     * @example
+     * console.log( __createHash( 'Hello World!', 'sha256', true ) );
+     * // "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
+     * @example
+     * console.log( __createHash( 'Hello World', 'sha256', true, true, 'My Secret' ) );
+     * // "852f78f917c4408000a8a94be61687865000bec5b2b77c0704dc5ad73ea06368"
+     */
+    static __createHash( message, algorithm, to_hex, hmac, secret ) {
         try {
             const crypto = require( 'crypto' );
 
@@ -3993,18 +4088,37 @@ class discordCrypt {
         }
     }
 
-    /* Computes a key-derivation based on the PBKDF2 standard and returns a hex or base64 encoded digest. */
-    static __pbkdf2(
-        /* string|Buffer|Array */ input,
-        /* string|Buffer|Array */ salt,
-        /* boolean */             to_hex,
-        /* boolean */             is_input_hex,
-        /* boolean */             is_salt_hex,
-        /* function(err, hash) */ callback,
-        /* string */              algorithm,
-        /* int*/                  key_length,
-        /* int*/                  iterations
-    ) {
+    /**
+     * @name pbkdf2Callback
+     * @param {string} error The error that occurred during processing or null on success.
+     * @param {string} hash The hash either as a hex or Base64 encoded string ( or null on failure ).
+     */
+
+    /**
+     * @public
+     * @desc Computes a key-derivation based on the PBKDF2 standard and returns a hex or base64 encoded digest.
+     * @param {string|Buffer|Array} input The input value to hash.
+     * @param {string|Buffer|Array} salt The secret value used to derive the hash.
+     * @param {boolean} [to_hex] Whether to conver the result to a hex string or a Base64 string.
+     * @param {boolean} [is_input_hex] Whether to treat the input as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [is_salt_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {pbkdf2Callback} [callback] The callback function if performing an async request.
+     * @param {string} algorithm The name of the hash algorithm to use.
+     * @param {int} key_length The length of the desired key in bytes.
+     * @param {int} iterations The number of recursive iterations to use to produce the resulting hash.
+     * @returns {string} If a callback is not specified, this returns the hex or Base64 result or an empty string on
+     *      failure.
+     * @example
+     * __pbkdf2( 'Hello World!', 'Super Secret', true, undefined, undefined, undefined, 'sha256', 32, 10000 );
+     * // "89205432badb5b1e53c7bb930d428afd0f98e5702c4e549ea2da4cfefe8af254"
+     * @example
+     * __pbkdf2( 'ABC', 'Salty!', true, undefined, undefined, ( e, h ) => { console.log( `Hash: ${h}` ); },
+     *      'sha256', 32, 1000 );
+     * // Hash: f0e110b17b02006bbbcecb8eb295421c69081a6ecda75c94d55d20759dc295b1
+     */
+    static __pbkdf2( input, salt, to_hex, is_input_hex, is_salt_hex, callback, algorithm, key_length, iterations ) {
         const crypto = require( 'crypto' );
         let _input, _salt;
 
@@ -4046,14 +4160,19 @@ class discordCrypt {
             }
     }
 
-    /* Pads or un-pads a given message using the specified encoding format and block size. Returns a Buffer() object. */
-    static __padMessage(
-        /* string|Buffer|Array */ message,
-        /* string */              padding_scheme,
-        /* int */                 block_size,
-        /* boolean */             is_hex = undefined,
-        /* boolean */             remove_padding = undefined
-    ) {
+    /**
+     * @public
+     * @desc Pads or un-pads the input message using the specified encoding format and block size.
+     * @param {string|Buffer|Array} message The input message to either pad or unpad.
+     * @param {string} padding_scheme The padding scheme used. This can be either: [ ZR0, ISO1, ISO9, PKC7, ANS2 ]
+     * @param {int} block_size The block size that the padding scheme must align the message to.
+     * @param {boolean} [is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [remove_padding] Whether to remove the padding applied to the message. If undefined, it is
+     *      treated as false.
+     * @returns {Buffer} Returns the padded or unpadded message as a Buffer object.
+     */
+    static __padMessage( message, padding_scheme, block_size, is_hex = undefined, remove_padding = undefined ) {
         let _message, _padBytes;
 
         /* Returns the number of bytes required to pad a message based on the block size. */
@@ -4076,9 +4195,10 @@ class discordCrypt {
                 /* Return the result. */
                 return padded;
             }
-            else
-            /* Remove the padding indicated by the last byte. */
+            else {
+                /* Remove the padding indicated by the last byte. */
                 return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
+            }
         }
 
         /* Pads a message with null bytes. N.B. Messages must NOT end with null bytes. */
@@ -4128,9 +4248,10 @@ class discordCrypt {
                 /* Return the result. */
                 return padded;
             }
-            else
-            /* Remove the padding indicated by the last byte. */
+            else {
+                /* Remove the padding indicated by the last byte. */
                 return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
+            }
         }
 
         /* Pads a message according to the ISO 10126 format. */
@@ -4153,9 +4274,10 @@ class discordCrypt {
                 /* Return the result. */
                 return padded;
             }
-            else
-            /* Remove the padding indicated by the last byte. */
+            else {
+                /* Remove the padding indicated by the last byte. */
                 return message.slice( 0, message.length - message.readUInt8( message.length - 1 ) );
+            }
         }
 
         /* Pads a message according to the ISO 97971 format. */
@@ -4208,8 +4330,19 @@ class discordCrypt {
         }
     }
 
-    /* Determines whether the passed cipher name is valid. */
-    static __isValidCipher( /* string */ cipher ) {
+    /**
+     * @public
+     * @desc Determines whether the passed cipher name is valid.
+     * @param {string} cipher The name of the cipher to check.
+     * @returns {boolean} Returns true if the cipher name is valid.
+     * @example
+     * console.log( __isValidCipher( 'aes-256-cbc' ) ); // True
+     * @example
+     * console.log( __isValidCipher( 'aes-256-gcm' ) ); // True
+     * @example
+     * console.log( __isValidCipher( 'camellia-256-gcm' ) ); // False
+     */
+    static __isValidCipher( cipher ) {
         const crypto = require( 'crypto' );
         let isValid = false;
 
@@ -4229,12 +4362,15 @@ class discordCrypt {
         return isValid;
     }
 
-    /* Converts a given key or iv into a buffer object. Performs a hash of the key it doesn't match the blockSize. */
-    static __validateKeyIV(
-        /* string|Buffer|Array */ key,
-        /* int */                 key_size_bits = 256,
-        /* boolean */             use_whirlpool = undefined
-    ) {
+    /**
+     * @public
+     * @desc Converts a given key or iv into a buffer object. Performs a hash of the key it doesn't match the blockSize.
+     * @param {string|Buffer|Array} key The key to perform validation on.
+     * @param {int} key_size_bits The bit length of the desired key.
+     * @param {boolean} [use_whirlpool] If the key length is 512-bits, use Whirlpool or SHA-512 hashing.
+     * @returns {Buffer} Returns a Buffer() object containing the key of the desired length.
+     */
+    static __validateKeyIV( key, key_size_bits = 256, use_whirlpool = undefined ) {
         /* Get the designed hashing algorithm. */
         let keyBytes = key_size_bits / 8;
 
@@ -4278,8 +4414,16 @@ class discordCrypt {
         }
     }
 
-    /* Convert the message to a buffer object. Supported formats are: String, Buffer, Array. */
-    static __validateMessage( /* string|Buffer|Array */ message, /* boolean */ is_message_hex = undefined ) {
+    /**
+     * @public
+     * @desc Convert the message to a buffer object.
+     * @param {string|Buffer|Array} message The input message.
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @returns {Buffer} Returns a Buffer() object containing the message.
+     * @throws An exception indicating the input message type is neither an Array(), Buffer() or string.
+     */
+    static __validateMessage( message, is_message_hex = undefined ) {
         /* Convert the message to a buffer. */
         try {
             return discordCrypt.__toBuffer( message, is_message_hex );
@@ -4289,18 +4433,40 @@ class discordCrypt {
         }
     }
 
-    /* Encrypts the given plain-text message using the algorithm specified. */
+    /**
+     * @public
+     * @desc Encrypts the given plain-text message using the algorithm specified.
+     * @param {string} symmetric_cipher The name of the symmetric cipher used to encrypt the message.
+     *      This must be supported by NodeJS's crypto module.
+     * @param {string} block_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_scheme The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {boolean} convert_to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
+     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer|null} Returns a Buffer() object containing the ciphertext or null if the chosen options are
+     *      invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static __encrypt(
-        /* string */              symmetric_cipher,
-        /* string */              block_mode,
-        /* string */              padding_scheme,
-        /* string|Buffer|Array */ message,
-        /* string|Buffer|Array */ key,
-        /* boolean */             convert_to_hex,
-        /* boolean */             is_message_hex,
-        /* int */                 key_size_bits = 256,
-        /* int */                 block_cipher_size = 128,
-        /* string|Buffer|Array */ one_time_salt = undefined
+        symmetric_cipher,
+        block_mode,
+        padding_scheme,
+        message,
+        key,
+        convert_to_hex,
+        is_message_hex,
+        key_size_bits = 256,
+        block_cipher_size = 128,
+        one_time_salt = undefined
     ) {
         const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
         const crypto = require( 'crypto' );
@@ -4362,17 +4528,37 @@ class discordCrypt {
         return new Buffer( _salt.toString( 'hex' ) + _ct, 'hex' ).toString( convert_to_hex ? 'hex' : 'base64' );
     }
 
-    /* Decrypts the given cipher-text message using the algorithm specified. */
+    /**
+     * @public
+     * @desc Decrypts the given cipher-text message using the algorithm specified.
+     * @param {string} symmetric_cipher The name of the symmetric cipher used to decrypt the message.
+     *      This must be supported by NodeJS's crypto module.
+     * @param {string} block_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_scheme The padding scheme used to unpad the message from the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string|Buffer|Array} message The input ciphertext message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {boolean} output_format The output format of the plaintext.
+     *      Can be either [ 'utf8', 'latin1', 'hex', 'base64' ]
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
+     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     * options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static __decrypt(
-        /* string */              symmetric_cipher,
-        /* string */              block_mode,
-        /* string */              padding_scheme,
-        /* string|Buffer|Array */ message,
-        /* string|Buffer|Array */ key,
-        /* string */              output_format,
-        /* boolean */             is_message_hex,
-        /* int */                 key_size_bits = 256,
-        /* int */                 block_cipher_size = 128
+        symmetric_cipher,
+        block_mode,
+        padding_scheme,
+        message,
+        key,
+        output_format,
+        is_message_hex,
+        key_size_bits = 256,
+        block_cipher_size = 128
     ) {
         const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
         const crypto = require( 'crypto' );
@@ -4424,7 +4610,12 @@ class discordCrypt {
         return _pt.toString( output_format );
     }
 
-    /* Returns the string encoded mime type of a file. */
+    /**
+     * @public
+     * @desc Returns the string encoded mime type of a file based on the file extension.
+     * @param {string} file_path The path to the file in question.
+     * @returns {string} Returns the known file extension's MIME type or "application/octet-stream".
+     */
     static __up1GetMimeType( /* string */ file_path ) {
         /* Look up the Mime type from the file extension. */
         let type = require( 'mime-types' ).lookup( require( 'path' ).extname( file_path ) );
@@ -4433,12 +4624,23 @@ class discordCrypt {
         return type === false ? 'application/octet-stream' : type;
     }
 
-    static __up1EncryptData(
-        /* string */ file_path,
-        /* class */ sjcl,
-        /* function(error_string, encrypted_data, identity, encoded_seed) */ callback,
-        /* boolean */ randomize_file_name = false
-    ) {
+    /**
+     * @name encryptedFileCallback
+     * @param {string} error_string The error that occurred during operation or null if no error occurred.
+     * @param {Buffer} encrypted_data The resulting encrypted buffer as a Buffer() object.
+     * @param {string} identity The encoded identity of the encrypted file.
+     * @param {string} seed The initial seed used to decrypt the encryption keys of the file.
+     */
+
+    /**
+     * @private
+     * @desc Performs AES-256 CCM encryption of the given file and converts it to the expected Up1 format.
+     * @param {string} file_path The path to the file to encrypt.
+     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+     * @param {encryptedFileCallback} callback The callback function for when the file has been encrypted.
+     * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+     */
+    static __up1EncryptData( file_path, sjcl, callback, randomize_file_name = false ) {
         const crypto = require( 'crypto' );
         const path = require( 'path' );
         const fs = require( 'fs' );
@@ -4526,6 +4728,24 @@ class discordCrypt {
         }
     }
 
+    /**
+     * @name uploadedFileCallback
+     * @param {string} error_string The error that occurred or null if no error occurred.
+     * @param {string} file_url The URL of the uploaded file/
+     * @param {string} deletion_link The link used to delete the file.
+     * @param {string} encoded_seed The encoded encryption key used to decrypt the file.
+     */
+
+    /**
+     * @public
+     * @desc Uploads the given file path to an Up1 service and returns the file URL and deletion key.
+     * @param {string} file_path The path to the file to encrypt.
+     * @param {string} up1_host The host URL for the Up1 service.
+     * @param {string} [up1_api_key] The optional API key used for the service.
+     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+     * @param {uploadedFileCallback} callback The callback function called on success or failure.
+     * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+     */
     static __up1UploadFile(
         /* string */ file_path,
         /* string */ up1_host,
@@ -4590,28 +4810,30 @@ class discordCrypt {
 
     /* ============== NODE CRYPTO HASH PRIMITIVES ============== */
 
-    /* Performs the Scrypt hash function on the given input.
-     * Original Implementation: https://github.com/ricmoo/scrypt-js
-     * Param: input - Input data. Must be either a Buffer, Array or a UTF-8 encoded string.
-     * Param: salt - Initialization salt. Must be either a Buffer, Array or a UTF-8 encoded string.
-     * Param: dkLen - The length of the derived key.
-     * Param: N - The work factor variable. Memory and CPU usage scale linearly with this.
-     * Param: r - Increases the size of each hash produced by a factor of 2rK-bits.
-     * Param: p - Parallelization factor. Indicates the number of mixing functions to be run simultaneously.
-     * Param: cb(error, progress, key) - Callback function for progress updates.
-     *          Callback must return false repeatedly upon each call to have Scrypt continue running.
-     *          Once [progress] === 1.f AND [key] is defined, no further calls will be made.
-     * Returns: Returns true if successful.
+    /**
+     * @name scryptCallback
+     * @desc Callback must return false repeatedly upon each call to have Scrypt continue running.
+     *      Once [progress] === 1.f AND [key] is defined, no further calls will be made.
+     * @param {string} error The error message encountered or null.
+     * @param {real} progress The percentage of the operation completed. This ranges from [ 0.00 - 1.00 ].
+     * @param {Buffer} result The output result when completed or null if not completed.
+     * @returns Returns false if the operation is to continue running or true if the cancel the running operation.
+     */
+
+    /**
+     * @public
+     * @desc Performs the Scrypt hash function on the given input.
+     *      Original Implementation: https://github.com/ricmoo/scrypt-js
+     * @param {string|Buffer|Array} input The input data to hash.
+     * @param {string|Buffer|Array} salt The unique salt used for hashing.
+     * @param {int} dkLen The desired length of the output in bytes.
+     * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
+     * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
+     * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
+     * @param {scryptCallback} cb Callback function for progress updates.
+     * @returns {boolean} Returns true if successful.
     */
-    static scrypt(
-        /* Buffer|Array|string */               input,
-        /* Buffer|Array|string */               salt,
-        /* int */                               dkLen,
-        /* int */                               N = 16384,
-        /* int */                               r = 8,
-        /* int */                               p = 1,
-        /* function(error, progress, result) */ cb = null
-    ) {
+    static scrypt( input, salt, dkLen, N = 16384, r = 8, p = 1, cb = null ) {
         let _in, _salt;
 
         /* PBKDF2-HMAC-SHA256 Helper. */
@@ -4919,69 +5141,155 @@ class discordCrypt {
         return false;
     }
 
-    /* Returns the first 64 bits of a Whirlpool digest of the message. */
-    static whirlpool64( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns the first 64 bits of a Whirlpool digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static whirlpool64( message, to_hex ) {
         return new Buffer( discordCrypt.whirlpool( message, true ), 'hex' )
             .slice( 0, 8 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
-    /* Returns the first 128 bits of an SHA-512 digest of a message. */
-    static sha512_128( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns the first 128 bits of an SHA-512 digest of a message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha512_128( message, to_hex ) {
         return new Buffer( discordCrypt.sha512( message, true ), 'hex' )
             .slice( 0, 16 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
-    /* Returns the first 192 bits of a Whirlpool digest of the message. */
-    static whirlpool192( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns the first 192 bits of a Whirlpool digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static whirlpool192( message, to_hex ) {
         return new Buffer( discordCrypt.sha512( message, true ), 'hex' )
             .slice( 0, 24 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
-    /* Returns an SHA-160 digest of the message. */
-    static sha160( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns an SHA-160 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha160( message, to_hex ) {
         return discordCrypt.__createHash( message, 'sha1', to_hex );
     }
 
-    /* Returns an SHA-256 digest of the message. */
-    static sha256( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns an SHA-256 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha256( message, to_hex ) {
         return discordCrypt.__createHash( message, 'sha256', to_hex );
     }
 
-    /* Returns an SHA-512 digest of the message. */
-    static sha512( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns an SHA-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha512( message, to_hex ) {
         return discordCrypt.__createHash( message, 'sha512', to_hex );
     }
 
-    /* Returns a Whirlpool-512 digest of the message. */
-    static whirlpool( /* Buffer|Array|string */ message, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns a Whirlpool-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static whirlpool( message, to_hex ) {
         return discordCrypt.__createHash( message, 'whirlpool', to_hex );
     }
 
-    /* Returns a HMAC-SHA-256 digest of the message. */
-    static hmac_sha256( /* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns a HMAC-SHA-256 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} secret The secret input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static hmac_sha256( message, secret, to_hex ) {
         return discordCrypt.__createHash( message, 'sha256', to_hex, true, secret );
     }
 
-    /* Returns an HMAC-SHA-512 digest of the message. */
-    static hmac_sha512( /* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex ) {
+    /*  */
+    /**
+     * @public
+     * @desc Returns an HMAC-SHA-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} secret The secret input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static hmac_sha512( message, secret, to_hex ) {
         return discordCrypt.__createHash( message, 'sha512', to_hex, true, secret );
     }
 
-    /* Returns an HMAC-Whirlpool-512 digest of the message. */
-    static hmac_whirlpool( /* Buffer|Array|string */ message, /* Buffer|Array|string */ secret, /* boolean */ to_hex ) {
+    /**
+     * @public
+     * @desc Returns an HMAC-Whirlpool-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} secret The secret input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static hmac_whirlpool( message, secret, to_hex ) {
         return discordCrypt.__createHash( message, 'whirlpool', to_hex, true, secret );
     }
 
-    /* Computes a derived digest using the PBKDF2 algorithm and SHA-256 as primitives. */
+    /**
+     * @name hashCallback
+     * @param {string} error The error that occurred or null.
+     * @param {string} hash The hex or Base64 encoded result.
+     */
+
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-256 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
     static pbkdf2_sha256(
-        /* Buffer|Array|string */   message,
-        /* Buffer|Array|string */   salt,
-        /* boolean */               to_hex,
-        /* boolean */               message_is_hex = undefined,
-        /* boolean */               salt_is_hex = undefined,
-        /* int */                   key_length = 32,
-        /* int */                   iterations = 5000,
-        /* function(err, hash) */   callback = undefined
+        message,
+        salt,
+        to_hex,
+        message_is_hex = undefined,
+        salt_is_hex = undefined,
+        key_length = 32,
+        iterations = 5000,
+        callback = undefined
     ) {
         return discordCrypt.__pbkdf2(
             message,
@@ -4996,7 +5304,23 @@ class discordCrypt {
         );
     }
 
-    /* Computes a derived digest using the PBKDF2 algorithm and SHA-512 as primitives. */
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-512 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
     static pbkdf2_sha512(
         /* Buffer|Array|string */   message,
         /* Buffer|Array|string */   salt,
@@ -5020,16 +5344,32 @@ class discordCrypt {
         );
     }
 
-    /* Computes a derived digest using the PBKDF2 algorithm and Whirlpool-512 as primitives. */
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and Whirlpool-512 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
     static pbkdf2_whirlpool(
-        /* Buffer|Array|string */   message,
-        /* Buffer|Array|string */   salt,
-        /* boolean */               to_hex,
-        /* boolean */               message_is_hex = undefined,
-        /* boolean */               salt_is_hex = undefined,
-        /* int */                   key_length = 32,
-        /* int */                   iterations = 5000,
-        /* function(err, hash) */   callback = undefined
+        message,
+        salt,
+        to_hex,
+        message_is_hex = undefined,
+        salt_is_hex = undefined,
+        key_length = 32,
+        iterations = 5000,
+        callback = undefined
     ) {
         return discordCrypt.__pbkdf2(
             message,
@@ -5048,15 +5388,32 @@ class discordCrypt {
 
     /* ================ CRYPTO CIPHER FUNCTIONS ================ */
 
-    /* Blowfish encrypts a message. If the key specified is not 512 bits in length, it is hashed via Whirlpool. */
+    /**
+     * @public
+     * @desc Blowfish encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static blowfish512_encrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined,
-        /* string|Buffer|Array */   one_time_salt = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined
     ) {
         /* Size constants for Blowfish. */
         const keySize = 512, blockSize = 64;
@@ -5076,14 +5433,30 @@ class discordCrypt {
         );
     }
 
-    /* Blowfish decrypts a message. If the key specified is not 512 bits in length, it is hashed via Whirlpool. */
+    /**
+     * @public
+     * @desc Blowfish decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static blowfish512_decrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* string */                output_format = 'utf8',
-        /* boolean */               is_message_hex = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined
     ) {
         /* Size constants for Blowfish. */
         const keySize = 512, blockSize = 64;
@@ -5102,15 +5475,32 @@ class discordCrypt {
         );
     }
 
-    /* AES-256 encrypts a message. Message must be a modulo of the block size and key to be the same block size. */
+    /**
+     * @public
+     * @desc AES-256 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static aes256_encrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined,
-        /* string|Buffer|Array */   one_time_salt = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined
     ) {
         /* Size constants for AES-256. */
         const keySize = 256, blockSize = 128;
@@ -5130,14 +5520,30 @@ class discordCrypt {
         );
     }
 
-    /* AES-256 decrypts a message. Message must be a modulo of the block size and key & iv to be the same block size. */
+    /**
+     * @public
+     * @desc AES-256 decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static aes256_decrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* string */                output_format = 'utf8',
-        /* boolean */               is_message_hex = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined
     ) {
         /* Size constants for AES-256. */
         const keySize = 256, blockSize = 128;
@@ -5156,16 +5562,33 @@ class discordCrypt {
         );
     }
 
-    /* AES-256 decrypts a message in GCM mode. Message must be a modulo of the block size and key & iv to be the
-     same block size. */
+    /*  */
+    /**
+     * @public
+     * @desc AES-256 decrypts a message in GCM mode.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [additional_data] If specified, this additional data is used during GCM
+     *      authentication.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static aes256_encrypt_gcm(
-        /* string|Buffer|Array */ message,
-        /* string|Buffer|Array */ key,
-        /* string */              padding_mode,
-        /* boolean */             to_hex = false,
-        /* boolean */             is_message_hex = undefined,
-        /* string|Buffer|Array */ additional_data = undefined,
-        /* string|Buffer|Array */ one_time_salt = undefined
+        message,
+        key,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        additional_data = undefined,
+        one_time_salt = undefined
     ) {
         const block_cipher_size = 128, key_size_bits = 256;
         const cipher_name = 'aes-256-gcm';
@@ -5227,15 +5650,30 @@ class discordCrypt {
         ).toString( to_hex ? 'hex' : 'base64' );
     }
 
-    /* AES-256 decrypts a message in GCM mode. Message must be a modulo of the block size and key & iv to be the same
-     block size. */
+    /**
+     * @public
+     * @desc AES-256 decrypts a message in GCM mode.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [additional_data] If specified, this additional data is used during GCM
+     *      authentication.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static aes256_decrypt_gcm(
-        /* string|Buffer|Array */ message,
-        /* string|Buffer|Array */ key,
-        /* string */              padding_mode,
-        /* string */              output_format = 'utf8',
-        /* boolean */             is_message_hex = undefined,
-        /* string|Buffer|Array */ additional_data = undefined
+        message,
+        key,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined,
+        additional_data = undefined
     ) {
         const block_cipher_size = 128, key_size_bits = 256;
         const cipher_name = 'aes-256-gcm';
@@ -5296,15 +5734,32 @@ class discordCrypt {
         return _pt.toString( output_format );
     }
 
-    /* Camellia-256 encrypts a message. If the key specified is not 256 bits in length, it is hashed via SHA-256. */
+    /**
+     * @public
+     * @desc Camellia-256 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static camellia256_encrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined,
-        /* string|Buffer|Array */   one_time_salt = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined
     ) {
         /* Size constants for Camellia-256. */
         const keySize = 256, blockSize = 128;
@@ -5324,14 +5779,30 @@ class discordCrypt {
         );
     }
 
-    /* Camellia-256 decrypts a message. If the key specified is not 256 bits in length, it is hashed via SHA-256. */
+    /**
+     * @public
+     * @desc Camellia-256 decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static camellia256_decrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* string */                output_format = 'utf8',
-        /* boolean */               is_message_hex = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined
     ) {
         /* Size constants for Camellia-256. */
         const keySize = 256, blockSize = 128;
@@ -5350,16 +5821,32 @@ class discordCrypt {
         );
     }
 
-    /* TripleDES-192 encrypts a message. If the key specified is not 192 bits in length, it is hashed via
-     Whirlpool-192. */
+    /**
+     * @public
+     * @desc TripleDES-192 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static tripledes192_encrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined,
-        /* string|Buffer|Array */   one_time_salt = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined
     ) {
         /* Size constants for TripleDES-192. */
         const keySize = 192, blockSize = 64;
@@ -5379,15 +5866,30 @@ class discordCrypt {
         );
     }
 
-    /* TripleDES-192 decrypts a message. If the key specified is not 192 bits in length, it is hashed via
-     Whirlpool-192. */
+    /**
+     * @public
+     * @desc TripleDES-192 decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static tripledes192_decrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* string */                output_format = 'utf8',
-        /* boolean */               is_message_hex = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined
     ) {
         /* Size constants for TripleDES-192. */
         const keySize = 192, blockSize = 64;
@@ -5406,15 +5908,32 @@ class discordCrypt {
         );
     }
 
-    /* IDEA-128 encrypts a message. If the key specified is not 128 bits in length, it is hashed via SHA-512-128. */
+    /**
+     * @public
+     * @desc IDEA-128 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static idea128_encrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* boolean */               to_hex = false,
-        /* boolean */               is_message_hex = undefined,
-        /* string|Buffer|Array */   one_time_salt = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined
     ) {
         /* Size constants for IDEA-128. */
         const keySize = 128, blockSize = 64;
@@ -5434,14 +5953,30 @@ class discordCrypt {
         );
     }
 
-    /* IDEA-128 decrypts a message. If the key specified is not 128 bits in length, it is hashed via SHA-512-128. */
+    /**
+     * @public
+     * @desc IDEA-128 decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
     static idea128_decrypt(
-        /* string|Buffer|Array */   message,
-        /* string|Buffer|Array */   key,
-        /* string */                cipher_mode,
-        /* string */                padding_mode,
-        /* string */                output_format = 'utf8',
-        /* boolean */               is_message_hex = undefined
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined
     ) {
         /* Size constants for IDEA-128. */
         const keySize = 128, blockSize = 64;
@@ -5462,8 +5997,16 @@ class discordCrypt {
 
     /* ============== END CRYPTO CIPHER FUNCTIONS ============== */
 
-    /* Converts a cipher string to its appropriate index number. */
-    static cipherStringToIndex( /* string */ primary_cipher, /* string */ secondary_cipher = undefined ) {
+    /**
+     * @public
+     * @desc Converts a cipher string to its appropriate index number.
+     * @param {string} primary_cipher The primary cipher.
+     *      This can be either [ 'bf', 'aes', 'camel', 'idea', 'tdes' ].
+     * @param {string} [secondary_cipher] The secondary cipher.
+     *      This can be either [ 'bf', 'aes', 'camel', 'idea', 'tdes' ].
+     * @returns {int} Returns the index value of the algorithm.
+     */
+    static cipherStringToIndex( primary_cipher, secondary_cipher = undefined ) {
         let value = 0;
 
         /* Return if already a number. */
@@ -5525,8 +6068,15 @@ class discordCrypt {
         return value;
     }
 
-    /* Converts an algorithm index to its appropriate string value. */
-    static cipherIndexToString( /* int */ index, /* boolean */ get_secondary = undefined ) {
+    /**
+     * @public
+     * @desc Converts an algorithm index to its appropriate string value.
+     * @param {int} index The index of the cipher(s) used.
+     * @param {boolean} get_secondary Whether to retrieve the secondary algorithm name.
+     * @returns {string} Returns a shorthand representation of either the primary or secondary cipher.
+     *      This can be either [ 'bf', 'aes', 'camel', 'idea', 'tdes' ].
+     */
+    static cipherIndexToString( index, get_secondary = undefined ) {
 
         /* Strip off the secondary. */
         if ( get_secondary !== undefined && get_secondary ) {
@@ -5564,8 +6114,13 @@ class discordCrypt {
             return 'bf';
     }
 
-    /* Converts an input string to the approximate entropic bits using Shannon's algorithm. */
-    static entropicBitLength( /* string */ key ) {
+    /**
+     * @public
+     * @desc Converts an input string to the approximate entropic bits using Shannon's algorithm.
+     * @param {string} key The input key to check.
+     * @returns {int} Returns the approximate number of bits of entropy contained in the key.
+     */
+    static entropicBitLength( key ) {
         let h = Object.create( null ), k;
         let sum = 0, len = key.length;
 
@@ -5581,7 +6136,11 @@ class discordCrypt {
         return parseInt( sum * len );
     }
 
-    /* Retrieves UTF-16 charset as an Array Object. */
+    /**
+     * @public
+     * @desc Retrieves UTF-16 charset as an Array Object.
+     * @returns {Array} Returns an array containing 64 characters used for substitution.
+     */
     static getUtf16() {
         return Array.from(
             "㐀㐁㐂㐃㐄㐅㐇㐒㐓㐔㐕㐖㐗㐜㐞㐡㐣㐥㐧㐨㐩㐫㐪㐭㐰㐱㐲㐳㐴㐶㐷㐹㐼㐽㐿㑁㑂㑃㑅㑇㑈㑉㑊㑏㑑" +
@@ -5589,8 +6148,13 @@ class discordCrypt {
         );
     }
 
-    /* Determines if a string has all valid UTF-16 characters. */
-    static isValidUtf16( /* string */ message ) {
+    /**
+     * @public
+     * @desc Determines if a string has all valid UTF-16 characters according to the result from getUtf16().
+     * @param {string} message The message to validate.
+     * @returns {boolean} Returns true if the message contains only the required character set.
+     */
+    static isValidUtf16( message ) {
         let c = discordCrypt.getUtf16();
         let m = message.split( '' ).join( '' );
 
@@ -5601,13 +6165,22 @@ class discordCrypt {
         return true;
     }
 
-    /* Retrieves Base64 charset as an Array Object. */
+    /**
+     * @public
+     * @desc Retrieves Base64 charset as an Array Object.
+     * @returns {Array} Returns an array of all 64 characters used in Base64 + encoding characters.
+     */
     static getBase64() {
         return Array.from( "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" );
     }
 
-    /* Determines if a string has all valid Base64 characters. */
-    static isValidBase64( /* string */ message ) {
+    /**
+     * @public
+     * @desc Determines if a string has all valid Base64 characters including encoding characters.
+     * @param {string} message The message to validate.
+     * @returns {boolean} Returns true if the message contains only the required character set.
+     */
+    static isValidBase64( message ) {
         try {
             btoa( message );
             return true;
@@ -5616,24 +6189,42 @@ class discordCrypt {
         }
     }
 
-    /* Returns an array of valid Diffie-Hellman exchange key bit-sizes. */
+    /**
+     * @public
+     * @desc Returns an array of valid Diffie-Hellman exchange key bit-sizes.
+     * @returns {number[]} Returns the bit lengths of all supported DH keys.
+     */
     static getDHBitSizes() {
         return [ 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192 ];
     }
 
-    /* Returns an array of Elliptic-Curve Diffie-Hellman key bit-sizes. */
+    /**
+     * @public
+     * @desc Returns an array of Elliptic-Curve Diffie-Hellman key bit-sizes.
+     * @returns {number[]} Returns the bit lengths of all supported ECDH keys.
+     */
     static getECDHBitSizes() {
         return [ 224, 256, 384, 409, 521, 571 ];
     }
 
-    /* Determines if a key exchange algorithm's index is valid. */
-    static isValidExchangeAlgorithm( /* int */ index ) {
+    /**
+     * @public
+     * @desc Determines if a key exchange algorithm's index is valid.
+     * @param {int} index The index to determine if valid.
+     * @returns {boolean} Returns true if the desired index meets one of the ECDH or DH key sizes.
+     */
+    static isValidExchangeAlgorithm( index ) {
         return index >= 0 &&
             index <= ( discordCrypt.getDHBitSizes().length + discordCrypt.getECDHBitSizes().length - 1 );
     }
 
-    /* Converts an algorithm index to a string. */
-    static indexToExchangeAlgorithmString( /* int */ index ) {
+    /**
+     * @public
+     * @desc Converts an algorithm index to a string.
+     * @param {int} index The input index of the exchange algorithm.
+     * @returns {string} Returns a string containing the algorithm or "Invalid Algorithm".
+     */
+    static indexToExchangeAlgorithmString( index ) {
         let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
         let base = [ 'DH-', 'ECDH-' ];
 
@@ -5645,8 +6236,13 @@ class discordCrypt {
             base[ 1 ] + ecdh_bl[ index - dh_bl.length ] );
     }
 
-    /* Converts an algorithm index to a bit size. */
-    static indexToAlgorithmBitLength( /* int */ index ) {
+    /**
+     * @public
+     * @desc Converts an algorithm index to a bit size.
+     * @param {int} index The index to convert to the bit length.
+     * @returns {int} Returns 0 if the index is invalid or the bit length of the index.
+     */
+    static indexToAlgorithmBitLength( index ) {
         let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
 
         if ( !discordCrypt.isValidExchangeAlgorithm( index ) )
@@ -5655,13 +6251,17 @@ class discordCrypt {
         return ( index <= ( dh_bl.length - 1 ) ? dh_bl[ index ] : ecdh_bl[ index - dh_bl.length ] );
     }
 
-    /* Computes a secret key from two ECDH or DH keys. One private and one public. */
-    static computeExchangeSharedSecret(
-        /* ECDH|DH */  private_key,
-        /* ECDH|DH */  public_key,
-        /* boolean */  is_base_64,
-        /* boolean */  to_base_64
-    ) {
+    /**
+     * @public
+     * @desc Computes a secret key from two ECDH or DH keys. One private and one public.
+     * @param {Object} private_key A private key DH or ECDH object from NodeJS's crypto module.
+     * @param {string} public_key The public key as a string in Base64 or hex format.
+     * @param {boolean} is_base_64 Whether the public key is a Base64 string. If false, it is assumed to be hex.
+     * @param {boolean} to_base_64 Whether to convert the output secret to Base64.
+     *      If false, it is converted to hex.
+     * @returns {string|null} Returns a string encoded secret on success or null on failure.
+     */
+    static computeExchangeSharedSecret( private_key, public_key, is_base_64, to_base_64 ) {
         let in_form, out_form;
 
         /* Compute the formats. */
@@ -5677,8 +6277,15 @@ class discordCrypt {
         }
     }
 
-    /* Generates a Diffie-Hellman Key. */
-    static generateDH( /* int */ size, /* Buffer */ private_key = undefined ) {
+    /**
+     * @public
+     * @desc Generates a Diffie-Hellman key pair.
+     * @param {int} size The bit length of the desired key pair.
+     *      This must be one of the supported lengths retrieved from getDHBitSizes().
+     * @param {Buffer} private_key The optional private key used to initialize the object.
+     * @returns {Object|null} Returns a DiffieHellman object on success or null on failure.
+     */
+    static generateDH( size, private_key = undefined ) {
         let groupName, key;
 
         /* Calculate the appropriate group. */
@@ -5731,8 +6338,15 @@ class discordCrypt {
         return key;
     }
 
-    /* Generates an Elliptic-Curve Diffie-Hellman Key. */
-    static generateECDH( /* int */ size, /* Buffer */ private_key = undefined ) {
+    /**
+     * @public
+     * @desc Generates a Elliptic-Curve Diffie-Hellman key pair.
+     * @param {int} size The bit length of the desired key pair.
+     *      This must be one of the supported lengths retrieved from getECDHBitSizes().
+     * @param {Buffer} private_key The optional private key used to initialize the object.
+     * @returns {Object|null} Returns a ECDH object on success or null on failure.
+     */
+    static generateECDH( size, private_key = undefined ) {
         let groupName, key;
 
         /* Calculate the appropriate group. */
@@ -5780,8 +6394,15 @@ class discordCrypt {
         return key;
     }
 
-    /* Substitutes input Base64 to Chinese character set. */
-    static substituteMessage( /* string */ message, /* boolean */ to_base64 ) {
+    /**
+     * @public
+     * @desc Substitutes an input Base64 message to the UTF-16 equivalent from getUtf16().
+     * @param {string} message The input message to perform substitution on.
+     * @param {boolean} convert Whether the message is to be converted from Base64 to UTF-16 or from UTF-16 to Base64.
+     * @returns {string} Returns the substituted string encoded message.
+     * @throws An exception indicating the message contains characters not in the character set.
+     */
+    static substituteMessage( /* string */ message, /* boolean */ convert ) {
         /* Target character set. */
         let subset = discordCrypt.getUtf16();
 
@@ -5790,7 +6411,7 @@ class discordCrypt {
 
         let result = "", index = 0;
 
-        if ( to_base64 !== undefined ) {
+        if ( convert !== undefined ) {
             /* Calculate the target character. */
             for ( let i = 0; i < message.length; i++ ) {
                 index = original.indexOf( message[ i ] );
@@ -5824,8 +6445,16 @@ class discordCrypt {
         return result;
     }
 
-    /* Encodes the given values as a Base64 encoded 32-bit word. */
-    static metaDataEncode( /* int */ cipherIndex, /* int */ cipherModeIndex, /* int */ paddingIndex, /* int */ pad ) {
+    /**
+     * @public
+     * @desc Encodes the given values as a Base64 encoded 32-bit word.
+     * @param {int} cipherIndex The index of the cipher(s) used to encrypt the message
+     * @param {int} cipherModeIndex The index of the cipher block mode used for the message.
+     * @param {int} paddingIndex The index of the padding scheme for the message.
+     * @param {int} pad The padding byte to use.
+     * @returns {string} Returns a substituted UTF-16 string of a Base64 encoded 32-bit word containing these options.
+     */
+    static metaDataEncode( cipherIndex, cipherModeIndex, paddingIndex, pad ) {
         /* Buffered word. */
         let buf = new Buffer( 4 );
 
@@ -5866,8 +6495,13 @@ class discordCrypt {
         return result;
     }
 
-    /* Decodes an input string and returns a byte array containing index number of options. */
-    static metaDataDecode( /* string */ message ) {
+    /**
+     * @public
+     * @desc Decodes an input string and returns a byte array containing index number of options.
+     * @param {string} message The substituted UTF-16 encoded metadata containing the metadata options.
+     * @returns {int[]} Returns 4 integer indexes of each metadata value.
+     */
+    static metaDataDecode( message ) {
         /* Target character set. */
         let subset = discordCrypt.getUtf16();
 
@@ -5894,7 +6528,22 @@ class discordCrypt {
         ];
     }
 
-    /* Encrypts a message using a symmetric key. */
+    /**
+     * @public
+     * @desc Dual-encrypts a message using symmetric keys and returns the substituted encoded equivalent.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} primary_key The primary key used for the first level of encryption.
+     * @param {string|Buffer|Array} secondary_key The secondary key used for the second level of encryption.
+     * @param {int} cipher_index The cipher index containing the primary and secondary ciphers used for encryption.
+     * @param {string} block_mode The block operation mode of the ciphers.
+     *      These can be: [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} use_hmac Whether to enable HMAC authentication on the message.
+     *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
+     * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
+     * @throws An exception indicating the error that occurred.
+     */
     static symmetricEncrypt(
         /* string|Buffer|Array */    message,
         /* string|Buffer|Array */    primary_key,
@@ -5998,7 +6647,23 @@ class discordCrypt {
         return discordCrypt.substituteMessage( msg, true );
     }
 
-    /* Decrypts a message using a symmetric key. */
+    /**
+     * @public
+     * @desc Dual-decrypts a message using symmetric keys and returns the substituted encoded equivalent.
+     * @param {string|Buffer|Array} message The substituted and encoded input message to decrypt.
+     * @param {string|Buffer|Array} primary_key The primary key used for the **second** level of decryption.
+     * @param {string|Buffer|Array} secondary_key The secondary key used for the **first** level of decryption.
+     * @param {int} cipher_index The cipher index containing the primary and secondary ciphers used for decryption.
+     * @param {string} block_mode The block operation mode of the ciphers.
+     *      These can be: [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to unpad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} use_hmac Whether to enable HMAC authentication on the message.
+     *      If this is enabled and authentication fails, null is returned.
+     *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
+     * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
+     * @throws An exception indicating the error that occurred.
+     */
     static symmetricDecrypt(
         /* string */    message,
         /* string */    primary_key,
@@ -6145,5 +6810,5 @@ class discordCrypt {
 }
 
 /* Required for code coverage reports. */
-module.exports = discordCrypt;
+module.exports = { discordCrypt };
 

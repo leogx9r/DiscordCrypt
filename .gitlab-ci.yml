@@ -8,10 +8,23 @@ cache:
 
 # Main stages
 stages:
+- build
 - test
 - deploy
 
-# Executed on every other branch but the master branch to perform full tests.
+# Generate documents on every branch.
+docs_gen:
+  stage: build
+  script:
+   - npm install
+   - node node_modules/.bin/esdoc
+  allow_failure: false
+  artifacts:
+   name: plugin-documentation
+   paths:
+    - docs/
+
+# Perform full tests. Executed on every other branch but the master branch.
 test:
   stage: test
   script:
@@ -26,7 +39,7 @@ cover_test:
   stage: test
   script:
    - npm install
-   - node node_modules/istanbul/lib/cli.js cover ./tests/perform-tests.js coverage
+   - node node_modules/.bin/istanbul cover ./tests/perform-tests.js coverage
   coverage: '/^Statements *: (\d+\.\d+%)/'
   artifacts:
    name: plugin-coverage
@@ -37,13 +50,15 @@ cover_test:
    - master
    - development
 
-# Upload the code coverage report only on the master branch.
+# Upload the code coverage and documentation reports only on the master branch.
 pages:
   stage: deploy
   dependencies:
+   - docs_gen
    - cover_test
   script:
-   - mv coverage/lcov-report/ public/
+   - mv docs public/
+   - mv coverage/lcov-report/ public/coverage
   artifacts:
    paths:
     - public

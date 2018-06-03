@@ -1,3 +1,9 @@
+Version 1.0.7
+
+- Fixed a bug where links weren't clickable.
+- Fixed a bug where the ANSI x9.23 padding scheme didn't work from the UI.
+- Finished project documentation.
+
 Version 1.0.6
 
 - Fixed a bug where file uploads wouldn't be sent if an encrypted channel wasn't already set up.
