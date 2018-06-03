@@ -1586,8 +1586,10 @@ class discordCrypt {
         } )();
 
         return {
-            ChannelProps: discordCrypt
-                .__getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
+            ChannelProps:
+                discordCrypt.getChannelId() === '@me' ?
+                    null :
+                    discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
             MessageParser: WebpackModules
                 .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
             MessageController: WebpackModules
