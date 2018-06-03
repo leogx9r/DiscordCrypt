@@ -57,11 +57,8 @@ pages:
    - docs_gen
    - cover_test
   script:
-   - mkdir public
-   - mkdir public/coverage
+   - mv docs public
    - mv coverage/lcov-report/ public/coverage
-   - mkdir public/docs
-   - mv docs/ /public/docs
   artifacts:
    paths:
     - public
