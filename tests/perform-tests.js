@@ -143,7 +143,7 @@ function addPBKDF2Tests(loaded_blob, unit_tests, coverage){
     function prepare_run(name, hash_size, /* Array */ loaded_blob, /* Object */ v){
         let pbkdf2 = loaded_blob['class'].__pbkdf2;
 
-        for(let i = 0; i < (coverage === undefined ? v.lengt : 1); i++){
+        for(let i = 0; i < (coverage === undefined ? v.length : 1); i++){
             let format =
                 `${name}: Test #${Object.keys(unit_tests.discordCrypt_pbkdf2).length}`;
 
@@ -540,9 +540,9 @@ function addGenericTests(loaded_blob, unit_tests){
 
 /* Load the plugin from module exports. */
 function loadDiscordCrypt(){
-    let load = require('../src/discordCrypt.plugin.js');
+    let { discordCrypt } = require('../src/discordCrypt.plugin.js');
 
-    return {'class': load, 'instance': new load()};
+    return {'class': discordCrypt, 'instance': new discordCrypt()};
 }
 
 /* Main function. */
