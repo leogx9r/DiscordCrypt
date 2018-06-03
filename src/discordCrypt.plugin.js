@@ -5186,16 +5186,38 @@ class discordCrypt {
         return discordCrypt.__createHash( message, 'whirlpool', to_hex, true, secret );
     }
 
-    /* Computes a derived digest using the PBKDF2 algorithm and SHA-256 as primitives. */
+    /**
+     * @name hashCallback
+     * @param {string} error The error that occurred or null.
+     * @param {string} hash The hex or Base64 encoded result.
+     */
+
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-256 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
     static pbkdf2_sha256(
-        /* Buffer|Array|string */   message,
-        /* Buffer|Array|string */   salt,
-        /* boolean */               to_hex,
-        /* boolean */               message_is_hex = undefined,
-        /* boolean */               salt_is_hex = undefined,
-        /* int */                   key_length = 32,
-        /* int */                   iterations = 5000,
-        /* function(err, hash) */   callback = undefined
+        message,
+        salt,
+        to_hex,
+        message_is_hex = undefined,
+        salt_is_hex = undefined,
+        key_length = 32,
+        iterations = 5000,
+        callback = undefined
     ) {
         return discordCrypt.__pbkdf2(
             message,
@@ -5210,7 +5232,23 @@ class discordCrypt {
         );
     }
 
-    /* Computes a derived digest using the PBKDF2 algorithm and SHA-512 as primitives. */
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-512 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
     static pbkdf2_sha512(
         /* Buffer|Array|string */   message,
         /* Buffer|Array|string */   salt,
@@ -5234,16 +5272,32 @@ class discordCrypt {
         );
     }
 
-    /* Computes a derived digest using the PBKDF2 algorithm and Whirlpool-512 as primitives. */
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and Whirlpool-512 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
     static pbkdf2_whirlpool(
-        /* Buffer|Array|string */   message,
-        /* Buffer|Array|string */   salt,
-        /* boolean */               to_hex,
-        /* boolean */               message_is_hex = undefined,
-        /* boolean */               salt_is_hex = undefined,
-        /* int */                   key_length = 32,
-        /* int */                   iterations = 5000,
-        /* function(err, hash) */   callback = undefined
+        message,
+        salt,
+        to_hex,
+        message_is_hex = undefined,
+        salt_is_hex = undefined,
+        key_length = 32,
+        iterations = 5000,
+        callback = undefined
     ) {
         return discordCrypt.__pbkdf2(
             message,
@@ -5262,7 +5316,24 @@ class discordCrypt {
 
     /* ================ CRYPTO CIPHER FUNCTIONS ================ */
 
-    /* Blowfish encrypts a message. If the key specified is not 512 bits in length, it is hashed via Whirlpool. */
+    /**
+     * @public
+     * @desc Blowfish encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static blowfish512_encrypt(
         /* string|Buffer|Array */   message,
         /* string|Buffer|Array */   key,
@@ -5316,7 +5387,24 @@ class discordCrypt {
         );
     }
 
-    /* AES-256 encrypts a message. Message must be a modulo of the block size and key to be the same block size. */
+    /**
+     * @public
+     * @desc AES-256 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static aes256_encrypt(
         /* string|Buffer|Array */   message,
         /* string|Buffer|Array */   key,
@@ -5370,8 +5458,25 @@ class discordCrypt {
         );
     }
 
-    /* AES-256 decrypts a message in GCM mode. Message must be a modulo of the block size and key & iv to be the
-     same block size. */
+    /*  */
+    /**
+     * @public
+     * @desc AES-256 decrypts a message in GCM mode.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [additional_data] If specified, this additional data is used during GCM
+     *      authentication.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static aes256_encrypt_gcm(
         /* string|Buffer|Array */ message,
         /* string|Buffer|Array */ key,
@@ -5510,7 +5615,24 @@ class discordCrypt {
         return _pt.toString( output_format );
     }
 
-    /* Camellia-256 encrypts a message. If the key specified is not 256 bits in length, it is hashed via SHA-256. */
+    /**
+     * @public
+     * @desc Camellia-256 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static camellia256_encrypt(
         /* string|Buffer|Array */   message,
         /* string|Buffer|Array */   key,
@@ -5564,8 +5686,24 @@ class discordCrypt {
         );
     }
 
-    /* TripleDES-192 encrypts a message. If the key specified is not 192 bits in length, it is hashed via
-     Whirlpool-192. */
+    /**
+     * @public
+     * @desc TripleDES-192 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static tripledes192_encrypt(
         /* string|Buffer|Array */   message,
         /* string|Buffer|Array */   key,
@@ -5620,7 +5758,24 @@ class discordCrypt {
         );
     }
 
-    /* IDEA-128 encrypts a message. If the key specified is not 128 bits in length, it is hashed via SHA-512-128. */
+    /**
+     * @public
+     * @desc IDEA-128 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
     static idea128_encrypt(
         /* string|Buffer|Array */   message,
         /* string|Buffer|Array */   key,
