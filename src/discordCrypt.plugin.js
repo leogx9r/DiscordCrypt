@@ -1474,7 +1474,7 @@ class discordCrypt {
         const WebpackModules = ( () => {
             const req = webpackJsonp(
                 [],
-                { '__extra_id__': ( module, exports, req ) => exports.default = req },
+                { '__extra_id__': ( module, _export_, req ) => _export_.default = req },
                 [ '__extra_id__' ]
             ).default;
 
