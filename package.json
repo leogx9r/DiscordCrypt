@@ -8,11 +8,6 @@
     "test_scrypt": "node tests/perform-tests.js scrypt",
     "test_pbkdf2": "node tests/perform-tests.js pbkdf2",
     "test_ciphers": "node tests/perform-tests.js cipher",
-    "test_aes": "node tests/perform-tests.js cipher aes",
-    "test_camellia": "node tests/perform-tests.js cipher camellia",
-    "test_tripledes": "node tests/perform-tests.js cipher tripledes",
-    "test_idea": "node tests/perform-tests.js cipher idea",
-    "test_blowfish": "node tests/perform-tests.js cipher blowfish",
     "test_general": "node tests/perform-tests.js general",
     "test_exchange": "node tests/perform-tests.js exchange",
     "test": "node tests/perform-tests.js"
