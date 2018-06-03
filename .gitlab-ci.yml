@@ -57,7 +57,7 @@ pages:
    - docs_gen
    - cover_test
   script:
-   - mv docs public
+   - mv docs public/
    - mv coverage/lcov-report/ public/coverage
   artifacts:
    paths:
