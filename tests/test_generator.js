@@ -23,13 +23,12 @@
  ******************************************************************************/
 
 /* Generates test vectors. */
-class testGenerator
-{
+class testGenerator {
     /* Loads required modules. */
-    constructor(){
-        this.fs = require('fs');
-        this.crypto = require('crypto');
-        this.discordCrypt = require('../src/discordCrypt.plugin.js');
+    constructor() {
+        this.fs = require( 'fs' );
+        this.crypto = require( 'crypto' );
+        this.discordCrypt = require( '../src/discordCrypt.plugin.js' ).discordCrypt;
 
         this.ciphers = [
             {
@@ -88,87 +87,87 @@ class testGenerator
     }
 
     /* Generates individual tests for each cipher mode and padding scheme. */
-    addCipherTest(/* int */ num_tests = 25, /* Array */ unit_tests, /* int */ i, /* int */ j, /* int */ k){
+    addCipherTest( /* int */ num_tests = 25, /* Array */ unit_tests, /* int */ i, /* int */ j, /* int */ k ) {
         /* Loop for the number of tests desired. */
-        for(let l = 0; l < num_tests; l++){
+        for ( let l = 0; l < num_tests; l++ ) {
             /* Generate random plaintext. */
-            let plaintext = this.crypto.randomBytes((this.ciphers[i].key_size * (l + 1)) + (l + k + i));
+            let plaintext = this.crypto.randomBytes( ( this.ciphers[ i ].key_size * ( l + 1 ) ) + ( l + k + i ) );
 
             /* Generate a random key and one-time salt. */
-            let key = this.crypto.randomBytes(this.ciphers[i].key_size);
-            let salt = this.crypto.randomBytes(8);
+            let key = this.crypto.randomBytes( this.ciphers[ i ].key_size );
+            let salt = this.crypto.randomBytes( 8 );
 
             /* Quick sanity check for Zero-Padding which can't end in zeros. */
-            if(this.padding_schemes[k].toLowerCase() === 'ZR0'){
-                do plaintext[plaintext.length - 1] = this.crypto.randomBytes(1)[0];
-                while(plaintext[plaintex.length - 1] === 0)
+            if ( this.padding_schemes[ k ].toLowerCase() === 'ZR0' ) {
+                do plaintext[ plaintext.length - 1 ] = this.crypto.randomBytes( 1 )[ 0 ];
+                while ( plaintext[ plaintex.length - 1 ] === 0 )
             }
 
             /* Perform a round of encryption. */
-            let ciphertext = this.ciphers[i].encrypt(
+            let ciphertext = this.ciphers[ i ].encrypt(
                 plaintext,
                 key,
-                unit_tests[i].tests[j][k].mode,
-                unit_tests[i].tests[j][k].scheme,
+                unit_tests[ i ].tests[ j ][ k ].mode,
+                unit_tests[ i ].tests[ j ][ k ].scheme,
                 true,
                 false,
                 salt
             );
 
             /* Perform a round of decryption. */
-            let _plaintext = this.ciphers[i].decrypt(
+            let _plaintext = this.ciphers[ i ].decrypt(
                 ciphertext,
                 key,
-                unit_tests[i].tests[j][k].mode,
-                unit_tests[i].tests[j][k].scheme,
+                unit_tests[ i ].tests[ j ][ k ].mode,
+                unit_tests[ i ].tests[ j ][ k ].scheme,
                 'hex',
                 true
             );
 
             /* Make sure that the plaintext generated matches the decrypted value. */
-            if(_plaintext !== plaintext.toString('hex')){
+            if ( _plaintext !== plaintext.toString( 'hex' ) ) {
                 l--;
-                console.log(`Invalid test generated for ${this.ciphers[i].name}.`);
+                console.log( `Invalid test generated for ${this.ciphers[ i ].name}.` );
                 continue;
             }
 
             /* Store the test result. */
-            unit_tests[i].tests[j][k].r[l] = {};
+            unit_tests[ i ].tests[ j ][ k ].r[ l ] = {};
 
-            unit_tests[i].tests[j][k].r[l].plaintext = plaintext.toString('hex');
-            unit_tests[i].tests[j][k].r[l].ciphertext = ciphertext;
+            unit_tests[ i ].tests[ j ][ k ].r[ l ].plaintext = plaintext.toString( 'hex' );
+            unit_tests[ i ].tests[ j ][ k ].r[ l ].ciphertext = ciphertext;
 
-            unit_tests[i].tests[j][k].r[l].key = key.toString('hex');
-            unit_tests[i].tests[j][k].r[l].salt = salt.toString('hex');
+            unit_tests[ i ].tests[ j ][ k ].r[ l ].key = key.toString( 'hex' );
+            unit_tests[ i ].tests[ j ][ k ].r[ l ].salt = salt.toString( 'hex' );
         }
     }
 
     /* Generates cipher test vectors. */
-    generateCipherTests(/* int */ num_tests = 25, /* string */ output_path = './tests/cipher-test-vectors.json'){
+    generateCipherTests( /* int */ num_tests = 25, /* string */ output_path = './tests/cipher-test-vectors.json' ) {
 
         let unit_tests = [];
 
-        for(let i = 0; i < this.ciphers.length; i++){
+        for ( let i = 0; i < this.ciphers.length; i++ ) {
 
-            unit_tests[i] = {};
+            unit_tests[ i ] = {};
 
-            unit_tests[i].full_name = this.ciphers[i].full_name;
-            unit_tests[i].name = this.ciphers[i].name;
+            unit_tests[ i ].full_name = this.ciphers[ i ].full_name;
+            unit_tests[ i ].name = this.ciphers[ i ].name;
 
-            unit_tests[i].tests = [];
+            unit_tests[ i ].tests = [];
 
-            for(let j = 0; j < this.block_modes.length; j++){
+            for ( let j = 0; j < this.block_modes.length; j++ ) {
 
-                unit_tests[i].tests[j] = [];
+                unit_tests[ i ].tests[ j ] = [];
 
-                for(let k = 0; k < this.padding_schemes.length; k++){
+                for ( let k = 0; k < this.padding_schemes.length; k++ ) {
 
-                    unit_tests[i].tests[j][k] = {};
-                    unit_tests[i].tests[j][k].mode = this.block_modes[j];
-                    unit_tests[i].tests[j][k].scheme = this.padding_schemes[k];
-                    unit_tests[i].tests[j][k].r = [];
+                    unit_tests[ i ].tests[ j ][ k ] = {};
+                    unit_tests[ i ].tests[ j ][ k ].mode = this.block_modes[ j ];
+                    unit_tests[ i ].tests[ j ][ k ].scheme = this.padding_schemes[ k ];
+                    unit_tests[ i ].tests[ j ][ k ].r = [];
 
-                    this.addCipherTest(num_tests, unit_tests, i, j, k);
+                    this.addCipherTest( num_tests, unit_tests, i, j, k );
                 }
             }
         }
@@ -182,36 +181,36 @@ class testGenerator
         aes_gcm.tests = [];
 
         /* Since GCM is the only mode tested here, use only 1 entry. */
-        aes_gcm.tests[0] = [];
+        aes_gcm.tests[ 0 ] = [];
 
         /* Loop over all padding schemes. */
-        for(let k = 0; k < this.padding_schemes.length; k++){
-            aes_gcm.tests[0][k] = {};
-            aes_gcm.tests[0][k].mode = 'gcm';
-            aes_gcm.tests[0][k].scheme = this.padding_schemes[k];
+        for ( let k = 0; k < this.padding_schemes.length; k++ ) {
+            aes_gcm.tests[ 0 ][ k ] = {};
+            aes_gcm.tests[ 0 ][ k ].mode = 'gcm';
+            aes_gcm.tests[ 0 ][ k ].scheme = this.padding_schemes[ k ];
 
-            aes_gcm.tests[0][k].r = [];
+            aes_gcm.tests[ 0 ][ k ].r = [];
 
             /* Generate each test. */
-            for(let l = 0; l < num_tests; l++){
+            for ( let l = 0; l < num_tests; l++ ) {
                 /* Generate random plaintext. */
-                let plaintext = this.crypto.randomBytes((32 * (l + 1)) + (l + k + this.ciphers.length));
+                let plaintext = this.crypto.randomBytes( ( 32 * ( l + 1 ) ) + ( l + k + this.ciphers.length ) );
 
                 /* Generate a random key and one-time salt. */
-                let key = this.crypto.randomBytes(32);
-                let salt = this.crypto.randomBytes(8);
+                let key = this.crypto.randomBytes( 32 );
+                let salt = this.crypto.randomBytes( 8 );
 
                 /* Quick sanity check for Zero-Padding which can't end in zeros. */
-                if(this.padding_schemes[k].toLowerCase() === 'ZR0'){
-                    do plaintext[plaintext.length - 1] = this.crypto.randomBytes(1)[0];
-                    while(plaintext[plaintex.length - 1] === 0)
+                if ( this.padding_schemes[ k ].toLowerCase() === 'ZR0' ) {
+                    do plaintext[ plaintext.length - 1 ] = this.crypto.randomBytes( 1 )[ 0 ];
+                    while ( plaintext[ plaintex.length - 1 ] === 0 )
                 }
 
                 /* Perform a round of encryption. */
                 let ciphertext = this.discordCrypt.aes256_encrypt_gcm(
                     plaintext,
                     key,
-                    this.padding_schemes[k],
+                    this.padding_schemes[ k ],
                     true,
                     false,
                     undefined,
@@ -222,33 +221,135 @@ class testGenerator
                 let _plaintext = this.discordCrypt.aes256_decrypt_gcm(
                     ciphertext,
                     key,
-                    this.padding_schemes[k],
+                    this.padding_schemes[ k ],
                     'hex',
                     true
                 );
 
                 /* Make sure that the plaintext generated matches the decrypted value. */
-                if(_plaintext !== plaintext.toString('hex')){
+                if ( _plaintext !== plaintext.toString( 'hex' ) ) {
                     l--;
-                    console.log(`Invalid test generated for ${this.ciphers[i].name}.`);
+                    console.log( `Invalid test generated for ${this.ciphers[ i ].name}.` );
                     continue;
                 }
 
                 /* Store the test result. */
-                aes_gcm.tests[0][k].r[l] = {};
+                aes_gcm.tests[ 0 ][ k ].r[ l ] = {};
 
-                aes_gcm.tests[0][k].r[l].plaintext = plaintext.toString('hex');
-                aes_gcm.tests[0][k].r[l].ciphertext = ciphertext;
+                aes_gcm.tests[ 0 ][ k ].r[ l ].plaintext = plaintext.toString( 'hex' );
+                aes_gcm.tests[ 0 ][ k ].r[ l ].ciphertext = ciphertext;
 
-                aes_gcm.tests[0][k].r[l].key = key.toString('hex');
-                aes_gcm.tests[0][k].r[l].salt = salt.toString('hex');
+                aes_gcm.tests[ 0 ][ k ].r[ l ].key = key.toString( 'hex' );
+                aes_gcm.tests[ 0 ][ k ].r[ l ].salt = salt.toString( 'hex' );
             }
         }
 
-        unit_tests[this.ciphers.length] = aes_gcm;
+        unit_tests[ this.ciphers.length ] = aes_gcm;
 
-        this.fs.writeFileSync(output_path, JSON.stringify(unit_tests, undefined, ' '));
+        this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
+    }
+
+    /* Generate hash test vectors. */
+    generateHashTests( /* int */ num_tests = 25, /* string */ output_path = './tests/hash-test-vectors.json' ) {
+        let unit_tests = [];
+        const hash_list = [
+            {
+                name: 'sha1',
+                length: 20,
+                hash: this.discordCrypt.sha160,
+            },
+            {
+                name: 'sha256',
+                length: 32,
+                hash: this.discordCrypt.sha256,
+            },
+            {
+                name: 'sha512',
+                length: 64,
+                hash: this.discordCrypt.sha512,
+            },
+            {
+                name: 'sha512_128',
+                length: 16,
+                hash: this.discordCrypt.sha512_128,
+            },
+            {
+                name: 'whirlpool',
+                length: 64,
+                hash: this.discordCrypt.whirlpool,
+            },
+            {
+                name: 'whirlpool64',
+                length: 8,
+                hash: this.discordCrypt.whirlpool64,
+            },
+            {
+                name: 'whirlpool192',
+                length: 24,
+                hash: this.discordCrypt.whirlpool192,
+            }
+        ];
+
+        for ( let i = 0; i < hash_list.length; i++ ) {
+            unit_tests[ i ] = {};
+
+            unit_tests[ i ].name = hash_list[ i ].name;
+            unit_tests[ i ].length = hash_list[ i ].length;
+            unit_tests[ i ].tests = [];
+
+            for ( let j = 0; j < num_tests; j++ ) {
+                let input = this.crypto.randomBytes( hash_list[ i ].length * ( j + 1 ) + j );
+
+                unit_tests[ i ].tests[ j ] = {};
+                unit_tests[ i ].tests[ j ].input = input.toString( 'hex' );
+                unit_tests[ i ].tests[ j ].output = hash_list[ i ].hash( input, true );
+            }
+        }
+
+        this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
+    }
+
+    /* Generate HMAC test vectors. */
+    generateHMACTests( /* int */ num_tests = 25, /* string */ output_path = './tests/hmac-test-vectors.json' ) {
+        let unit_tests = [];
+        const hmac_list = [
+            {
+                name: 'hmac_sha256',
+                length: 32,
+                hash: this.discordCrypt.hmac_sha256,
+            },
+            {
+                name: 'hmac_sha512',
+                length: 64,
+                hash: this.discordCrypt.hmac_sha512,
+            },
+            {
+                name: 'hmac_whirlpool',
+                length: 64,
+                hash: this.discordCrypt.hmac_whirlpool,
+            }
+        ];
+
+        for ( let i = 0; i < hmac_list.length; i++ ) {
+            unit_tests[ i ] = {};
+
+            unit_tests[ i ].name = hmac_list[ i ].name;
+            unit_tests[ i ].length = hmac_list[ i ].length;
+            unit_tests[ i ].tests = [];
+
+            for ( let j = 0; j < num_tests; j++ ) {
+                let input = this.crypto.randomBytes( hmac_list[ i ].length * ( j + 1 ) + j );
+                let salt = this.crypto.randomBytes( hmac_list[ i ].length * ( j + 1 ) + j );
+
+                unit_tests[ i ].tests[ j ] = {};
+                unit_tests[ i ].tests[ j ].input = input.toString( 'hex' );
+                unit_tests[ i ].tests[ j ].salt = salt.toString( 'hex' );
+                unit_tests[ i ].tests[ j ].output = hmac_list[ i ].hash( input, salt, true );
+            }
+        }
+
+        this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
     }
 }
 
-module.exports = testGenerator;
+module.exports = { testGenerator };
