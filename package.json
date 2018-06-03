@@ -4,7 +4,7 @@
   "description": "Secure messaging for the Discord app.",
   "main": "",
   "scripts": {
-    "coverage": "node node_modules/istanbul/lib/cli.js cover tests/perform-tests.js",
+    "coverage": "node node_modules/.bin/istanbul cover tests/perform-tests.js coverage",
     "test_scrypt": "node tests/perform-tests.js scrypt",
     "test_pbkdf2": "node tests/perform-tests.js pbkdf2",
     "test_ciphers": "node tests/perform-tests.js cipher",
