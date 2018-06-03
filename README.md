@@ -1,7 +1,5 @@
 <h1 align="center">
-    <sub>
-        <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" height="38" width="38">
-    </sub>
+    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" height="38" width="38">
     DiscordCrypt
 </h1>
 
