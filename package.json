@@ -22,6 +22,7 @@
   "dependencies": {
     "electron": "latest",
     "esdoc": "latest",
+    "esdoc-node": "^1.0.3",
     "esdoc-standard-plugin": "latest",
     "form-data": "latest",
     "fs": "latest",
@@ -33,4 +34,3 @@
     "request": "latest"
   }
 }
-
