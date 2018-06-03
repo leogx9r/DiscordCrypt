@@ -32,7 +32,7 @@ test:
    - node ./tests/perform-tests.js
   allow_failure: false
   except:
-   - development
+   - master
 
 # Perform code coverage only on the master & development branches.
 cover_test:
