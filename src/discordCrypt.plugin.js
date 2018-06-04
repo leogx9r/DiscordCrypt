@@ -1391,7 +1391,7 @@ class discordCrypt {
     }
 
     /**
-     * @name updateCallback
+     * @callback updateCallback
      * @param {string} file_data The update file's data.
      * @param {string} short_hash A 64-bit SHA-256 checksum of the new update.
      * @param {string} new_version The new version of the update.
@@ -3642,7 +3642,7 @@ class discordCrypt {
     /* ======================= UTILITIES ======================= */
 
     /**
-     * @name getResultCallback
+     * @callback getResultCallback
      * @param {int} statusCode The HTTP static code of the operation.
      * @param {string|null} The HTTP error string if an error occurred.
      * @param {string} data The returned data from the request.
@@ -3851,7 +3851,7 @@ class discordCrypt {
     }
 
     /**
-     * @name codeBlockDescriptor
+     * @callback codeBlockDescriptor
      * @param {int} start_pos The starting position of the code block.
      * @param {int} end_pos The ending position of the code block.
      * @param {string} language The language identifier of the code within this block.
@@ -4110,7 +4110,7 @@ class discordCrypt {
     }
 
     /**
-     * @name pbkdf2Callback
+     * @callback pbkdf2Callback
      * @param {string} error The error that occurred during processing or null on success.
      * @param {string} hash The hash either as a hex or Base64 encoded string ( or null on failure ).
      */
@@ -4548,7 +4548,7 @@ class discordCrypt {
     }
 
     /**
-     * @name encryptedFileCallback
+     * @callback encryptedFileCallback
      * @param {string} error_string The error that occurred during operation or null if no error occurred.
      * @param {Buffer} encrypted_data The resulting encrypted buffer as a Buffer() object.
      * @param {string} identity The encoded identity of the encrypted file.
@@ -4683,7 +4683,7 @@ class discordCrypt {
     }
 
     /**
-     * @name uploadedFileCallback
+     * @callback uploadedFileCallback
      * @param {string} error_string The error that occurred or null if no error occurred.
      * @param {string} file_url The URL of the uploaded file/
      * @param {string} deletion_link The link used to delete the file.
@@ -4765,7 +4765,7 @@ class discordCrypt {
     /* ============== NODE CRYPTO HASH PRIMITIVES ============== */
 
     /**
-     * @name scryptCallback
+     * @callback scryptCallback
      * @desc Callback must return false repeatedly upon each call to have Scrypt continue running.
      *      Once [progress] === 1.f AND [key] is defined, no further calls will be made.
      * @param {string} error The error message encountered or null.
@@ -5224,7 +5224,7 @@ class discordCrypt {
     }
 
     /**
-     * @name hashCallback
+     * @callback hashCallback
      * @param {string} error The error that occurred or null.
      * @param {string} hash The hex or Base64 encoded result.
      */
