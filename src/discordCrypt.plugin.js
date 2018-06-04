@@ -4457,12 +4457,91 @@ class discordCrypt {
      * @param {string} file_path The path to the file in question.
      * @returns {string} Returns the known file extension's MIME type or "application/octet-stream".
      */
-    static __up1GetMimeType( /* string */ file_path ) {
+    static __getFileMimeType( file_path ) {
         /* Look up the Mime type from the file extension. */
         let type = require( 'mime-types' ).lookup( require( 'path' ).extname( file_path ) );
 
         /* Default to an octet stream if it fails. */
         return type === false ? 'application/octet-stream' : type;
+    }
+
+    /**
+     * @private
+     * @desc Attempts to read the clipboard and converts either Images or text to raw Buffer() objects.
+     * @returns {{ mime_type: string, name: string|null, data: Buffer|null }} Contains clipboard data. May be null.
+     */
+    static __clipboardToBuffer( ) {
+        /* Request the clipboard object. */
+        let clipboard = require( 'electron' ).clipboard;
+        let fs = require( 'fs' );
+
+        /* The clipboard must have at least one type available. */
+        if ( clipboard.availableFormats().length === 0 )
+            return { mime_type: '', name: '', data: null };
+
+        /* Get all available formats. */
+        let mime_type = clipboard.availableFormats();
+        let data, tmp, name, is_file = false;
+
+        /* Loop over each format and try getting the data. */
+        for ( let i = 0; i < mime_type.length; i++ ) {
+            let format = mime_type[ i ].split( '/' );
+
+            /* For types, prioritize images. */
+            switch ( format[ 0 ] ) {
+                case 'image':
+                    /* Convert the image type. */
+                    switch ( format[ 1 ].toLowerCase() ) {
+                        case 'png':
+                            data = clipboard.readImage().toPNG();
+                            break;
+                        case 'bmp':
+                        case 'bitmap':
+                            data = clipboard.readImage().toBitmap();
+                            break;
+                        case 'jpg':
+                        case 'jepg':
+                            data = clipboard.readImage().toBitmap();
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 'text':
+                    tmp = clipboard.readText();
+
+                    /* For text, see if this is a file path. */
+                    if ( fs.existsSync( tmp ) ) {
+                        /* Read the file and store the file name. */
+                        data = fs.readFileSync( tmp );
+                        name = fs.basename( tmp );
+                        is_file = true;
+                    }
+                    else {
+                        /* Convert the text to a buffer. */
+                        data = new Buffer( tmp, 'utf8' );
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            /* Keep trying till it has at least a byte of data to return. */
+            if ( data && data.length > 0 ) {
+                /* If this is a file, try getting the file's MIME type. */
+                if ( is_file )
+                    mime_type[ i ] = discordCrypt.__getFileMimeType( tmp );
+
+                /* Return the data. */
+                return {
+                    mime_type: mime_type[ i ],
+                    name: name,
+                    data: data
+                }
+            }
+        }
+
+        return { mime_type: '', name: '', data: null };
     }
 
     /**
@@ -5115,6 +5194,46 @@ class discordCrypt {
      * @param {string} error The error that occurred or null.
      * @param {string} hash The hex or Base64 encoded result.
      */
+
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-160 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
+    static pbkdf2_sha160(
+        message,
+        salt,
+        to_hex,
+        message_is_hex = undefined,
+        salt_is_hex = undefined,
+        key_length = 32,
+        iterations = 5000,
+        callback = undefined
+    ) {
+        return discordCrypt.__pbkdf2(
+            message,
+            salt,
+            to_hex,
+            message_is_hex,
+            salt_is_hex,
+            callback,
+            'sha1',
+            key_length,
+            iterations
+        );
+    }
 
     /**
      * @public
