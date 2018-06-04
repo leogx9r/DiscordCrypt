@@ -26,8 +26,11 @@
 const nodeunit = require('nodeunit');
 
 class testRunner {
+    /**
+     * @desc Loads the SJCL library and discordCrypt.
+     */
     constructor() {
-        this.fs = require( 'fs' );
+        this.sjcl = require( './sjcl.js' );
         this.process = require( 'process' );
 
         this.discordCrypt = require( '../src/discordCrypt.plugin.js' ).discordCrypt;
@@ -35,6 +38,9 @@ class testRunner {
         this.discordCrypt_instance = new ( this.discordCrypt )();
     }
 
+    /**
+     * @desc Runs tests based on command line parameters.
+     */
     run() {
         /* Prepare the unit tests. */
         let unit_tests = {};
@@ -124,7 +130,11 @@ class testRunner {
         nodeunit.reporters.default.run( unit_tests );
     }
 
-    /* Runs Scrypt tests. */
+    /**
+     * @desc Adds Scrypt() based tests to the array specified.
+     * @param {Array} unit_tests An array of unit tests to run.
+     * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
+     */
     addScryptTests( unit_tests, coverage ) {
         const vectors = require( './scrypt-test-vectors' );
 
@@ -164,7 +174,11 @@ class testRunner {
         }
     }
 
-    /* Run PBKDF2 tests. */
+    /**
+     * @desc Adds PBKDF2() based tests to the array specified.
+     * @param {Array} unit_tests An array of unit tests to run.
+     * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
+     */
     addPBKDF2Tests( unit_tests, coverage ) {
 
         /* Load the test units. */
@@ -172,40 +186,49 @@ class testRunner {
         const hash_list = [
             {
                 name: 'sha1',
-                length: 20
+                length: 20,
+                fn: this.discordCrypt.pbkdf2_sha160
             },
             {
                 name: 'sha256',
-                length: 32
+                length: 32,
+                fn: this.discordCrypt.pbkdf2_sha256
             },
             {
                 name: 'sha512',
-                length: 64
+                length: 64,
+                fn: this.discordCrypt.pbkdf2_sha512
             },
             {
                 name: 'whirlpool',
-                length: 64
+                length: 64,
+                fn: this.discordCrypt.pbkdf2_whirlpool
             }
         ];
 
         /* Prepare the unit tests. */
         unit_tests.discordCrypt_pbkdf2 = {};
 
-        /* Run a unit for a target. */
-        function prepare_run( instance, name, hash_size, /* Object */ v ) {
+        /**
+         * @desc Adds the given PBKDF2 class of tests to the array.
+         * @param {testRunner} instance A reference to the current implementation of the test runner.
+         * @param {string} name The name of the hash class to run.
+         * @param {int} hash_size The size of the hash generated in bytes.
+         * @param {function} fn The PBKDF2 function for this hash.
+         * @param {Array} v The array of test vectors to run for this hash function.
+         */
+        function prepare_run( instance, name, hash_size, fn, v ) {
             for ( let i = 0; i < ( coverage === undefined ? v.length : 1 ); i++ ) {
                 let format =
                     `${name}: Test #${Object.keys( unit_tests.discordCrypt_pbkdf2 ).length}`;
 
                 unit_tests.discordCrypt_pbkdf2[ format ] = ( ut ) => {
-                    let hash = instance.discordCrypt.__pbkdf2(
+                    let hash = fn(
                         new Buffer( v[ i ].password, 'utf8' ),
                         new Buffer( v[ i ].salt, 'utf8' ),
                         true,
                         undefined,
                         undefined,
-                        undefined,
-                        name,
                         hash_size,
                         v[ i ].iterations
                     );
@@ -218,10 +241,14 @@ class testRunner {
 
         /* Register all tests. */
         for ( let i = 0; i < hash_list.length; i++ )
-            prepare_run( this, hash_list[ i ].name, hash_list[ i ].length, hash_vectors );
+            prepare_run( this, hash_list[ i ].name, hash_list[ i ].length, hash_list[ i ].fn, hash_vectors );
     }
 
-    /* Run hash tests. */
+    /**
+     * @desc Adds hash based tests to the array specified.
+     * @param {Array} unit_tests An array of unit tests to run.
+     * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
+     */
     addHashTests( unit_tests, coverage ) {
 
         /* Load the test units. */
@@ -267,8 +294,12 @@ class testRunner {
         /* Prepare the unit tests. */
         unit_tests.discordCrypt_hash = {};
 
-        /* Finds the hash algorithm. */
-        function find_hash_algorithm( /* string */ name ) {
+        /**
+         * @desc Finds the hash algorithm used for the given hash name.
+         * @param {string} name The name of the hash algorithm.
+         * @returns {function} The hash function used for this hash name.
+         */
+        function find_hash_algorithm( name ) {
             for ( let i = 0; i < hash_list.length; i++ )
                 if ( name == hash_list[ i ].name )
                     return hash_list[ i ].hash;
@@ -299,7 +330,11 @@ class testRunner {
         }
     }
 
-    /* Run hash tests. */
+    /**
+     * @desc Adds HMAC based tests to the array specified.
+     * @param {Array} unit_tests An array of unit tests to run.
+     * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
+     */
     addHMACTests( unit_tests, coverage ) {
 
         /* Load the test units. */
@@ -325,8 +360,12 @@ class testRunner {
         /* Prepare the unit tests. */
         unit_tests.discordCrypt_hmac = {};
 
-        /* Finds the hash algorithm. */
-        function find_hash_algorithm( /* string */ name ) {
+        /**
+         * @desc Finds the HMAC algorithm used for the given hash name.
+         * @param {string} name The name of the hash algorithm.
+         * @returns {function} The hash function used for this hash name.
+         */
+        function find_hmac_algorithm( name ) {
             for ( let i = 0; i < hmac_list.length; i++ )
                 if ( name == hmac_list[ i ].name )
                     return hmac_list[ i ].hash;
@@ -336,7 +375,7 @@ class testRunner {
         /* Register all tests types. */
         for ( let i = 0; i < hash_vectors.length; i++ ) {
             let name = hash_vectors[ i ].name;
-            let hash_algorithm = find_hash_algorithm( name );
+            let hash_algorithm = find_hmac_algorithm( name );
             let v = hash_vectors[ i ].tests;
 
             /* Run each test. */
@@ -358,12 +397,22 @@ class testRunner {
         }
     }
 
-    /* Run Cipher tests. */
+    /**
+     * @desc Adds cipher based tests to the array specified.
+     * @param {Array} unit_tests An array of unit tests to run.
+     * @param {string} preferred_cipher If specified, only the tests for this cipher is added.
+     * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
+     */
     addCipherTests( unit_tests, preferred_cipher = undefined, coverage ) {
         const vectors = require( './cipher-test-vectors.json' );
 
-        /* Locates the given array containing the target's test vectors. */
-        function locateTestVector( /* Array */ list, /* string */ name ) {
+        /**
+         * @desc Locates the given array containing the target's test vectors.
+         * @param {Array} list The list of test vectors.
+         * @param {string} name The name of the cipher.
+         * @returns {Object} Returns the cipher test vector object.
+         */
+        function locateTestVector( list, name ) {
             for ( let i = 0; i < list.length; i++ ) {
                 if ( list[ i ].full_name.toLowerCase() === name.toLowerCase() )
                     return list[ i ];
@@ -372,14 +421,15 @@ class testRunner {
             return null;
         }
 
-        /* Adds a cipher test list to be checked. */
-        function addCipherTest(
-            /* Object */     unit_tests,
-            /* string */     cipher_name,
-            /* Array */      test_vectors,
-            /* function() */ encrypt,
-            /* function() */ decrypt
-        ) {
+        /**
+         * @desc Adds a cipher test list to be checked.
+         * @param {Array} unit_tests An array of unit tests to run.
+         * @param {string} cipher_name If specified, only the tests for this cipher is added.
+         * @param {Array} test_vectors The full array of test vectors for this cipher.
+         * @param {function} encrypt The encryption function for this cipher.
+         * @param {function} decrypt The decryption function for this cipher.
+         */
+        function addCipherTest( unit_tests, cipher_name, test_vectors, encrypt, decrypt ) {
             /* Loop over each individual test. */
             for ( let i = 0; i < test_vectors.length; i++ ) {
                 /* Loop over the block mode and padding scheme array. */
@@ -593,7 +643,11 @@ class testRunner {
         }
     }
 
-    /* Run Diffie-Hellman exchange tests. */
+    /**
+     * @desc Adds diffie hellman key exchange based tests to the array specified.
+     * @param {Array} unit_tests An array of unit tests to run.
+     * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
+     */
     addDiffieHellmanTests( unit_tests, coverage ) {
         const algorithms = [
             {
@@ -656,26 +710,21 @@ class testRunner {
         }
     }
 
-    /* Adds generic plugin tests not classified by other types. */
-    addGenericTests( unit_tests ) {
-        let DiscordCrypt = this.discordCrypt_instance;
-        let discordCrypt = this.discordCrypt;
-
-        unit_tests.generic_tests = {};
-
+    /**
+     * @desc Adds general BetterDiscord based plugin tests.
+     * @param {Array} unit_tests An array of unit tests to run.
+     */
+    addPluginBasedTests( unit_tests ) {
         /* Test the plugin's ability to log things and overwrite the logger with a non-HTML formatted one. */
         unit_tests.generic_tests[ 'Logging' ] = ( ut ) => {
-            discordCrypt.log( 'Info', 'info' );
-            discordCrypt.log( 'Error', 'error' );
-            discordCrypt.log( 'Debug', 'debug' );
-            discordCrypt.log( 'Warning', 'warn' );
+            this.discordCrypt.log( 'Info', 'info' );
+            this.discordCrypt.log( 'Error', 'error' );
+            this.discordCrypt.log( 'Debug', 'debug' );
+            this.discordCrypt.log( 'Warning', 'warn' );
 
-            discordCrypt.log = ( /* string */ message, /* string */ method = "info" ) => {
-                try {
-                    console[ method ]( "[DiscordCrypt] - " + message );
-                }
-                catch ( ex ) {
-                }
+            this.discordCrypt.log = ( /* string */ message, /* string */ method = "info" ) => {
+                try { console[ method ]( "[DiscordCrypt] - " + message ); }
+                catch ( ex ) { }
             };
 
             ut.done();
@@ -683,20 +732,20 @@ class testRunner {
 
         /* List general BetterDiscord info. */
         unit_tests.generic_tests[ 'Plugin Info' ] = ( ut ) => {
-            discordCrypt.log( `Plugin: ${DiscordCrypt.getName()} v${DiscordCrypt.getVersion()}` );
-            discordCrypt.log( `Author: ${DiscordCrypt.getAuthor()}` );
-            discordCrypt.log( `Description: ${DiscordCrypt.getDescription()}` );
+            this.discordCrypt.log( `Plugin: ${this.discordCrypt_instance.getName()} v${this.discordCrypt_instance.getVersion()}` );
+            this.discordCrypt.log( `Author: ${this.discordCrypt_instance.getAuthor()}` );
+            this.discordCrypt.log( `Description: ${this.discordCrypt_instance.getDescription()}` );
 
-            discordCrypt.log( `Configuration:\n${JSON.stringify( DiscordCrypt.getDefaultConfig(), undefined, ' ' )}` );
+            this.discordCrypt.log( `Configuration:\n${JSON.stringify( this.discordCrypt_instance.getDefaultConfig(), undefined, ' ' )}` );
 
-            discordCrypt.log( `Path: ${discordCrypt.getPluginsPath()}` );
+            this.discordCrypt.log( `Path: ${this.discordCrypt.getPluginsPath()}` );
 
             ut.done();
         };
 
         /* Plugin update test.  */
         unit_tests.generic_tests[ 'Plugin Update' ] = ( ut ) => {
-            discordCrypt.checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) => {
+            this.discordCrypt.checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) => {
                 /* Only called if the master branch's hash doesn't match this file's. */
                 ut.equal( file_data.length > 0, true, 'Failed to retrieve update file.' );
                 ut.equal( short_hash.length > 0, true, 'Failed to retrieve update file hash.' );
@@ -707,14 +756,25 @@ class testRunner {
             /* Test will be completed regardless of if an update is found. */
             ut.done();
         };
+    }
+
+    /**
+     * @desc Adds generic plugin tests not classified by other types.
+     * @param {Array} unit_tests An array of unit tests to run.
+     */
+    addGenericTests( unit_tests ) {
+        unit_tests.generic_tests = {};
+
+        /* Add general plugin info tests. */
+        this.addPluginBasedTests( unit_tests );
 
         /* File upload test. */
         unit_tests.generic_tests[ 'Encrypted File Upload' ] = ( ut ) => {
-            discordCrypt.__up1UploadFile(
+            this.discordCrypt.__up1UploadFile(
                 './tests/test_generator.js',
                 'https://share.riseup.net',
                 '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
-                require( './sjcl' ),
+                this.sjcl,
                 ( error, file_url, deletion_link, seed ) => {
                     /* Succeeds only if the error is null. */
                     ut.equal( error, null );
@@ -724,10 +784,13 @@ class testRunner {
                     ut.equal( typeof deletion_link, 'string' );
 
                     ut.equal( typeof seed, 'string' );
+
+                    console.log( `✔ -> ${file_url}` );
+                    console.log( `✔ -> ${deletion_link}` );
+
+                    ut.done();
                 }
             );
-
-            ut.done();
         };
     }
 }
