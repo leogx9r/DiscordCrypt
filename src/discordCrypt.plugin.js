@@ -3907,7 +3907,10 @@ class discordCrypt {
      *      N.B. This does not remove the URLs from the message.
      * @param {string} message The message to extract the URLs from.
      * @returns {Array} Returns an array of URLs detected int the message.
-     * @private
+     * @example
+     * __extractUrls( 'Hello https://google.com' );
+     * //
+     * [ 'https://google.com' ]
      */
     static __extractUrls( message ) {
         /* This regex only extracts HTTP/HTTPS/FTP and FILE URLs. */
@@ -3931,6 +3934,19 @@ class discordCrypt {
      * @desc Extracts code blocks from a message and formats them in HTML to the proper format.
      * @param {string} message The message to format code blocks from.
      * @returns {{code: boolean, html: string}} Returns whether the message contains code blocks and the formatted HTML.
+     * @example
+     * __buildCodeBlockMessage('```\nHello World!\n```');
+     * //
+     * {
+     *      "code": true,
+     *      "html": "<div class=\"markup line-scanned\" data-colour=\"true\" style=\"color: rgb(111, 0, 0);\">
+     *                  <pre class=\"hljs\">
+     *                      <code class=\"dc-code-block hljs\" style=\"position: relative;\">
+     *                          <ol><li>Hello World!</li></ol>
+     *                      </code>
+     *                  </pre>
+     *              </div>"
+     * }
      */
     static __buildCodeBlockMessage( message ) {
         try {
