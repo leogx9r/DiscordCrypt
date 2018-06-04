@@ -410,5 +410,7 @@ A brief overview of the possible attack mechanisms we **ARE** aware of but unfor
 > Performing such an attack, while difficult due to the fact that all messages are sent via TLS to Discord's servers 
 > is possible if one **controls** these servers. It however cannot be done by a third party without breaking into or 
 > compromising Discord's SSL certificate.
+> 
+> [![https://i.imgur.com/Ti6BzSv.png](http://img.youtube.com/vi/vsXMMT2CqqE/0.jpg)](http://www.youtube.com/watch?v=vsXMMT2CqqE "MiTM Attacks") 
 >
 > **N.B. These attacks can only be performed during a key exchange as this is the only time reliance is placed on Discord.**
