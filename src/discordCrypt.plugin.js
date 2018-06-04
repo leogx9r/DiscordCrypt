@@ -64,7 +64,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.0.7';
+        return '1.0.7-debug';
     }
 
     /* ============================================================== */
@@ -981,10 +981,10 @@ class discordCrypt {
             /* Check for any new updates. */
             this.checkForUpdates();
 
-            /* Add an update handler to check for updates every 10 minutes. */
+            /* Add an update handler to check for updates every 60 minutes. */
             this.updateHandlerInterval = setInterval( () => {
                 self.checkForUpdates();
-            }, 600000 );
+            }, 3600000 );
         }
     }
 
