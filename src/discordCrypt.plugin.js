@@ -4453,183 +4453,6 @@ class discordCrypt {
 
     /**
      * @public
-     * @desc Encrypts the given plain-text message using the algorithm specified.
-     * @param {string} symmetric_cipher The name of the symmetric cipher used to encrypt the message.
-     *      This must be supported by NodeJS's crypto module.
-     * @param {string} block_mode The block operation mode of the cipher.
-     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
-     * @param {string} padding_scheme The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
-     * @param {string|Buffer|Array} message The input message to encrypt.
-     * @param {string|Buffer|Array} key The key used with the encryption cipher.
-     * @param {boolean} convert_to_hex If true, the ciphertext is converted to a hex string, if false, it is
-     *      converted to a Base64 string.
-     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
-     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
-     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
-     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
-     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
-     *      Key used to encrypt the message.
-     * @returns {Buffer|null} Returns a Buffer() object containing the ciphertext or null if the chosen options are
-     *      invalid.
-     * @throws Exception indicating the error that occurred.
-     */
-    static __encrypt(
-        symmetric_cipher,
-        block_mode,
-        padding_scheme,
-        message,
-        key,
-        convert_to_hex,
-        is_message_hex,
-        key_size_bits = 256,
-        block_cipher_size = 128,
-        one_time_salt = undefined
-    ) {
-        const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
-        const crypto = require( 'crypto' );
-
-        /* Buffered parameters. */
-        let _message, _key, _iv, _salt, _derived, _encrypt;
-
-        /* Make sure the cipher name and mode is valid first. */
-        if (
-            !discordCrypt.__isValidCipher( cipher_name ) || [ 'cbc', 'cfb', 'ofb' ]
-                .indexOf( block_mode.toLowerCase() ) === -1
-        )
-            return null;
-
-        /* Pad the message to the nearest block boundary. */
-        _message = discordCrypt.__padMessage( message, padding_scheme, key_size_bits, is_message_hex );
-
-        /* Get the key as a buffer. */
-        _key = discordCrypt.__validateKeyIV( key, key_size_bits );
-
-        /* Check if using a predefined salt. */
-        if ( one_time_salt !== undefined ) {
-            /* Convert the salt to a Buffer. */
-            _salt = discordCrypt.__toBuffer( one_time_salt );
-
-            /* Don't bother continuing if conversions have failed. */
-            if ( !_salt || _salt.length === 0 )
-                return null;
-
-            /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
-            if ( _salt.length !== 8 )
-                _salt = new Buffer( discordCrypt.whirlpool64( _salt, true ), 'hex' );
-        }
-        else
-        /* Generate a random salt to derive the key and IV. */
-            _salt = crypto.randomBytes( 8 );
-
-        /* Derive the key length and IV length. */
-        _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
-            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), 1000 );
-
-        /* Slice off the IV. */
-        _iv = _derived.slice( 0, block_cipher_size / 8 );
-
-        /* Slice off the key. */
-        _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
-
-        /* Create the cipher with derived IV and key. */
-        _encrypt = crypto.createCipheriv( cipher_name, _key, _iv );
-
-        /* Disable automatic PKCS #7 padding. We do this in-house. */
-        _encrypt.setAutoPadding( false );
-
-        /* Get the cipher text. */
-        let _ct = _encrypt.update( _message, undefined, 'hex' );
-        _ct += _encrypt.final( 'hex' );
-
-        /* Return the result with the prepended salt. */
-        return new Buffer( _salt.toString( 'hex' ) + _ct, 'hex' ).toString( convert_to_hex ? 'hex' : 'base64' );
-    }
-
-    /**
-     * @public
-     * @desc Decrypts the given cipher-text message using the algorithm specified.
-     * @param {string} symmetric_cipher The name of the symmetric cipher used to decrypt the message.
-     *      This must be supported by NodeJS's crypto module.
-     * @param {string} block_mode The block operation mode of the cipher.
-     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
-     * @param {string} padding_scheme The padding scheme used to unpad the message from the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
-     * @param {string|Buffer|Array} message The input ciphertext message to decrypt.
-     * @param {string|Buffer|Array} key The key used with the decryption cipher.
-     * @param {boolean} output_format The output format of the plaintext.
-     *      Can be either [ 'utf8', 'latin1', 'hex', 'base64' ]
-     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
-     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
-     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
-     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
-     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
-     * options are invalid.
-     * @throws Exception indicating the error that occurred.
-     */
-    static __decrypt(
-        symmetric_cipher,
-        block_mode,
-        padding_scheme,
-        message,
-        key,
-        output_format,
-        is_message_hex,
-        key_size_bits = 256,
-        block_cipher_size = 128
-    ) {
-        const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
-        const crypto = require( 'crypto' );
-
-        /* Buffered parameters. */
-        let _message, _key, _iv, _salt, _derived, _decrypt;
-
-        /* Make sure the cipher name and mode is valid first. */
-        if ( !discordCrypt.__isValidCipher( cipher_name ) || [ 'cbc', 'ofb', 'cfb' ]
-            .indexOf( block_mode.toLowerCase() ) === -1 )
-            return null;
-
-        /* Get the message as a buffer. */
-        _message = discordCrypt.__validateMessage( message, is_message_hex );
-
-        /* Get the key as a buffer. */
-        _key = discordCrypt.__validateKeyIV( key, key_size_bits );
-
-        /* Retrieve the 64-bit salt. */
-        _salt = _message.slice( 0, 8 );
-
-        /* Derive the key length and IV length. */
-        _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
-            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), 1000 );
-
-        /* Slice off the IV. */
-        _iv = _derived.slice( 0, block_cipher_size / 8 );
-
-        /* Slice off the key. */
-        _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
-
-        /* Splice the message. */
-        _message = _message.slice( 8 );
-
-        /* Create the cipher with IV. */
-        _decrypt = crypto.createDecipheriv( cipher_name, _key, _iv );
-
-        /* Disable automatic PKCS #7 padding. We do this in-house. */
-        _decrypt.setAutoPadding( false );
-
-        /* Decrypt the cipher text. */
-        let _pt = _decrypt.update( _message, undefined, 'hex' );
-        _pt += _decrypt.final( 'hex' );
-
-        /* Unpad the message. */
-        _pt = discordCrypt.__padMessage( _pt, padding_scheme, key_size_bits, true, true );
-
-        /* Return the buffer. */
-        return _pt.toString( output_format );
-    }
-
-    /**
-     * @public
      * @desc Returns the string encoded mime type of a file based on the file extension.
      * @param {string} file_path The path to the file in question.
      * @returns {string} Returns the known file extension's MIME type or "application/octet-stream".
@@ -5419,6 +5242,188 @@ class discordCrypt {
 
     /**
      * @public
+     * @desc Encrypts the given plain-text message using the algorithm specified.
+     * @param {string} symmetric_cipher The name of the symmetric cipher used to encrypt the message.
+     *      This must be supported by NodeJS's crypto module.
+     * @param {string} block_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_scheme The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {boolean} convert_to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
+     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {Buffer|null} Returns a Buffer() object containing the ciphertext or null if the chosen options are
+     *      invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static __encrypt(
+        symmetric_cipher,
+        block_mode,
+        padding_scheme,
+        message,
+        key,
+        convert_to_hex,
+        is_message_hex,
+        key_size_bits = 256,
+        block_cipher_size = 128,
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
+        const crypto = require( 'crypto' );
+
+        /* Buffered parameters. */
+        let _message, _key, _iv, _salt, _derived, _encrypt;
+
+        /* Make sure the cipher name and mode is valid first. */
+        if (
+            !discordCrypt.__isValidCipher( cipher_name ) || [ 'cbc', 'cfb', 'ofb' ]
+                .indexOf( block_mode.toLowerCase() ) === -1
+        )
+            return null;
+
+        /* Pad the message to the nearest block boundary. */
+        _message = discordCrypt.__padMessage( message, padding_scheme, key_size_bits, is_message_hex );
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV( key, key_size_bits );
+
+        /* Check if using a predefined salt. */
+        if ( one_time_salt !== undefined ) {
+            /* Convert the salt to a Buffer. */
+            _salt = discordCrypt.__toBuffer( one_time_salt );
+
+            /* Don't bother continuing if conversions have failed. */
+            if ( !_salt || _salt.length === 0 )
+                return null;
+
+            /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
+            if ( _salt.length !== 8 )
+                _salt = new Buffer( discordCrypt.whirlpool64( _salt, true ), 'hex' );
+        }
+        else
+        /* Generate a random salt to derive the key and IV. */
+            _salt = crypto.randomBytes( 8 );
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+
+        /* Slice off the IV. */
+        _iv = _derived.slice( 0, block_cipher_size / 8 );
+
+        /* Slice off the key. */
+        _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
+
+        /* Create the cipher with derived IV and key. */
+        _encrypt = crypto.createCipheriv( cipher_name, _key, _iv );
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _encrypt.setAutoPadding( false );
+
+        /* Get the cipher text. */
+        let _ct = _encrypt.update( _message, undefined, 'hex' );
+        _ct += _encrypt.final( 'hex' );
+
+        /* Return the result with the prepended salt. */
+        return new Buffer( _salt.toString( 'hex' ) + _ct, 'hex' ).toString( convert_to_hex ? 'hex' : 'base64' );
+    }
+
+    /**
+     * @public
+     * @desc Decrypts the given cipher-text message using the algorithm specified.
+     * @param {string} symmetric_cipher The name of the symmetric cipher used to decrypt the message.
+     *      This must be supported by NodeJS's crypto module.
+     * @param {string} block_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_scheme The padding scheme used to unpad the message from the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     * @param {string|Buffer|Array} message The input ciphertext message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {boolean} output_format The output format of the plaintext.
+     *      Can be either [ 'utf8', 'latin1', 'hex', 'base64' ]
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
+     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     * options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static __decrypt(
+        symmetric_cipher,
+        block_mode,
+        padding_scheme,
+        message,
+        key,
+        output_format,
+        is_message_hex,
+        key_size_bits = 256,
+        block_cipher_size = 128,
+        kdf_iteration_rounds = 1000
+    ) {
+        const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
+        const crypto = require( 'crypto' );
+
+        /* Buffered parameters. */
+        let _message, _key, _iv, _salt, _derived, _decrypt;
+
+        /* Make sure the cipher name and mode is valid first. */
+        if ( !discordCrypt.__isValidCipher( cipher_name ) || [ 'cbc', 'ofb', 'cfb' ]
+            .indexOf( block_mode.toLowerCase() ) === -1 )
+            return null;
+
+        /* Get the message as a buffer. */
+        _message = discordCrypt.__validateMessage( message, is_message_hex );
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV( key, key_size_bits );
+
+        /* Retrieve the 64-bit salt. */
+        _salt = _message.slice( 0, 8 );
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+
+        /* Slice off the IV. */
+        _iv = _derived.slice( 0, block_cipher_size / 8 );
+
+        /* Slice off the key. */
+        _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
+
+        /* Splice the message. */
+        _message = _message.slice( 8 );
+
+        /* Create the cipher with IV. */
+        _decrypt = crypto.createDecipheriv( cipher_name, _key, _iv );
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _decrypt.setAutoPadding( false );
+
+        /* Decrypt the cipher text. */
+        let _pt = _decrypt.update( _message, undefined, 'hex' );
+        _pt += _decrypt.final( 'hex' );
+
+        /* Unpad the message. */
+        _pt = discordCrypt.__padMessage( _pt, padding_scheme, key_size_bits, true, true );
+
+        /* Return the buffer. */
+        return _pt.toString( output_format );
+    }
+
+
+    /**
+     * @public
      * @desc Blowfish encrypts a message.
      * @param {string|Buffer|Array} message The input message to encrypt.
      * @param {string|Buffer|Array} key The key used with the encryption cipher.
@@ -5432,6 +5437,7 @@ class discordCrypt {
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
      * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
      *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
      * @throws An exception indicating the error that occurred.
      */
@@ -5442,7 +5448,8 @@ class discordCrypt {
         padding_mode,
         to_hex = false,
         is_message_hex = undefined,
-        one_time_salt = undefined
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for Blowfish. */
         const keySize = 512, blockSize = 64;
@@ -5458,7 +5465,8 @@ class discordCrypt {
             is_message_hex,
             keySize,
             blockSize,
-            one_time_salt
+            one_time_salt,
+            kdf_iteration_rounds
         );
     }
 
@@ -5475,6 +5483,7 @@ class discordCrypt {
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
      *      options are invalid.
      * @throws Exception indicating the error that occurred.
@@ -5485,7 +5494,8 @@ class discordCrypt {
         cipher_mode,
         padding_mode,
         output_format = 'utf8',
-        is_message_hex = undefined
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for Blowfish. */
         const keySize = 512, blockSize = 64;
@@ -5500,7 +5510,8 @@ class discordCrypt {
             output_format,
             is_message_hex,
             keySize,
-            blockSize
+            blockSize,
+            kdf_iteration_rounds
         );
     }
 
@@ -5519,6 +5530,7 @@ class discordCrypt {
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
      * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
      *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
      * @throws An exception indicating the error that occurred.
      */
@@ -5529,7 +5541,8 @@ class discordCrypt {
         padding_mode,
         to_hex = false,
         is_message_hex = undefined,
-        one_time_salt = undefined
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for AES-256. */
         const keySize = 256, blockSize = 128;
@@ -5545,7 +5558,8 @@ class discordCrypt {
             is_message_hex,
             keySize,
             blockSize,
-            one_time_salt
+            one_time_salt,
+            kdf_iteration_rounds
         );
     }
 
@@ -5562,6 +5576,7 @@ class discordCrypt {
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
      *      options are invalid.
      * @throws Exception indicating the error that occurred.
@@ -5572,7 +5587,8 @@ class discordCrypt {
         cipher_mode,
         padding_mode,
         output_format = 'utf8',
-        is_message_hex = undefined
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for AES-256. */
         const keySize = 256, blockSize = 128;
@@ -5587,7 +5603,8 @@ class discordCrypt {
             output_format,
             is_message_hex,
             keySize,
-            blockSize
+            blockSize,
+            kdf_iteration_rounds
         );
     }
 
@@ -5607,6 +5624,7 @@ class discordCrypt {
      *      authentication.
      * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
      *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
      * @throws An exception indicating the error that occurred.
      */
@@ -5617,7 +5635,8 @@ class discordCrypt {
         to_hex = false,
         is_message_hex = undefined,
         additional_data = undefined,
-        one_time_salt = undefined
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         const block_cipher_size = 128, key_size_bits = 256;
         const cipher_name = 'aes-256-gcm';
@@ -5650,7 +5669,7 @@ class discordCrypt {
 
         /* Derive the key length and IV length. */
         _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
-            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), 1000 );
+            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
         /* Slice off the IV. */
         _iv = _derived.slice( 0, block_cipher_size / 8 );
@@ -5692,6 +5711,7 @@ class discordCrypt {
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
      * @param {string|Buffer|Array} [additional_data] If specified, this additional data is used during GCM
      *      authentication.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
      *      options are invalid.
      * @throws Exception indicating the error that occurred.
@@ -5702,7 +5722,8 @@ class discordCrypt {
         padding_mode,
         output_format = 'utf8',
         is_message_hex = undefined,
-        additional_data = undefined
+        additional_data = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         const block_cipher_size = 128, key_size_bits = 256;
         const cipher_name = 'aes-256-gcm';
@@ -5731,7 +5752,7 @@ class discordCrypt {
 
         /* Derive the key length and IV length. */
         _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
-            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), 1000 );
+            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
         /* Slice off the IV. */
         _iv = _derived.slice( 0, block_cipher_size / 8 );
@@ -5778,6 +5799,7 @@ class discordCrypt {
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
      * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
      *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
      * @throws An exception indicating the error that occurred.
      */
@@ -5788,7 +5810,8 @@ class discordCrypt {
         padding_mode,
         to_hex = false,
         is_message_hex = undefined,
-        one_time_salt = undefined
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for Camellia-256. */
         const keySize = 256, blockSize = 128;
@@ -5804,7 +5827,8 @@ class discordCrypt {
             is_message_hex,
             keySize,
             blockSize,
-            one_time_salt
+            one_time_salt,
+            kdf_iteration_rounds
         );
     }
 
@@ -5821,6 +5845,7 @@ class discordCrypt {
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
      *      options are invalid.
      * @throws Exception indicating the error that occurred.
@@ -5831,7 +5856,8 @@ class discordCrypt {
         cipher_mode,
         padding_mode,
         output_format = 'utf8',
-        is_message_hex = undefined
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for Camellia-256. */
         const keySize = 256, blockSize = 128;
@@ -5846,7 +5872,8 @@ class discordCrypt {
             output_format,
             is_message_hex,
             keySize,
-            blockSize
+            blockSize,
+            kdf_iteration_rounds
         );
     }
 
@@ -5865,6 +5892,7 @@ class discordCrypt {
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
      * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
      *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
      * @throws An exception indicating the error that occurred.
      */
@@ -5875,7 +5903,8 @@ class discordCrypt {
         padding_mode,
         to_hex = false,
         is_message_hex = undefined,
-        one_time_salt = undefined
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for TripleDES-192. */
         const keySize = 192, blockSize = 64;
@@ -5891,7 +5920,8 @@ class discordCrypt {
             is_message_hex,
             keySize,
             blockSize,
-            one_time_salt
+            one_time_salt,
+            kdf_iteration_rounds
         );
     }
 
@@ -5908,6 +5938,7 @@ class discordCrypt {
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
      *      options are invalid.
      * @throws Exception indicating the error that occurred.
@@ -5918,7 +5949,8 @@ class discordCrypt {
         cipher_mode,
         padding_mode,
         output_format = 'utf8',
-        is_message_hex = undefined
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for TripleDES-192. */
         const keySize = 192, blockSize = 64;
@@ -5933,7 +5965,8 @@ class discordCrypt {
             output_format,
             is_message_hex,
             keySize,
-            blockSize
+            blockSize,
+            kdf_iteration_rounds
         );
     }
 
@@ -5952,6 +5985,7 @@ class discordCrypt {
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
      * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
      *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
      * @throws An exception indicating the error that occurred.
      */
@@ -5962,7 +5996,8 @@ class discordCrypt {
         padding_mode,
         to_hex = false,
         is_message_hex = undefined,
-        one_time_salt = undefined
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for IDEA-128. */
         const keySize = 128, blockSize = 64;
@@ -5978,7 +6013,8 @@ class discordCrypt {
             is_message_hex,
             keySize,
             blockSize,
-            one_time_salt
+            one_time_salt,
+            kdf_iteration_rounds
         );
     }
 
@@ -5995,6 +6031,7 @@ class discordCrypt {
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
      *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
      * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
      *      options are invalid.
      * @throws Exception indicating the error that occurred.
@@ -6005,7 +6042,8 @@ class discordCrypt {
         cipher_mode,
         padding_mode,
         output_format = 'utf8',
-        is_message_hex = undefined
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
     ) {
         /* Size constants for IDEA-128. */
         const keySize = 128, blockSize = 64;
@@ -6020,7 +6058,8 @@ class discordCrypt {
             output_format,
             is_message_hex,
             keySize,
-            blockSize
+            blockSize,
+            kdf_iteration_rounds
         );
     }
 
