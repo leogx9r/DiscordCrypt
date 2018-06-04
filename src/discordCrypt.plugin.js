@@ -1660,17 +1660,20 @@ class discordCrypt {
                 embed: {
                     type: "rich",
                     url: "https://gitlab.com/leogx9r/DiscordCrypt",
-                    color: embedded_color === undefined ? 0x551A8B : embedded_color,
+                    color: embedded_color || 0x551A8B,
                     timestamp: ( new Date() ).toISOString(),
                     output_mime_type: "text/x-html",
                     encoding: "utf-16",
                     author: {
-                        name: embedded_header !== undefined ? embedded_header : '-----MESSAGE-----',
-                        icon_url: 'https://i.imgur.com/NC0PcLA.png'
+                        name: embedded_header || '-----MESSAGE-----',
+                        icon_url: 'https://i.imgur.com/NC0PcLA.png',
+                        url: 'https://gitlab.com/leogx9r/DiscordCrypt'
                     },
                     footer: {
-                        text: embedded_footer !== undefined ? embedded_footer : 'DiscordCrypt',
-                        icon_url: 'https://i.imgur.com/9y1uGB0.png'
+                        text: embedded_footer || 'DiscordCrypt',
+                        icon_url: 'https://i.imgur.com/9y1uGB0.png',
+                        url: 'https://gitlab.com/leogx9r/DiscordCrypt/tags/' +
+                            embedded_footer[ 0 ] === 'v' ? embedded_footer : ''
                     },
                     description: embedded_text,
                 }
@@ -2549,7 +2552,7 @@ class discordCrypt {
             discordCrypt.sendEmbeddedMessage(
                 msg,
                 this.messageHeader,
-                'v' + this.getVersion(),
+                'v' + this.getVersion().replace( '-debug', '' ),
                 0x551A8B,
                 user_tags
             );
