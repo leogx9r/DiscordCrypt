@@ -4553,17 +4553,16 @@ class discordCrypt {
      */
 
     /**
-     * @private
-     * @desc Performs AES-256 CCM encryption of the given file and converts it to the expected Up1 format.
-     * @param {string} file_path The path to the file to encrypt.
-     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
-     * @param {encryptedFileCallback} callback The callback function for when the file has been encrypted.
-     * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+     * @public
+     * @desc Uploads the specified buffer to Up1's format specifications and returns this data to the callback.
+     * @param {Buffer} data The input buffer to encrypt.
+     * @param {string} mime_type The MIME type of this file.
+     * @param {string} file_name The name of this file.
+     * @param {Object} sjcl The loaded Stanford Javascript Crypto Library.
+     * @param {encryptedFileCallback} callback The callback function that will be called on error or completion.
      */
-    static __up1EncryptData( file_path, sjcl, callback, randomize_file_name = false ) {
+    static __up1EncryptBuffer( data, mime_type, file_name, sjcl, callback ){
         const crypto = require( 'crypto' );
-        const path = require( 'path' );
-        const fs = require( 'fs' );
 
         /* Returns a parameter object from the input seed. */
         function getParams( /* string|Buffer|Array|Uint8Array */ seed ) {
@@ -4591,11 +4590,62 @@ class discordCrypt {
             let buf = new Buffer( str.length * 2 );
 
             /* Loop over each byte. */
-            for ( let i = 0, strLen = str.length; i < strLen; i++ )
+            for ( let i = 0, strLen = str.length; i < strLen; i++ ) {
                 /* Write the UTF-16 equivalent in Big Endian. */
                 buf.writeUInt16BE( str.charCodeAt( i ), i * 2 );
+            }
+
             return buf;
         }
+
+        try {
+            /* Make sure the file size is less than 50 MB. */
+            if ( data.length > 50000000 ) {
+                callback( 'Input size must be < 50 MB.' );
+                return;
+            }
+
+            /* Calculate the upload header and append the file data to it prior to encryption. */
+            data = Buffer.concat( [
+                str2ab( JSON.stringify( { 'mime': mime_type, 'name': file_name } ) ),
+                new Buffer( [ 0, 0 ] ),
+                data
+            ] );
+
+            /* Convert the file to a Uint8Array() then to SJCL's bit buffer. */
+            data = sjcl.codec.bytes.toBits( new Uint8Array( data ) );
+
+            /* Generate a random 128 bit seed and calculate the key and IV from this. */
+            let params = getParams( crypto.randomBytes( 16 ) );
+
+            /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
+            data = sjcl.arrayBuffer.ccm.compat_encrypt( new sjcl.cipher.aes( params.key ), data, params.iv );
+
+            /* Execute the callback. */
+            callback(
+                null,
+                new Buffer( sjcl.codec.bytes.fromBits( data ) ),
+                sjcl.codec.base64url.fromBits( params.ident ),
+                sjcl.codec.base64url.fromBits( params.seed )
+            );
+        }
+        catch ( ex ) {
+            callback( ex.toString() );
+        }
+    }
+
+    /**
+     * @private
+     * @desc Performs AES-256 CCM encryption of the given file and converts it to the expected Up1 format.
+     * @param {string} file_path The path to the file to encrypt.
+     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+     * @param {encryptedFileCallback} callback The callback function for when the file has been encrypted.
+     * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+     */
+    static __up1EncryptFile( file_path, sjcl, callback, randomize_file_name = false ) {
+        const crypto = require( 'crypto' );
+        const path = require( 'path' );
+        const fs = require( 'fs' );
 
         try {
             /* Make sure the file size is less than 50 MB. */
@@ -4612,35 +4662,16 @@ class discordCrypt {
                     return;
                 }
 
-                /* Calculate the upload header and append the file data to it prior to encryption. */
-                file_data = Buffer.concat( [
-                    str2ab( JSON.stringify( {
-                        'mime': discordCrypt.__up1GetMimeType( file_path ),
-                        'name': randomize_file_name ?
-                            crypto.pseudoRandomBytes( 8 ).toString( 'hex' ) + path.extname( file_path ) :
-                            path.basename( file_path )
-                    } ) ),
-                    new Buffer( [ 0, 0 ] ),
-                    file_data
-                ] );
-
-                /* Convert the file to a Uint8Array() then to SJCL's bit buffer. */
-                file_data = sjcl.codec.bytes.toBits( new Uint8Array( file_data ) );
-
-                /* Generate a random 128 bit seed and calculate the key and IV from this. */
-                let params = getParams( crypto.randomBytes( 16 ) );
-
-                /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
-                file_data = sjcl.arrayBuffer.ccm
-                    .compat_encrypt( new sjcl.cipher.aes( params.key ), file_data, params.iv );
-
-                /* Execute the callback. */
-                callback(
-                    null,
-                    new Buffer( sjcl.codec.bytes.fromBits( file_data ) ),
-                    sjcl.codec.base64url.fromBits( params.ident ),
-                    sjcl.codec.base64url.fromBits( params.seed )
-                );
+                /* Encrypt the file data. */
+                discordCrypt.__up1EncryptBuffer(
+                    file_data,
+                    discordCrypt.__getFileMimeType( file_path ),
+                    randomize_file_name ?
+                        crypto.pseudoRandomBytes( 8 ).toString( 'hex' ) + path.extname( file_path ) :
+                        path.basename( file_path ),
+                    sjcl,
+                    callback
+                )
             } );
         }
         catch ( ex ) {
@@ -4675,7 +4706,7 @@ class discordCrypt {
         /* boolean */ randomize_file_name = false
     ) {
         /* Encrypt the file data first. */
-        this.__up1EncryptData(
+        this.__up1EncryptFile(
             file_path,
             sjcl,
             ( error_string, encrypted_data, identity, encoded_seed ) => {
