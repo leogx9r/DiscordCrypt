@@ -46,7 +46,7 @@ function addScryptTests(loaded_blob, unit_tests, coverage) {
     let num_tests = coverage === undefined ? vectors.length : 1;
     for ( let i = 0; i < num_tests; i++ ) {
         let v = vectors[ i ],
-            k = `Test #${Object.keys( unit_tests.discordCrypt_scrypt ).length + 1}: [ N: ${v.N} p: ${v.p} r: ${v.r} ]`;
+            k = `Test #${Object.keys( unit_tests.discordCrypt_scrypt ).length + 1}: [ N: ${v.N} r: ${v.r} p: ${v.p} ]`;
 
         /* Create a function callback for this test name. */
         unit_tests.discordCrypt_scrypt[ k ] = ( ut ) => {

@@ -4868,85 +4868,88 @@ class discordCrypt {
             }
         }
 
-        /* Performs an XOR on a block. */
-        function XOR_BLOCK( S, Si, D, L ) {
-            for ( let i = 0; i < L; i++ )
-                D[ i ] ^= S[ Si + i ];
-        }
+        /**
+         * @private
+         * @desc Mixes a block and performs SALSA20 on it.
+         * @param {Uint32Array} BY
+         * @param {int} Yi
+         * @param {int} r
+         * @param {Uint32Array} x
+         * @param {Uint32Array} _X
+         */
+        function Salsa20_BlockMix( BY, Yi, r, x, _X ) {
+            let i, j, k, l;
 
-        /* Copies the source array to the destination array. */
-        function ArrayCopy( src, srcPos, dest, destPos, length ) {
-            while ( length-- )
-                dest[ destPos++ ] = src[ srcPos++ ];
-        }
-
-        /* Performs SALSA-20 on the block. */
-        function XSALSA_20( B, x ) {
-            ArrayCopy( B, 0, x, 0, 16 );
-
-            /**
-             * @return {number}
-             */
-            function R( a, b ) {
-                return ( a << b ) | ( a >>> ( 32 - b ) );
-            }
-
-            for ( let i = 8; i > 0; i -= 2 ) {
-                x[ 4 ] ^= R( x[ 0 ] + x[ 12 ], 7 );
-                x[ 8 ] ^= R( x[ 4 ] + x[ 0 ], 9 );
-                x[ 12 ] ^= R( x[ 8 ] + x[ 4 ], 13 );
-                x[ 0 ] ^= R( x[ 12 ] + x[ 8 ], 18 );
-                x[ 9 ] ^= R( x[ 5 ] + x[ 1 ], 7 );
-                x[ 13 ] ^= R( x[ 9 ] + x[ 5 ], 9 );
-                x[ 1 ] ^= R( x[ 13 ] + x[ 9 ], 13 );
-                x[ 5 ] ^= R( x[ 1 ] + x[ 13 ], 18 );
-                x[ 14 ] ^= R( x[ 10 ] + x[ 6 ], 7 );
-                x[ 2 ] ^= R( x[ 14 ] + x[ 10 ], 9 );
-                x[ 6 ] ^= R( x[ 2 ] + x[ 14 ], 13 );
-                x[ 10 ] ^= R( x[ 6 ] + x[ 2 ], 18 );
-                x[ 3 ] ^= R( x[ 15 ] + x[ 11 ], 7 );
-                x[ 7 ] ^= R( x[ 3 ] + x[ 15 ], 9 );
-                x[ 11 ] ^= R( x[ 7 ] + x[ 3 ], 13 );
-                x[ 15 ] ^= R( x[ 11 ] + x[ 7 ], 18 );
-                x[ 1 ] ^= R( x[ 0 ] + x[ 3 ], 7 );
-                x[ 2 ] ^= R( x[ 1 ] + x[ 0 ], 9 );
-                x[ 3 ] ^= R( x[ 2 ] + x[ 1 ], 13 );
-                x[ 0 ] ^= R( x[ 3 ] + x[ 2 ], 18 );
-                x[ 6 ] ^= R( x[ 5 ] + x[ 4 ], 7 );
-                x[ 7 ] ^= R( x[ 6 ] + x[ 5 ], 9 );
-                x[ 4 ] ^= R( x[ 7 ] + x[ 6 ], 13 );
-                x[ 5 ] ^= R( x[ 4 ] + x[ 7 ], 18 );
-                x[ 11 ] ^= R( x[ 10 ] + x[ 9 ], 7 );
-                x[ 8 ] ^= R( x[ 11 ] + x[ 10 ], 9 );
-                x[ 9 ] ^= R( x[ 8 ] + x[ 11 ], 13 );
-                x[ 10 ] ^= R( x[ 9 ] + x[ 8 ], 18 );
-                x[ 12 ] ^= R( x[ 15 ] + x[ 14 ], 7 );
-                x[ 13 ] ^= R( x[ 12 ] + x[ 15 ], 9 );
-                x[ 14 ] ^= R( x[ 13 ] + x[ 12 ], 13 );
-                x[ 15 ] ^= R( x[ 14 ] + x[ 13 ], 18 );
-            }
-
-            for ( let i = 0; i < 16; ++i )
-                B[ i ] += x[ i ];
-        }
-
-        /* Mixes a block and performs SALSA20 on it. */
-        function BLOCKMIX_SALSA20( BY, Yi, r, x, _X ) {
-            let i;
-
-            ArrayCopy( BY, ( 2 * r - 1 ) * 16, _X, 0, 16 );
+            for ( i = 0, j = ( 2 * r - 1 ) * 16; i < 16; i++ )
+                _X[ i ] = BY[ j + i ];
 
             for ( i = 0; i < 2 * r; i++ ) {
-                XOR_BLOCK( BY, i * 16, _X, 16 );
-                XSALSA_20( _X, x );
-                ArrayCopy( _X, 0, BY, Yi + ( i * 16 ), 16 );
+                for ( j = 0, k = i * 16; j < 16; j++ )
+                    _X[ j ] ^= BY[ k + j ];
+
+                for( j = 0; j < 16; j++ )
+                    x[ j ] = _X[ j ];
+
+                /**
+                 * @desc Rotates [a] by [b] bits to the left.
+                 * @param {int} a The base value.
+                 * @param {int} b The number of bits to rotate [a] to the left by.
+                 * @return {number}
+                 */
+                function RotateBitsLeft( a, b ) { return ( a << b ) | ( a >>> ( 32 - b ) ); }
+
+                for ( j = 8; j > 0; j -= 2 ) {
+                    x[ 0x04 ] ^= RotateBitsLeft( x[ 0x00 ] + x[ 0x0C ], 0x07 );
+                    x[ 0x08 ] ^= RotateBitsLeft( x[ 0x04 ] + x[ 0x00 ], 0x09 );
+                    x[ 0x0C ] ^= RotateBitsLeft( x[ 0x08 ] + x[ 0x04 ], 0x0D );
+                    x[ 0x00 ] ^= RotateBitsLeft( x[ 0x0C ] + x[ 0x08 ], 0x12 );
+                    x[ 0x09 ] ^= RotateBitsLeft( x[ 0x05 ] + x[ 0x01 ], 0x07 );
+                    x[ 0x0D ] ^= RotateBitsLeft( x[ 0x09 ] + x[ 0x05 ], 0x09 );
+                    x[ 0x01 ] ^= RotateBitsLeft( x[ 0x0D ] + x[ 0x09 ], 0x0D );
+                    x[ 0x05 ] ^= RotateBitsLeft( x[ 0x01 ] + x[ 0x0D ], 0x12 );
+                    x[ 0x0E ] ^= RotateBitsLeft( x[ 0x0A ] + x[ 0x06 ], 0x07 );
+                    x[ 0x02 ] ^= RotateBitsLeft( x[ 0x0E ] + x[ 0x0A ], 0x09 );
+                    x[ 0x06 ] ^= RotateBitsLeft( x[ 0x02 ] + x[ 0x0E ], 0x0D );
+                    x[ 0x0A ] ^= RotateBitsLeft( x[ 0x06 ] + x[ 0x02 ], 0x12 );
+                    x[ 0x03 ] ^= RotateBitsLeft( x[ 0x0F ] + x[ 0x0B ], 0x07 );
+                    x[ 0x07 ] ^= RotateBitsLeft( x[ 0x03 ] + x[ 0x0F ], 0x09 );
+                    x[ 0x0B ] ^= RotateBitsLeft( x[ 0x07 ] + x[ 0x03 ], 0x0D );
+                    x[ 0x0F ] ^= RotateBitsLeft( x[ 0x0B ] + x[ 0x07 ], 0x12 );
+                    x[ 0x01 ] ^= RotateBitsLeft( x[ 0x00 ] + x[ 0x03 ], 0x07 );
+                    x[ 0x02 ] ^= RotateBitsLeft( x[ 0x01 ] + x[ 0x00 ], 0x09 );
+                    x[ 0x03 ] ^= RotateBitsLeft( x[ 0x02 ] + x[ 0x01 ], 0x0D );
+                    x[ 0x00 ] ^= RotateBitsLeft( x[ 0x03 ] + x[ 0x02 ], 0x12 );
+                    x[ 0x06 ] ^= RotateBitsLeft( x[ 0x05 ] + x[ 0x04 ], 0x07 );
+                    x[ 0x07 ] ^= RotateBitsLeft( x[ 0x06 ] + x[ 0x05 ], 0x09 );
+                    x[ 0x04 ] ^= RotateBitsLeft( x[ 0x07 ] + x[ 0x06 ], 0x0D );
+                    x[ 0x05 ] ^= RotateBitsLeft( x[ 0x04 ] + x[ 0x07 ], 0x12 );
+                    x[ 0x0B ] ^= RotateBitsLeft( x[ 0x0A ] + x[ 0x09 ], 0x07 );
+                    x[ 0x08 ] ^= RotateBitsLeft( x[ 0x0B ] + x[ 0x0A ], 0x09 );
+                    x[ 0x09 ] ^= RotateBitsLeft( x[ 0x08 ] + x[ 0x0B ], 0x0D );
+                    x[ 0x0A ] ^= RotateBitsLeft( x[ 0x09 ] + x[ 0x08 ], 0x12 );
+                    x[ 0x0C ] ^= RotateBitsLeft( x[ 0x0F ] + x[ 0x0E ], 0x07 );
+                    x[ 0x0D ] ^= RotateBitsLeft( x[ 0x0C ] + x[ 0x0F ], 0x09 );
+                    x[ 0x0E ] ^= RotateBitsLeft( x[ 0x0D ] + x[ 0x0C ], 0x0D );
+                    x[ 0x0F ] ^= RotateBitsLeft( x[ 0x0E ] + x[ 0x0D ], 0x12 );
+                }
+
+                for ( j = 0; j < 16; ++j )
+                    _X[ j ] += x[ j ];
+
+                /* Copy back the result. */
+                for ( j = 0, k = Yi + ( i * 16 ); j < 16; j++ )
+                    BY[ j + k ] = _X[ j ];
             }
 
-            for ( i = 0; i < r; i++ )
-                ArrayCopy( BY, Yi + ( i * 2 ) * 16, BY, ( i * 16 ), 16 );
+            for ( i = 0; i < r; i++ ) {
+                for ( j = 0, k = Yi + ( i * 2 ) * 16, l = ( i * 16 ); j < 16; j++ )
+                    BY[ l + j ] = BY[ k + j ];
+            }
 
-            for ( i = 0; i < r; i++ )
-                ArrayCopy( BY, Yi + ( i * 2 + 1 ) * 16, BY, ( i + r ) * 16, 16 );
+            for ( i = 0; i < r; i++ ) {
+                for ( j = 0, k = Yi + ( i * 2 + 1 ) * 16, l = ( i + r ) * 16; j < 16; j++ )
+                    BY[ l + j ] = BY[ k + j ];
+            }
         }
 
         /* Perform the script process. */
@@ -4970,58 +4973,65 @@ class discordCrypt {
 
             let Yi = 32 * r;
 
-            // Scratchpad
-            let x = new Uint32Array( 16 );        // XSALSA_20
-            let _X = new Uint32Array( 16 );       // BLOCKMIX_XSALSA20
+            /* Salsa20 Scratchpad. */
+            let x = new Uint32Array( 16 );
+            /* Block-mix Salsa20 Scratchpad. */
+            let _X = new Uint32Array( 16 );
 
             totalOps = p * N * 2;
             currentOp = 0;
             lastPercent10 = null;
 
-            // Set this to true to abandon the scrypt on the next step
+            /* Set this to true to abandon the scrypt on the next step. */
             let stop = false;
 
-            // State information
+            /* State information. */
             let state = 0;
             let i0 = 0, i1;
             let Bi;
 
-            // How many block-mix salsa8 operations can we do per step?
+            /* How many block-mix salsa8 operations can we do per step? */
             let limit = parseInt( 1000 / r );
 
-            // Trick from scrypt-async; if there is a setImmediate shim in place, use it
+            /* Trick from scrypt-async; if there is a setImmediate shim in place, use it. */
             let nextTick = ( typeof( setImmediate ) !== 'undefined' ) ? setImmediate : setTimeout;
 
             const incrementalSMix = function () {
                 if ( stop )
                     return cb( new Error( 'cancelled' ), currentOp / totalOps );
 
-                let steps, i, percent10;
+                let steps, i, y, z, percent10;
                 switch ( state ) {
                     case 0:
-                        // for (var i = 0; i < p; i++)...
                         Bi = i0 * 32 * r;
-                        ArrayCopy( B, Bi, XY, 0, Yi );                        // ROMix - 1
-                        state = 1;                                            // Move to ROMix 2
+                        /* Row mix #1 */
+                        for( let z = 0; z < Yi; z++ )
+                            XY[ z ] = B[ Bi + z ]
+
+                        /* Move to second row mix. */
+                        state = 1;
                         i1 = 0;
-                    // Fall through
+                    /* Fall through purposely. */
                     case 1:
-                        // Run up to 1000 steps of the first inner S-Mix loop
+                        /* Run up to 1000 steps of the first inner S-Mix loop. */
                         steps = N - i1;
 
                         if ( steps > limit )
                             steps = limit;
 
-                        for ( i = 0; i < steps; i++ ) {                       // ROMix - 2
-                            ArrayCopy( XY, 0, V, ( i1 + i ) * Yi, Yi );       // ROMix - 3
-                            BLOCKMIX_SALSA20( XY, Yi, r, x, _X );             // ROMix - 4
+                        /* Row mix #2 */
+                        for ( i = 0; i < steps; i++ ) {
+                            /* Row mix #3 */
+                            y = ( i1 + i ) * Yi; z = Yi; while( z-- ) V[ z + y ] = XY[ z ];
+
+                            /* Row mix #4 */
+                            Salsa20_BlockMix( XY, Yi, r, x, _X );
                         }
 
-                        // for (var i = 0; i < N; i++)
                         i1 += steps;
                         currentOp += steps;
 
-                        // Call the callback with the progress ( Optionally stopping us. )
+                        /* Call the callback with the progress. ( Optionally stopping us. ) */
                         percent10 = parseInt( 1000 * currentOp / totalOps );
                         if ( percent10 !== lastPercent10 ) {
                             stop = cb( null, currentOp / totalOps );
@@ -5035,28 +5045,30 @@ class discordCrypt {
                         if ( i1 < N )
                             break;
 
-                        i1 = 0;                                               // ROMix - 6
+                        /* Row mix #6 */
+                        i1 = 0;
                         state = 2;
-                    // Fall through
+                    /* Fall through purposely. */
                     case 2:
 
-                        // Run up to 1000 steps of the second inner S-Mix loop
+                        /* Run up to 1000 steps of the second inner S-Mix loop. */
                         steps = N - i1;
 
-                        if ( steps > limit ) steps = limit;
+                        if ( steps > limit )
+                            steps = limit;
 
                         for ( i = 0; i < steps; i++ ) {
-                            const offset = ( 2 * r - 1 ) * 16;                // ROMix - 6
-                            const j = XY[ offset ] & ( N - 1 );               // ROMix - 7
-                            XOR_BLOCK( V, j * Yi, XY, Yi );                   // ROMix - 8 (inner)
-                            BLOCKMIX_SALSA20( XY, Yi, r, x, _X );             // ROMix - 9 (outer)
+                            /* Row mix #8 ( inner ) */
+                            for( z = 0, y = ( XY[ ( 2 * r - 1 ) * 16 ] & ( N - 1 ) ) * Yi; z < Yi; z++ )
+                                XY[ z ] ^= V[ y + z ];
+                            /* Row mix #9 ( outer ) */
+                            Salsa20_BlockMix( XY, Yi, r, x, _X );
                         }
 
-                        // for (var i = 0; i < N; i++)...
                         i1 += steps;
                         currentOp += steps;
 
-                        // Call the callback with the progress (optionally stopping us)
+                        /* Call the callback with the progress. ( Optionally stopping us. ) */
                         percent10 = parseInt( 1000 * currentOp / totalOps );
                         if ( percent10 !== lastPercent10 ) {
                             stop = cb( null, currentOp / totalOps );
@@ -5070,9 +5082,10 @@ class discordCrypt {
                         if ( i1 < N )
                             break;
 
-                        ArrayCopy( XY, 0, B, Bi, Yi );                        // ROMix - 10
+                        /* Row mix #10 */
+                        for( z = 0; z < Yi; z++ )
+                            B[ Bi + z ] = XY[ z ];
 
-                        // for (var i = 0; i < p; i++)...
                         i0++;
                         if ( i0 < p ) {
                             state = 0;
@@ -5087,15 +5100,13 @@ class discordCrypt {
                             b.push( ( B[ i ] >> 24 ) & 0xff );
                         }
 
-                        const derivedKey = PBKDF2_SHA256( input, new Buffer( b ), dkLen, 1 );
-
-                        // Done; don't break (which would reschedule)
-                        return cb( null, 1.0, new Buffer( derivedKey ) );
+                        /* Done. Don't break to avoid rescheduling. */
+                        return cb( null, 1.0, new Buffer( PBKDF2_SHA256( input, new Buffer( b ), dkLen, 1 ) ) );
                     default:
                         return cb( new Error( 'invalid state' ), 0 );
                 }
 
-                // Schedule the next steps
+                /* Schedule the next steps. */
                 nextTick( incrementalSMix );
             };
 
