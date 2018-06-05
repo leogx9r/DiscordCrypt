@@ -64,7 +64,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.0.7';
+        return '1.0.7-debug';
     }
 
     /* ============================================================== */
@@ -1530,29 +1530,59 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc Returns the React modules loaded natively in Discord
+     * @desc Returns the React modules loaded natively in Discord.
      * @returns {{
-     *      ChannelProps: Object,
-     *      MessageParser: Object,
-     *      MessageController: Object,
-     *      MessageActionTypes: Object,
-     *      MessageDispatcher: Object,
-     *      MessageQueue: Object,
-     *      HighlightJS: Object
+     *      ChannelProps: Object|null,
+     *      MessageParser: Object|null,
+     *      MessageController: Object|null,
+     *      MessageActionTypes: Object|null,
+     *      MessageDispatcher: Object|null,
+     *      MessageQueue: Object|null,
+     *      HighlightJS: Object|null
      *  }}
      */
     static getReactModules() {
         /* Initializes WebPackModules. [ Credits to the creator. ] */
         const WebpackModules = ( () => {
-            const req = webpackJsonp(
-                [],
-                { '__extra_id__': ( module, _export_, req ) => _export_.default = req },
-                [ '__extra_id__' ]
-            ).default;
+            const req =
+                typeof( webpackJsonp ) === "function" ?
+                    webpackJsonp(
+                        [],
+                        { '__extra_id__': ( module, _exports_, req ) => _exports_.default = req },
+                        [ '__extra_id__' ]
+                    ).default :
+                    webpackJsonp.push(
+                        [
+                            [],
+                            { '__extra_id__': ( module, _exports_, req ) => _exports_.exports = req },
+                            [ [ '__extra_id__' ] ]
+                        ]
+                    );
 
             delete req.m[ '__extra_id__' ];
             delete req.c[ '__extra_id__' ];
 
+            /**
+             * @desc Predicate for searching module.
+             * @callback modulePredicate
+             * @param {*} module Module to test.
+             * @return {boolean} Returns `true` if `module` matches predicate.
+             */
+
+            /**
+             * @desc Look through all modules of internal Discord's Webpack and return first one that matches filter
+             *      predicate. At first this function will look through already loaded modules cache.
+             *      If no loaded modules match, then this function tries to load all modules and match for them.
+             *      Loading any module may have unexpected side effects, like changing current locale of moment.js,
+             *      so in that case there will be a warning the console.
+             *      If no module matches, this function returns `null`.
+             *      ou should always try to provide a predicate that will match something,
+             *      but your code should be ready to receive `null` in case of changes in Discord's codebase.
+             *      If module is ES6 module and has default property, consider default first;
+             *      otherwise, consider the full module object.
+             * @param {modulePredicate} filter Predicate to match module
+             * @return {*} First module that matches `filter` or `null` if none match.
+             */
             const find = ( filter ) => {
                 for ( let i in req.c ) {
                     if ( req.c.hasOwnProperty( i ) ) {
@@ -1565,20 +1595,44 @@ class discordCrypt {
                             return m;
                     }
                 }
-                for ( let i = 0; i < req.m.length; ++i ) {
-                    let m = req( i );
-                    if ( m && m.__esModule && m.default )
-                        m = m.default;
 
-                    if ( m && filter( m ) )
-                        return m;
+                discordCrypt.log( "Couldn't find module in existing cache. Loading all modules.", 'warn' );
+
+                for ( let i = 0; i < req.m.length; ++i ) {
+                    try {
+                        let m = req( i );
+                        if ( m && m.__esModule && m.default && filter( m.default ) )
+                            return m.default;
+                        if ( m && filter( m ) )
+                            return m;
+                    }
+                    catch ( e ) {
+                    }
                 }
                 discordCrypt.log( 'Cannot find React module.', 'warn' );
                 return null;
             };
 
+            /**
+             * @desc Look through all modules of internal Discord's Webpack and return first object that has all of
+             *      following properties. You should be ready that in any moment, after Discord update,
+             *      this function may start returning `null` (if no such object exists anymore) or even some
+             *      different object with the same properties. So you should provide all property names that
+             *      you use, and often even some extra properties to make sure you'll get exactly what you want.
+             * @param {string[]} propNames Array of property names to look for.
+             * @returns {object} First module that matches `propNames` or `null` if none match.
+             */
             const findByUniqueProperties = ( propNames ) =>
                 find( module => propNames.every( prop => module[ prop ] !== undefined ) );
+
+            /**
+             * @desc Look through all modules of internal Discord's Webpack and return first object that has
+             *      `displayName` property with following value. This is useful for searching for React components by
+             *      name. Take into account that not all components are exported as modules. Also, there might be
+             *      several components with the same name.
+             * @param {string} displayName Display name property value to look for.
+             * @return {object} First module that matches `displayName` or `null` if none match.
+             */
             const findByDisplayName = ( displayName ) =>
                 find( module => module.displayName === displayName );
 
@@ -1628,6 +1682,12 @@ class discordCrypt {
 
         /* Parse the message content to the required format if applicable.. */
         if ( typeof message_content === 'string' && message_content.length ) {
+            /* Sanity check. */
+            if ( React.MessageParser === null ) {
+                discordCrypt.log( 'Could not locate the MessageParser module!', 'error' );
+                return;
+            }
+
             try {
                 message_content = React.MessageParser.parse( React.ChannelProps, message_content ).content;
 
@@ -1647,6 +1707,12 @@ class discordCrypt {
 
         /* Save the Channel ID. */
         let _channel = discordCrypt.getChannelId();
+
+        /* Sanity check. */
+        if ( React.MessageQueue === null ) {
+            discordCrypt.log( 'Could not locate the MessageQueue module!', 'error' );
+            return;
+        }
 
         /* Create the message object and add it to the queue. */
         React.MessageQueue.enqueue( {
@@ -1673,30 +1739,47 @@ class discordCrypt {
                         text: embedded_footer || 'DiscordCrypt',
                         icon_url: 'https://i.imgur.com/9y1uGB0.png',
                         url: 'https://gitlab.com/leogx9r/DiscordCrypt/tags/' +
-                            embedded_footer[ 0 ] === 'v' ? embedded_footer : ''
+                        embedded_footer[ 0 ] === 'v' ? embedded_footer : ''
                     },
                     description: embedded_text,
                 }
             }
         }, ( r ) => {
+            /* Sanity check. */
+            if( React.MessageController === null ){
+                discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
+                return;
+            }
+
             /* Check if an error occurred and inform Clyde bot about it. */
             if ( !r.ok ) {
+                /* Perform Clyde dispatch if necessary. */
                 if (
                     r.status >= 400 &&
                     r.status < 500 &&
                     r.body &&
                     !React.MessageController.sendClydeError( discordCrypt.getChannelId(), r.body.code )
-                )
+                ){
+                    /* Log the error in case we can't manually dispatch the error. */
                     discordCrypt.log( 'Error sending message: ' + r.status, 'error' );
-                React.MessageDispatcher.dispatch( {
-                    type: React.MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
-                    messageId: _nonce,
-                    channelId: _channel
-                } );
+
+                    /* Sanity check. */
+                    if( React.MessageDispatcher === null || React.MessageActionTypes === null ){
+                        discordCrypt.log( 'Could not locate the MessageDispatcher module!', 'error' );
+                        return;
+                    }
+
+                    React.MessageDispatcher.dispatch( {
+                        type: React.MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
+                        messageId: _nonce,
+                        channelId: _channel
+                    } );
+                }
             }
-            else
-            /* Receive the message normally. */
+            else {
+                /* Receive the message normally. */
                 React.MessageController.receiveMessage( _nonce, r.body );
+            }
         } );
     }
 
@@ -2360,17 +2443,23 @@ class discordCrypt {
 
             /* If this contains code blocks, highlight them. */
             if ( dataMsg.code ) {
-                /* The inner element contains a <span></span> class, get all children beneath that. */
-                let elements = $( message.children()[ 0 ] ).children();
+                /* Sanity check. */
+                if( ReactModules.HighlightJS !== null ){
 
-                /* Loop over each element to get the markup division list. */
-                for ( let i = 0; i < elements.length; i++ ) {
-                    /* Highlight the element's <pre><code></code></code> block. */
-                    ReactModules.HighlightJS.highlightBlock( $( elements[ i ] ).children()[ 0 ] );
+                    /* The inner element contains a <span></span> class, get all children beneath that. */
+                    let elements = $( message.children()[ 0 ] ).children();
 
-                    /* Reset the class name. */
-                    $( elements[ i ] ).children()[ 0 ].className = 'hljs';
+                    /* Loop over each element to get the markup division list. */
+                    for ( let i = 0; i < elements.length; i++ ) {
+                        /* Highlight the element's <pre><code></code></code> block. */
+                        ReactModules.HighlightJS.highlightBlock( $( elements[ i ] ).children()[ 0 ] );
+
+                        /* Reset the class name. */
+                        $( elements[ i ] ).children()[ 0 ].className = 'hljs';
+                    }
                 }
+                else
+                    discordCrypt.log( 'Could not locate HighlightJS module!', 'error' );
             }
 
             /* Decrypted messages get set to green. */
