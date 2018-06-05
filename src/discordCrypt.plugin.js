@@ -3668,7 +3668,14 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc Gets the React instance of an element. [ Credits to the creator. ]
+     * @desc Get React component instance of closest owner of DOM element matched by filter.
+     * @author noodlebox
+     * @param {Element} element DOM element to start react component searching.
+     * @param {object} options Filter to match React component by display name.
+     *      If `include` if provided, `exclude` value is ignored.
+     * @param {string[]} options.include Array of names to allow.
+     * @param {string[]} options.exclude Array of names to ignore.
+     * @return {object|null} Closest matched React component instance or null if none is matched.
      */
     static __getElementReactOwner(
         element,
@@ -3680,6 +3687,12 @@ class discordCrypt {
         if ( element === undefined )
             return undefined;
 
+        /**
+         * Get React Internal Instance mounted to DOM element
+         * @author noodlebox
+         * @param {Element} e DOM element to get React Internal Instance from
+         * @return {object|null} Returns React Internal Instance mounted to this element if exists
+         */
         const getOwnerReactInstance = e => e[ Object.keys( e ).find( k => k.startsWith( "__reactInternalInstance" ) ) ];
         const excluding = include === undefined;
         const filter = excluding ? exclude : include;
