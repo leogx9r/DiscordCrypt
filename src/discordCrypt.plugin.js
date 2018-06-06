@@ -439,6 +439,14 @@ class discordCrypt {
          */
         this.toolbarHtml =
             `
+            <button type="button" id="dc-clipboard-upload-btn" style="background-color: transparent;"
+                title="Upload Encrypted Clipboard">
+                <svg x="0px" y="0px" width="30" height="30" viewBox="0 0 18 18" class="dc-svg"> 
+                        <path fill="lightgrey"
+                            d="M13 4h-3v-4h-10v14h6v2h10v-9l-3-3zM3 1h4v1h-4v-1zM15 
+                            15h-8v-10h5v3h3v7zM13 7v-2l2 2h-2z"/>
+                </svg>
+            </button>
             <button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File">
                 <svg class="dc-svg" width="24" height="24" viewBox="0 0 1792 1792" fill="lightgrey">
                     <path d="M768 384v-128h-128v128h128zm128 128v-128h-128v128h128zm-128 
@@ -1667,13 +1675,16 @@ class discordCrypt {
      * @param {string} embedded_footer The text to display at the bottom of the embed.
      * @param {string|int} embedded_color A hex color used to outline the left side of the embed.
      * @param {string} message_content Message content to be attached above the embed.
+     * @param {int|undefined} channel_id If specified, sends the embedded message to this channel instead of the
+     *      current channel.
      */
     static sendEmbeddedMessage(
         /* string */ embedded_text,
         /* string */ embedded_header,
         /* string */ embedded_footer,
         /* int */    embedded_color = 0x551A8B,
-        /* string */ message_content = ''
+        /* string */ message_content = '',
+        /* int */    channel_id = undefined
     ) {
         let mention_everyone = false;
 
@@ -1706,7 +1717,7 @@ class discordCrypt {
         let _nonce = parseInt( require( 'crypto' ).randomBytes( 6 ).toString( 'hex' ), 16 );
 
         /* Save the Channel ID. */
-        let _channel = discordCrypt.getChannelId();
+        let _channel = channel_id !== undefined ? channel_id : discordCrypt.getChannelId();
 
         /* Sanity check. */
         if ( React.MessageQueue === null ) {
@@ -1746,7 +1757,7 @@ class discordCrypt {
             }
         }, ( r ) => {
             /* Sanity check. */
-            if( React.MessageController === null ){
+            if ( React.MessageController === null ) {
                 discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
                 return;
             }
@@ -1758,13 +1769,13 @@ class discordCrypt {
                     r.status >= 400 &&
                     r.status < 500 &&
                     r.body &&
-                    !React.MessageController.sendClydeError( discordCrypt.getChannelId(), r.body.code )
-                ){
+                    !React.MessageController.sendClydeError( _channel, r.body.code )
+                ) {
                     /* Log the error in case we can't manually dispatch the error. */
                     discordCrypt.log( 'Error sending message: ' + r.status, 'error' );
 
                     /* Sanity check. */
-                    if( React.MessageDispatcher === null || React.MessageActionTypes === null ){
+                    if ( React.MessageDispatcher === null || React.MessageActionTypes === null ) {
                         discordCrypt.log( 'Could not locate the MessageDispatcher module!', 'error' );
                         return;
                     }
@@ -2158,6 +2169,9 @@ class discordCrypt {
         $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, false );
         $( '#dc-secondary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, true );
 
+        /* Handle clipboard upload button. */
+        $( '#dc-clipboard-upload-btn' ).click( discordCrypt.on_upload_encrypted_clipboard_button_clicked( this ) );
+
         /* Handle file button clicked. */
         $( '#dc-file-btn' ).click( discordCrypt.on_file_button_clicked );
 
@@ -2280,7 +2294,7 @@ class discordCrypt {
                 return;
 
             /* Send the encrypted message. */
-            if(self.sendEncryptedMessage( $( this ).val() ) != 0)
+            if ( self.sendEncryptedMessage( $( this ).val() ) != 0 )
                 return;
 
             /* Clear text field. */
@@ -2444,7 +2458,7 @@ class discordCrypt {
             /* If this contains code blocks, highlight them. */
             if ( dataMsg.code ) {
                 /* Sanity check. */
-                if( ReactModules.HighlightJS !== null ){
+                if ( ReactModules.HighlightJS !== null ) {
 
                     /* The inner element contains a <span></span> class, get all children beneath that. */
                     let elements = $( message.children()[ 0 ] ).children();
@@ -2549,8 +2563,10 @@ class discordCrypt {
      * @param {string} message The unencrypted message to send.
      * @param {boolean} force_send Whether to ignore checking for the encryption trigger and always encrypt and send.
      * @returns {number} Returns 1 if the message failed to be parsed correctly and 0 on success.
+     * @param {int|undefined} channel_id If specified, sends the embedded message to this channel instead of the
+     *      current channel.
      */
-    sendEncryptedMessage( message, force_send = false ) {
+    sendEncryptedMessage( message, force_send = false, channel_id = undefined ) {
         /* Let's use a maximum message size of 1200 instead of 2000 to account for encoding, new line feeds & packet
          header. */
         const maximum_encoded_data = 1200;
@@ -2643,7 +2659,8 @@ class discordCrypt {
                 this.messageHeader,
                 'v' + this.getVersion().replace( '-debug', '' ),
                 0x551A8B,
-                user_tags
+                user_tags,
+                channel_id
             );
         }
         else {
@@ -2676,7 +2693,8 @@ class discordCrypt {
                     this.messageHeader,
                     'v' + this.getVersion(),
                     0x551A8B,
-                    i === 0 ? user_tags : ''
+                    i === 0 ? user_tags : '',
+                    channel_id
                 );
             }
         }
@@ -2721,6 +2739,43 @@ class discordCrypt {
 
     /**
      * @private
+     * @desc Uploads the clipboard's current contents and sends the encrypted link.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_upload_encrypted_clipboard_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+            /* Since this is an async operation, we need to backup the channel ID before doing this. */
+            let channel_id = discordCrypt.getChannelId();
+
+            /* Upload the clipboard. */
+            discordCrypt.__up1UploadClipboard(
+                self.configFile.up1Host,
+                self.configFile.up1ApiKey,
+                sjcl,
+                ( error_string, file_url, deletion_link ) => {
+                    /* Do some sanity checking. */
+                    if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
+                        alert( error_string, 'Failed to upload the clipboard!' );
+                        return;
+                    }
+
+                    /* Format and send the message. */
+                    self.sendEncryptedMessage(
+                        `Link: ${file_url}`,
+                        true,
+                        channel_id
+                    );
+
+                    /* Copy the deletion link to the clipboard. */
+                    require( 'electron' ).clipboard.writeText( `Delete URL: ${deletion_link}` );
+                }
+            );
+        };
+    }
+
+    /**
+     * @private
      * @desc  Uploads the selected file and sends the encrypted link.
      * @param {discordCrypt} self
      * @returns {Function}
@@ -2738,6 +2793,9 @@ class discordCrypt {
             /* Send the additional text first if it's valid. */
             if ( message_textarea.val().length > 0 )
                 self.sendEncryptedMessage( message_textarea.val(), true );
+
+            /* Since this is an async operation, we need to backup the channel ID before doing this. */
+            let channel_id = discordCrypt.getChannelId();
 
             /* Clear the message field. */
             message_textarea.val( '' );
@@ -2779,7 +2837,8 @@ class discordCrypt {
                     /* Format and send the message. */
                     self.sendEncryptedMessage(
                         `Link: ${file_url}${send_deletion_link ? '\nDelete URL: ' + deletion_link : ''}`,
-                        true
+                        true,
+                        channel_id
                     );
 
                     /* Clear the file path. */
@@ -2798,7 +2857,7 @@ class discordCrypt {
                     }, 1000 );
                 },
                 randomize_file_name
-            )
+            );
         };
     }
 
@@ -4575,10 +4634,13 @@ class discordCrypt {
      * @desc Attempts to read the clipboard and converts either Images or text to raw Buffer() objects.
      * @returns {{ mime_type: string, name: string|null, data: Buffer|null }} Contains clipboard data. May be null.
      */
-    static __clipboardToBuffer( ) {
+    static __clipboardToBuffer() {
         /* Request the clipboard object. */
         let clipboard = require( 'electron' ).clipboard;
-        let fs = require( 'fs' );
+
+        /* We use original-fs to bypass any file-restrictions ( Eg. ASAR ) for reading. */
+        let fs = require( 'original-fs' ),
+            path = require( 'path' );
 
         /* The clipboard must have at least one type available. */
         if ( clipboard.availableFormats().length === 0 )
@@ -4586,7 +4648,7 @@ class discordCrypt {
 
         /* Get all available formats. */
         let mime_type = clipboard.availableFormats();
-        let data, tmp, name, is_file = false;
+        let data, tmp = '', name = '', is_file = false;
 
         /* Loop over each format and try getting the data. */
         for ( let i = 0; i < mime_type.length; i++ ) {
@@ -4619,7 +4681,7 @@ class discordCrypt {
                     if ( fs.existsSync( tmp ) ) {
                         /* Read the file and store the file name. */
                         data = fs.readFileSync( tmp );
-                        name = fs.basename( tmp );
+                        name = path.basename( tmp );
                         is_file = true;
                     }
                     else {
@@ -4666,7 +4728,7 @@ class discordCrypt {
      * @param {Object} sjcl The loaded Stanford Javascript Crypto Library.
      * @param {encryptedFileCallback} callback The callback function that will be called on error or completion.
      */
-    static __up1EncryptBuffer( data, mime_type, file_name, sjcl, callback ){
+    static __up1EncryptBuffer( data, mime_type, file_name, sjcl, callback ) {
         const crypto = require( 'crypto' );
 
         /* Returns a parameter object from the input seed. */
@@ -4794,6 +4856,82 @@ class discordCrypt {
 
     /**
      * @public
+     * @desc Uploads raw data to an Up1 service and returns the file URL and deletion key.
+     * @param {string} up1_host The host URL for the Up1 service.
+     * @param {string} [up1_api_key] The optional API key used for the service.
+     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+     * @param {uploadedFileCallback} callback The callback function called on success or failure.
+     */
+    static __up1UploadClipboard( up1_host, up1_api_key, sjcl, callback ) {
+        /* Get the current clipboard data. */
+        let clipboard = discordCrypt.__clipboardToBuffer();
+
+        /* Perform sanity checks on the clipboard data. */
+        if ( !clipboard.mime_type.length || clipboard.data === null ) {
+            callback( 'Invalid clipboard data' );
+            return;
+        }
+
+        /* Get a real file name, whether it be random or actual. */
+        let file_name = clipboard.name.length === 0 ?
+            require( 'crypto' ).pseudoRandomBytes( 16 ).toString( 'hex' ) :
+            clipboard.name;
+
+        /* Encrypt the buffer. */
+        this.__up1EncryptBuffer(
+            clipboard.data,
+            clipboard.mime_type,
+            file_name,
+            sjcl,
+            ( error_string, encrypted_data, identity, encoded_seed ) => {
+                /* Return if there's an error. */
+                if ( error_string !== null ) {
+                    callback( error_string );
+                    return;
+                }
+
+                /* Create a new FormData() object. */
+                let form = new ( require( 'form-data' ) )();
+
+                /* Append the ID and the file data to it. */
+                form.append( 'ident', identity );
+                form.append( 'file', encrypted_data, { filename: 'file', contentType: 'text/plain' } );
+
+                /* Append the API key if necessary. */
+                if ( up1_api_key !== undefined && typeof up1_api_key === 'string' )
+                    form.append( 'api_key', up1_api_key );
+
+                /* Perform the post request. */
+                require( 'request' ).post( {
+                        headers: form.getHeaders(),
+                        uri: up1_host + '/up',
+                        body: form
+                    },
+                    ( err, res, body ) => {
+                        try {
+                            /* Execute the callback if no error has occurred. */
+                            if ( err !== null )
+                                callback( err );
+                            else {
+                                callback(
+                                    null,
+                                    up1_host + '/#' + encoded_seed,
+                                    up1_host + `/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
+                                    encoded_seed
+                                );
+                            }
+                        }
+                        catch ( ex ) {
+                            callback( ex.toString() );
+                        }
+                    }
+                );
+            }
+        );
+    }
+
+    /**
+     * @public
      * @desc Uploads the given file path to an Up1 service and returns the file URL and deletion key.
      * @param {string} file_path The path to the file to encrypt.
      * @param {string} up1_host The host URL for the Up1 service.
@@ -4802,14 +4940,7 @@ class discordCrypt {
      * @param {uploadedFileCallback} callback The callback function called on success or failure.
      * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
      */
-    static __up1UploadFile(
-        /* string */ file_path,
-        /* string */ up1_host,
-        /* string */ up1_api_key,
-        /* class */ sjcl,
-        /* function(error_string, file_url, deletion_link, encoded_seed) */ callback,
-        /* boolean */ randomize_file_name = false
-    ) {
+    static __up1UploadFile( file_path, up1_host, up1_api_key, sjcl, callback, randomize_file_name = false ) {
         /* Encrypt the file data first. */
         this.__up1EncryptFile(
             file_path,
@@ -4888,7 +5019,7 @@ class discordCrypt {
      * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
      * @param {scryptCallback} cb Callback function for progress updates.
      * @returns {boolean} Returns true if successful.
-    */
+     */
     static scrypt( input, salt, dkLen, N = 16384, r = 8, p = 1, cb = null ) {
         let _in, _salt;
 
@@ -4925,7 +5056,7 @@ class discordCrypt {
                 for ( j = 0, k = i * 16; j < 16; j++ )
                     _X[ j ] ^= BY[ k + j ];
 
-                for( j = 0; j < 16; j++ )
+                for ( j = 0; j < 16; j++ )
                     x[ j ] = _X[ j ];
 
                 /**
@@ -4934,7 +5065,9 @@ class discordCrypt {
                  * @param {int} b The number of bits to rotate [a] to the left by.
                  * @return {number}
                  */
-                function RotateBitsLeft( a, b ) { return ( a << b ) | ( a >>> ( 32 - b ) ); }
+                function RotateBitsLeft( a, b ) {
+                    return ( a << b ) | ( a >>> ( 32 - b ) );
+                }
 
                 for ( j = 8; j > 0; j -= 2 ) {
                     x[ 0x04 ] ^= RotateBitsLeft( x[ 0x00 ] + x[ 0x0C ], 0x07 );
@@ -5043,7 +5176,7 @@ class discordCrypt {
                     case 0:
                         Bi = i0 * 32 * r;
                         /* Row mix #1 */
-                        for( let z = 0; z < Yi; z++ )
+                        for ( let z = 0; z < Yi; z++ )
                             XY[ z ] = B[ Bi + z ]
 
                         /* Move to second row mix. */
@@ -5060,7 +5193,9 @@ class discordCrypt {
                         /* Row mix #2 */
                         for ( i = 0; i < steps; i++ ) {
                             /* Row mix #3 */
-                            y = ( i1 + i ) * Yi; z = Yi; while( z-- ) V[ z + y ] = XY[ z ];
+                            y = ( i1 + i ) * Yi;
+                            z = Yi;
+                            while ( z-- ) V[ z + y ] = XY[ z ];
 
                             /* Row mix #4 */
                             Salsa20_BlockMix( XY, Yi, r, x, _X );
@@ -5097,7 +5232,7 @@ class discordCrypt {
 
                         for ( i = 0; i < steps; i++ ) {
                             /* Row mix #8 ( inner ) */
-                            for( z = 0, y = ( XY[ ( 2 * r - 1 ) * 16 ] & ( N - 1 ) ) * Yi; z < Yi; z++ )
+                            for ( z = 0, y = ( XY[ ( 2 * r - 1 ) * 16 ] & ( N - 1 ) ) * Yi; z < Yi; z++ )
                                 XY[ z ] ^= V[ y + z ];
                             /* Row mix #9 ( outer ) */
                             Salsa20_BlockMix( XY, Yi, r, x, _X );
@@ -5121,7 +5256,7 @@ class discordCrypt {
                             break;
 
                         /* Row mix #10 */
-                        for( z = 0; z < Yi; z++ )
+                        for ( z = 0; z < Yi; z++ )
                             B[ Bi + z ] = XY[ z ];
 
                         i0++;
