@@ -64,7 +64,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.0.7';
+        return '1.0.7-debug';
     }
 
     /* ============================================================== */
@@ -4217,8 +4217,7 @@ class discordCrypt {
                     _extracted[ i ].startsWith( `${embed_link_prefix}/#` ) &&
                     _extracted[ i ].indexOf( 'del?ident=') === -1
                 )
-                    join = `<iframe src=${_extracted[ i ]} width="${window.innerWidth}px" ` +
-                                `height="${window.innerHeight / 2}px"></iframe><br/><br/>`;
+                    join = `<iframe src=${_extracted[ i ]} width="400px" height="400px"></iframe><br/><br/>`;
 
                 /* Join the message together. */
                 message = message.join( join + `<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
