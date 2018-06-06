@@ -4638,6 +4638,10 @@ class discordCrypt {
         /* Request the clipboard object. */
         let clipboard = require( 'electron' ).clipboard;
 
+        /* Sanity check. */
+        if( !clipboard )
+            return { mime_type: '', name: '', data: null };
+
         /* We use original-fs to bypass any file-restrictions ( Eg. ASAR ) for reading. */
         let fs = require( 'original-fs' ),
             path = require( 'path' );
@@ -4861,14 +4865,15 @@ class discordCrypt {
      * @param {string} [up1_api_key] The optional API key used for the service.
      * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
      * @param {uploadedFileCallback} callback The callback function called on success or failure.
+     * @param {{ mime_type: string, name: string|null, data: Buffer|null }} [clipboard_data] Optional clipboard data.
      */
-    static __up1UploadClipboard( up1_host, up1_api_key, sjcl, callback ) {
+    static __up1UploadClipboard( up1_host, up1_api_key, sjcl, callback, clipboard_data = undefined ) {
         /* Get the current clipboard data. */
-        let clipboard = discordCrypt.__clipboardToBuffer();
+        let clipboard = clipboard_data === undefined ? discordCrypt.__clipboardToBuffer() : clipboard_data;
 
         /* Perform sanity checks on the clipboard data. */
         if ( !clipboard.mime_type.length || clipboard.data === null ) {
-            callback( 'Invalid clipboard data' );
+            callback( 'Invalid clipboard data.' );
             return;
         }
 
