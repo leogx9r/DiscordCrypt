@@ -418,7 +418,7 @@ class discordCrypt {
             .stat-bar {
                 background-color: #2a2b2f;
                 box-shadow: inset 0 5px 15px rgba(0,0,0,.6);
-                height: 15px;
+                height: 8px;
                 overflow: hidden;
                 padding: 3px;
                 border-radius: 3px;
@@ -1939,7 +1939,7 @@ class discordCrypt {
             (
                 new Buffer( password ),
                 new Buffer( discordCrypt.whirlpool( password, true ), 'hex' ),
-                32, 1536, 8, 1, ( error, progress, pwd ) => {
+                32, 4096, 8, 1, ( error, progress, pwd ) => {
                     if ( error ) {
                         /* Update the button's text. */
                         if ( cfg_exists )
@@ -2951,7 +2951,7 @@ class discordCrypt {
                 (
                     new Buffer( password ),
                     new Buffer( discordCrypt.whirlpool( password, true ), 'hex' ),
-                    32, 1536, 8, 1, ( error, progress, pwd ) => {
+                    32, 4096, 8, 1, ( error, progress, pwd ) => {
                         if ( error ) {
                             /* Alert the user. */
                             alert( 'Error setting the new database password. Check the console for more info.' );
