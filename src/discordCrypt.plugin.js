@@ -1554,20 +1554,17 @@ class discordCrypt {
     static getReactModules() {
         /* Initializes WebPackModules. [ Credits to the creator. ] */
         const WebpackModules = ( () => {
-            const req =
-                typeof( webpackJsonp ) === "function" ?
-                    webpackJsonp(
-                        [],
-                        { '__extra_id__': ( module, _exports_, req ) => _exports_.default = req },
-                        [ '__extra_id__' ]
-                    ).default :
-                    webpackJsonp.push(
-                        [
-                            [],
-                            { '__extra_id__': ( module, _exports_, req ) => _exports_.exports = req },
-                            [ [ '__extra_id__' ] ]
-                        ]
-                    );
+            const req = typeof( webpackJsonp ) === "function" ?
+                webpackJsonp(
+                    [],
+                    { '__extra_id__': ( module, _export_, req ) => _export_.default = req },
+                    [ '__extra_id__' ]
+                ).default :
+                webpackJsonp.push( [
+                    [],
+                    { '__extra_id__': ( _module_, exports, req ) => _module_.exports = req },
+                    [ [ '__extra_id__' ] ] ]
+                );
 
             delete req.m[ '__extra_id__' ];
             delete req.c[ '__extra_id__' ];
@@ -2476,12 +2473,6 @@ class discordCrypt {
                 }
                 else
                     discordCrypt.log( 'Could not locate HighlightJS module!', 'error' );
-            }
-
-            /* If this contains links, be sure to apply any custom CSS. */
-            if( dataMsg.url ) {
-                //$('a#inbrowserbtn.btn').css('display', 'none');
-                $('a#newupload.btn').css('display', 'none');
             }
 
             /* Decrypted messages get set to green. */
@@ -4215,7 +4206,7 @@ class discordCrypt {
                 if (
                     embed_link_prefix !== undefined &&
                     _extracted[ i ].startsWith( `${embed_link_prefix}/#` ) &&
-                    _extracted[ i ].indexOf( 'del?ident=') === -1
+                    _extracted[ i ].indexOf( 'del?ident=' ) === -1
                 )
                     join = `<iframe src=${_extracted[ i ]} width="400px" height="400px"></iframe><br/><br/>`;
 
