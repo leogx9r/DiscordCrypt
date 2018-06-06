@@ -194,6 +194,7 @@ class discordCrypt {
          * @type {string}
          */
         this.appCss = `
+            a#inbrowserbtn.btn{ display: none }
             .dc-overlay {
                 position: fixed;
                 font-family: monospace;
@@ -201,11 +202,12 @@ class discordCrypt {
                 width: 100%;
                 height: 100%;
                 left: 0;
+                bottom: 0;
                 right: 0;
                 top: 0;
-                bottom: 0;
-                z-index: 50000;
+                z-index: 1000;
                 cursor: default;
+                transform: translateZ(0px);
                 background: rgba(0, 0, 0, 0.85) !important;
             }
             .dc-password-field {
@@ -2450,7 +2452,7 @@ class discordCrypt {
             message.parent().parent().parent().parent().css( 'max-width', '100%' );
 
             /* Process the message and apply all necessary element modifications. */
-            dataMsg = discordCrypt.postProcessMessage( dataMsg );
+            dataMsg = discordCrypt.postProcessMessage( dataMsg, this.configFile.up1Host );
 
             /* Set the new HTML. */
             message[ 0 ].innerHTML = dataMsg.html;
@@ -2476,6 +2478,12 @@ class discordCrypt {
                     discordCrypt.log( 'Could not locate HighlightJS module!', 'error' );
             }
 
+            /* If this contains links, be sure to apply any custom CSS. */
+            if( dataMsg.url ) {
+                //$('a#inbrowserbtn.btn').css('display', 'none');
+                $('a#newupload.btn').css('display', 'none');
+            }
+
             /* Decrypted messages get set to green. */
             message.css( 'color', 'green' );
         }
@@ -2498,15 +2506,16 @@ class discordCrypt {
      * @private
      * @desc Processes a decrypted message and formats any elements needed in HTML.
      * @param message The message to process.
+     * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
      * @returns {{url: boolean, code: boolean, html: (string|*)}}
      */
-    static postProcessMessage( message ) {
+    static postProcessMessage( message, embed_link_prefix ) {
         /* Extract any code blocks from the message. */
         let processed = discordCrypt.__buildCodeBlockMessage( message );
         let hasCode = processed.code;
 
         /* Extract any URLs. */
-        processed = discordCrypt.__buildUrlMessage( processed.html );
+        processed = discordCrypt.__buildUrlMessage( processed.html, embed_link_prefix );
         let hasUrl = processed.url;
 
         /* Return the raw HTML. */
@@ -2636,8 +2645,15 @@ class discordCrypt {
         /* If the message length is less than the threshold, we can send it without splitting. */
         if ( getBase64EncodedLength( cleaned.length ) < maximum_encoded_data ) {
             /* Encrypt the message. */
-            let msg = discordCrypt.symmetricEncrypt( cleaned, password, secondary, this.configFile.encryptMode,
-                this.configFile.encryptBlockMode, this.configFile.paddingMode, true );
+            let msg = discordCrypt.symmetricEncrypt(
+                cleaned,
+                password,
+                secondary,
+                this.configFile.encryptMode,
+                this.configFile.encryptBlockMode,
+                this.configFile.paddingMode,
+                true
+            );
 
             /* Append the header to the message normally. */
             msg = this.encodedMessageHeader + discordCrypt.metaDataEncode
@@ -2668,8 +2684,13 @@ class discordCrypt {
             let packets = discordCrypt.__splitStringChunks( cleaned, maximum_encoded_data );
             for ( let i = 0; i < packets.length; i++ ) {
                 /* Encrypt the message. */
-                let msg = discordCrypt.symmetricEncrypt( packets[ i ], password, secondary,
-                    this.configFile.encryptMode, this.configFile.encryptBlockMode, this.configFile.paddingMode,
+                let msg = discordCrypt.symmetricEncrypt(
+                    packets[ i ],
+                    password,
+                    secondary,
+                    this.configFile.encryptMode,
+                    this.configFile.encryptBlockMode,
+                    this.configFile.paddingMode,
                     true
                 );
 
@@ -2691,7 +2712,7 @@ class discordCrypt {
                 discordCrypt.sendEmbeddedMessage(
                     msg,
                     this.messageHeader,
-                    'v' + this.getVersion(),
+                    'v' + this.getVersion().replace( '-debug', '' ),
                     0x551A8B,
                     i === 0 ? user_tags : '',
                     channel_id
@@ -2761,11 +2782,7 @@ class discordCrypt {
                     }
 
                     /* Format and send the message. */
-                    self.sendEncryptedMessage(
-                        `Link: ${file_url}`,
-                        true,
-                        channel_id
-                    );
+                    self.sendEncryptedMessage( `${file_url}`, true, channel_id );
 
                     /* Copy the deletion link to the clipboard. */
                     require( 'electron' ).clipboard.writeText( `Delete URL: ${deletion_link}` );
@@ -2836,7 +2853,7 @@ class discordCrypt {
 
                     /* Format and send the message. */
                     self.sendEncryptedMessage(
-                        `Link: ${file_url}${send_deletion_link ? '\nDelete URL: ' + deletion_link : ''}`,
+                        `${file_url}${send_deletion_link ? '\n\nDelete URL: ' + deletion_link : ''}`,
                         true,
                         channel_id
                     );
@@ -4175,9 +4192,10 @@ class discordCrypt {
      * @public
      * @desc Extracts URLs from a message and formats them accordingly.
      * @param {string} message The input message to format URLs from.
+     * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
      * @returns {{url: boolean, html: string}} Returns whether the message contains URLs and the formatted HTML.
      */
-    static __buildUrlMessage( message ) {
+    static __buildUrlMessage( message, embed_link_prefix ) {
         try {
             /* Extract the URLs. */
             let _extracted = discordCrypt.__extractUrls( message );
@@ -4188,10 +4206,22 @@ class discordCrypt {
 
             /* Loop over each URL and format it. */
             for ( let i = 0; i < _extracted.length; i++ ) {
+                let join = '';
+
                 /* Split the message according to the URL and replace it. */
-                message =
-                    message.split( _extracted[ i ] )
-                        .join( `<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
+                message = message.split( _extracted[ i ] );
+
+                /* If this is an Up1 host, we can directly embed it. Obviously don't embed deletion links.*/
+                if (
+                    embed_link_prefix !== undefined &&
+                    _extracted[ i ].startsWith( `${embed_link_prefix}/#` ) &&
+                    _extracted[ i ].indexOf( 'del?ident=') === -1
+                )
+                    join = `<iframe src=${_extracted[ i ]} width="${window.innerWidth}px" ` +
+                                `height="${window.innerHeight / 2}px"></iframe><br/><br/>`;
+
+                /* Join the message together. */
+                message = message.join( join + `<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
             }
 
             /* Wrap the message in span tags. */
@@ -4639,7 +4669,7 @@ class discordCrypt {
         let clipboard = require( 'electron' ).clipboard;
 
         /* Sanity check. */
-        if( !clipboard )
+        if ( !clipboard )
             return { mime_type: '', name: '', data: null };
 
         /* We use original-fs to bypass any file-restrictions ( Eg. ASAR ) for reading. */
