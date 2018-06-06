@@ -759,15 +759,10 @@ class testRunner {
     }
 
     /**
-     * @desc Adds generic plugin tests not classified by other types.
+     * @desc Adds general file uploading test to the Riseup service.
      * @param {Array} unit_tests An array of unit tests to run.
      */
-    addGenericTests( unit_tests ) {
-        unit_tests.generic_tests = {};
-
-        /* Add general plugin info tests. */
-        this.addPluginBasedTests( unit_tests );
-
+    addEncryptedFileTests( unit_tests ){
         /* File upload test. */
         unit_tests.generic_tests[ 'Encrypted File Upload' ] = ( ut ) => {
             this.discordCrypt.__up1UploadFile(
@@ -792,6 +787,50 @@ class testRunner {
                 }
             );
         };
+
+        /* Clipboard upload test. */
+        unit_tests.generic_tests[ 'Encrypted Clipboard Upload' ] = ( ut ) => {
+            this.discordCrypt.__up1UploadClipboard(
+                'https://share.riseup.net',
+                '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
+                this.sjcl,
+                ( error, file_url, deletion_link, seed ) => {
+                    /* Succeeds only if the error is null. */
+                    ut.equal( error, null );
+
+                    /* All these should be strings. */
+                    ut.equal( typeof file_url, 'string' );
+                    ut.equal( typeof deletion_link, 'string' );
+
+                    ut.equal( typeof seed, 'string' );
+
+                    console.log( `✔ -> ${file_url}` );
+                    console.log( `✔ -> ${deletion_link}` );
+
+                    ut.done();
+                },
+                {
+                    name: '',
+                    mime_type: 'text/plain',
+                    data: new Buffer('This is a pseudo-clipboard upload test!')
+                }
+            );
+        };
+
+    }
+
+    /**
+     * @desc Adds generic plugin tests not classified by other types.
+     * @param {Array} unit_tests An array of unit tests to run.
+     */
+    addGenericTests( unit_tests ) {
+        unit_tests.generic_tests = {};
+
+        /* Add general plugin info tests. */
+        this.addPluginBasedTests( unit_tests );
+
+        /* Add file upload tests. */
+        this.addEncryptedFileTests( unit_tests );
     }
 }
 
