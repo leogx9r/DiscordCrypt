@@ -99,6 +99,11 @@ class discordCrypt {
          * @type {string}
          */
         this.channelTextAreaClass = '.content textarea';
+        /**
+         * @desc Used to detect if the autocomplete dialog is opened.
+         * @type {string}
+         */
+        this.autoCompleteClass = '.autocomplete-1vrmpx';
 
         /* ============================================ */
 
@@ -2290,6 +2295,10 @@ class discordCrypt {
 
             /* Skip if shift key is down indicating going to a new line. */
             if ( e.shiftKey )
+                return;
+
+            /* Skip if autocomplete dialog is opened. */
+            if ( !!$( self.autoCompleteClass )[ 0 ] )
                 return;
 
             /* Send the encrypted message. */
