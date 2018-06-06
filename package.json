@@ -26,6 +26,7 @@
     "istanbul": "latest",
     "mime-types": "latest",
     "nodeunit": "latest",
+    "original-fs": "^1.0.0",
     "path": "latest",
     "process": "latest",
     "request": "latest"
