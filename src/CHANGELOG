@@ -1,3 +1,17 @@
+Version 1.0.8
+
+- NOTE: This version introduces a change which will require you to delete your old configuration file.
+- NOTE: You will need to completely close and restart Discord after deleting your configuration.
+
+- Fixed a React bug for module finding thanks to Discord's update.
+- Fixed error throwing for ChannelProps being used when it's not defined.
+- Optimized Scrypt KDF function for a speed increase by approximately 30-50%.
+- Increased auto-update checking interval to 1 hour.
+- Added encrypted file uploads from clipboard.
+- Uploads now embed directly in messages for previews. You can also now download them from within Discord itself.
+- Decreased progress bar height to 8 pixels.
+- Increased the Database unlocking KDF N parameter from 1536 to 4096 for increased security.
+
 Version 1.0.7
 
 - Fixed a bug where links weren't clickable.
