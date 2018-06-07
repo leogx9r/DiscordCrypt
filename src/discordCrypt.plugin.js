@@ -3244,7 +3244,7 @@ class discordCrypt {
 
             /* Send the message. */
             let header = `-----BEGIN ${algo_str} PUBLIC KEY-----`,
-                footer = `-----END ${algo_str} PUBLIC KEY----- | v${self.getVersion()}`;
+                footer = `-----END ${algo_str} PUBLIC KEY----- | v${self.getVersion().replace( '-debug', '' )}`;
 
             discordCrypt.sendEmbeddedMessage( formatted_message, header, footer, 0x720000 );
 
