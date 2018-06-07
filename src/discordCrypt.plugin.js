@@ -131,7 +131,7 @@ class discordCrypt {
          * @desc Master database password. This is a Buffer() containing a 256-bit key.
          * @type {Buffer}
          */
-        this.masterPassword = new Buffer( 32 );
+        this.masterPassword = Buffer.alloc( 32 );
 
         /**
          * @desc Message scanning interval handler's index. Used to stop any running handler.
@@ -1482,7 +1482,7 @@ class discordCrypt {
                 /* Read the current hash of the plugin and compare them.. */
                 let currentHash = discordCrypt.sha256( localFile );
                 let hash = discordCrypt.sha256( data );
-                let shortHash = new Buffer( hash, 'base64' )
+                let shortHash = Buffer.from( hash, 'base64' )
                     .toString( 'hex' )
                     .slice( 0, 8 );
 
@@ -1939,8 +1939,8 @@ class discordCrypt {
             /* Hash the password. */
             discordCrypt.scrypt
             (
-                new Buffer( password ),
-                new Buffer( discordCrypt.whirlpool( password, true ), 'hex' ),
+                Buffer.from( password ),
+                Buffer.from( discordCrypt.whirlpool( password, true ), 'hex' ),
                 32, 4096, 8, 1, ( error, progress, pwd ) => {
                     if ( error ) {
                         /* Update the button's text. */
@@ -1969,7 +1969,7 @@ class discordCrypt {
 
                     if ( pwd ) {
                         /* To test whether this is the correct password or not, we have to attempt to use it. */
-                        self.masterPassword = new Buffer( pwd, 'hex' );
+                        self.masterPassword = Buffer.from( pwd, 'hex' );
 
                         /* Attempt to load the database with this password. */
                         if ( !self.loadConfig() ) {
@@ -2951,8 +2951,8 @@ class discordCrypt {
                 /* Hash the password. */
                 discordCrypt.scrypt
                 (
-                    new Buffer( password ),
-                    new Buffer( discordCrypt.whirlpool( password, true ), 'hex' ),
+                    Buffer.from( password ),
+                    Buffer.from( discordCrypt.whirlpool( password, true ), 'hex' ),
                     32, 4096, 8, 1, ( error, progress, pwd ) => {
                         if ( error ) {
                             /* Alert the user. */
@@ -2964,7 +2964,7 @@ class discordCrypt {
 
                         if ( pwd ) {
                             /* Now update the password. */
-                            self.masterPassword = new Buffer( pwd, 'hex' );
+                            self.masterPassword = Buffer.from( pwd, 'hex' );
 
                             /* Save the configuration file and update the button text. */
                             self.saveSettings( this );
@@ -3176,7 +3176,7 @@ class discordCrypt {
             min_salt_len;
 
         /* Copy the buffer. */
-        pub_buffer = new Buffer(
+        pub_buffer = Buffer.from(
             key.getPublicKey( 'hex', $( '#dc-keygen-method' )[ 0 ].value === 'ecdh' ?
                 'compressed' :
                 undefined
@@ -3185,7 +3185,7 @@ class discordCrypt {
         );
 
         /* Create a blank payload. */
-        raw_buffer = new Buffer( 2 + salt_len + pub_buffer.length );
+        raw_buffer = Buffer.alloc( 2 + salt_len + pub_buffer.length );
 
         /* Write the algorithm index. */
         raw_buffer.writeInt8( index, 0 );
@@ -3228,7 +3228,7 @@ class discordCrypt {
                 return;
 
             /* The text area stores a hex encoded binary. Convert it to a Base64 message to save space. */
-            let message = new Buffer( $( '#dc-pub-key-ta' )[ 0 ].value, 'hex' ).toString( 'base64' );
+            let message = Buffer.from( $( '#dc-pub-key-ta' )[ 0 ].value, 'hex' ).toString( 'base64' );
 
             /* Add the header to the message and encode it. */
             message = self.encodedKeyHeader + discordCrypt.substituteMessage( message, true );
@@ -3320,7 +3320,7 @@ class discordCrypt {
                 let bin_str = atob( discordCrypt.substituteMessage( blob ) );
 
                 /* Convert from a binary string to a Buffer(). */
-                value = new Buffer( bin_str.length );
+                value = Buffer.alloc( bin_str.length );
                 for ( let i = 0; i < bin_str.length; i++ )
                     value.writeUInt8( bin_str.charCodeAt( i ), i );
             }
@@ -3347,7 +3347,7 @@ class discordCrypt {
             }
 
             /* Read the user's generated public key. */
-            let user_pub_key = new Buffer( $( '#dc-pub-key-ta' )[ 0 ].value, 'hex' );
+            let user_pub_key = Buffer.from( $( '#dc-pub-key-ta' )[ 0 ].value, 'hex' );
 
             /* Check the algorithm used is the same as ours. */
             if ( user_pub_key.readInt8( 0 ) !== algorithm ) {
@@ -3377,13 +3377,13 @@ class discordCrypt {
             }
 
             /* Read the public salt. */
-            salt = new Buffer( value.subarray( 2, 2 + salt_len ) );
+            salt = Buffer.from( value.subarray( 2, 2 + salt_len ) );
 
             /* Read the user's salt length. */
             user_salt_len = user_pub_key.readInt8( 1 );
 
             /* Read the user salt. */
-            user_salt = new Buffer( user_pub_key.subarray( 2, 2 + user_salt_len ) );
+            user_salt = Buffer.from( user_pub_key.subarray( 2, 2 + user_salt_len ) );
 
             /* Update the salt text. */
             $( '#dc-handshake-salts' )[ 0 ].innerText =
@@ -3391,7 +3391,7 @@ class discordCrypt {
                 `${displaySecret( user_salt.toString( 'hex' ) )} ]`;
 
             /* Read the public key and convert it to a hex string. */
-            payload = new Buffer( value.subarray( 2 + salt_len ) ).toString( 'hex' );
+            payload = Buffer.from( value.subarray( 2 + salt_len ) ).toString( 'hex' );
 
             /* Return if invalid. */
             if ( !discordCrypt.privateExchangeKey || discordCrypt.privateExchangeKey === undefined ||
@@ -3455,11 +3455,11 @@ class discordCrypt {
                 isUserSaltPrimary = user_salt_len > salt_len;
 
             /* Create hashed salt from the two user-generated salts. */
-            let primary_hash = new Buffer(
+            let primary_hash = Buffer.from(
                 discordCrypt.sha512( isUserSaltPrimary ? user_salt : salt, true ),
                 'hex'
             );
-            let secondary_hash = new Buffer(
+            let secondary_hash = Buffer.from(
                 discordCrypt.whirlpool( isUserSaltPrimary ? salt : user_salt, true ),
                 'hex'
             );
@@ -3469,7 +3469,7 @@ class discordCrypt {
 
             /* Calculate the primary key. */
             discordCrypt.scrypt(
-                new Buffer( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
+                Buffer.from( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
                 primary_hash,
                 256,
                 3072,
@@ -3522,7 +3522,7 @@ class discordCrypt {
             /* Calculate all salts needed. */
             let primary_salt = isUserSaltPrimary ? user_salt : salt;
             let secondary_salt = isUserSaltPrimary ? salt : user_salt;
-            let secondary_password = new Buffer(
+            let secondary_password = Buffer.from(
                 primary_salt.toString( 'hex' ) + derived_secret + secondary_salt.toString( 'hex' ),
                 'hex'
             );
@@ -3904,7 +3904,7 @@ class discordCrypt {
             msg = discordCrypt.substituteMessage( msg );
 
             /* Decode the message to raw bytes. */
-            msg = new Buffer( msg, 'base64' );
+            msg = Buffer.from( msg, 'base64' );
 
             /* Sanity check. */
             if ( !discordCrypt.isValidExchangeAlgorithm( msg[ 0 ] ) )
@@ -4252,14 +4252,14 @@ class discordCrypt {
     static __toBuffer( input, is_input_hex = undefined ) {
         /* If the message is either a Hex, Base64 or UTF-8 encoded string, convert it to a buffer. */
         if ( typeof input === 'string' )
-            return new Buffer( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
+            return Buffer.from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
         else if ( typeof input === 'object' ) {
             /* No conversion needed, return it as-is. */
             if ( Buffer.isBuffer( input ) )
                 return input;
             /* Convert the Array to a Buffer object first. */
             else if ( Array.isArray( input ) )
-                return new Buffer( input );
+                return Buffer.from( input );
         }
 
         /* Throw if an invalid type was passed. */
@@ -4340,23 +4340,23 @@ class discordCrypt {
             if ( Buffer.isBuffer( input ) )
                 _input = input;
             else if ( Array.isArray )
-                _input = new Buffer( input );
+                _input = Buffer.from( input );
             else
-                _input = new Buffer( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
+                _input = Buffer.from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
         }
         else if ( typeof input === 'string' )
-            _input = new Buffer( input, 'utf8' );
+            _input = Buffer.from( input, 'utf8' );
 
         if ( typeof salt === 'object' ) {
             if ( Buffer.isBuffer( salt ) )
                 _salt = salt;
             else if ( Array.isArray )
-                _salt = new Buffer( salt );
+                _salt = Buffer.from( salt );
             else
-                _salt = new Buffer( salt, is_salt_hex === undefined ? 'utf8' : is_salt_hex ? 'hex' : 'base64' );
+                _salt = Buffer.from( salt, is_salt_hex === undefined ? 'utf8' : is_salt_hex ? 'hex' : 'base64' );
         }
         else if ( typeof salt === 'string' )
-            _salt = new Buffer( salt, 'utf8' );
+            _salt = Buffer.from( salt, 'utf8' );
 
         /* For function callbacks, use the async method else use the synchronous method. */
         if ( typeof callback === 'function' )
@@ -4397,13 +4397,13 @@ class discordCrypt {
         function __PKCS7( message, paddingBytes, remove ) {
             if ( remove === undefined ) {
                 /* Allocate required padding length + message length. */
-                let padded = new Buffer( message.length + paddingBytes );
+                let padded = Buffer.alloc( message.length + paddingBytes );
 
                 /* Copy the message. */
                 message.copy( padded );
 
                 /* Append the number of padding bytes according to PKCS #7 / PKCS #5 format. */
-                new Buffer( paddingBytes ).fill( paddingBytes ).copy( padded, message.length );
+                Buffer.alloc( paddingBytes ).fill( paddingBytes ).copy( padded, message.length );
 
                 /* Return the result. */
                 return padded;
@@ -4418,13 +4418,13 @@ class discordCrypt {
         function __ZERO( message, paddingBytes, remove ) {
             if ( remove === undefined ) {
                 /* Allocate required padding length + message length. */
-                let padded = new Buffer( message.length + paddingBytes );
+                let padded = Buffer.alloc( message.length + paddingBytes );
 
                 /* Copy the message. */
                 message.copy( padded );
 
                 /* Fill the end of the message with null bytes according to the padding length. */
-                new Buffer( paddingBytes ).fill( 0x00 ).copy( message, message.length );
+                Buffer.alloc( paddingBytes ).fill( 0x00 ).copy( message, message.length );
 
                 /* Return the result. */
                 return padded;
@@ -4447,16 +4447,16 @@ class discordCrypt {
         function __ANSIX923( message, paddingBytes, remove ) {
             if ( remove === undefined ) {
                 /* Allocate required padding length + message length. */
-                let padded = new Buffer( message.length + paddingBytes );
+                let padded = Buffer.alloc( message.length + paddingBytes );
 
                 /* Copy the message. */
                 message.copy( padded );
 
                 /* Append null-bytes till the end of the message. */
-                new Buffer( paddingBytes - 1 ).fill( 0x00 ).copy( padded, message.length );
+                Buffer.alloc( paddingBytes - 1 ).fill( 0x00 ).copy( padded, message.length );
 
                 /* Append the padding length as the final byte of the message. */
-                new Buffer( 1 ).fill( paddingBytes ).copy( padded, message.length + paddingBytes - 1 );
+                Buffer.alloc( 1 ).fill( paddingBytes ).copy( padded, message.length + paddingBytes - 1 );
 
                 /* Return the result. */
                 return padded;
@@ -4473,7 +4473,7 @@ class discordCrypt {
 
             if ( remove === undefined ) {
                 /* Allocate required padding length + message length. */
-                let padded = new Buffer( message.length + paddingBytes );
+                let padded = Buffer.alloc( message.length + paddingBytes );
 
                 /* Copy the message. */
                 message.copy( padded );
@@ -4497,16 +4497,16 @@ class discordCrypt {
         function __ISO97971( message, paddingBytes, remove ) {
             if ( remove === undefined ) {
                 /* Allocate required padding length + message length. */
-                let padded = new Buffer( message.length + paddingBytes );
+                let padded = Buffer.alloc( message.length + paddingBytes );
 
                 /* Copy the message. */
                 message.copy( padded );
 
                 /* Append the first byte as 0x80 */
-                new Buffer( 1 ).fill( 0x80 ).copy( padded, message.length );
+                Buffer.alloc( 1 ).fill( 0x80 ).copy( padded, message.length );
 
                 /* Fill the rest of the padding with zeros. */
-                new Buffer( paddingBytes - 1 ).fill( 0x00 ).copy( message, message.length + 1 );
+                Buffer.alloc( paddingBytes - 1 ).fill( 0x00 ).copy( message, message.length + 1 );
 
                 /* Return the result. */
                 return padded;
@@ -4616,12 +4616,12 @@ class discordCrypt {
                     ' are supported.';
             }
             /* Hash the key and return it as a buffer. */
-            return new Buffer( hash( key, true ), 'hex' );
+            return Buffer.from( hash( key, true ), 'hex' );
         }
         else {
             if ( typeof key === 'string' ||
                 ( typeof key === 'object' && ( Buffer.isBuffer( key ) || Array.isArray( key ) ) ) )
-                return new Buffer( key );
+                return Buffer.from( key );
             else
                 throw 'exception - Invalid key type.';
         }
@@ -4721,7 +4721,7 @@ class discordCrypt {
                     }
                     else {
                         /* Convert the text to a buffer. */
-                        data = new Buffer( tmp, 'utf8' );
+                        data = Buffer.from( tmp, 'utf8' );
                     }
                     break;
                 default:
@@ -4789,7 +4789,7 @@ class discordCrypt {
         /* Converts a string to its UTF-16 equivalent in network byte order. */
         function str2ab( /* string */ str ) {
             /* UTF-16 requires 2 bytes per UTF-8 byte. */
-            let buf = new Buffer( str.length * 2 );
+            let buf = Buffer.alloc( str.length * 2 );
 
             /* Loop over each byte. */
             for ( let i = 0, strLen = str.length; i < strLen; i++ ) {
@@ -4810,7 +4810,7 @@ class discordCrypt {
             /* Calculate the upload header and append the file data to it prior to encryption. */
             data = Buffer.concat( [
                 str2ab( JSON.stringify( { 'mime': mime_type, 'name': file_name } ) ),
-                new Buffer( [ 0, 0 ] ),
+                Buffer.from( [ 0, 0 ] ),
                 data
             ] );
 
@@ -4826,7 +4826,7 @@ class discordCrypt {
             /* Execute the callback. */
             callback(
                 null,
-                new Buffer( sjcl.codec.bytes.fromBits( data ) ),
+                Buffer.from( sjcl.codec.bytes.fromBits( data ) ),
                 sjcl.codec.base64url.fromBits( params.ident ),
                 sjcl.codec.base64url.fromBits( params.seed )
             );
@@ -5062,14 +5062,14 @@ class discordCrypt {
         /* PBKDF2-HMAC-SHA256 Helper. */
         function PBKDF2_SHA256( input, salt, size, iterations ) {
             try {
-                return new Buffer(
+                return Buffer.from(
                     discordCrypt.pbkdf2_sha256( input, salt, true, undefined, undefined, size, iterations ),
                     'hex'
                 );
             }
             catch ( e ) {
                 discordCrypt.log( e.toString(), 'error' );
-                return new Buffer();
+                return Buffer.alloc(1);
             }
         }
 
@@ -5310,7 +5310,7 @@ class discordCrypt {
                         }
 
                         /* Done. Don't break to avoid rescheduling. */
-                        return cb( null, 1.0, new Buffer( PBKDF2_SHA256( input, new Buffer( b ), dkLen, 1 ) ) );
+                        return cb( null, 1.0, Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), dkLen, 1 ) ) );
                     default:
                         return cb( new Error( 'invalid state' ), 0 );
                 }
@@ -5325,11 +5325,11 @@ class discordCrypt {
         /* Validate input. */
         if ( typeof input === 'object' || typeof input === 'string' ) {
             if ( Array.isArray( input ) )
-                _in = new Buffer( input );
+                _in = Buffer.from( input );
             else if ( Buffer.isBuffer( input ) )
                 _in = input;
             else if ( typeof input === 'string' )
-                _in = new Buffer( input, 'utf8' );
+                _in = Buffer.from( input, 'utf8' );
             else {
                 discordCrypt.log( 'Invalid input parameter type specified!', 'error' );
                 return false;
@@ -5339,11 +5339,11 @@ class discordCrypt {
         /* Validate salt. */
         if ( typeof salt === 'object' || typeof salt === 'string' ) {
             if ( Array.isArray( salt ) )
-                _salt = new Buffer( salt );
+                _salt = Buffer.from( salt );
             else if ( Buffer.isBuffer( salt ) )
                 _salt = salt;
             else if ( typeof salt === 'string' )
-                _salt = new Buffer( salt, 'utf8' );
+                _salt = Buffer.from( salt, 'utf8' );
             else {
                 discordCrypt.log( 'Invalid salt parameter type specified!', 'error' );
                 return false;
@@ -5387,7 +5387,7 @@ class discordCrypt {
      * @returns {string} Returns the hex or Base64 encoded result.
      */
     static whirlpool64( message, to_hex ) {
-        return new Buffer( discordCrypt.whirlpool( message, true ), 'hex' )
+        return Buffer.from( discordCrypt.whirlpool( message, true ), 'hex' )
             .slice( 0, 8 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
@@ -5399,7 +5399,7 @@ class discordCrypt {
      * @returns {string} Returns the hex or Base64 encoded result.
      */
     static sha512_128( message, to_hex ) {
-        return new Buffer( discordCrypt.sha512( message, true ), 'hex' )
+        return Buffer.from( discordCrypt.sha512( message, true ), 'hex' )
             .slice( 0, 16 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
@@ -5411,7 +5411,7 @@ class discordCrypt {
      * @returns {string} Returns the hex or Base64 encoded result.
      */
     static whirlpool192( message, to_hex ) {
-        return new Buffer( discordCrypt.sha512( message, true ), 'hex' )
+        return Buffer.from( discordCrypt.sha512( message, true ), 'hex' )
             .slice( 0, 24 ).toString( to_hex ? 'hex' : 'base64' );
     }
 
@@ -5733,7 +5733,7 @@ class discordCrypt {
 
             /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
             if ( _salt.length !== 8 )
-                _salt = new Buffer( discordCrypt.whirlpool64( _salt, true ), 'hex' );
+                _salt = Buffer.from( discordCrypt.whirlpool64( _salt, true ), 'hex' );
         }
         else
         /* Generate a random salt to derive the key and IV. */
@@ -5760,7 +5760,7 @@ class discordCrypt {
         _ct += _encrypt.final( 'hex' );
 
         /* Return the result with the prepended salt. */
-        return new Buffer( _salt.toString( 'hex' ) + _ct, 'hex' ).toString( convert_to_hex ? 'hex' : 'base64' );
+        return Buffer.from( _salt.toString( 'hex' ) + _ct, 'hex' ).toString( convert_to_hex ? 'hex' : 'base64' );
     }
 
     /**
@@ -6087,7 +6087,7 @@ class discordCrypt {
 
             /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
             if ( _salt.length !== 8 )
-                _salt = new Buffer( discordCrypt.whirlpool64( _salt, true ), 'hex' );
+                _salt = Buffer.from( discordCrypt.whirlpool64( _salt, true ), 'hex' );
         }
         else
         /* Generate a random salt to derive the key and IV. */
@@ -6118,7 +6118,7 @@ class discordCrypt {
         _ct += _encrypt.final( 'hex' );
 
         /* Return the auth tag prepended with the salt to the message. */
-        return new Buffer(
+        return Buffer.from(
             _encrypt.getAuthTag().toString( 'hex' ) + _salt.toString( 'hex' ) + _ct,
             'hex'
         ).toString( to_hex ? 'hex' : 'base64' );
@@ -6950,7 +6950,7 @@ class discordCrypt {
      */
     static metaDataEncode( cipherIndex, cipherModeIndex, paddingIndex, pad ) {
         /* Buffered word. */
-        let buf = new Buffer( 4 );
+        let buf = Buffer.alloc( 4 );
 
         /* Target character set. */
         let subset = discordCrypt.getUtf16();
@@ -7131,10 +7131,10 @@ class discordCrypt {
         /* If using HMAC mode, compute the HMAC of the ciphertext and prepend it. */
         if ( use_hmac ) {
             /* Get MAC tag as a hex string. */
-            let tag = discordCrypt.hmac_sha256( new Buffer( msg, 'hex' ), primary_key, true );
+            let tag = discordCrypt.hmac_sha256( Buffer.from( msg, 'hex' ), primary_key, true );
 
             /* Prepend the authentication tag hex string & convert it to Base64. */
-            msg = new Buffer( tag + msg, 'hex' ).toString( 'base64' );
+            msg = Buffer.from( tag + msg, 'hex' ).toString( 'base64' );
         }
 
         /* Return the message. */
@@ -7226,16 +7226,16 @@ class discordCrypt {
             /* If using HMAC, strip off the HMAC and compare it before proceeding. */
             if ( use_hmac ) {
                 /* Convert to a Buffer. */
-                message = new Buffer( message, 'base64' );
+                message = Buffer.from( message, 'base64' );
 
                 /* Pull off the first 32 bytes as a buffer. */
-                let tag = new Buffer( message.subarray( 0, 32 ) );
+                let tag = Buffer.from( message.subarray( 0, 32 ) );
 
                 /* Strip off the authentication tag. */
-                message = new Buffer( message.subarray( 32 ) );
+                message = Buffer.from( message.subarray( 32 ) );
 
                 /* Compute the HMAC-SHA-256 of the cipher text as hex. */
-                let computed_tag = new Buffer( discordCrypt.hmac_sha256( message, primary_key, true ), 'hex' );
+                let computed_tag = Buffer.from( discordCrypt.hmac_sha256( message, primary_key, true ), 'hex' );
 
                 /* Compare the tag for validity. */
                 if ( !crypto.timingSafeEqual( computed_tag, tag ) )
