@@ -29,6 +29,8 @@ class testGenerator {
         this.fs = require( 'fs' );
         this.crypto = require( 'crypto' );
         this.discordCrypt = require( '../src/discordCrypt.plugin.js' ).discordCrypt;
+        this.discordCrypt_instance = new ( this.discordCrypt )();
+        this.cipherModeCount = this.discordCrypt_instance.encryptModes.length;
 
         this.ciphers = [
             {
@@ -81,7 +83,6 @@ class testGenerator {
             'PKC7',
             'ANS2',
             'ISO9',
-            'ZR0',
             'ISO1',
         ];
     }
@@ -96,12 +97,6 @@ class testGenerator {
             /* Generate a random key and one-time salt. */
             let key = this.crypto.randomBytes( this.ciphers[ i ].key_size );
             let salt = this.crypto.randomBytes( 8 );
-
-            /* Quick sanity check for Zero-Padding which can't end in zeros. */
-            if ( this.padding_schemes[ k ].toLowerCase() === 'ZR0' ) {
-                do plaintext[ plaintext.length - 1 ] = this.crypto.randomBytes( 1 )[ 0 ];
-                while ( plaintext[ plaintex.length - 1 ] === 0 )
-            }
 
             /* Perform a round of encryption. */
             let ciphertext = this.ciphers[ i ].encrypt(
@@ -199,12 +194,6 @@ class testGenerator {
                 /* Generate a random key and one-time salt. */
                 let key = this.crypto.randomBytes( 32 );
                 let salt = this.crypto.randomBytes( 8 );
-
-                /* Quick sanity check for Zero-Padding which can't end in zeros. */
-                if ( this.padding_schemes[ k ].toLowerCase() === 'ZR0' ) {
-                    do plaintext[ plaintext.length - 1 ] = this.crypto.randomBytes( 1 )[ 0 ];
-                    while ( plaintext[ plaintex.length - 1 ] === 0 )
-                }
 
                 /* Perform a round of encryption. */
                 let ciphertext = this.discordCrypt.aes256_encrypt_gcm(
@@ -345,6 +334,56 @@ class testGenerator {
                 unit_tests[ i ].tests[ j ].input = input.toString( 'hex' );
                 unit_tests[ i ].tests[ j ].salt = salt.toString( 'hex' );
                 unit_tests[ i ].tests[ j ].output = hmac_list[ i ].hash( input, salt, true );
+            }
+        }
+
+        this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
+    }
+
+    /* Generate symmetric encryption/decryption tests. */
+    generateFullEncryptionTests( /* int */ num_tests = 5, /* string */ output_path = './tests/encode-test-vectors.json' ) {
+        let unit_tests = [];
+
+        /* Loop over each dual-encryption type. */
+        for ( let i = 0; i < this.cipherModeCount; i++ ) {
+            unit_tests[ i ] = [];
+
+            /* Loop over every block encryption mode. */
+            for ( let j = 0; j < this.block_modes.length; j++ ) {
+                unit_tests[ i ][ j ] = [];
+
+                /* Loop over every padding scheme.*/
+                for ( let k = 0; k < this.padding_schemes.length; k++ ) {
+                    unit_tests[ i ][ j ][ k ] = {};
+
+                    unit_tests[ i ][ j ][ k ].mode = this.block_modes[ j ];
+                    unit_tests[ i ][ j ][ k ].scheme = this.padding_schemes[ k ];
+                    unit_tests[ i ][ j ][ k ].r = [];
+
+                    /* Generate each test. */
+                    for ( let l = 0; l < num_tests; l++ ) {
+                        /* Get some random values. */
+                        let len = parseInt( this.crypto.randomBytes( 1 ).toString( 'hex' ), 16 ) + 32 + i + j + k + l,
+                            primary = this.crypto.randomBytes( parseInt( len / 2 ) ),
+                            secondary = this.crypto.randomBytes( parseInt( len / 3 ) ),
+                            plaintext = this.crypto.randomBytes( len + ( l % 5 ? l + 33 : k + 11 ) );
+
+                        /* Store the test output. */
+                        unit_tests[ i ][ j ][ k ].r[ l ] = {};
+                        unit_tests[ i ][ j ][ k ].r[ l ].primary_key = primary.toString( 'hex' );
+                        unit_tests[ i ][ j ][ k ].r[ l ].secondary_key = secondary.toString( 'hex' );
+                        unit_tests[ i ][ j ][ k ].r[ l ].plaintext = plaintext.toString( 'hex' );
+                        unit_tests[ i ][ j ][ k ].r[ l ].ciphertext = this.discordCrypt.symmetricEncrypt(
+                            plaintext,
+                            primary,
+                            secondary,
+                            i,
+                            this.block_modes[ j ],
+                            this.padding_schemes[ k ],
+                            true
+                        );
+                    }
+                }
             }
         }
 
