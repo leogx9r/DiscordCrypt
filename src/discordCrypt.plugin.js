@@ -2147,11 +2147,11 @@ class discordCrypt {
         if ( $( '#dc-lock-btn' ).length > 0 ) {
             if ( this.configFile.encodeAll ) {
                 $( '#dc-lock-btn' ).attr( 'title', 'Disable Message Encryption' );
-                $( '#dc-lock-btn' )[ 0 ].innerHTML = atob( this.lockIcon );
+                $( '#dc-lock-btn' )[ 0 ].innerHTML = Buffer.from( this.lockIcon, 'base64' ).toString( 'utf8' );
             }
             else {
                 $( '#dc-lock-btn' ).attr( 'title', 'Enable Message Encryption' );
-                $( '#dc-lock-btn' )[ 0 ].innerHTML = atob( this.unlockIcon );
+                $( '#dc-lock-btn' )[ 0 ].innerHTML = Buffer.from( this.unlockIcon, 'base64' ).toString( 'utf8' );
             }
 
             /* Set the button class. */
@@ -3315,7 +3315,7 @@ class discordCrypt {
 
             try {
                 /* Decode the message. */
-                let bin_str = atob( discordCrypt.substituteMessage( blob ) );
+                let bin_str = Buffer.from( discordCrypt.substituteMessage( blob ), 'base64' ).toString( 'utf8' );
 
                 /* Convert from a binary string to a Buffer(). */
                 value = Buffer.alloc( bin_str.length );
@@ -3781,12 +3781,12 @@ class discordCrypt {
             /* Update the icon and toggle. */
             if ( !self.configFile.encodeAll ) {
                 $( '#dc-lock-btn' ).attr( 'title', 'Disable Message Encryption' );
-                $( '#dc-lock-btn' )[ 0 ].innerHTML = atob( self.lockIcon );
+                $( '#dc-lock-btn' )[ 0 ].innerHTML = Buffer.from( self.lockIcon, 'base64' ).toString( 'utf8' );
                 self.configFile.encodeAll = true;
             }
             else {
                 $( '#dc-lock-btn' ).attr( 'title', 'Enable Message Encryption' );
-                $( '#dc-lock-btn' )[ 0 ].innerHTML = atob( self.unlockIcon );
+                $( '#dc-lock-btn' )[ 0 ].innerHTML = Buffer.from( self.unlockIcon, 'base64' ).toString( 'utf8' );
                 self.configFile.encodeAll = false;
             }
 
@@ -4537,9 +4537,10 @@ class discordCrypt {
         let isValid = false;
 
         /* Iterate all valid Crypto ciphers and compare the name. */
+        let cipher_name = cipher.toLowerCase();
         crypto.getCiphers().every( ( s ) => {
             /* If the cipher matches, stop iterating. */
-            if ( s === cipher.toLowerCase() ) {
+            if ( s === cipher_name) {
                 isValid = true;
                 return false;
             }
@@ -6653,7 +6654,13 @@ class discordCrypt {
      */
     static isValidBase64( message ) {
         try {
-            btoa( message );
+            let b64 = discordCrypt.getBase64();
+
+            for(let c in message){
+                if(b64.indexOf(c) === -1)
+                    return false;
+            }
+
             return true;
         } catch ( e ) {
             return false;
@@ -6989,13 +6996,13 @@ class discordCrypt {
             result += original[ subset.indexOf( msg[ i ] ) ];
 
         /* Convert from base64. */
-        buf = atob( result );
+        buf = Buffer.from( result, 'base64' );
 
         return [
-            buf[ 0 ].charCodeAt( 0 ),
-            buf[ 1 ].charCodeAt( 0 ),
-            buf[ 2 ].charCodeAt( 0 ),
-            buf[ 3 ].charCodeAt( 0 )
+            buf[ 0 ],
+            buf[ 1 ],
+            buf[ 2 ],
+            buf[ 3 ]
         ];
     }
 
