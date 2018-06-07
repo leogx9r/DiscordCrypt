@@ -1,4 +1,4 @@
-//META{"name":"discordCrypt","website":"https://gitlab.com/leogx9r/DiscordCrypt","source":"https://gitlab.com/leogx9r/DiscordCrypt/blob/master/src/discordCrypt.plugin.js"}*//
+//META{"name":"discordCrypt"}*//
 
 /*******************************************************************************
  * MIT License
@@ -7033,7 +7033,6 @@ class discordCrypt {
      *      These can be: [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
      *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
-     * @param {boolean} use_hmac Whether to enable HMAC authentication on the message.
      *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
      * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
      * @throws An exception indicating the error that occurred.
@@ -7044,8 +7043,7 @@ class discordCrypt {
         /* string|Buffer|Array */    secondary_key,
         /* int */                    cipher_index,
         /* int */                    block_mode,
-        /* int */                    padding_mode,
-        /* boolean */                use_hmac
+        /* int */                    padding_mode
     ) {
 
         /* Performs one of the 5 standard encryption algorithms on the plain text. */
@@ -7088,7 +7086,6 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
                 false
             );
         else if ( cipher_index >= 5 && cipher_index <= 9 )
@@ -7097,7 +7094,6 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
                 false
             );
         else if ( cipher_index >= 10 && cipher_index <= 14 )
@@ -7106,7 +7102,6 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
                 false
             );
         else if ( cipher_index >= 15 && cipher_index <= 19 )
@@ -7115,7 +7110,6 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
                 false
             );
         else if ( cipher_index >= 20 && cipher_index <= 24 )
@@ -7124,18 +7118,14 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
                 false
             );
 
-        /* If using HMAC mode, compute the HMAC of the ciphertext and prepend it. */
-        if ( use_hmac ) {
-            /* Get MAC tag as a hex string. */
-            let tag = discordCrypt.hmac_sha256( Buffer.from( msg, 'hex' ), primary_key, true );
+        /* Get MAC tag as a hex string. */
+        let tag = discordCrypt.hmac_sha256( Buffer.from( msg, 'hex' ), primary_key, true );
 
-            /* Prepend the authentication tag hex string & convert it to Base64. */
-            msg = Buffer.from( tag + msg, 'hex' ).toString( 'base64' );
-        }
+        /* Prepend the authentication tag hex string & convert it to Base64. */
+        msg = Buffer.from( tag + msg, 'hex' ).toString( 'base64' );
 
         /* Return the message. */
         return discordCrypt.substituteMessage( msg, true );
@@ -7152,7 +7142,6 @@ class discordCrypt {
      *      These can be: [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to unpad the message to the block length of the cipher.
      *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
-     * @param {boolean} use_hmac Whether to enable HMAC authentication on the message.
      *      If this is enabled and authentication fails, null is returned.
      *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
      * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
@@ -7164,8 +7153,7 @@ class discordCrypt {
         /* string */    secondary_key,
         /* int */       cipher_index,
         /* int */       block_mode,
-        /* int */       padding_mode,
-        /* boolean */   use_hmac
+        /* int */       padding_mode
     ) {
         const crypto = require( 'crypto' );
 
@@ -7223,29 +7211,26 @@ class discordCrypt {
             /* Decode level-1 message. */
             message = discordCrypt.substituteMessage( message );
 
-            /* If using HMAC, strip off the HMAC and compare it before proceeding. */
-            if ( use_hmac ) {
-                /* Convert to a Buffer. */
-                message = Buffer.from( message, 'base64' );
+            /* Convert to a Buffer. */
+            message = Buffer.from( message, 'base64' );
 
-                /* Pull off the first 32 bytes as a buffer. */
-                let tag = Buffer.from( message.subarray( 0, 32 ) );
+            /* Pull off the first 32 bytes as a buffer. */
+            let tag = Buffer.from( message.subarray( 0, 32 ) );
 
-                /* Strip off the authentication tag. */
-                message = Buffer.from( message.subarray( 32 ) );
+            /* Strip off the authentication tag. */
+            message = Buffer.from( message.subarray( 32 ) );
 
-                /* Compute the HMAC-SHA-256 of the cipher text as hex. */
-                let computed_tag = Buffer.from( discordCrypt.hmac_sha256( message, primary_key, true ), 'hex' );
+            /* Compute the HMAC-SHA-256 of the cipher text as hex. */
+            let computed_tag = Buffer.from( discordCrypt.hmac_sha256( message, primary_key, true ), 'hex' );
 
-                /* Compare the tag for validity. */
-                if ( !crypto.timingSafeEqual( computed_tag, tag ) )
-                    return 1;
-            }
+            /* Compare the tag for validity. */
+            if ( !crypto.timingSafeEqual( computed_tag, tag ) )
+                return 1;
 
             /* Dual decrypt the segment. */
             if ( cipher_index >= 0 && cipher_index <= 4 )
                 return handleDecodeSegment(
-                    discordCrypt.blowfish512_decrypt( message, secondary_key, mode, pad, 'base64', use_hmac ),
+                    discordCrypt.blowfish512_decrypt( message, secondary_key, mode, pad, 'base64' ),
                     primary_key,
                     cipher_index,
                     mode,
@@ -7255,7 +7240,7 @@ class discordCrypt {
                 );
             else if ( cipher_index >= 5 && cipher_index <= 9 )
                 return handleDecodeSegment(
-                    discordCrypt.aes256_decrypt( message, secondary_key, mode, pad, 'base64', use_hmac ),
+                    discordCrypt.aes256_decrypt( message, secondary_key, mode, pad, 'base64' ),
                     primary_key,
                     cipher_index - 5,
                     mode,
@@ -7265,7 +7250,7 @@ class discordCrypt {
                 );
             else if ( cipher_index >= 10 && cipher_index <= 14 )
                 return handleDecodeSegment(
-                    discordCrypt.camellia256_decrypt( message, secondary_key, mode, pad, 'base64', use_hmac ),
+                    discordCrypt.camellia256_decrypt( message, secondary_key, mode, pad, 'base64' ),
                     primary_key,
                     cipher_index - 10,
                     mode,
@@ -7275,7 +7260,7 @@ class discordCrypt {
                 );
             else if ( cipher_index >= 15 && cipher_index <= 19 )
                 return handleDecodeSegment(
-                    discordCrypt.idea128_decrypt( message, secondary_key, mode, pad, 'base64', use_hmac ),
+                    discordCrypt.idea128_decrypt( message, secondary_key, mode, pad, 'base64' ),
                     primary_key,
                     cipher_index - 15,
                     mode,
@@ -7285,7 +7270,7 @@ class discordCrypt {
                 );
             else if ( cipher_index >= 20 && cipher_index <= 24 )
                 return handleDecodeSegment(
-                    discordCrypt.tripledes192_decrypt( message, secondary_key, mode, pad, 'base64', use_hmac ),
+                    discordCrypt.tripledes192_decrypt( message, secondary_key, mode, pad, 'base64' ),
                     primary_key,
                     cipher_index - 20,
                     mode,
