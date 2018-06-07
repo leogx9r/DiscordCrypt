@@ -1,4 +1,4 @@
-//META{"name":"discordCrypt"}*//
+//META{"name":"discordCrypt","website":"https://gitlab.com/leogx9r/DiscordCrypt","source":"https://gitlab.com/leogx9r/DiscordCrypt/blob/master/src/discordCrypt.plugin.js"}*//
 
 /*******************************************************************************
  * MIT License
