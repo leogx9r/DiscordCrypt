@@ -680,7 +680,6 @@ class discordCrypt {
                                 <option value="ans2">ANSI X9.23</option>
                                 <option value="iso1">ISO 10126</option>
                                 <option value="iso9">ISO 97971</option>
-                                <option value="zr0">Zero Padding</option>
                             </select>
                         </div>
                         
@@ -2342,7 +2341,7 @@ class discordCrypt {
          *      [ 07 ... 00 ] - Random Padding Byte
          *
          *  #1 - Substitute( Base64( Encryption Algorithm << 24 | Padding Mode << 16 | Block Mode << 8 | RandomByte ) )
-         *  #2 - ( 0 - PKCS #7 | 1 = ANSI X9.23 | 2 = ISO 10126 | 3 = ISO97971 | 4 = Zero Pad | 5 = No Padding )
+         *  #2 - ( 0 - PKCS #7 | 1 = ANSI X9.23 | 2 = ISO 10126 | 3 = ISO97971 )
          *  #3 - Substitute( Base64( ( Key Algorithm Type & 0xff ) + Public Key ) )
          *  #4 - 8 Byte Metadata For Messages Only
          *
@@ -6950,7 +6949,7 @@ class discordCrypt {
 
         /* Parse the next 8 bits. */
         if ( typeof paddingIndex === 'string' )
-            paddingIndex = [ 'pkc7', 'ans2', 'iso1', 'iso9', 'zr0' ].indexOf( paddingIndex.toLowerCase() );
+            paddingIndex = [ 'pkc7', 'ans2', 'iso1', 'iso9' ].indexOf( paddingIndex.toLowerCase() );
         buf[ 2 ] = paddingIndex;
 
         /* Add padding. */
@@ -7196,8 +7195,6 @@ class discordCrypt {
                 pad = 'iso1';
             else if ( padding_mode === 3 )
                 pad = 'iso9';
-            else if ( padding_mode === 4 )
-                pad = 'zr0';
             else return '';
         }
 
