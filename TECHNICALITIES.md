@@ -68,7 +68,6 @@ The following padding schemes are supported:
 * [ANSI x9.23](https://en.wikipedia.org/wiki/Padding_(cryptography)#ANSI_X.923)
 * [ISO 10126](https://en.wikipedia.org/wiki/Padding_(cryptography)#ISO_10126)
 * [ISO 97971](https://en.wikipedia.org/wiki/Padding_(cryptography)#ISO/IEC_7816-4)
-* [Zero Padding](https://en.wikipedia.org/wiki/Padding_(cryptography)#Zero_padding)
 
 #### Key Exchanges
 

@@ -66,7 +66,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.0.8';
+        return '1.0.8-debug';
     }
 
     /* ============================================================== */
@@ -193,7 +193,6 @@ class discordCrypt {
             'ANS2', /* ANSI X.923 */
             'ISO1', /* ISO-10126 */
             'ISO9', /* ISO-97972 */
-            'ZR0', /* Zero-Padding */
         ];
 
         /**
@@ -4377,7 +4376,7 @@ class discordCrypt {
      * @public
      * @desc Pads or un-pads the input message using the specified encoding format and block size.
      * @param {string|Buffer|Array} message The input message to either pad or unpad.
-     * @param {string} padding_scheme The padding scheme used. This can be either: [ ZR0, ISO1, ISO9, PKC7, ANS2 ]
+     * @param {string} padding_scheme The padding scheme used. This can be either: [ ISO1, ISO9, PKC7, ANS2 ]
      * @param {int} block_size The block size that the padding scheme must align the message to.
      * @param {boolean} [is_hex] Whether to treat the message as a hex or Base64 string.
      *      If undefined, it is interpreted as a UTF-8 string.
@@ -4411,35 +4410,6 @@ class discordCrypt {
             else {
                 /* Remove the padding indicated by the last byte. */
                 return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
-            }
-        }
-
-        /* Pads a message with null bytes. N.B. Messages must NOT end with null bytes. */
-        function __ZERO( message, paddingBytes, remove ) {
-            if ( remove === undefined ) {
-                /* Allocate required padding length + message length. */
-                let padded = Buffer.alloc( message.length + paddingBytes );
-
-                /* Copy the message. */
-                message.copy( padded );
-
-                /* Fill the end of the message with null bytes according to the padding length. */
-                Buffer.alloc( paddingBytes ).fill( 0x00 ).copy( message, message.length );
-
-                /* Return the result. */
-                return padded;
-            }
-            else {
-                /* Scan backwards. */
-                let lastIndex = message.length - 1;
-
-                for ( ; lastIndex > 0; lastIndex-- )
-                    /* If a null byte is encountered, split at this index. */
-                    if ( message[ lastIndex ] !== 0x00 )
-                        break;
-
-                /* Slice the message based on this index. */
-                return message.slice( 0, lastIndex + 1 );
             }
         }
 
@@ -4512,8 +4482,18 @@ class discordCrypt {
                 return padded;
             }
             else {
+
+                /* Scan backwards. */
+                let lastIndex = message.length - 1;
+
+                /* Find the amount of null padding bytes. */
+                for ( ; lastIndex > 0; lastIndex-- )
+                    /* If a null byte is encountered, split at this index. */
+                    if ( message[ lastIndex ] !== 0x00 )
+                        break;
+
                 /* Remove the null-padding. */
-                let cleaned = __ZERO( message, 0, true );
+                let cleaned = message.slice( 0, lastIndex + 1 );
 
                 /* Remove the final byte which is 0x80. */
                 return cleaned.slice( 0, cleaned.length - 1 );
@@ -4536,8 +4516,6 @@ class discordCrypt {
                 return __ISO10126( _message, _padBytes, remove_padding );
             case 'ISO9':
                 return __ISO97971( _message, _padBytes, remove_padding );
-            case 'ZR0':
-                return __ZERO( _message, _padBytes, remove_padding );
             default:
                 return '';
         }
@@ -5674,7 +5652,7 @@ class discordCrypt {
      * @param {string} block_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_scheme The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {string|Buffer|Array} message The input message to encrypt.
      * @param {string|Buffer|Array} key The key used with the encryption cipher.
      * @param {boolean} convert_to_hex If true, the ciphertext is converted to a hex string, if false, it is
@@ -5771,7 +5749,7 @@ class discordCrypt {
      * @param {string} block_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_scheme The padding scheme used to unpad the message from the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {string|Buffer|Array} message The input ciphertext message to decrypt.
      * @param {string|Buffer|Array} key The key used with the decryption cipher.
      * @param {boolean} output_format The output format of the plaintext.
@@ -5856,7 +5834,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
      *      converted to a Base64 string.
      * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
@@ -5904,7 +5882,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {string} output_format The output format of the decrypted message.
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
@@ -5949,7 +5927,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
      *      converted to a Base64 string.
      * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
@@ -5997,7 +5975,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {string} output_format The output format of the decrypted message.
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
@@ -6041,7 +6019,7 @@ class discordCrypt {
      * @param {string|Buffer|Array} message The input message to encrypt.
      * @param {string|Buffer|Array} key The key used with the encryption cipher.
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
      *      converted to a Base64 string.
      * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
@@ -6130,7 +6108,7 @@ class discordCrypt {
      * @param {string|Buffer|Array} message The input message to decrypt.
      * @param {string|Buffer|Array} key The key used with the decryption cipher.
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {string} output_format The output format of the decrypted message.
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
@@ -6218,7 +6196,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
      *      converted to a Base64 string.
      * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
@@ -6266,7 +6244,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {string} output_format The output format of the decrypted message.
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
@@ -6311,7 +6289,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
      *      converted to a Base64 string.
      * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
@@ -6359,7 +6337,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {string} output_format The output format of the decrypted message.
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
@@ -6404,7 +6382,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
      *      converted to a Base64 string.
      * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
@@ -6452,7 +6430,7 @@ class discordCrypt {
      * @param {string} cipher_mode The block operation mode of the cipher.
      *      This can be either [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {string} output_format The output format of the decrypted message.
      *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
      * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
@@ -7032,7 +7010,7 @@ class discordCrypt {
      * @param {string} block_mode The block operation mode of the ciphers.
      *      These can be: [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {boolean} use_hmac Whether to enable HMAC authentication on the message.
      *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
      * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
@@ -7151,7 +7129,7 @@ class discordCrypt {
      * @param {string} block_mode The block operation mode of the ciphers.
      *      These can be: [ 'CBC', 'CFB', 'OFB' ].
      * @param {string} padding_mode The padding scheme used to unpad the message to the block length of the cipher.
-     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9', 'ZR0' ].
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
      * @param {boolean} use_hmac Whether to enable HMAC authentication on the message.
      *      If this is enabled and authentication fails, null is returned.
      *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
