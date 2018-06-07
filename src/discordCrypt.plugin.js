@@ -24,6 +24,8 @@
  * SOFTWARE.
  ******************************************************************************/
 
+"use strict";
+
 /**
  * @public
  * @desc Main plugin prototype.
@@ -5099,43 +5101,43 @@ class discordCrypt {
                  * @param {int} b The number of bits to rotate [a] to the left by.
                  * @return {number}
                  */
-                function RotateBitsLeft( a, b ) {
+                let R = ( a, b ) => {
                     return ( a << b ) | ( a >>> ( 32 - b ) );
-                }
+                };
 
                 for ( j = 8; j > 0; j -= 2 ) {
-                    x[ 0x04 ] ^= RotateBitsLeft( x[ 0x00 ] + x[ 0x0C ], 0x07 );
-                    x[ 0x08 ] ^= RotateBitsLeft( x[ 0x04 ] + x[ 0x00 ], 0x09 );
-                    x[ 0x0C ] ^= RotateBitsLeft( x[ 0x08 ] + x[ 0x04 ], 0x0D );
-                    x[ 0x00 ] ^= RotateBitsLeft( x[ 0x0C ] + x[ 0x08 ], 0x12 );
-                    x[ 0x09 ] ^= RotateBitsLeft( x[ 0x05 ] + x[ 0x01 ], 0x07 );
-                    x[ 0x0D ] ^= RotateBitsLeft( x[ 0x09 ] + x[ 0x05 ], 0x09 );
-                    x[ 0x01 ] ^= RotateBitsLeft( x[ 0x0D ] + x[ 0x09 ], 0x0D );
-                    x[ 0x05 ] ^= RotateBitsLeft( x[ 0x01 ] + x[ 0x0D ], 0x12 );
-                    x[ 0x0E ] ^= RotateBitsLeft( x[ 0x0A ] + x[ 0x06 ], 0x07 );
-                    x[ 0x02 ] ^= RotateBitsLeft( x[ 0x0E ] + x[ 0x0A ], 0x09 );
-                    x[ 0x06 ] ^= RotateBitsLeft( x[ 0x02 ] + x[ 0x0E ], 0x0D );
-                    x[ 0x0A ] ^= RotateBitsLeft( x[ 0x06 ] + x[ 0x02 ], 0x12 );
-                    x[ 0x03 ] ^= RotateBitsLeft( x[ 0x0F ] + x[ 0x0B ], 0x07 );
-                    x[ 0x07 ] ^= RotateBitsLeft( x[ 0x03 ] + x[ 0x0F ], 0x09 );
-                    x[ 0x0B ] ^= RotateBitsLeft( x[ 0x07 ] + x[ 0x03 ], 0x0D );
-                    x[ 0x0F ] ^= RotateBitsLeft( x[ 0x0B ] + x[ 0x07 ], 0x12 );
-                    x[ 0x01 ] ^= RotateBitsLeft( x[ 0x00 ] + x[ 0x03 ], 0x07 );
-                    x[ 0x02 ] ^= RotateBitsLeft( x[ 0x01 ] + x[ 0x00 ], 0x09 );
-                    x[ 0x03 ] ^= RotateBitsLeft( x[ 0x02 ] + x[ 0x01 ], 0x0D );
-                    x[ 0x00 ] ^= RotateBitsLeft( x[ 0x03 ] + x[ 0x02 ], 0x12 );
-                    x[ 0x06 ] ^= RotateBitsLeft( x[ 0x05 ] + x[ 0x04 ], 0x07 );
-                    x[ 0x07 ] ^= RotateBitsLeft( x[ 0x06 ] + x[ 0x05 ], 0x09 );
-                    x[ 0x04 ] ^= RotateBitsLeft( x[ 0x07 ] + x[ 0x06 ], 0x0D );
-                    x[ 0x05 ] ^= RotateBitsLeft( x[ 0x04 ] + x[ 0x07 ], 0x12 );
-                    x[ 0x0B ] ^= RotateBitsLeft( x[ 0x0A ] + x[ 0x09 ], 0x07 );
-                    x[ 0x08 ] ^= RotateBitsLeft( x[ 0x0B ] + x[ 0x0A ], 0x09 );
-                    x[ 0x09 ] ^= RotateBitsLeft( x[ 0x08 ] + x[ 0x0B ], 0x0D );
-                    x[ 0x0A ] ^= RotateBitsLeft( x[ 0x09 ] + x[ 0x08 ], 0x12 );
-                    x[ 0x0C ] ^= RotateBitsLeft( x[ 0x0F ] + x[ 0x0E ], 0x07 );
-                    x[ 0x0D ] ^= RotateBitsLeft( x[ 0x0C ] + x[ 0x0F ], 0x09 );
-                    x[ 0x0E ] ^= RotateBitsLeft( x[ 0x0D ] + x[ 0x0C ], 0x0D );
-                    x[ 0x0F ] ^= RotateBitsLeft( x[ 0x0E ] + x[ 0x0D ], 0x12 );
+                    x[ 0x04 ] ^= R( x[ 0x00 ] + x[ 0x0C ], 0x07 );
+                    x[ 0x08 ] ^= R( x[ 0x04 ] + x[ 0x00 ], 0x09 );
+                    x[ 0x0C ] ^= R( x[ 0x08 ] + x[ 0x04 ], 0x0D );
+                    x[ 0x00 ] ^= R( x[ 0x0C ] + x[ 0x08 ], 0x12 );
+                    x[ 0x09 ] ^= R( x[ 0x05 ] + x[ 0x01 ], 0x07 );
+                    x[ 0x0D ] ^= R( x[ 0x09 ] + x[ 0x05 ], 0x09 );
+                    x[ 0x01 ] ^= R( x[ 0x0D ] + x[ 0x09 ], 0x0D );
+                    x[ 0x05 ] ^= R( x[ 0x01 ] + x[ 0x0D ], 0x12 );
+                    x[ 0x0E ] ^= R( x[ 0x0A ] + x[ 0x06 ], 0x07 );
+                    x[ 0x02 ] ^= R( x[ 0x0E ] + x[ 0x0A ], 0x09 );
+                    x[ 0x06 ] ^= R( x[ 0x02 ] + x[ 0x0E ], 0x0D );
+                    x[ 0x0A ] ^= R( x[ 0x06 ] + x[ 0x02 ], 0x12 );
+                    x[ 0x03 ] ^= R( x[ 0x0F ] + x[ 0x0B ], 0x07 );
+                    x[ 0x07 ] ^= R( x[ 0x03 ] + x[ 0x0F ], 0x09 );
+                    x[ 0x0B ] ^= R( x[ 0x07 ] + x[ 0x03 ], 0x0D );
+                    x[ 0x0F ] ^= R( x[ 0x0B ] + x[ 0x07 ], 0x12 );
+                    x[ 0x01 ] ^= R( x[ 0x00 ] + x[ 0x03 ], 0x07 );
+                    x[ 0x02 ] ^= R( x[ 0x01 ] + x[ 0x00 ], 0x09 );
+                    x[ 0x03 ] ^= R( x[ 0x02 ] + x[ 0x01 ], 0x0D );
+                    x[ 0x00 ] ^= R( x[ 0x03 ] + x[ 0x02 ], 0x12 );
+                    x[ 0x06 ] ^= R( x[ 0x05 ] + x[ 0x04 ], 0x07 );
+                    x[ 0x07 ] ^= R( x[ 0x06 ] + x[ 0x05 ], 0x09 );
+                    x[ 0x04 ] ^= R( x[ 0x07 ] + x[ 0x06 ], 0x0D );
+                    x[ 0x05 ] ^= R( x[ 0x04 ] + x[ 0x07 ], 0x12 );
+                    x[ 0x0B ] ^= R( x[ 0x0A ] + x[ 0x09 ], 0x07 );
+                    x[ 0x08 ] ^= R( x[ 0x0B ] + x[ 0x0A ], 0x09 );
+                    x[ 0x09 ] ^= R( x[ 0x08 ] + x[ 0x0B ], 0x0D );
+                    x[ 0x0A ] ^= R( x[ 0x09 ] + x[ 0x08 ], 0x12 );
+                    x[ 0x0C ] ^= R( x[ 0x0F ] + x[ 0x0E ], 0x07 );
+                    x[ 0x0D ] ^= R( x[ 0x0C ] + x[ 0x0F ], 0x09 );
+                    x[ 0x0E ] ^= R( x[ 0x0D ] + x[ 0x0C ], 0x0D );
+                    x[ 0x0F ] ^= R( x[ 0x0E ] + x[ 0x0D ], 0x12 );
                 }
 
                 for ( j = 0; j < 16; ++j )
