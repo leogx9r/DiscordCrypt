@@ -1285,17 +1285,17 @@ class discordCrypt {
         this.saveConfig();
 
         /* Set a new decoder to use any updated configurations. */
-        setInterval( function () {
+        setInterval( ( function () {
             self.decodeMessages( true );
-        }, this.configFile.encryptScanDelay );
+        } ), this.configFile.encryptScanDelay );
 
         /* Tell the user that their settings were applied. */
         btn.innerHTML = "Saved & Applied!";
 
         /* Reset the original text after a second. */
-        setTimeout( function () {
+        setTimeout( ( function () {
             btn.innerHTML = "Save & Apply";
-        }, 1000 );
+        } ), 1000 );
     }
 
     /**
@@ -1317,17 +1317,17 @@ class discordCrypt {
         this.saveConfig();
 
         /* Set a new decoder to use any updated configurations. */
-        setInterval( function () {
+        setInterval( ( function () {
             self.decodeMessages( true );
-        }, self.configFile.encryptScanDelay );
+        } ), self.configFile.encryptScanDelay );
 
         /* Tell the user that their settings were reset. */
         btn.innerHTML = "Restored Default Settings!";
 
         /* Reset the original text after a second. */
-        setTimeout( function () {
+        setTimeout( ( function () {
             btn.innerHTML = "Reset Settings";
-        }, 1000 );
+        } ), 1000 );
     }
 
     /**
@@ -1904,7 +1904,7 @@ class discordCrypt {
         document.getElementById( 'dc-master-overlay' ).style.display = 'block';
 
         /* Check for ENTER key press to execute unlocks. */
-        pwd_field.on( "keydown", function ( e ) {
+        pwd_field.on( "keydown", ( function ( e ) {
             let code = e.keyCode || e.which;
 
             /* Execute on ENTER/RETURN only. */
@@ -1912,10 +1912,10 @@ class discordCrypt {
                 return;
 
             unlock_btn.click();
-        } );
+        } ) );
 
         /* Handle unlock button clicks. */
-        unlock_btn.click( function () {
+        unlock_btn.click( ( function () {
 
             /* Disable the button before clicking. */
             unlock_btn.attr( 'disabled', true );
@@ -1956,9 +1956,9 @@ class discordCrypt {
                         master_status.css( 'width', '0%' );
 
                         /* Reset the text of the button after 1 second. */
-                        setTimeout( function () {
+                        setTimeout( ( function () {
                             unlock_btn.text( action_msg );
-                        }, 1000 );
+                        } ), 1000 );
 
                         discordCrypt.log( error.toString(), 'error' );
                         return true;
@@ -1988,9 +1988,9 @@ class discordCrypt {
                             master_status.css( 'width', '0%' );
 
                             /* Reset the text of the button after 1 second. */
-                            setTimeout( function () {
+                            setTimeout( ( function () {
                                 unlock_btn.text( action_msg );
-                            }, 1000 );
+                            } ), 1000 );
 
                             /* Proceed no further. */
                             unlock_btn.attr( 'disabled', false );
@@ -2007,30 +2007,30 @@ class discordCrypt {
                             unlock_btn.text( 'Created Successfully!' );
 
                         /* Close the overlay after 1 second. */
-                        setTimeout( function () {
+                        setTimeout( ( function () {
                             $( '#dc-master-overlay' ).remove();
-                        }, 1000 );
+                        } ), 1000 );
                     }
 
                     return false;
                 }
             );
-        } );
+        } ) );
 
         /* Handle cancel button presses. */
-        cancel_btn.click( function () {
+        cancel_btn.click( ( function () {
             /* Use a 300 millisecond delay. */
             setTimeout(
-                function () {
+                ( function () {
                     /* Remove the prompt overlay. */
                     $( '#dc-master-overlay' ).remove();
 
                     /* Do some quick cleanup. */
                     self.masterPassword = null;
                     self.configFile = null;
-                }, 300
+                } ), 300
             );
-        } );
+        } ) );
     }
 
     /**
@@ -2284,7 +2284,7 @@ class discordCrypt {
             return;
 
         /* Replace any old handlers before adding the new one. */
-        textarea.off( "keydown.dcrypt" ).on( "keydown.dcrypt", function ( e ) {
+        textarea.off( "keydown.dcrypt" ).on( "keydown.dcrypt", ( function ( e ) {
             let code = e.keyCode || e.which;
 
             /* Skip if we don't have a valid configuration. */
@@ -2313,7 +2313,7 @@ class discordCrypt {
             /* Cancel the default sending action. */
             e.preventDefault();
             e.stopPropagation();
-        } );
+        } ) );
     }
 
     /**
@@ -2374,7 +2374,7 @@ class discordCrypt {
             button.css( 'width', '100%' );
 
             /* Handle clicks. */
-            button.click( function () {
+            button.click( ( function () {
                 /* Save for faster access. */
                 let tmp = [];
                 tmp[ 'ea' ] = $( '#dc-keygen-method' )[ 0 ].value;
@@ -2420,7 +2420,7 @@ class discordCrypt {
 
                 /* Click compute. */
                 $( '#dc-handshake-compute-btn' ).click();
-            } );
+            } ) );
 
             /* Add the button. */
             message.parent().append( button );
@@ -2551,7 +2551,7 @@ class discordCrypt {
 
         /* Look through each markup element to find an embedDescription. */
         let React = discordCrypt.getReactModules();
-        $( this.messageMarkupClass ).each( function () {
+        $( this.messageMarkupClass ).each( ( function () {
             /* Skip classes with no embeds. */
             if ( !this.className.includes( 'embedDescription' ) )
                 return;
@@ -2565,7 +2565,7 @@ class discordCrypt {
 
             /* Set the flag. */
             $( this ).data( 'dc-parsed', true );
-        } );
+        } ) );
     }
 
     /**
@@ -3096,9 +3096,9 @@ class discordCrypt {
         let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
 
         /* Clear the old select list. */
-        $( '#dc-keygen-algorithm option' ).each( function () {
+        $( '#dc-keygen-algorithm option' ).each( ( function () {
             $( this ).remove();
-        } );
+        } ) );
 
         /* Repopulate the entries. */
         switch ( $( '#dc-keygen-method' )[ 0 ].value ) {
@@ -3251,9 +3251,9 @@ class discordCrypt {
             /* Update the button text & reset after 1 second.. */
             $( '#dc-keygen-send-pub-btn' )[ 0 ].innerText = 'Sent The Public Key!';
 
-            setTimeout( function () {
+            setTimeout( ( function () {
                 $( '#dc-keygen-send-pub-btn' )[ 0 ].innerText = 'Send Public Key';
-            }, 1000 );
+            } ), 1000 );
         };
     }
 
@@ -3295,9 +3295,9 @@ class discordCrypt {
             if ( !$( '#dc-pub-key-ta' )[ 0 ].value || !$( '#dc-pub-key-ta' )[ 0 ].value.length ) {
                 /* Update the text. */
                 $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'You Didn\'t Generate A Key!';
-                setTimeout( function () {
+                setTimeout( ( function () {
                     $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                }, 1000 );
+                } ), 1000 );
                 return;
             }
 
@@ -3327,9 +3327,9 @@ class discordCrypt {
             catch ( e ) {
                 /* Update the text. */
                 $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Invalid Public Key!';
-                setTimeout( function () {
+                setTimeout( ( function () {
                     $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                }, 1000 );
+                } ), 1000 );
                 return;
             }
 
@@ -3340,9 +3340,9 @@ class discordCrypt {
             if ( !discordCrypt.isValidExchangeAlgorithm( algorithm ) ) {
                 /* Update the text. */
                 $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Invalid Algorithm!';
-                setTimeout( function () {
+                setTimeout( ( function () {
                     $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                }, 1000 );
+                } ), 1000 );
                 return;
             }
 
@@ -3353,9 +3353,9 @@ class discordCrypt {
             if ( user_pub_key.readInt8( 0 ) !== algorithm ) {
                 /* Update the text. */
                 $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Mismatched Algorithm!';
-                setTimeout( function () {
+                setTimeout( ( function () {
                     $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                }, 1000 );
+                } ), 1000 );
                 return;
             }
 
@@ -3370,9 +3370,9 @@ class discordCrypt {
             if ( salt_len < 16 || salt_len > 32 ) {
                 /* Update the text. */
                 $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Invalid Salt Length!';
-                setTimeout( function () {
+                setTimeout( ( function () {
                     $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                }, 1000 );
+                } ), 1000 );
                 return;
             }
 
@@ -3398,9 +3398,9 @@ class discordCrypt {
                 typeof discordCrypt.privateExchangeKey.computeSecret === 'undefined' ) {
                 /* Update the text. */
                 $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Failed To Calculate Private Key!';
-                setTimeout( function () {
+                setTimeout( ( function () {
                     $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                }, 1000 );
+                } ), 1000 );
                 return;
             }
 
@@ -3412,9 +3412,9 @@ class discordCrypt {
             if ( !derived_secret || !derived_secret.length ) {
                 /* Update the text. */
                 $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Failed To Derive Key!';
-                setTimeout( function () {
+                setTimeout( ( function () {
                     $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                }, 1000 );
+                } ), 1000 );
                 return;
             }
 
@@ -3443,9 +3443,9 @@ class discordCrypt {
                     /* Update the text. */
                     $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Both Salts Are Equal ?!';
                     setTimeout(
-                        function () {
+                        ( function () {
                             $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                        },
+                        } ),
                         1000
                     );
                     return;
@@ -3480,9 +3480,9 @@ class discordCrypt {
                         /* Update the text. */
                         $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Failed Generating Primary Key!';
                         setTimeout(
-                            function () {
+                            ( function () {
                                 $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                            },
+                            } ),
                             1000
                         );
                         return true;
@@ -3533,9 +3533,9 @@ class discordCrypt {
                     /* Update the text. */
                     $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Failed Generating Secondary Key!';
                     setTimeout(
-                        function () {
+                        ( function () {
                             $( '#dc-handshake-compute-btn' )[ 0 ].innerText = 'Compute Secret Keys';
-                        },
+                        } ),
                         1000
                     );
                     return true;
@@ -3590,11 +3590,11 @@ class discordCrypt {
         /* Update the button text & reset after 1 second. */
         $( '#dc-handshake-cpy-keys-btn' )[ 0 ].innerText = 'Coped Keys To Clipboard!';
 
-        setTimeout( function () {
+        setTimeout( ( function () {
             $( '#dc-handshake-cpy-keys-btn' )[ 0 ].innerText = 'Copy Keys & Nuke';
             $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
             $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
-        }, 1000 );
+        } ), 1000 );
     }
 
     /**
@@ -3627,7 +3627,7 @@ class discordCrypt {
 
             /* Update the text and reset it after 1 second. */
             $( '#dc-handshake-apply-keys-btn' )[ 0 ].innerText = 'Applied & Saved!';
-            setTimeout( function () {
+            setTimeout( ( function () {
                 $( '#dc-handshake-apply-keys-btn' )[ 0 ].innerText = 'Apply Generated Passwords';
 
                 /* Reset quality bit length fields. */
@@ -3642,7 +3642,7 @@ class discordCrypt {
 
                 /* Reset the index to the info tab. */
                 discordCrypt.setActiveTab( 0 );
-            }, 1000 );
+            } ), 1000 );
         }
     }
 
@@ -3672,7 +3672,7 @@ class discordCrypt {
             btn.text( "Saved!" );
 
             /* Reset the text for the password button after a 1 second delay. */
-            setTimeout( function () {
+            setTimeout( ( function () {
                 /* Reset text. */
                 btn.text( "Save Password" );
 
@@ -3683,7 +3683,7 @@ class discordCrypt {
                 /* Close. */
                 $( '#dc-overlay' )[ 0 ].style.display = 'none';
                 $( '#dc-overlay-password' )[ 0 ].style.display = 'none';
-            }, 1000 );
+            } ), 1000 );
         };
     }
 
@@ -3704,7 +3704,7 @@ class discordCrypt {
             /* Update the text for the button. */
             btn.text( "Password Reset!" );
 
-            setTimeout( function () {
+            setTimeout( ( function () {
                 /* Reset text. */
                 btn.text( "Reset Password" );
 
@@ -3715,7 +3715,7 @@ class discordCrypt {
                 /* Close. */
                 $( '#dc-overlay' )[ 0 ].style.display = 'none';
                 $( '#dc-overlay-password' )[ 0 ].style.display = 'none';
-            }, 1000 );
+            } ), 1000 );
         };
     }
 
@@ -3729,11 +3729,11 @@ class discordCrypt {
         $( "#dc-password-secondary" )[ 0 ].value = '';
 
         /* Close after a .25 second delay. */
-        setTimeout( function () {
+        setTimeout( ( function () {
             /* Close. */
             $( '#dc-overlay' )[ 0 ].style.display = 'none';
             $( '#dc-overlay-password' )[ 0 ].style.display = 'none';
-        }, 250 );
+        } ), 250 );
     }
 
     /**
@@ -3762,13 +3762,13 @@ class discordCrypt {
             $( '#dc-cpy-pwds-btn' ).text( 'Copied Keys To Clipboard!' );
 
             /* Reset the button after 1 second close the prompt. */
-            setTimeout( function () {
+            setTimeout( ( function () {
                 /* Reset. */
                 $( '#dc-cpy-pwds-btn' ).text( 'Copy Current Passwords!' );
 
                 /* Close. */
                 $( '#dc-cancel-btn' ).click();
-            }, 1000 );
+            } ), 1000 );
         };
     }
 
@@ -7305,4 +7305,5 @@ class discordCrypt {
 
 /* Required for code coverage reports. */
 module.exports = { discordCrypt };
+
 
