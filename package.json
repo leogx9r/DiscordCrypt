@@ -26,11 +26,10 @@
     "istanbul": "latest",
     "mime-types": "latest",
     "nodeunit": "latest",
-    "optimize-js": "^1.0.3",
-    "original-fs": "^1.0.0",
+    "optimize-js": "latest",
+    "original-fs": "latest",
     "path": "latest",
     "process": "latest",
-    "request": "latest",
-    "uglify-js": "^3.4.0"
+    "request": "latest"
   }
 }
