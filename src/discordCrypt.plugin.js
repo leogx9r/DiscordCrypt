@@ -3315,12 +3315,7 @@ class discordCrypt {
 
             try {
                 /* Decode the message. */
-                let bin_str = Buffer.from( discordCrypt.substituteMessage( blob ), 'base64' ).toString( 'utf8' );
-
-                /* Convert from a binary string to a Buffer(). */
-                value = Buffer.alloc( bin_str.length );
-                for ( let i = 0; i < bin_str.length; i++ )
-                    value.writeUInt8( bin_str.charCodeAt( i ), i );
+                value = Buffer.from( discordCrypt.substituteMessage( blob ), 'base64' );
             }
             catch ( e ) {
                 /* Update the text. */
