@@ -439,5 +439,5 @@ not being visible.
 If you've discovered a bug in the plugin, feel free to create an issue after reading the 
 [contribution guide](CONTRIBUTING.md). Please be as detailed as possible.
 
-We also have a [Discord Server](https://discord.gg/3uakNmM) for any discussion related to **DiscordCrypt** and for 
+We also have a [Discord Server](https://discord.me/discordcrypt) for any discussion related to **DiscordCrypt** and for 
 general support.
