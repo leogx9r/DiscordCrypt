@@ -76,6 +76,10 @@ class testRunner {
                     /* Run key exchange tests. */
                     this.addDiffieHellmanTests( unit_tests );
                     break;
+                case 'encoding':
+                    /* Run encoding tests. */
+                    this.addEncodingTests( unit_tests );
+                    break;
                 case 'coverage':
                     /* Run generic tests. */
                     this.addGenericTests( unit_tests );
@@ -94,6 +98,9 @@ class testRunner {
 
                     /* Run only a single test of each cipher type. */
                     this.addCipherTests( unit_tests, undefined, true );
+
+                    /* Run encoding tests. */
+                    this.addEncodingTests( unit_tests, true );
 
                     /* Run key exchange tests once for every key length. */
                     this.addDiffieHellmanTests( unit_tests, true );
@@ -121,6 +128,9 @@ class testRunner {
 
             /* Run cipher tests. */
             this.addCipherTests( unit_tests );
+
+            /* Run encoding tests. */
+            this.addEncodingTests( unit_tests );
 
             /* Run key exchange tests. */
             this.addDiffieHellmanTests( unit_tests );
@@ -641,6 +651,94 @@ class testRunner {
                 );
                 break;
         }
+    }
+
+    /**
+     * @desc Adds full encryption encoding tests to the array specified.
+     * @param {Array} unit_tests An array of unit tests to run.
+     * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
+     */
+    addEncodingTests( unit_tests, coverage ) {
+        const vectors = require( './encode-test-vectors.json' );
+
+        /* Loop over every dual-encryption combination. */
+        for ( let i = 0; i < vectors.length; i++ ) {
+            let cipher_index = i;
+
+            /* Loop over every block mode. */
+            for ( let j = 0; j < vectors[ i ].length; j++ ) {
+                /* Loop over every padding mode. */
+                for ( let k = 0; k < vectors[ i ][ j ].length; k++ ) {
+
+                    /* Get the block operation mode and padding scheme used. */
+                    let block_mode = vectors[ i ][ j ][ k ].mode;
+                    let padding_scheme = vectors[ i ][ j ][ k ].scheme;
+
+                    /* Convert the cipher index to a string for logging. */
+                    let cipher_string = this.discordCrypt.cipherIndexToString( cipher_index ) + '-' +
+                        this.discordCrypt.cipherIndexToString( cipher_index, true );
+
+                    /* Create the test class. */
+                    let test_name = `encode-${cipher_string}-${block_mode}-${padding_scheme}`;
+                    unit_tests[ test_name ] = { };
+
+                    /* Loop over each test being performed. */
+                    for( let l = 0; l < (coverage ? 1 : vectors[ i ][ j ][ k ].r.length); l++ ){
+
+                        /* Create a test. */
+                        unit_tests[ test_name ][ `Test #${l}` ] = ( ut ) => {
+
+                            /* Grab all data necessary. */
+                            let primary_key = Buffer.from(vectors[ i ][ j ][ k ].r[ l ].primary_key, 'hex'),
+                                secondary_key = Buffer.from(vectors[ i ][ j ][ k ].r[ l ].secondary_key, 'hex'),
+                                plaintext = Buffer.from(vectors[ i ][ j ][ k ].r[ l ].plaintext, 'hex'),
+                                ciphertext = vectors[ i ][ j ][ k ].r[ l ].ciphertext;
+
+                            /* Perform a decryption test. */
+                            ut.equal(
+                                plaintext.toString('utf8'),
+                                this.discordCrypt.symmetricDecrypt(
+                                    ciphertext,
+                                    primary_key,
+                                    secondary_key,
+                                    cipher_index,
+                                    this.discordCrypt_instance.encryptBlockModes.indexOf(block_mode.toUpperCase()),
+                                    this.discordCrypt_instance.paddingModes.indexOf(padding_scheme.toUpperCase()),
+                                    true
+                                ),
+                                `Encoding error during decryption of ${cipher_string}`
+                            );
+
+                            /* Perform an encryption/decryption test. */
+                            ut.equal(
+                                plaintext.toString('utf8'),
+                                this.discordCrypt.symmetricDecrypt(
+                                    this.discordCrypt.symmetricEncrypt(
+                                        plaintext,
+                                        primary_key,
+                                        secondary_key,
+                                        cipher_index,
+                                        block_mode,
+                                        padding_scheme,
+                                        true
+                                    ),
+                                    primary_key,
+                                    secondary_key,
+                                    cipher_index,
+                                    this.discordCrypt_instance.encryptBlockModes.indexOf(block_mode.toUpperCase()),
+                                    this.discordCrypt_instance.paddingModes.indexOf(padding_scheme.toUpperCase()),
+                                    true
+                                ),
+                                `Encoding error during encryption of ${cipher_string}`
+                            );
+
+                            ut.done();
+                        };
+                    }
+                }
+            }
+        }
+
     }
 
     /**
