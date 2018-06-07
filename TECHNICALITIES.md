@@ -243,13 +243,10 @@ These methods do a 1-1 substituion as follows:
 
 Encryption and decryption follows [OpenSSL](https://en.wikipedia.org/wiki/OpenSSL)'s method of deriving keys.
 
-In the event that a cipher requires an [Initialization Vector](https://en.wikipedia.org/wiki/Initialization_vector), 
-a random 64-bit salt is generated and is used in conjunction with an SHA-256 based PBKDF to generate a unique IV 
-and a derived encryption key.
+A random 64-bit salt is generated and is used in conjunction with an SHA-256 based PBKDF over 1000 rounds to generate a 
+unique [IV](https://en.wikipedia.org/wiki/Initialization_vector) and a derived encryption key.
 
 Messages encrypted in this format take the form: `< 64-Bit Random Seed > + < Cipher Text >`
-
-If however, an IV is not required ( ECB-only ) then the random seed is not prepended to the message.
 
 When a message is being decrypted, the [metadata](#meta-data-encoding) for the message is read to determine how to proceed.
 
@@ -259,8 +256,7 @@ This indicates:
 - The block operation mode of the cipher.
 - The padding mode used for the message.
 
-In the event that the cipher mode used requires an IV, the message is assumed to contain a 64-bit seed used to 
-derive the actual key and IV used.
+All inputs passed to a `< cipher >_decrypt` method is assumed to contain a 64-bit seed used to derive the key and IV.
 
 The plugin employs what is known as [multiple encryption](https://en.wikipedia.org/wiki/Multiple_encryption) to encrypt all 
 messages before they are sent.
@@ -286,7 +282,7 @@ scheme.
 
 Its derivation is done by using the [Scrypt](https://en.wikipedia.org/wiki/Scrypt) hashing algorithm with the following parameters.
 
-- N = `1536`   ( The work factor variable. Memory and CPU usage scale linearly with this. )
+- N = `4096`   ( The work factor variable. Memory and CPU usage scale linearly with this. )
 - r = `8`      ( The block size parameter used to tune memory reading. )
 - p = `1`      ( Parallelization factor. Indicates the number of mixing functions to be run simultaneously. )
 - dkLen = `32` ( The output size of the hash produced. Must satisfy dkLen ≤ (2^32− 1) * 32 )
