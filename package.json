@@ -26,7 +26,6 @@
     "istanbul": "latest",
     "mime-types": "latest",
     "nodeunit": "latest",
-    "optimize-js": "latest",
     "original-fs": "latest",
     "path": "latest",
     "process": "latest",
