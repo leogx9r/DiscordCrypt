@@ -1,7 +1,7 @@
 <h1 align="center">
     <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" 
     height="50" width="50">
-    DiscordCrypt
+    DiscordCrypt <h3>End-To-End Message Encryption For Discord</h3>
 </h1>
 
 * [**Introduction**](#introduction)
@@ -35,15 +35,15 @@ messages between users and channels in a safe and secure manner.
 It achieves this by using [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) using 
 well known ciphers to ensure only the people you want to read your messages can read them and no one else.
 
-The source code is public and licensed under the [**MIT License**](LICENSE) so feel free to have a look or modify it 
-as you see fit!
+The source code is free and completely open source and licensed under the [**MIT License**](LICENSE) so feel free to 
+have a look or modify it as you see fit!
 
 If you'd like an in-depth explanation of its inner workings, [click here](TECHNICALITIES.md).
 
 Contributions are welcome! Be sure to read [our guidelines](CONTRIBUTING.md) before submitting your changes.
 
-Also, while this project is licensed under the MIT, if you feel generous and wish to buy us coffee, We'll happily 
-accept.
+Also, while this project is licensed under the MIT, if you feel generous and wish to buy the creators coffee, we'll 
+happily accept.
 
 
 | **Name**               | **Address**                                                                                        |
@@ -58,8 +58,8 @@ accept.
 
 # Installation
 
-**DiscordCrypt** is installed just like any other [BetterDiscord](https://github.com/Jiiks/BetterDiscordApp) plugin. 
-If you do not have BetterDiscord installed, be sure to do that first.
+**DiscordCrypt** is installed just like any other [BetterDiscord](https://github.com/rauenzi/BetterDiscordApp/releases)
+plugin. If you do not have BetterDiscord installed, be sure to do that before continuing with this guide.
 
 **N.B** For now, the plugin has ***only*** been tested on *Windows* and *Linux* but it should work for all operating 
 systems that support BetterDiscord.
