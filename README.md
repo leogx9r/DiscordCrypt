@@ -70,9 +70,9 @@ For specific operating systems, see below:
 
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/discordCrypt.plugin.js) the plugin file. ( Right 
 Click -> Save As )
-* Save the plugin to the following path: `%APPDATA%\BetterDiscord\plugins`.
+* Save the plugin to the following path: **`%APPDATA%\BetterDiscord\plugins`**.
 	* *Example: `C:\Users\Jeremy\AppData\Local\BetterDiscord\plugins\discordCrypt.plugin.js`*
-* **Ensure** the file is named exactly as `discordCrypt.plugin.js`.
+* **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
@@ -80,23 +80,24 @@ Click -> Save As )
 
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/discordCrypt.plugin.js) the plugin file. ( Right 
 Click -> Save As )
-* Save the plugin to the following path: `~/Library/Preferences/BetterDiscord/plugins`.
+* Save the plugin to the following path: **`~/Library/Preferences/BetterDiscord/plugins`**.
 	* *Example: `/home/jeremy/Library/Preferences/BetterDiscord/plugins/discordCrypt.plugin.js`*
-* **Ensure** the file is named exactly as `discordCrypt.plugin.js`.
+* **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
 #### Linux
 
-*The following instructions are for **Discord Stable***. ( Get it [here](https://discordapp.com/api/download?platform=linux&format=deb) for Debian/Ubuntu. )
+*The following instructions are for **Discord Stable***.
+( Get it [here](https://discordapp.com/api/download?platform=linux&format=deb) for Debian/Ubuntu. )
 
 The *PTB* and *Canary* versions have **NOT** been tested.
 
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/discordCrypt.plugin.js) the plugin file. ( Right 
 Click -> Save As )
-* Save the plugin to the following path: `~/.config/BetterDiscord/plugins`.
+* Save the plugin to the following path: **`~/.config/BetterDiscord/plugins`**.
 	* *Example: `/home/jeremy/.config/BetterDiscord/plugins/discordCrypt.plugin.js`*
-* **Ensure** the file is named exactly as `discordCrypt.plugin.js`.
+* **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
