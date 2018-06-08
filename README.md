@@ -10,8 +10,8 @@
     * [***MacOS***](#macos)
     * [***Linux***](#linux)
 * [**Usage**](#usage)
-    * [***Creating a new database***](#creating-a-new-database)
-    * [***Changing the database password***](#changing-the-database-password)
+    * [***Creating A New Database***](#creating-a-new-database)
+    * [***Changing The Database Password***](#changing-the-database-password)
     * [***Exchanging Keys***](#exchanging-keys)
         * [*Personal Conversations*](#personal-conversations)
         * [*Group Conversations / Channels*](#group-conversations-channels)
@@ -107,7 +107,7 @@ Click -> Save As )
 
 ### Creating a new database
 
-Every time Discord starts, you will be met with an overlayed prompt seen below:
+Every time Discord starts, you will be met with a prompt seen below:
 
 ---
 
