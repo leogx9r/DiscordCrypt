@@ -1,3 +1,9 @@
+Version 1.0.9
+
+- Fixed a major HTML injection bug thanks to An0.
+- Removed native Base64 conversion methods for Node's.
+- Removed deprecated Buffer calls.
+
 Version 1.0.8
 
 - NOTE: This version introduces a change which will require you to delete your old configuration file.
