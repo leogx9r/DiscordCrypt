@@ -1,5 +1,6 @@
 <h1 align="center">
-    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" height="38" width="38">
+    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" 
+    height="50" width="50">
     DiscordCrypt
 </h1>
 
@@ -31,8 +32,8 @@
 **DiscordCrypt** is a plugin for Discord that uses BetterDiscord's internal structure to send and receive encrypted 
 messages between users and channels in a safe and secure manner.
 
-It achieves this by using [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) using well known ciphers to ensure only the people you want to read 
-your messages can read them and no one else.
+It achieves this by using [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) using 
+well known ciphers to ensure only the people you want to read your messages can read them and no one else.
 
 The source code is public and licensed under the [**MIT License**](LICENSE) so feel free to have a look or modify it 
 as you see fit!
