@@ -1748,7 +1748,7 @@ class discordCrypt {
                     author: {
                         name: embedded_header || '-----MESSAGE-----',
                         icon_url: 'https://i.imgur.com/NC0PcLA.png',
-                        url: 'https://gitlab.com/leogx9r/DiscordCrypt'
+                        url: 'https://discord.me/discordCrypt'
                     },
                     footer: {
                         text: embedded_footer || 'DiscordCrypt',
@@ -1793,7 +1793,7 @@ class discordCrypt {
             }
             else {
                 /* Receive the message normally. */
-                React.MessageController.receiveMessage( _nonce, r.body );
+                React.MessageController.receiveMessage( _channel, r.body );
             }
         } );
     }
@@ -2360,6 +2360,18 @@ class discordCrypt {
 
         /* If this is a public key, just add a button and continue. */
         if ( magic === this.encodedKeyHeader ) {
+            /* Extract the algorithm info from the message's metadata. */
+            let metadata = discordCrypt.__extractKeyInfo( message.text().replace( /\r?\n|\r/g, '' ), true );
+
+            /* Compute the fingerprint of our currently known public key if any to determine if to proceed. */
+            let local_fingerprint = discordCrypt.sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
+
+            /* Skip if this is our current public key. */
+            if ( metadata[ 'fingerprint' ] === local_fingerprint ){
+                message.css( 'display', 'none' );
+                return true;
+            }
+
             /* Create a button allowing the user to perform a key exchange with this public key. */
             let button = $( "<button>Perform Key Exchange</button>" )
                 .addClass( 'dc-button' )
@@ -2384,9 +2396,6 @@ class discordCrypt {
 
                 /* Simulate pressing the exchange key button. */
                 $( '#dc-exchange-btn' ).click();
-
-                /* Extract the algorithm info from the message's metadata. */
-                let metadata = discordCrypt.__extractKeyInfo( message.text().replace( /\r?\n|\r/g, '' ), true );
 
                 /* If the current algorithm differs, change it and generate then send a new key. */
                 if ( tmp[ 'ea' ] !== metadata[ 'algorithm' ] || tmp[ 'ks' ] !== metadata[ 'bit_length' ] ) {
@@ -3890,10 +3899,11 @@ class discordCrypt {
 
     /**
      * @public
-     * @desc Returns the exchange algorithm and bit size for the given metadata.
+     * @desc Returns the exchange algorithm and bit size for the given metadata as well as a fingerprint.
      * @param {string} key_message The encoded metadata to extract the information from.
      * @param {boolean} header_present Whether the message's magic string is attached to the input.
-     * @returns {{bit_length: int, algorithm: string}|null} Returns the algorithm's bit length and name or null.
+     * @returns {{bit_length: int, algorithm: string, fingerprint: string}|null} Returns the algorithm's bit length and
+     *      name or null.
      * @example
      * __extractKeyInfo( '㑼㑷㑵㑳㐁㑢', true );
      * @example
@@ -3918,9 +3928,13 @@ class discordCrypt {
             if ( !discordCrypt.isValidExchangeAlgorithm( msg[ 0 ] ) )
                 return null;
 
+            /* Create a fingerprint for the blob. */
+            output[ 'fingerprint' ] = discordCrypt.sha256( msg, true );
+
             /* Buffer[0] contains the algorithm type. Reverse it. */
             output[ 'bit_length' ] = discordCrypt.indexToAlgorithmBitLength( msg[ 0 ] );
-            output[ 'algorithm' ] = discordCrypt.indexToExchangeAlgorithmString( msg[ 0 ] ).split( '-' )[ 0 ].toLowerCase();
+            output[ 'algorithm' ] = discordCrypt.indexToExchangeAlgorithmString( msg[ 0 ] )
+                .split( '-' )[ 0 ].toLowerCase();
 
             return output;
         }
