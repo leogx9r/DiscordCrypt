@@ -2518,7 +2518,7 @@ class discordCrypt {
         const html_escape_characters = { '&': '&amp;', '<': '&lt', '>': '&gt;' };
 
         /* Remove any injected HTML. */
-        message = message.replace(/[&<>]/g, x => html_escape_characters[x]);
+        message = message.replace( /[&<>]/g, x => html_escape_characters[ x ] );
 
         /* Extract any code blocks from the message. */
         let processed = discordCrypt.__buildCodeBlockMessage( message );
@@ -4550,7 +4550,7 @@ class discordCrypt {
         let cipher_name = cipher.toLowerCase();
         crypto.getCiphers().every( ( s ) => {
             /* If the cipher matches, stop iterating. */
-            if ( s === cipher_name) {
+            if ( s === cipher_name ) {
                 isValid = true;
                 return false;
             }
@@ -4691,7 +4691,7 @@ class discordCrypt {
                             break;
                         case 'jpg':
                         case 'jpeg':
-                            data = clipboard.readImage().toJPEG(100);
+                            data = clipboard.readImage().toJPEG( 100 );
                             break;
                         default:
                             break;
@@ -5057,7 +5057,7 @@ class discordCrypt {
             }
             catch ( e ) {
                 discordCrypt.log( e.toString(), 'error' );
-                return Buffer.alloc(1);
+                return Buffer.alloc( 1 );
             }
         }
 
@@ -6674,8 +6674,8 @@ class discordCrypt {
         try {
             let b64 = discordCrypt.getBase64();
 
-            for(let c in message){
-                if(b64.indexOf(c) === -1)
+            for ( let c in message ) {
+                if ( b64.indexOf( c ) === -1 )
                     return false;
             }
 
@@ -7200,7 +7200,7 @@ class discordCrypt {
         let mode, pad;
 
         /* Convert the block mode. */
-        if( typeof block_mode !== 'string' ){
+        if ( typeof block_mode !== 'string' ) {
             if ( block_mode === 0 )
                 mode = 'cbc';
             else if ( block_mode === 1 )
@@ -7211,7 +7211,7 @@ class discordCrypt {
         }
 
         /* Convert the padding. */
-        if( typeof padding_mode !== 'string' ){
+        if ( typeof padding_mode !== 'string' ) {
             if ( padding_mode === 0 )
                 pad = 'pkc7';
             else if ( padding_mode === 1 )
