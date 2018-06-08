@@ -1939,7 +1939,11 @@ class discordCrypt {
             (
                 Buffer.from( password ),
                 Buffer.from( discordCrypt.whirlpool( password, true ), 'hex' ),
-                32, 4096, 8, 1, ( error, progress, pwd ) => {
+                32,
+                4096,
+                8,
+                1,
+                ( error, progress, pwd ) => {
                     if ( error ) {
                         /* Update the button's text. */
                         if ( cfg_exists )
@@ -2957,7 +2961,11 @@ class discordCrypt {
                 (
                     Buffer.from( password ),
                     Buffer.from( discordCrypt.whirlpool( password, true ), 'hex' ),
-                    32, 4096, 8, 1, ( error, progress, pwd ) => {
+                    32,
+                    4096,
+                    8,
+                    1,
+                    ( error, progress, pwd ) => {
                         if ( error ) {
                             /* Alert the user. */
                             alert( 'Error setting the new database password. Check the console for more info.' );
@@ -5138,9 +5146,18 @@ class discordCrypt {
             }
         }
 
-        /* Perform the script process. */
+        /**
+         * @desc Perform the scrypt process in steps and call the callback on intervals.
+         * @param {string|Buffer|Array} input The input data to hash.
+         * @param {string|Buffer|Array} salt The unique salt used for hashing.
+         * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
+         * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
+         * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
+         * @param {scryptCallback} cb Callback function for progress updates.
+         * @private
+         */
         function __perform( input, salt, N, r, p, cb ) {
-            let totalOps, currentOp, lastPercent10;
+            let totalOps, currentOps, lastPercentage;
             let b = PBKDF2_SHA256( input, salt, p * 128 * r, 1 );
             let B = new Uint32Array( p * 32 * r );
 
@@ -5165,15 +5182,14 @@ class discordCrypt {
             let _X = new Uint32Array( 16 );
 
             totalOps = p * N * 2;
-            currentOp = 0;
-            lastPercent10 = null;
+            currentOps = 0;
+            lastPercentage = null;
 
             /* Set this to true to abandon the scrypt on the next step. */
             let stop = false;
 
             /* State information. */
-            let state = 0;
-            let i0 = 0, i1;
+            let state = 0, stateCount = 0, i1;
             let Bi;
 
             /* How many block-mix salsa8 operations can we do per step? */
@@ -5184,12 +5200,12 @@ class discordCrypt {
 
             const incrementalSMix = function () {
                 if ( stop )
-                    return cb( new Error( 'cancelled' ), currentOp / totalOps );
+                    return cb( new Error( 'cancelled' ), currentOps / totalOps );
 
-                let steps, i, y, z, percent10;
+                let steps, i, y, z, currentPercentage;
                 switch ( state ) {
                     case 0:
-                        Bi = i0 * 32 * r;
+                        Bi = stateCount * 32 * r;
                         /* Row mix #1 */
                         for ( let z = 0; z < Yi; z++ )
                             XY[ z ] = B[ Bi + z ]
@@ -5217,17 +5233,17 @@ class discordCrypt {
                         }
 
                         i1 += steps;
-                        currentOp += steps;
+                        currentOps += steps;
 
                         /* Call the callback with the progress. ( Optionally stopping us. ) */
-                        percent10 = parseInt( 1000 * currentOp / totalOps );
-                        if ( percent10 !== lastPercent10 ) {
-                            stop = cb( null, currentOp / totalOps );
+                        currentPercentage = parseInt( 1000 * currentOps / totalOps );
+                        if ( currentPercentage !== lastPercentage ) {
+                            stop = cb( null, currentOps / totalOps );
 
                             if ( stop )
                                 break;
 
-                            lastPercent10 = percent10;
+                            lastPercentage = currentPercentage;
                         }
 
                         if ( i1 < N )
@@ -5254,17 +5270,17 @@ class discordCrypt {
                         }
 
                         i1 += steps;
-                        currentOp += steps;
+                        currentOps += steps;
 
                         /* Call the callback with the progress. ( Optionally stopping us. ) */
-                        percent10 = parseInt( 1000 * currentOp / totalOps );
-                        if ( percent10 !== lastPercent10 ) {
-                            stop = cb( null, currentOp / totalOps );
+                        currentPercentage = parseInt( 1000 * currentOps / totalOps );
+                        if ( currentPercentage !== lastPercentage ) {
+                            stop = cb( null, currentOps / totalOps );
 
                             if ( stop )
                                 break;
 
-                            lastPercent10 = percent10;
+                            lastPercentage = currentPercentage;
                         }
 
                         if ( i1 < N )
@@ -5274,8 +5290,8 @@ class discordCrypt {
                         for ( z = 0; z < Yi; z++ )
                             B[ Bi + z ] = XY[ z ];
 
-                        i0++;
-                        if ( i0 < p ) {
+                        stateCount++;
+                        if ( stateCount < p ) {
                             state = 0;
                             break;
                         }
