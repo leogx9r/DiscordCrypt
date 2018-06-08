@@ -4690,8 +4690,8 @@ class discordCrypt {
                             data = clipboard.readImage().toBitmap();
                             break;
                         case 'jpg':
-                        case 'jepg':
-                            data = clipboard.readImage().toJPEG();
+                        case 'jpeg':
+                            data = clipboard.readImage().toJPEG(100);
                             break;
                         default:
                             break;
