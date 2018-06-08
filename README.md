@@ -120,24 +120,25 @@ Every time Discord starts, you will be met with a prompt seen below:
 
 The first time you use the plugin, you'll be prompted to input a new password that will be used to create the database.
 
-Every time you restart Discord, you'll be prompted with this screen where you must enter the same password as before.
+Every time you restart Discord, you'll be prompted with the above screen where you must enter the same password as 
+before. If you don't enter the same password, you will not be able to decrypt any messages.
 
 All exchanged keys and passwords are saved to this database and **cannot be recovered** if the master password is 
-lost. ( [Forgot Password?](#i-forgot-my-master-password-what-do-i-do-) )
+lost so be sure to use a strong but memorable one. ( [Forgot Password?](#i-forgot-my-master-password-what-do-i-do-) )
 
  
 
 ### Changing the database password
 
-If you wish to change your master password, you may do so in the `DiscordCrypt Settings` menu. ![settings](images/settings-menu.png)
+If you wish to change your master password, you may do so in the `DiscordCrypt Settings` menu.
+![settings](images/settings-menu.png)
 
-If you enter a password in this field and save your settings, this key will be used to encrypt the database in the 
-future.
-
-**N.B.** If a key is not entered into this field, it is ignored. Your current password will **NOT** be replaced.
-
+If you enter a password in the `New Master Database Password` field and save your settings, this key will be used to 
+encrypt the database in the future.
 
 ![masterpassword](images/master-password.png)
+
+**N.B.** If a key is not entered into this field, it is ignored. Your current password will **NOT** be replaced.
 
  
 
@@ -147,8 +148,9 @@ future.
 While we give users a choice regarding the options they want to use when originally setting up an encrypted 
 conversation, we offer a simple way to do it, using strong cryptography.
 
-This involves using an asymmetric key exchange algorithm which, while allowing you to post information on an insecure
- channel, allows a strong secret to be shared between parties.
+This involves using an 
+[asymmetric key exchange algorithm](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) which, while
+allowing you to post information on an insecure channel, allows a strong secret to be shared between parties.
 
 Advanced users are free to mess with the configuration, though be aware that we will only discuss the built-in key 
 exchange feature in this tutorial.
@@ -222,7 +224,7 @@ If you are manually updating the passwords to be able to have an encrypted group
 
 # Best Practices
 
-The following tips should be adhered to for maximium privacy between users.
+The following tips should be adhered to for maximum privacy between users.
 
 * Change your master database password frequently.
 * Do **NOT** share passwords across unencrypted communications. Always establish a secure connection before sending 
@@ -237,16 +239,17 @@ combination of alphanumeric ( ***A-Z***, ***0-9*** ) and symbolic characters.
     KeePass/KeePassXC, OnePass or LastPass to generate and safely store strong passwords.
 * Use AES as either the primary or secondary ciphers for encryption. AES is a cipher developed in 1998 and is still 
 considered one of the most secure methods of sending and receiving confidential information to this day.
-* If you require absolute secrecy which is not vulnerable to MiTM attacks, use a strong password generator, encrypt 
-these using PGP and send them to your partner over a non-Discord channel.
+* If you require absolute secrecy which is not vulnerable to Discord's potential MiTM attacks, use a strong password 
+generator, encrypt these using PGP and send them to your partner over a non-Discord channel.
 
 
 
 # Debugging
 
-The official Discord client is built with the [Electron framework](https://electronjs.org) that uses  
-[Node.js](https://nodejs.org/en/) and a tweaked Chromium version.
-The DevTools interface can be opened using the key combination of: `Ctrl + Shift + I`.
+The official Discord client is built with the [Electron framework](https://electronjs.org) that uses a tweaked 
+Chromium version bundled with [Node.js](https://nodejs.org/en/) support.
+
+The DevTools console interface can be opened using the key combination of: `Ctrl + Shift + I`.
 
 In the event that you encounter an error and wish to submit an issue to us to help resolve this problem,
  please follow these steps:
@@ -259,9 +262,11 @@ In the event that you encounter an error and wish to submit an issue to us to he
 * Watch your console while using the client as you would normally do. In the the opened debug console window switch 
 to the 'Console' tab and see if there are any errors. 
 
-In case there is an error critical warning create an issue ticket with the exact debug output. You should, as a form 
-of security, strip any identifiable information from your request. If however more information is required, we'll 
-request it from you.
+In case there is an error caused by the plugin, create an issue ticket with the exact debug output. You should, 
+as a general practice of security, strip any identifiable information from your request. If however more 
+information is required than you provided, we'll request it from you.
+
+Be sure to read the [contribution](CONTRIBUTING.md) guidelines before creating an issue.
 
 
 
@@ -287,11 +292,11 @@ to control what users can do or say.
 
 We highly disapprove of their ideals as we believe their actions violate every human's right to privacy.
 
-This plugin attempts to emulate the behavior of end-to-end encryption behavior so you can actually keep your messages
- between friends private.
+This plugin attempts to implement the behavior of end-to-end encryption behavior so you can actually keep your 
+messages between friends private.
 
-While this plugin does not support, nor plan to support end-to-end voice encryption, messages **should** be safe and 
-secure from prying eyes.
+While this plugin does not support, nor plan to support end-to-end voice encryption, messages and uploaded 
+files via the encrypted file uploading interface **should** be safe and secure from prying eyes.
 
  
 
@@ -306,16 +311,18 @@ If you however do know how to make an attractive UI, please do create a pull req
 
 ### How do I tag users?
 
-As we explained in the [Known Limitations](#known-limitations-bugs), tagging users should normally not work because 
-of the embeds.
+As we explained in the [Known Limitations](#known-limitations-bugs), tagging users normally does not work because 
+ we cannot notify users of tags after messages have been decrypted.
 
-We created a workaround for this allowing you to notify whoever you want while benefiting from the encryption.
+We created a workaround for this allowing you to notify whoever you want while still benefiting from encrypted 
+messages.
 
-The idea behind this is simple: When you tag users in a message, **DiscordCrypt** will extract the usernames and send
- them in an unencrypted message.
+The idea behind this is simple:
 
-Then, it will trim the discriminator and send the message as is, encrypted. That way you can send notifications while
- leaving the username(s) in the message as to not lose context.
+When you tag users in a message, **DiscordCrypt** will extract the usernames and send them in an unencrypted form 
+while the rest of the message is encrypted. Prior to sending, messages will have the user's discriminator removed 
+from the message. This way, you can send notifications to tagged users while leaving the original username(s) in 
+the message intact so as to not lose context.
 
 
 ***Be aware that the mentions will display a user's "nickname" on the server, while the embed will retain the 
@@ -323,7 +330,7 @@ original name.***
 
 Here's how it looks like:
 
-![intags](images/tags.png)
+![User Tagging](images/tags.png)
 
 
  
@@ -361,7 +368,9 @@ happens, you can copy the passwords of the current channel and share them by fol
 
 ### DiscordCrypt uses so much CPU, what gives?!
 
-Unless you're generating keys, **DiscordCrypt** shouldn't be CPU heavy. Discord itself can be annoying in that regard.
+Unless you're generating keys or performing encrypted file uploads, **DiscordCrypt** should not be CPU heavy.
+
+Discord itself can be annoying in that regard as it generally uses a large amount of processing power.
 
 If you believe it is causing issues, you may want to try increasing the `Encryption Scanning Frequency` in the plugin
  settings.
@@ -380,8 +389,8 @@ We've tried to simplify the process as much as possible but once you get used to
 
 We wanted a way for users who both use and do not use the plugin to easily identify encrypted messages.
 
-In addition to this, rich embeds provide a nicer means of conveying and formatting the messages that standard 
-messages do not.
+In addition to this, rich embeds provide a nicer means of conveying and formatting the encrypted messages that 
+standard messages do not as well as making the plugin itself detect encrypted messages easily.
 
  
 
@@ -389,57 +398,56 @@ messages do not.
 
 **DiscordCrypt** is not ( and sadly cannot be ) perfect, the plugin is limited in the number of features it can provide.
 
-Some of **DiscordCrypt**'s limitations are due to the fact that we use embeds to send encrypted messages.
+Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messages cannot undergo the standard 
+post-processing that Discord itself does. Some examples of these would be emojis and link previews etc.
 
  
 
-* ***DiscordCrypt's key exchange is vulnerable to 
+* ***DiscordCrypt's key exchange is vulnerable to Discord's servers being used for 
 [Man-in-The-Middle attacks](https://en.wikipedia.org/wiki/Man-in-the-middle_attack).***
     * While an attacker would need access to Discord's infrastructure as the data is encrypted in transit using TLS, 
-    it is in theory possible for someone to sit in the middle of the key exchange.
+    it is in theory possible for an attacker, the government or Discord's administrators to sit in the middle of the 
+    key exchange.
         * We discussed this in greater details in the [TECHNICALITIES.md](TECHNICALITIES.md) file.
 
  
 
 * Only text channels are end-to-end encrypted. Voice channels cannot be secured, so what you verbally say in them 
 could still be recorded by Discord.
-    * This also means files ( pictures, audio, text files, etc ) are unencrypted as well. We recommend using 
-    [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) to encrypt sensitive files before sending them.
+    * Support for encrypted file uploads was added in `v1.0.5`. However we still recommend using 
+    [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) to encrypt especially sensitive files before sending them.
 
  
 
 * Emojis are not visible in an encrypted message: As we use embeds, sending emojis in a message will result in them 
 not being visible.
-    * As a workaround for this, messages starting with the character `:` will be sent unencrypted. This means you can
-     send your message, then an emoji in a second, unencrypted message.
-
- 
-
-* Emojis don't work when using encryption.
-    * As a bypass to this, messages starting with `:` ( Emoji identifier ) will not be encrypted.
+    * As a workaround for this, messages starting with the character `:` will be not be encrypted. This means you
+     can send your message, then an emoji in a second, unencrypted message.
     * This will also happen if your messages start with `#` ( For convenience, to quickly send an unencrypted message
-    . ) or `/` ( Commands )
+    . ) or `/`. ( For commands. )
 
- 
 
-* Tagging users works in a different way when using encryption:
+
+* Tagging users works in a different way when using encrypted messages:
     * As we use embeds, tagging users in a message should result in them not being notified.
         * To fix this, every users tagged in a message will receive an unencrypted notification.
-        [Example here](#how-do-i-tag-users).
+            [Example here](#how-do-i-tag-users).
 
  
 
 * Some third-party plugins may conflict with **DiscordCrypt**.
     * One such example discovered so far is the plugin `OldTitleBar` by DevilBro. This plugin causes 
     **DiscordCrypt**'s icons to be unclickable.
-       * We do not plan to fix this, but feel free to contribute if you wish to do so yourself.
+        * We do not plan to fix this, but feel free to contribute if you wish to do so yourself.
+        * For a list of known problematic themes and plugins, see
+            [here](https://gitlab.com/leogx9r/DiscordCrypt/issues/5).
 
  
 
 # Support & Discussion
 
 If you've discovered a bug in the plugin, feel free to create an issue after reading the 
-[contribution guide](CONTRIBUTING.md). Please be as detailed as possible.
+[contribution guide](CONTRIBUTING.md). Please be as detailed as possible when submitting your issues.
 
 We also have a [Discord Server](https://discord.me/discordcrypt) for any discussion related to **DiscordCrypt** and for 
 general support.
