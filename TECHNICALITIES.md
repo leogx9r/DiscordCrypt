@@ -1,12 +1,16 @@
 <h1 align="center">
-    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" height="38" width="38">
-    DiscordCrypt Technical Details Overview
+    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" 
+    height="50" width="50">
+    DiscordCrypt
+    <h3>End-To-End Message Encryption For Discord</h3>
+    <h5>Technical Details Overview</h5>
 </h1>
+
 
 * [**Supported Algorithms**](#supported-algorithms)
     * [***Ciphers***](#ciphers)
         * [*Cipher Modes*](#cipher-modes)
-        * [*Cipher Padding*](#cipher-padding)
+        * [*Message Padding*](#message-padding)
     * [***Key Exchanges***](#key-exchanges)
         * [*Diffie-Hellman*](#diffie-hellman)
         * [*Elliptic Curve Diffie-Hellman*](#elliptic-curve-diffie-hellman)
@@ -23,16 +27,16 @@
 
 # Supported Algorithms
 
-**DiscordCrypt** uses a variety of symmetric encryption algorithms via the [NodeJS](https://en.wikipedia.org/wiki/Node.js) 
-[`crypto`](https://nodejs.org/api/crypto.html) module.
+**DiscordCrypt** uses a variety of symmetric encryption algorithms via 
+[NodeJS](https://en.wikipedia.org/wiki/Node.js)'s [`crypto`](https://nodejs.org/api/crypto.html) module.
 
 In addition to these, two types of key exchanges are supported as well as the ability to generate 
-[cryptographically secure pseudorandom numbers](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback) 
+[secure pseudorandom numbers](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback) 
 which is also exposed by NodeJS.
 
 Every algorithm used in this plugin is directly provided by NodeJS. The only things manually implemented are:
 
-* [Cipher Padding Modes](#cipher-padding)
+* [Cipher Padding Modes](#message-padding)
 * [Scrypt Hashing Algorithm](https://en.wikipedia.org/wiki/Scrypt)
 
 #### Ciphers
@@ -47,20 +51,22 @@ The following ciphers are currently supported by **DiscordCrypt**.
 
 ##### Cipher Modes
 
-Each cipher can operate in a number of [block operation modes](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation).
+Each cipher can operate in a number of 
+[block operation modes](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation).
 
 The supported modes are:
 
-- [Cipher Block Chaining](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_(CBC)) ( **Default Block Mode** )
+- [Cipher Block Chaining](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_(CBC)) 
+    ( **Default Block Mode** )
 - [Cipher Feedback Mode](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Feedback_(CFB))
 - [Output Feedback Mode](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Output_Feedback_(OFB))
 
-##### Cipher Padding
+##### Message Padding
 
-For each cipher, messages must be [cryptographically padded](https://en.wikipedia.org/wiki/Padding_(cryptography)) to meet the 
-cipher's block size.
+For each cipher, messages must be [cryptographically padded](https://en.wikipedia.org/wiki/Padding_(cryptography)) 
+to meet the cipher's block size.
 
-***While NodeJS supports some padding schemes, most aren't. As such, these were manually implemented in the code.***
+***While NodeJS supports some padding schemes, most are not. As such, these were manually implemented in the code.***
 
 The following padding schemes are supported:
 
@@ -73,7 +79,8 @@ The following padding schemes are supported:
 
 The following algorithms are used to exchange keys in a secure manner.
 
-* [Diffie-Hellman ( ***DH*** )](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) ( **Default Exchange Algorithm** )
+* [Diffie-Hellman ( ***DH*** )](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) 
+    ( **Default Exchange Algorithm** )
 * [Elliptic Curve Diffie-Hellman ( ***ECDH*** )](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman)
 
 ##### Diffie-Hellman
@@ -85,9 +92,8 @@ The following algorithms are used to exchange keys in a secure manner.
     [Whitfield Diffie](https://en.wikipedia.org/wiki/Whitfield_Diffie "Whitfield Diffie") and
     [Martin Hellman](https://en.wikipedia.org/wiki/Martin_Hellman "Martin Hellman").
 
-This exchange algorithm supports a large number of key sizes.
-
-It operates on a similar principle of RSA, the asymmetric encryption algorithm.
+This exchange algorithm supports a large number of key sizes and operates on a similar principle of RSA, the 
+asymmetric encryption algorithm.
 
 The main advantage of this algorithm is it is generally considered secure but its downside is as the key size increases, 
 the time taken to generate a key pair increases proportionately.
@@ -128,7 +134,8 @@ This operates on the same principle of a Diffie-Hellman exchange except it is do
 The main benefits of this algorithm is that it is much smaller in size in contrast to standard Diffie-Hellman keys and 
 is extremely quick to generate a key pair.
 
-The downside, however, is that many consider it insecure as concerns of various backdoors have been brought forth.
+The downside, however, is that many consider it insecure as concerns of various 
+[backdoors](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography#Backdoors) have been brought forth.
 
 Just as with Diffie-Hellman, one should choose the largest key size for key exchanges as the security of the key size is equivilent to a
 Diffie-Hellman keys with a much faster generation speed. 
@@ -190,13 +197,13 @@ By default, all user messages contain a [HMAC](https://en.wikipedia.org/wiki/HMA
 
 This HMAC uses SHA-256 along with the primary message key to form a hash of the outer ciphertext of the message.
 
-This is appened such that the variable length message now follows the following format:
+This is prepended such that the variable length message now follows the following format:
 
 
 | **Byte Position**  | **Byte Size**    | **Description**                                               |
 | ------------------ | ---------------- | ------------------------------------------------------------- |
 | `0`                | `32`             | Contains the 256-bit HMAC tag of the ciphertext.              |
-| `32`               | `Variable`       | Contains the ciphertext.                                      |
+| `32`               | `Variable`       | Contains the ciphertext ( Including a unique 64-bit salt ).   |
 
 
 This tag is used for authentication to ensure ciphertexts have not been tampered with during transit.
@@ -230,7 +237,7 @@ meaning both a UTF-8 and UTF-16 messages are limited to 2000 characters each.
 
 This is handled by the methods `substituteMessage`, `metaDataEncode` and `metaDataDecode`.
 
-These methods do a 1-1 substituion as follows:
+These methods do a 1-1 substitution as follows:
 
 
 | **Character Set** | **String**                                                                                                                           |
@@ -243,33 +250,47 @@ These methods do a 1-1 substituion as follows:
 Encryption and decryption follows [OpenSSL](https://en.wikipedia.org/wiki/OpenSSL)'s method of deriving keys.
 
 A random 64-bit salt is generated and is used in conjunction with an SHA-256 based PBKDF over 1000 rounds to generate a 
-unique [IV](https://en.wikipedia.org/wiki/Initialization_vector) and a derived encryption key.
+unique [Initialization Vector](https://en.wikipedia.org/wiki/Initialization_vector) and a derived encryption key.
 
-Messages encrypted in this format take the form: `< 64-Bit Random Seed > + < Cipher Text >`
+This is used to prevent the same message being encrypted multiple times over the course of a conversation from having 
+the same ciphertext being produced.
 
-When a message is being decrypted, the [metadata](#meta-data-encoding) for the message is read to determine how to proceed.
+Messages encrypted in this format take the form:
+
+
+| **Byte Position**  | **Byte Size**    | **Description**                                               |
+| ------------------ | ---------------- | ------------------------------------------------------------- |
+| `0`                | `8`              | Contains a one time salt used to generate a unique key.       |
+| `8`                | `Variable`       | Contains the ciphertext.                                      |
+
+When a message is being decrypted, the [metadata](#meta-data-encoding) for the message is read to determine how  to 
+proceed.
 
 This indicates:
 
-- The symmetric cipher used.
-- The block operation mode of the cipher.
-- The padding mode used for the message.
+- The symmetric ciphers used.
+- The block operation mode of the ciphers.
+- The padding scheme used for the message.
 
 All inputs passed to a `< cipher >_decrypt` method is assumed to contain a 64-bit seed used to derive the key and IV.
 
-The plugin employs what is known as [multiple encryption](https://en.wikipedia.org/wiki/Multiple_encryption) to encrypt all 
-messages before they are sent.
+The plugin employs what is known as [multiple encryption](https://en.wikipedia.org/wiki/Multiple_encryption) to 
+encrypt all messages before they are sent.
 
-For this, two ciphers are used. The primary cipher is used to encrypt the [plaintext](https://en.wikipedia.org/wiki/Plaintext) message 
-into [ciphertext](https://en.wikipedia.org/wiki/Ciphertext).
+For this, two ciphers are used. The primary cipher is used to encrypt the 
+[plaintext](https://en.wikipedia.org/wiki/Plaintext) message into 
+[ciphertext](https://en.wikipedia.org/wiki/Ciphertext).
 
-Following this, the secondary cipher is used along with a completely different key to encrypt the ciphertext yet again yielding the final 
-result.
+Following this, the secondary cipher is used along with a completely different key to encrypt the ciphertext yet 
+again yielding the final ciphertext. Finally, a HMAC hash using SHA-256 is computed on the final ciphertext and 
+is prepended to it creating the final result.
 
-This result is then encoded to [base 64](https://en.wikipedia.org/wiki/Base64) and undergoes [byte encoding](#byte-encoding) to produce a 
-monospace-compatible message.
+This result is then encoded to [base 64](https://en.wikipedia.org/wiki/Base64) and undergoes 
+[byte encoding](#byte-encoding) to produce a monospace-compatible message.
 
-This message is then sent to Discord's servers in an embedded message.
+This message is sent to Discord's servers in an embedded message with additional aesthetic icons to produce the image
+ seen below.
+ 
 
 ![An encrypted message](images/encrypted-message.png)
 
@@ -281,10 +302,13 @@ scheme.
 
 Its derivation is done by using the [Scrypt](https://en.wikipedia.org/wiki/Scrypt) hashing algorithm with the following parameters.
 
-- N = `4096`   ( The work factor variable. Memory and CPU usage scale linearly with this. )
-- r = `8`      ( The block size parameter used to tune memory reading. )
-- p = `1`      ( Parallelization factor. Indicates the number of mixing functions to be run simultaneously. )
-- dkLen = `32` ( The output size of the hash produced. Must satisfy dkLen ≤ (2^32− 1) * 32 )
+
+| **Parameter** | **Description**                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| `N`               | The work factor variable. Memory and CPU usage scale linearly with this.                   |
+| `r`               | The block size parameter. Memory usage scales to `2rK` bytes where K is 256 bits.          |
+| `p`               | Parallelization factor. Indicates the number of mixing functions to be run simultaneously. |
+| `dkLen`           | The output size of the hash produced in bytes. Must satisfy `dkLen ≤ (2^32− 1) * 32`.      |
 
 This derives a 256-bit key which is used in conjunction with the `aes256_encrypt_gcm`/`aes256_decrypt_gcm` functions.
 
@@ -329,12 +353,13 @@ During decryption, the authentication tag is stripped off as well as the random 
 The `scrypt` derived password is then used with the one-time salt to derive a `key` and `iv` using the same 
 `PBKDF-SHA256` process.
 
-Finally, the authentication tag is assigned to `GCM` and verified which either throws an error if invalid or returns 
-the plaintext message.
+Finally, the authentication tag is assigned to `GCM` and verified which either throws an error if message 
+authentication fails or returns the plaintext message.
 
 ## Key Exchange Process
 
-**DiscordCrypt** uses the Diffie-Hellman exchange algorithm to derive a unique [shared secret](https://en.wikipedia.org/wiki/Shared_secret).
+**DiscordCrypt** uses the Diffie-Hellman exchange algorithm to derive a unique 
+[shared secret](https://en.wikipedia.org/wiki/Shared_secret).
 
 Once both parties post a public key, a shared secret of the algorithm's bit length is derived.
 
@@ -352,10 +377,12 @@ The way these keys are produced follows:
 * Calculate the secondary key as:
     * `SecondaryKey = Base64Encode( Scrypt( Input: PrimarySalt + SharedSecret + SecondarySalt, Salt: Whirlpool( SecondarySalt ), dkLen: 256, N: 3072, r: 8, p: 1 ) )`
 
-These steps generate two keys containing roughly `2000` bits of [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)), which is calculated using the 
-[Shannon algorithm](https://en.wiktionary.org/wiki/Shannon_entropy). 
+These steps generate two keys containing roughly `2000` bits of 
+[entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)), which is calculated using 
+[Shannon's algorithm](https://en.wiktionary.org/wiki/Shannon_entropy).
 
-Each of these derived keys is used in conjunction with symmetric ciphers for message encryption.
+Each of these derived keys are converted to Base64 and used in conjunction with symmetric ciphers for message 
+encryption.
 
 # Known Vulnerabilities
 
@@ -365,25 +392,33 @@ A brief overview of the possible attack mechanisms we **ARE** aware of but unfor
 
 * **Bugs In NodeJS's `crypto` Module**
 
-> This is perhaps the biggest caveat we're aware of. Since NodeJS's modules are used to provide most of the core functionality of this plugin, 
-> we place heavy reliance on its ability to be secure. As such, any potential security flaws affecting this module will directly affect the security of the plugin.
+> This is perhaps the biggest caveat we're aware of.
+> 
+> Since NodeJS's modules are used to provide most of the core 
+> functionality of this plugin, we place heavy reliance on its ability to be secure. As such, any potential security 
+> flaws affecting this module will directly affect the security of the plugin.
 >
 > This caveat also includes Discord manually compromising the `crypto` module between releases.
 
 * **Possible Imperfections In The Implementation Of Cipher Padding Schemes** 
 
-> As these padding schemes have been manually implemented and not audited by any security teams, there does exist the possibility that due to using this method,
-> possible flaws in their implementation may lead to weakened or even broken security, however unlikely this event may be.
+> As these padding schemes have been manually implemented and not audited by any security teams, there does exist the
+> possibility that due to this, possible flaws in their implementation may lead to weakened or even 
+> broken security, however unlikely this event may be.
 
 * **Vulnerable Storage Of The Password Database**
 
-> BetterDiscord unfortunately allows anyone with console or JavaScript executing permissions to directly view the internal structures of any plugin.
+> BetterDiscord unfortunately allows anyone with console or JavaScript executing permissions to directly view the 
+> internal structures of any plugin.
 >
-> These include access to all variables, methods and configurations used as well as the ability to replace them at will.
+> These include access to all variables, methods and configurations used as well as the ability to replace them at 
+> will.
 >
-> As the database is stored in an unencrypted fashion once the master password unlocks it, it is possible for someone to steal your passwords.
+> As the database is stored in an unencrypted fashion once the master password unlocks it, it is possible for someone
+> to steal your passwords.
 >
-> While we are fully aware of this, we're generally unable to do much about it. As such, we can only issue security advisories.
+> While we are fully aware of this, we're generally unable to do much about it. As such, we can only issue security 
+> advisories.
 >
 > These being:
 >
@@ -395,17 +430,20 @@ A brief overview of the possible attack mechanisms we **ARE** aware of but unfor
 
 * **Man In The Middle Attacks**
 
-> It is possible to perform a MiTM attack on the encryption methods used in this plugin.
+> It is possible to perform a MiTM attack on the encryption methods used in this plugin but **ONLY** if Discord 
+> itself has been compromised.
 >
-> This is due to the fact that the plugin cannot tell that a message was truly sent by you.
+> This is due to the fact that the plugin cannot tell that a message was truly sent by you and instead relies on 
+> Discord's own implementation of encrypted communication.
 >
-> As such, during a key exchange, if someone manages to intercept your messages and replace your public key with theirs, 
-> they can completely decrypt all futher messages between you and your colleagues.
+> As such, during a key exchange, if someone manages to intercept your messages and replace your public key with 
+> theirs, they can completely decrypt all further messages between you and your colleagues.
 >
 > Performing such an attack, while difficult due to the fact that all messages are sent via TLS to Discord's servers 
-> is possible if one **controls** these servers. It however cannot be done by a third party without breaking into or 
-> compromising Discord's SSL certificate.
+> **is possible if one controls or forces Discord to compromise** these servers. It however cannot be 
+> done by a third party without breaking into or compromising Discord's SSL certificate.
 > 
 > [![https://i.imgur.com/Ti6BzSv.png](http://img.youtube.com/vi/vsXMMT2CqqE/0.jpg)](http://www.youtube.com/watch?v=vsXMMT2CqqE "MiTM Attacks") 
 >
-> **N.B. These attacks can only be performed during a key exchange as this is the only time reliance is placed on Discord.**
+> **N.B. These attacks can only be performed during a key exchange as this is the only time reliance is placed on 
+> Discord's own security implementations.**
