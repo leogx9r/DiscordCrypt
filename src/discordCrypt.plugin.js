@@ -2809,7 +2809,7 @@ class discordCrypt {
      */
     static on_upload_file_button_clicked( /* discordCrypt */ self ) {
         return () => {
-            const fs = require( 'fs' );
+            const fs = require( 'original-fs' );
 
             let file_path_field = $( '#dc-file-path' );
             let file_upload_btn = $( '#dc-file-upload-btn' );
@@ -2848,6 +2848,7 @@ class discordCrypt {
                     if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
                         /* Set the status text. */
                         file_upload_btn.text( 'Failed to upload the file!' );
+                        discordCrypt.log( error_string, 'error' );
 
                         /* Clear the file path. */
                         file_path_field.val( '' );
@@ -4834,7 +4835,7 @@ class discordCrypt {
     static __up1EncryptFile( file_path, sjcl, callback, randomize_file_name = false ) {
         const crypto = require( 'crypto' );
         const path = require( 'path' );
-        const fs = require( 'fs' );
+        const fs = require( 'original-fs' );
 
         try {
             /* Make sure the file size is less than 50 MB. */
