@@ -66,7 +66,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.0.8';
+        return '1.0.8-debug';
     }
 
     /* ============================================================== */
@@ -2510,6 +2510,12 @@ class discordCrypt {
      * @returns {{url: boolean, code: boolean, html: (string|*)}}
      */
     static postProcessMessage( message, embed_link_prefix ) {
+        /* HTML escape characters. */
+        const html_escape_characters = { '&': '&amp;', '<': '&lt', '>': '&gt;' };
+
+        /* Remove any injected HTML. */
+        message = message.replace(/[&<>]/g, x => html_escape_characters[x]);
+
         /* Extract any code blocks from the message. */
         let processed = discordCrypt.__buildCodeBlockMessage( message );
         let hasCode = processed.code;
