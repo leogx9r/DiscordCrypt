@@ -66,7 +66,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.0.10-debug';
+        return '1.0.10';
     }
 
     /* ============================================================== */
