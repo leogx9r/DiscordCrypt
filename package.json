@@ -16,19 +16,19 @@
   "author": "Leonardo Gates",
   "license": "MIT",
   "dependencies": {
-    "electron": "latest",
-    "esdoc": "latest",
-    "esdoc-brand-plugin": "latest",
-    "esdoc-node": "latest",
-    "esdoc-standard-plugin": "latest",
-    "form-data": "latest",
-    "fs": "latest",
-    "istanbul": "latest",
-    "mime-types": "latest",
-    "nodeunit": "latest",
-    "original-fs": "latest",
-    "path": "latest",
-    "process": "latest",
-    "request": "latest"
+    "electron": "^2.0.2",
+    "esdoc": "^1.1.0",
+    "esdoc-brand-plugin": "^1.0.1",
+    "esdoc-node": "^1.0.3",
+    "esdoc-standard-plugin": "^1.0.0",
+    "form-data": "^2.3.2",
+    "fs": "0.0.1-security",
+    "istanbul": "^0.4.5",
+    "mime-types": "^2.1.18",
+    "nodeunit": "^0.11.2",
+    "original-fs": "^1.0.0",
+    "path": "^0.12.7",
+    "process": "^0.11.10",
+    "request": "^2.87.0"
   }
 }
