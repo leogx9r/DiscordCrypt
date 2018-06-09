@@ -66,7 +66,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.0.10';
+        return '1.0.10-debug';
     }
 
     /* ============================================================== */
@@ -156,6 +156,18 @@ class discordCrypt {
          * @type {Object|null}
          */
         this.configFile = null;
+
+        /**
+         * @desc The main message dispatcher used by Discord. Resolved upon startup.
+         * @type {Object|null}
+         */
+        this.messageDispatcher = null;
+
+        /**
+         * @typedef function EventHandler
+         * @typedef string EventName
+         * @typedef {{EventName: EventHandler}} EventDefinition
+         */
 
         /**
          * @desc Indexes of each dual-symmetric encryption mode.
@@ -1544,70 +1556,63 @@ class discordCrypt {
     }
 
     /**
-     * @private
-     * @desc Returns the React modules loaded natively in Discord.
-     * @returns {{
-     *      ChannelProps: Object|null,
-     *      MessageParser: Object|null,
-     *      MessageController: Object|null,
-     *      MessageActionTypes: Object|null,
-     *      MessageDispatcher: Object|null,
-     *      MessageQueue: Object|null,
-     *      HighlightJS: Object|null
-     *  }}
+     * @public
+     * @desc Returns functions to locate exported webpack modules.
+     * @returns {{find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames}}
      */
-    static getReactModules() {
-        /* Initializes WebPackModules. [ Credits to the creator. ] */
-        const WebpackModules = ( () => {
-            const req = typeof( webpackJsonp ) === "function" ?
-                webpackJsonp(
-                    [],
-                    { '__extra_id__': ( module, _export_, req ) => _export_.default = req },
-                    [ '__extra_id__' ]
-                ).default :
-                webpackJsonp.push( [
-                    [],
-                    { '__extra_id__': ( _module_, exports, req ) => _module_.exports = req },
-                    [ [ '__extra_id__' ] ] ]
-                );
+    static getWebpackModuleSearcher() {
+        /* [ Credits to the creator. ] */
+        const req = typeof( webpackJsonp ) === "function" ?
+            webpackJsonp(
+                [],
+                { '__extra_id__': ( module, _export_, req ) => _export_.default = req },
+                [ '__extra_id__' ]
+            ).default :
+            webpackJsonp.push( [
+                [],
+                { '__extra_id__': ( _module_, exports, req ) => _module_.exports = req },
+                [ [ '__extra_id__' ] ] ]
+            );
 
-            delete req.m[ '__extra_id__' ];
-            delete req.c[ '__extra_id__' ];
+        delete req.m[ '__extra_id__' ];
+        delete req.c[ '__extra_id__' ];
 
-            /**
-             * @desc Predicate for searching module.
-             * @callback modulePredicate
-             * @param {*} module Module to test.
-             * @return {boolean} Returns `true` if `module` matches predicate.
-             */
+        /**
+         * @desc Predicate for searching module.
+         * @callback modulePredicate
+         * @param {*} module Module to test.
+         * @return {boolean} Returns `true` if `module` matches predicate.
+         */
 
-            /**
-             * @desc Look through all modules of internal Discord's Webpack and return first one that matches filter
-             *      predicate. At first this function will look through already loaded modules cache.
-             *      If no loaded modules match, then this function tries to load all modules and match for them.
-             *      Loading any module may have unexpected side effects, like changing current locale of moment.js,
-             *      so in that case there will be a warning the console.
-             *      If no module matches, this function returns `null`.
-             *      ou should always try to provide a predicate that will match something,
-             *      but your code should be ready to receive `null` in case of changes in Discord's codebase.
-             *      If module is ES6 module and has default property, consider default first;
-             *      otherwise, consider the full module object.
-             * @param {modulePredicate} filter Predicate to match module
-             * @return {*} First module that matches `filter` or `null` if none match.
-             */
-            const find = ( filter ) => {
-                for ( let i in req.c ) {
-                    if ( req.c.hasOwnProperty( i ) ) {
-                        let m = req.c[ i ].exports;
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first one that matches filter
+         *      predicate. At first this function will look through already loaded modules cache.
+         *      If no loaded modules match, then this function tries to load all modules and match for them.
+         *      Loading any module may have unexpected side effects, like changing current locale of moment.js,
+         *      so in that case there will be a warning the console.
+         *      If no module matches, this function returns `null`.
+         *      ou should always try to provide a predicate that will match something,
+         *      but your code should be ready to receive `null` in case of changes in Discord's codebase.
+         *      If module is ES6 module and has default property, consider default first;
+         *      otherwise, consider the full module object.
+         * @param {modulePredicate} filter Predicate to match module
+         * @param {boolean} force_load Whether to force load all modules if cached modules don't work.
+         * @return {*} First module that matches `filter` or `null` if none match.
+         */
+        const find = ( filter, force_load ) => {
+            for ( let i in req.c ) {
+                if ( req.c.hasOwnProperty( i ) ) {
+                    let m = req.c[ i ].exports;
 
-                        if ( m && m.__esModule && m.default )
-                            m = m.default;
+                    if ( m && m.__esModule && m.default )
+                        m = m.default;
 
-                        if ( m && filter( m ) )
-                            return m;
-                    }
+                    if ( m && filter( m ) )
+                        return m;
                 }
+            }
 
+            if( force_load ) {
                 discordCrypt.log( "Couldn't find module in existing cache. Loading all modules.", 'warn' );
 
                 for ( let i = 0; i < req.m.length; ++i ) {
@@ -1621,35 +1626,130 @@ class discordCrypt {
                     catch ( e ) {
                     }
                 }
+
                 discordCrypt.log( 'Cannot find React module.', 'warn' );
-                return null;
-            };
+            }
 
-            /**
-             * @desc Look through all modules of internal Discord's Webpack and return first object that has all of
-             *      following properties. You should be ready that in any moment, after Discord update,
-             *      this function may start returning `null` (if no such object exists anymore) or even some
-             *      different object with the same properties. So you should provide all property names that
-             *      you use, and often even some extra properties to make sure you'll get exactly what you want.
-             * @param {string[]} propNames Array of property names to look for.
-             * @returns {object} First module that matches `propNames` or `null` if none match.
-             */
-            const findByUniqueProperties = ( propNames ) =>
-                find( module => propNames.every( prop => module[ prop ] !== undefined ) );
+            return null;
+        };
 
-            /**
-             * @desc Look through all modules of internal Discord's Webpack and return first object that has
-             *      `displayName` property with following value. This is useful for searching for React components by
-             *      name. Take into account that not all components are exported as modules. Also, there might be
-             *      several components with the same name.
-             * @param {string} displayName Display name property value to look for.
-             * @return {object} First module that matches `displayName` or `null` if none match.
-             */
-            const findByDisplayName = ( displayName ) =>
-                find( module => module.displayName === displayName );
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first object that has all of
+         *      following properties. You should be ready that in any moment, after Discord update,
+         *      this function may start returning `null` (if no such object exists anymore) or even some
+         *      different object with the same properties. So you should provide all property names that
+         *      you use, and often even some extra properties to make sure you'll get exactly what you want.
+         * @param {string[]} propNames Array of property names to look for.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @returns {object} First module that matches `propNames` or `null` if none match.
+         */
+        const findByUniqueProperties = ( propNames, force_load = true ) =>
+            find( module => propNames.every( prop => module[ prop ] !== undefined ), force_load );
 
-            return { find, findByUniqueProperties, findByDisplayName };
-        } )();
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first object that has
+         *      `displayName` property with following value. This is useful for searching for React components by
+         *      name. Take into account that not all components are exported as modules. Also, there might be
+         *      several components with the same name.
+         * @param {string} displayName Display name property value to look for.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @return {object} First module that matches `displayName` or `null` if none match.
+         */
+        const findByDisplayName = ( displayName, force_load = true ) =>
+            find( module => module.displayName === displayName, force_load );
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return the first object that matches
+         *      a dispatch token's ID. These usually contain a bundle of `_actionHandlers` used to handle events
+         *      internally.
+         * @param {int} token The internal token ID number.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @return {object} First module that matches the dispatch ID or `null` if none match.
+         */
+        const findByDispatchToken = ( token, force_load = false ) =>
+            find( module =>
+                module[ '_dispatchToken' ] !== undefined &&
+                module[ '_dispatchToken' ] === `ID_${token}` &&
+                module[ '_actionHandlers' ] !== undefined,
+                force_load
+            );
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return the first object that matches
+         *      every dispatcher name provided.
+         * @param {string[]} dispatchNames Names of events to search for.
+         * @return {object} First module that matches every dispatch name provided or null if no full matches.
+         */
+        const findByDispatchNames = dispatchNames => {
+            for( let i = 0; i < 500; i++ ){
+                let dispatcher = findByDispatchToken( i );
+
+                if( !dispatcher )
+                    continue;
+
+                if( dispatchNames.every( prop => dispatcher._actionHandlers.hasOwnProperty( prop ) ) )
+                    return dispatcher;
+            }
+            return null;
+        };
+
+        return { find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames };
+    }
+
+    /**
+     * @desc Dumps all function callback handlers with their names, IDs and function prototypes. [ Debug Function ]
+     * @returns {Array} Returns an array of all IDs and identifier callbacks.
+     */
+    static dumpWebpackModuleCallbacks(){
+        /* Resolve the finder function. */
+        let finder = discordCrypt.getWebpackModuleSearcher().findByDispatchToken;
+
+        /* Create the dumping array. */
+        let dump = [];
+
+        /* Iterate over let's say 500 possible modules ? In reality, there's < 100. */
+        for( let i = 0; i < 500; i++ ){
+            /* Locate the module. */
+            let module = finder( i );
+
+            /* Skip if it's invalid. */
+            if( !module )
+                continue;
+
+            /* Create an entry in the array. */
+            dump[ i ] = {};
+
+            /* Loop over every property name in the action handler. */
+            for( let prop in module._actionHandlers ) {
+
+                /* Quick sanity check. */
+                if ( !module._actionHandlers.hasOwnProperty( prop ) )
+                    continue;
+
+                /* Assign the module property name and it's basic prototype. */
+                dump[ i ][ prop ] = module._actionHandlers[ prop ].prototype.constructor.toString().split( '{' )[ 0 ];
+            }
+        }
+
+        /* Return any found module handlers. */
+        return dump;
+    }
+
+    /**
+     * @private
+     * @desc Returns the React modules loaded natively in Discord.
+     * @returns {{
+     *      ChannelProps: Object|null,
+     *      MessageParser: Object|null,
+     *      MessageController: Object|null,
+     *      MessageActionTypes: Object|null,
+     *      MessageDispatcher: Object|null,
+     *      MessageQueue: Object|null,
+     *      HighlightJS: Object|null
+     *  }}
+     */
+    static getReactModules() {
+        const WebpackModules = discordCrypt.getWebpackModuleSearcher();
 
         return {
             ChannelProps:
@@ -1859,6 +1959,136 @@ class discordCrypt {
     /* ================= END PROJECT UTILITIES ================= */
 
     /* ================= BEGIN MAIN CALLBACKS ================== */
+
+    /**
+     * @desc Hooks a dispatcher from Discord's internals.
+     * @author samogot & Leonardo Gates
+     * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
+     * @param {string} methodName The name of the method to hook.
+     * @param {string} options The type of hook to apply. [ 'before', 'after', 'instead', 'revert' ]
+     * @param {boolean} [options.once=false] Set to `true` if you want to automatically unhook method after first call.
+     * @param {boolean} [options.silent=false] Set to `true` if you want to suppress log messages about patching and
+     *      unhooking. Useful to avoid clogging the console in case of frequent conditional hooking/unhooking, for
+     *      example from another monkeyPatch callback.
+     * @return {function} Returns the function used to cancel the hook.
+     */
+    static hookDispatcher(dispatcher, methodName, options) {
+        const { before, after, instead, once = false, silent = false } = options;
+        const origMethod = dispatcher._actionHandlers[ methodName ];
+
+        const cancel = () => {
+            if ( !silent )
+                discordCrypt.log( `Unhooking "${methodName}" ...` );
+            dispatcher[ methodName ] = origMethod;
+        };
+
+        const suppressErrors = ( method, description ) => ( ... params ) => {
+            try {
+                return method( ... params );
+            }
+            catch ( e ) {
+                discordCrypt.log( 'Error occurred in ' + description, 'error' )
+            }
+        };
+
+        if( !dispatcher._actionHandlers[ methodName ].__hooked ) {
+            if ( !silent )
+                discordCrypt.log( `Hooking "${methodName}" ...` );
+
+            dispatcher._actionHandlers[ methodName ] = function () {
+                /**
+                 * @interface
+                 * @name PatchData
+                 * @property {object} thisObject Original `this` value in current call of patched method.
+                 * @property {Arguments} methodArguments Original `arguments` object in current call of patched method.
+                 *      Please, never change function signatures, as it may cause a lot of problems in future.
+                 * @property {cancelPatch} cancelPatch Function with no arguments and no return value that may be called
+                 *      to reverse patching of current method. Calling this function prevents running of this callback
+                 *      on further original method calls.
+                 * @property {function} originalMethod Reference to the original method that is patched. You can use it
+                 *      if you need some special usage. You should explicitly provide a value for `this` and any method
+                 *      arguments when you call this function.
+                 * @property {function} callOriginalMethod This is a shortcut for calling original method using `this` and
+                 *      `arguments` from original call.
+                 * @property {*} returnValue This is a value returned from original function call. This property is
+                 *      available only in `after` callback or in `instead` callback after calling `callOriginalMethod` function.
+                 */
+                const data = {
+                    thisObject: this,
+                    methodArguments: arguments,
+                    cancelPatch: cancel,
+                    originalMethod: origMethod,
+                    callOriginalMethod: () => data.returnValue =
+                        data.originalMethod.apply( data.thisObject, data.methodArguments )
+                };
+                if ( instead ) {
+                    const tempRet =
+                        suppressErrors( instead, `${methodName} called hook via 'instead'.` )( data );
+
+                    if ( tempRet !== undefined )
+                        data.returnValue = tempRet;
+                }
+                else {
+
+                    if ( before )
+                        suppressErrors( before, `${methodName} called hook via 'before'.` )( data );
+
+                    data.callOriginalMethod();
+
+                    if ( after )
+                        suppressErrors( after, `${methodName} called hook via 'after'.` )( data );
+                }
+                if ( once )
+                    cancel();
+
+                return data.returnValue;
+            };
+
+            dispatcher._actionHandlers[ methodName ].__hooked = true;
+            dispatcher._actionHandlers[ methodName ].__cancel = cancel;
+        }
+        return dispatcher._actionHandlers[ methodName ].__cancel;
+    }
+
+    hookMessageCallbacks() {
+
+        /* Find the main message dispatcher if not already found. */
+        if ( !this.messageDispatcher ) {
+            this.messageDispatcher = discordCrypt.getWebpackModuleSearcher().findByDispatchNames( [
+                'MESSAGE_CREATE',
+                'MESSAGE_UPDATE',
+                'MESSAGE_DELETE',
+                'LOAD_MESSAGES'
+            ] );
+        }
+
+        /* Don't proceed if it failed. */
+        if ( !this.messageDispatcher ) {
+            discordCrypt.log( `Failed to locate the message dispatcher!`, 'error' );
+            return;
+        }
+
+        discordCrypt.hookDispatcher(
+            this.messageDispatcher,
+            'MESSAGE_UPDATE',
+            {
+                after: ( e ) => {
+                    if ( e.methodArguments[ 0 ].message.channel_id === discordCrypt.getChannelId() )
+                        discordCrypt.log( `${JSON.stringify( e.methodArguments[ 0 ].message )}` );
+                }
+            }
+        );
+    }
+
+    unhookMessageCallbacks() {
+        if( !this.messageDispatcher )
+            return;
+
+        for( let prop in this.messageDispatcher._actionHandlers ){
+            if( prop.hasOwnProperty( '__cancel' ) )
+                prop.__cancel();
+        }
+    }
 
     /**
      * @private
