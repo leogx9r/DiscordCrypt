@@ -30,10 +30,10 @@ class testRunner {
      * @desc Loads the SJCL library and discordCrypt.
      */
     constructor() {
-        this.sjcl = require( './sjcl.js' );
+        this.sjcl = require( '../lib/sjcl.js' );
         this.process = require( 'process' );
 
-        this.discordCrypt = require( '../src/discordCrypt.plugin.js' ).discordCrypt;
+        this.discordCrypt = require( '../build/discordCrypt.plugin.js' ).discordCrypt;
 
         this.discordCrypt_instance = new ( this.discordCrypt )();
     }

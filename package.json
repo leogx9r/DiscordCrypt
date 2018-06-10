@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Secure messaging for the Discord app.",
   "repository": "https://gitlab.com/leogx9r/DiscordCrypt",
-  "main": "",
+  "main": "node src/build.js -o build",
   "scripts": {
     "coverage": "node node_modules/.bin/istanbul cover tests/perform-tests.js coverage",
     "test_scrypt": "node tests/perform-tests.js scrypt",
@@ -25,6 +25,7 @@
     "fs": "0.0.1-security",
     "istanbul": "^0.4.5",
     "mime-types": "^2.1.18",
+    "minimist": "^1.2.0",
     "nodeunit": "^0.11.2",
     "original-fs": "^1.0.0",
     "path": "^0.12.7",

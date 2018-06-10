@@ -28,7 +28,7 @@ class testGenerator {
     constructor() {
         this.fs = require( 'fs' );
         this.crypto = require( 'crypto' );
-        this.discordCrypt = require( '../src/discordCrypt.plugin.js' ).discordCrypt;
+        this.discordCrypt = require( '../build/discordCrypt.plugin.js' ).discordCrypt;
         this.discordCrypt_instance = new ( this.discordCrypt )();
         this.cipherModeCount = this.discordCrypt_instance.encryptModes.length;
 
