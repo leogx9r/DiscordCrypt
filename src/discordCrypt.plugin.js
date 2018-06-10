@@ -4078,7 +4078,7 @@ class discordCrypt {
      * @desc Checks if the plugin should ignore auto-updates.
      *      Usually in a developer environment, a simple symlink is ( or should be ) used to link the current build
      *      file to the plugin path allowing faster deployment.
-     * @param {string} version. Version string of the plugin to include in the check.
+     * @param {string} version Version string of the plugin to include in the check.
      * @return {boolean} Returns false if the plugin should auto-update.
      */
     static __shouldIgnoreUpdates( version ) {
