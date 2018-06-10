@@ -157,6 +157,18 @@ exchange feature in this tutorial.
 
 #### _Personal Conversations_
 
+###### _Short Explanation_
+
+All it takes is three ( 3 ) clicks.
+
+* _Step one_: Generate a key ![s1](images/auto-handshake.png)
+    * You may skip this step if your partner is generating their key first. Hooray, down to two ( 2 ) clicks!
+* _Step two_: Once the key appears, click the `Perform Key Exchange` button in the message that just appeared.
+* _Step three_: After the passwords are generated, click the `Apply Generated Passwords` button at the bottom of the pop-up.
+
+
+###### _Longer Explanation_
+
 * Go in the channel or conversation you want to set a password for.
 * If you're not sure whether you've sent a key before, go to the `Key Exchange` menu ![1](images/key-exchange.png) 
 and then to the `Key Generation` tab.
