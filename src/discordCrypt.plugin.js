@@ -4510,17 +4510,18 @@ class discordCrypt {
      * @throws {string} Thrown an unsupported type error if the input is neither a string, Buffer or Array.
      */
     static __toBuffer( input, is_input_hex = undefined ) {
+
+        /* No conversion needed, return it as-is. */
+        if ( Buffer.isBuffer( input ) )
+            return input;
+
         /* If the message is either a Hex, Base64 or UTF-8 encoded string, convert it to a buffer. */
         if ( typeof input === 'string' )
             return Buffer.from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
-        else if ( typeof input === 'object' ) {
-            /* No conversion needed, return it as-is. */
-            if ( Buffer.isBuffer( input ) )
-                return input;
-            /* Convert the Array to a Buffer object first. */
-            else if ( Array.isArray( input ) )
-                return Buffer.from( input );
-        }
+
+        /* Convert the Array to a Buffer object first. */
+        if ( Array.isArray( input ) )
+            return Buffer.from( input );
 
         /* Throw if an invalid type was passed. */
         throw 'Input is neither an Array(), Buffer() or a string.';
