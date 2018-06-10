@@ -1013,7 +1013,7 @@ class discordCrypt {
         }, 5000 );
 
         /* Don't check for updates if running a debug version. */
-        if ( this.getVersion().indexOf( '-debug' ) === -1 ) {
+        if ( !discordCrypt.__shouldIgnoreUpdates( this.getVersion() ) ) {
             /* Check for any new updates. */
             this.checkForUpdates();
 
@@ -4073,6 +4073,23 @@ class discordCrypt {
      * @param {string|null} The HTTP error string if an error occurred.
      * @param {string} data The returned data from the request.
      */
+
+    /**
+     * @private
+     * @desc Checks if the plugin should ignore auto-updates.
+     *      Usually in a developer environment, a simple symlink is ( or should be ) used to link the current build
+     *      file to the plugin path allowing faster deployment.
+     * @param {string} version. Version string of the plugin to include in the check.
+     * @return {boolean} Returns false if the plugin should auto-update.
+     */
+    static __shouldIgnoreUpdates( version ) {
+        const fs = require( 'fs' );
+        const path = require( 'path' );
+        const plugin_file = path.join( discordCrypt.getPluginsPath(), discordCrypt.getPluginName() );
+
+        return fs.existsSync( plugin_file ) &&
+            ( fs.lstatSync( plugin_file ).isSymbolicLink() || version.indexOf( '-debug' ) !== -1 );
+    }
 
     /**
      * @public
