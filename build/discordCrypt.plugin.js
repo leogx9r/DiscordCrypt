@@ -1069,7 +1069,7 @@ class discordCrypt {
         discordCrypt.injectCSS( 'dc-css', this.appCss );
 
         /* Inject all compiled libraries. */
-        for( let name in this.libraries ){
+        for ( let name in this.libraries ) {
             vm.runInThisContext( this.libraries[ name ], {
                 filename: name,
                 displayErrors: false
@@ -1615,7 +1615,7 @@ class discordCrypt {
                 }
             }
 
-            if( force_load ) {
+            if ( force_load ) {
                 discordCrypt.log( "Couldn't find module in existing cache. Loading all modules.", 'warn' );
 
                 for ( let i = 0; i < req.m.length; ++i ) {
@@ -1684,13 +1684,13 @@ class discordCrypt {
          * @return {object} First module that matches every dispatch name provided or null if no full matches.
          */
         const findByDispatchNames = dispatchNames => {
-            for( let i = 0; i < 500; i++ ){
+            for ( let i = 0; i < 500; i++ ) {
                 let dispatcher = findByDispatchToken( i );
 
-                if( !dispatcher )
+                if ( !dispatcher )
                     continue;
 
-                if( dispatchNames.every( prop => dispatcher._actionHandlers.hasOwnProperty( prop ) ) )
+                if ( dispatchNames.every( prop => dispatcher._actionHandlers.hasOwnProperty( prop ) ) )
                     return dispatcher;
             }
             return null;
@@ -1704,7 +1704,7 @@ class discordCrypt {
      * @desc Dumps all function callback handlers with their names, IDs and function prototypes. [ Debug Function ]
      * @returns {Array} Returns an array of all IDs and identifier callbacks.
      */
-    static dumpWebpackModuleCallbacks(){
+    static dumpWebpackModuleCallbacks() {
         /* Resolve the finder function. */
         let finder = discordCrypt.getWebpackModuleSearcher().findByDispatchToken;
 
@@ -1712,19 +1712,19 @@ class discordCrypt {
         let dump = [];
 
         /* Iterate over let's say 500 possible modules ? In reality, there's < 100. */
-        for( let i = 0; i < 500; i++ ){
+        for ( let i = 0; i < 500; i++ ) {
             /* Locate the module. */
             let module = finder( i );
 
             /* Skip if it's invalid. */
-            if( !module )
+            if ( !module )
                 continue;
 
             /* Create an entry in the array. */
             dump[ i ] = {};
 
             /* Loop over every property name in the action handler. */
-            for( let prop in module._actionHandlers ) {
+            for ( let prop in module._actionHandlers ) {
 
                 /* Quick sanity check. */
                 if ( !module._actionHandlers.hasOwnProperty( prop ) )
@@ -1976,7 +1976,7 @@ class discordCrypt {
      *      example from another monkeyPatch callback.
      * @return {function} Returns the function used to cancel the hook.
      */
-    static hookDispatcher(dispatcher, methodName, options) {
+    static hookDispatcher( dispatcher, methodName, options ) {
         const { before, after, instead, once = false, silent = false } = options;
         const origMethod = dispatcher._actionHandlers[ methodName ];
 
@@ -1995,7 +1995,7 @@ class discordCrypt {
             }
         };
 
-        if( !dispatcher._actionHandlers[ methodName ].__hooked ) {
+        if ( !dispatcher._actionHandlers[ methodName ].__hooked ) {
             if ( !silent )
                 discordCrypt.log( `Hooking "${methodName}" ...` );
 
@@ -2085,11 +2085,11 @@ class discordCrypt {
     }
 
     unhookMessageCallbacks() {
-        if( !this.messageDispatcher )
+        if ( !this.messageDispatcher )
             return;
 
-        for( let prop in this.messageDispatcher._actionHandlers ){
-            if( prop.hasOwnProperty( '__cancel' ) )
+        for ( let prop in this.messageDispatcher._actionHandlers ) {
+            if ( prop.hasOwnProperty( '__cancel' ) )
                 prop.__cancel();
         }
     }
@@ -2558,7 +2558,7 @@ class discordCrypt {
      * @param {Object} obj The jQuery object of the current message being examined.
      * @returns {boolean} Returns true.
      */
-    parseKeyMessage( obj ){
+    parseKeyMessage( obj ) {
         /* Extract the algorithm info from the message's metadata. */
         let metadata = discordCrypt.__extractKeyInfo( obj.text().replace( /\r?\n|\r/g, '' ), true );
 
@@ -2566,7 +2566,7 @@ class discordCrypt {
         let local_fingerprint = discordCrypt.sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
 
         /* Skip if this is our current public key. */
-        if ( metadata[ 'fingerprint' ] === local_fingerprint ){
+        if ( metadata[ 'fingerprint' ] === local_fingerprint ) {
             obj.css( 'display', 'none' );
             return true;
         }
@@ -2644,12 +2644,12 @@ class discordCrypt {
      * @private
      * @desc Parses a message object and attempts to decrypt it..
      * @param {Object} obj The jQuery object of the current message being examined.
-     * @param {string} password The primary key used to decrypt the message.
-     * @param {string} secondary The secondary key used to decrypt the message.
+     * @param {string} primaryKey The primary key used to decrypt the message.
+     * @param {string} secondaryKey The secondary key used to decrypt the message.
      * @param {Object} ReactModules The modules retrieved by calling getReactModules()
      * @returns {boolean} Returns true if the message has been decrypted.
      */
-    parseSymmetric( obj, password, secondary, ReactModules ) {
+    parseSymmetric( obj, primaryKey, secondaryKey, ReactModules ) {
         let message = $( obj );
         let dataMsg;
 
@@ -2706,7 +2706,7 @@ class discordCrypt {
 
         /* Decrypt the message. */
         dataMsg = discordCrypt.symmetricDecrypt( message.text().replace( /\r?\n|\r/g, '' )
-            .substr( 12 ), password, secondary, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
+            .substr( 12 ), primaryKey, secondaryKey, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
 
         /* If decryption didn't fail, set the decoded text along with a green foreground. */
         if ( ( typeof dataMsg === 'string' || dataMsg instanceof String ) && dataMsg !== "" ) {
@@ -2804,10 +2804,16 @@ class discordCrypt {
         let id = discordCrypt.getChannelId();
 
         /* Use the default password for decryption if one hasn't been defined for this channel. */
-        let password = this.configFile.passList[ id ] && this.configFile.passList[ id ].primary ?
-            this.configFile.passList[ id ].primary : this.configFile.defaultPassword;
-        let secondary = this.configFile.passList[ id ] && this.configFile.passList[ id ].secondary ?
-            this.configFile.passList[ id ].secondary : this.configFile.defaultPassword;
+        let password = Buffer.from(
+            this.configFile.passList[ id ] && this.configFile.passList[ id ].primary ?
+                this.configFile.passList[ id ].primary :
+                this.configFile.defaultPassword
+        );
+        let secondary = Buffer.from(
+            this.configFile.passList[ id ] && this.configFile.passList[ id ].secondary ?
+                this.configFile.passList[ id ].secondary :
+                this.configFile.defaultPassword
+        );
 
         /* Look through each markup element to find an embedDescription. */
         let React = discordCrypt.getReactModules();
@@ -2873,9 +2879,10 @@ class discordCrypt {
             cleaned = message[ 0 ];
         }
         /* Make sure we have a valid password. */
-        else
-        /* Use the whole message. */
+        else {
+            /* Use the whole message. */
             cleaned = message;
+        }
 
         /* Check if we actually have a message ... */
         if ( cleaned.length === 0 )
@@ -2885,18 +2892,26 @@ class discordCrypt {
         let parsed = discordCrypt.__extractTags( cleaned );
 
         /* Sanity check for messages with just spaces or new line feeds in it. */
-        if ( parsed[ 0 ].length !== 0 )
-        /* Extract the message to be encrypted. */
+        if ( parsed[ 0 ].length !== 0 ) {
+            /* Extract the message to be encrypted. */
             cleaned = parsed[ 0 ];
+        }
 
         /* Add content tags. */
         let user_tags = parsed[ 1 ].length > 0 ? parsed[ 1 ] : '';
 
         /* Get the passwords. */
-        let password = this.configFile.passList[ discordCrypt.getChannelId() ] ?
-            this.configFile.passList[ discordCrypt.getChannelId() ].primary : this.configFile.defaultPassword;
-        let secondary = this.configFile.passList[ discordCrypt.getChannelId() ] ?
-            this.configFile.passList[ discordCrypt.getChannelId() ].secondary : this.configFile.defaultPassword;
+        let primaryPassword = Buffer.from(
+            this.configFile.passList[ discordCrypt.getChannelId() ] ?
+                this.configFile.passList[ discordCrypt.getChannelId() ].primary :
+                this.configFile.defaultPassword
+        );
+
+        let secondaryPassword = Buffer.from(
+            this.configFile.passList[ discordCrypt.getChannelId() ] ?
+                this.configFile.passList[ discordCrypt.getChannelId() ].secondary :
+                this.configFile.defaultPassword
+        );
 
         /* Returns the number of bytes a given string is in Base64. */
         function getBase64EncodedLength( len ) {
@@ -2909,8 +2924,8 @@ class discordCrypt {
             /* Encrypt the message. */
             let msg = discordCrypt.symmetricEncrypt(
                 cleaned,
-                password,
-                secondary,
+                primaryPassword,
+                secondaryPassword,
                 this.configFile.encryptMode,
                 this.configFile.encryptBlockMode,
                 this.configFile.paddingMode,
@@ -2948,8 +2963,8 @@ class discordCrypt {
                 /* Encrypt the message. */
                 let msg = discordCrypt.symmetricEncrypt(
                     packets[ i ],
-                    password,
-                    secondary,
+                    primaryPassword,
+                    secondaryPassword,
                     this.configFile.encryptMode,
                     this.configFile.encryptBlockMode,
                     this.configFile.paddingMode,
@@ -3232,16 +3247,17 @@ class discordCrypt {
                             self.masterPassword = Buffer.from( pwd, 'hex' );
 
                             /* Save the configuration file and update the button text. */
-                            self.saveSettings( this );
+                            self.saveSettings( $( '#dc-settings-save-btn' )[ 0 ] );
                         }
 
                         return false;
                     }
                 );
             }
-            else
-            /* Save the configuration file and update the button text. */
-                self.saveSettings( this );
+            else {
+                /* Save the configuration file and update the button text. */
+                self.saveSettings( $( '#dc-settings-save-btn' )[ 0 ] );
+            }
         };
     }
 
@@ -3254,7 +3270,7 @@ class discordCrypt {
     static on_reset_settings_button_clicked( /* discordCrypt */ self ) {
         return () => {
             /* Resets the configuration file and update the button text. */
-            self.resetSettings( this );
+            self.resetSettings( $( '#dc-settings-reset-btn' )[ 0 ] );
 
             /* Update all settings from the settings panel. */
             $( '#dc-master-password' )[ 0 ].value = '';
@@ -4881,13 +4897,8 @@ class discordCrypt {
             /* Hash the key and return it as a buffer. */
             return Buffer.from( hash( key, true ), 'hex' );
         }
-        else {
-            if ( typeof key === 'string' ||
-                ( typeof key === 'object' && ( Buffer.isBuffer( key ) || Array.isArray( key ) ) ) )
-                return Buffer.from( key );
-            else
-                throw 'exception - Invalid key type.';
-        }
+        else
+            return Buffer.from( key );
     }
 
     /**
@@ -7302,9 +7313,9 @@ class discordCrypt {
     /**
      * @public
      * @desc Dual-encrypts a message using symmetric keys and returns the substituted encoded equivalent.
-     * @param {string|Buffer|Array} message The input message to encrypt.
-     * @param {string|Buffer|Array} primary_key The primary key used for the first level of encryption.
-     * @param {string|Buffer|Array} secondary_key The secondary key used for the second level of encryption.
+     * @param {string|Buffer} message The input message to encrypt.
+     * @param {Buffer} primary_key The primary key used for the first level of encryption.
+     * @param {Buffer} secondary_key The secondary key used for the second level of encryption.
      * @param {int} cipher_index The cipher index containing the primary and secondary ciphers used for encryption.
      * @param {string} block_mode The block operation mode of the ciphers.
      *      These can be: [ 'CBC', 'CFB', 'OFB' ].
@@ -7315,24 +7326,10 @@ class discordCrypt {
      * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
      * @throws An exception indicating the error that occurred.
      */
-    static symmetricEncrypt(
-        /* string|Buffer|Array */    message,
-        /* string|Buffer|Array */    primary_key,
-        /* string|Buffer|Array */    secondary_key,
-        /* int */                    cipher_index,
-        /* string */                 block_mode,
-        /* string */                 padding_mode,
-        /* boolean */                use_hmac
-    ) {
+    static symmetricEncrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode, use_hmac ) {
 
         /* Performs one of the 5 standard encryption algorithms on the plain text. */
-        function handleEncodeSegment(
-            /* string|Buffer|Array */   message,
-            /* string|Buffer|Array */   key,
-            /* int */                   cipher,
-            /* string */                mode,
-            /* string */                pad
-        ) {
+        function handleEncodeSegment( message, key, cipher, mode, pad ) {
             switch ( cipher ) {
                 case 0:
                     return discordCrypt.blowfish512_encrypt( message, key, mode, pad );
@@ -7422,8 +7419,8 @@ class discordCrypt {
      * @public
      * @desc Dual-decrypts a message using symmetric keys and returns the substituted encoded equivalent.
      * @param {string|Buffer|Array} message The substituted and encoded input message to decrypt.
-     * @param {string|Buffer|Array} primary_key The primary key used for the **second** level of decryption.
-     * @param {string|Buffer|Array} secondary_key The secondary key used for the **first** level of decryption.
+     * @param {Buffer} primary_key The primary key used for the **second** level of decryption.
+     * @param {Buffer} secondary_key The secondary key used for the **first** level of decryption.
      * @param {int} cipher_index The cipher index containing the primary and secondary ciphers used for decryption.
      * @param {string} block_mode The block operation mode of the ciphers.
      *      These can be: [ 'CBC', 'CFB', 'OFB' ].
@@ -7435,26 +7432,18 @@ class discordCrypt {
      * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
      * @throws An exception indicating the error that occurred.
      */
-    static symmetricDecrypt(
-        /* string */    message,
-        /* string */    primary_key,
-        /* string */    secondary_key,
-        /* int */       cipher_index,
-        /* int */       block_mode,
-        /* int */       padding_mode,
-        /* boolean */   use_hmac
-    ) {
+    static symmetricDecrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode, use_hmac ) {
         const crypto = require( 'crypto' );
 
         /* Performs one of the 5 standard decryption algorithms on the plain text. */
         function handleDecodeSegment(
-            /* string|Buffer|Array */ message,
-            /* string|Buffer|Array */ key,
-            /* int */                 cipher,
-            /* string */              mode,
-            /* string */              pad,
-            /* string */              output_format = 'utf8',
-            /* boolean */             is_message_hex = undefined
+            message,
+            key,
+            cipher,
+            mode,
+            pad,
+            output_format = 'utf8',
+            is_message_hex = undefined
         ) {
             switch ( cipher ) {
                 case 0:
