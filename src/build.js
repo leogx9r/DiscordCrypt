@@ -115,9 +115,10 @@ class Compiler {
      * @param {string} tag_name The tag name to scan the [plugin] for to insert all libraries.
      * @param {string} library_path The path to the libraries used to add to the base file.
      * @param {string} output_dir The output directory to store the plugin.
+     * @param {boolean} compress Whether to compress the plugin itself.
      * @return {boolean} Returns true on success and false on failure.
      */
-    compilePlugin( plugin_path, tag_name, library_path, output_dir ) {
+    compilePlugin( plugin_path, tag_name, library_path, output_dir, compress ) {
         const header =
 `//META{"name":"discordCrypt"}*//
 
@@ -175,15 +176,21 @@ class Compiler {
         }
 
         try {
-            /* Compress the code. */
-            data = this.uglifyjs.minify( data, this.defaultBuilderOptions );
+            /* Only do this if we're compressing the plugin. */
+            if( compress ){
+                /* Compress the code. */
+                data = this.uglifyjs.minify( data, this.defaultBuilderOptions );
 
-            /* Check if an error occurred. */
-            if( data.error !== undefined )
-                throw `${error}`;
+                /* Check if an error occurred. */
+                if( data.error !== undefined )
+                    throw `${error}`;
+
+                /* Update the variable. */
+                data = header + data.code;
+            }
 
             /* Write the file to the output. */
-            this.fs.writeFileSync( output_path, header + data.code );
+            this.fs.writeFileSync( output_path, data );
         }
         catch ( e ) {
             console.error( `Error building plugin:\n    ${e.toString()}` );
@@ -203,10 +210,11 @@ class Compiler {
     run() {
         /* Construct the default arguments. */
         const defaults = {
-            plugin: './src/discordCrypt.plugin.js',
             tag: '/* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
+            plugin: './src/discordCrypt.plugin.js',
+            compression: false,
+            output: './build',
             lib: './lib',
-            output: './build'
         };
 
         let args = require( 'minimist' )( this.process.argv.slice( 2 ) );
@@ -215,14 +223,15 @@ class Compiler {
         if( !args || args[ 'help' ] || args[ 'h' ] ){
             console.info(
                 "Usage:\n" +
-                "   --plugin-path|-p       -  Path to the base plugin file to use.\n" +
-                "   --tag-name|-t          -  The \"tag\" to use find and insert libraries in the plugin file.\n" +
-                "   --library-path|-l      -  The path to the library folder containing all needed files.\n" +
-                "   --output-directory|-o  -  The output directory to store the compiled file in.\n" +
+                "   --plugin-path|-p         -  Path to the base plugin file to use.\n" +
+                "   --tag-name|-t            -  The \"tag\" to use find and insert libraries in the plugin file.\n" +
+                "   --library-path|-l        -  The path to the library folder containing all needed files.\n" +
+                "   --output-directory|-o    -  The output directory to store the compiled file in.\n" +
+                "   --enable-compression|-c  -  If used, the plugin file will be compressed.\n" +
                 "\n" +
                 "Example:\n" +
                 `   ${this.process.argv[0]} ${this.process.argv[1]} ` +
-                `-p "${defaults.plugin}" -l "${defaults.lib}" -o "${defaults.output}" -t "${defaults.tag}"`
+                    `-c -p "${defaults.plugin}" -l "${defaults.lib}" -o "${defaults.output}" -t "${defaults.tag}"`
 
             );
             return;
@@ -233,7 +242,8 @@ class Compiler {
             args['plugin-path'] || args[ 'p' ] || defaults.plugin,
             args['tag-name'] || args[ 't' ] || defaults.tag,
             args['library-path'] || args[ 'l' ] || defaults.lib,
-            args['output-directory'] || args[ 'o' ] || defaults.output
+            args['output-directory'] || args[ 'o' ] || defaults.output,
+            args['enable-compression'] || args[ 'c' ] || defaults.compression
         );
     }
 }
