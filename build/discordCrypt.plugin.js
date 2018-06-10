@@ -129,9 +129,9 @@ class discordCrypt {
 
         /**
          * @desc Master database password. This is a Buffer() containing a 256-bit key.
-         * @type {Buffer}
+         * @type {Buffer|null}
          */
-        this.masterPassword = Buffer.alloc( 32 );
+        this.masterPassword = null;
 
         /**
          * @desc Message scanning interval handler's index. Used to stop any running handler.
@@ -479,20 +479,31 @@ class discordCrypt {
                     </path>
                 </svg>           
             </button>
-            <button type="button" id="dc-settings-btn" style="background-color: transparent;" title="DiscordCrypt Settings">
+            <button type="button" id="dc-settings-btn" style="background-color: transparent;" 
+                title="DiscordCrypt Settings">
                 <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32" 
                 width="20px" height="20px" xml:space="preserve">
                     <g>
-                        <path fill="lightgrey" d="M28,10H18v2h10V10z M14,10H4v10h10V10z M32,0H0v28h15.518c1.614,2.411,4.361,3.999,7.482,4c4.971-0.002,8.998-4.029,9-9   
-                        c0-0.362-0.027-0.718-0.069-1.069L32,22V0z M10,2h12v2H10V2z M6,2h2v2H6V2z M2,2h2v2H2V2z M23,29.883   
-                        c-3.801-0.009-6.876-3.084-6.885-6.883c0.009-3.801,3.084-6.876,6.885-6.885c3.799,0.009,6.874,3.084,6.883,6.885   
-                        C29.874,26.799,26.799,29.874,23,29.883z M29.999,17.348c-0.57-0.706-1.243-1.324-1.999-1.83V14h-4.99c-0.003,0-0.007,0-0.01,0   
-                        s-0.007,0-0.01,0H18v1.516c-2.412,1.614-4,4.361-4,7.483c0,1.054,0.19,2.061,0.523,3H2V6h27.999V17.348z M30,4h-4V2h4V4z"/>
-                        <path fill="lightgrey" d="M28,24v-2.001h-1.663c-0.063-0.212-0.145-0.413-0.245-0.606l1.187-1.187l-1.416-1.415l-1.165,1.166   
-                        c-0.22-0.123-0.452-0.221-0.697-0.294V18h-2v1.662c-0.229,0.068-0.446,0.158-0.652,0.27l-1.141-1.14l-1.415,1.415l1.14,1.14   
-                        c-0.112,0.207-0.202,0.424-0.271,0.653H18v2h1.662c0.073,0.246,0.172,0.479,0.295,0.698l-1.165,1.163l1.413,1.416l1.188-1.187   
-                        c0.192,0.101,0.394,0.182,0.605,0.245V28H24v-1.665c0.229-0.068,0.445-0.158,0.651-0.27l1.212,1.212l1.414-1.416l-1.212-1.21   
-                        c0.111-0.206,0.201-0.423,0.27-0.651H28z M22.999,24.499c-0.829-0.002-1.498-0.671-1.501-1.5c0.003-0.829,0.672-1.498,1.501-1.501   
+                        <path fill="lightgrey" d="M28,10H18v2h10V10z M14,10H4v10h10V10z M32,0H0v28h15.518c1.614,2.411,
+                        4.361,3.999,7.482,4c4.971-0.002,8.998-4.029,9-9   
+                        c0-0.362-0.027-0.718-0.069-1.069L32,22V0z M10,2h12v2H10V2z M6,2h2v2H6V2z M2,2h2v2H2V2z 
+                        M23,29.883   
+                        c-3.801-0.009-6.876-3.084-6.885-6.883c0.009-3.801,3.084-6.876,6.885-6.885c3.799,0.009,6.874,
+                        3.084,6.883,6.885   
+                        C29.874,26.799,26.799,29.874,23,29.883z M29.999,
+                        17.348c-0.57-0.706-1.243-1.324-1.999-1.83V14h-4.99c-0.003,0-0.007,0-0.01,0   
+                        s-0.007,0-0.01,0H18v1.516c-2.412,1.614-4,4.361-4,7.483c0,1.054,0.19,2.061,0.523,
+                        3H2V6h27.999V17.348z M30,4h-4V2h4V4z"/>
+                        <path fill="lightgrey" d="M28,
+                        24v-2.001h-1.663c-0.063-0.212-0.145-0.413-0.245-0.606l1.187-1.187l-1.416-1.415l-1.165,1.166   
+                        c-0.22-0.123-0.452-0.221-0.697-0.294V18h-2v1.662c-0.229,0.068-0.446,0.158-0.652,
+                        0.27l-1.141-1.14l-1.415,1.415l1.14,1.14   
+                        c-0.112,0.207-0.202,0.424-0.271,0.653H18v2h1.662c0.073,0.246,0.172,0.479,
+                        0.295,0.698l-1.165,1.163l1.413,1.416l1.188-1.187   
+                        c0.192,0.101,0.394,0.182,0.605,0.245V28H24v-1.665c0.229-0.068,0.445-0.158,
+                        0.651-0.27l1.212,1.212l1.414-1.416l-1.212-1.21   
+                        c0.111-0.206,0.201-0.423,0.27-0.651H28z M22.999,
+                        24.499c-0.829-0.002-1.498-0.671-1.501-1.5c0.003-0.829,0.672-1.498,1.501-1.501   
                         c0.829,0.003,1.498,0.672,1.5,1.501C24.497,23.828,23.828,24.497,22.999,24.499z"/>
                     </g>
                 </svg>
@@ -502,12 +513,18 @@ class discordCrypt {
                 <svg class="dc-svg" version="1.1" viewBox="0 0 32 32" width="20px" height="20px">
                     <g fill="none" fill-rule="evenodd" stroke="none" stroke-width="1">
                         <g fill="lightgrey">
-                            <path d="M13.008518,22 L11.508518,23.5 L11.508518,23.5 L14.008518,26 L11.008518,29 L8.50851798,26.5 L6.63305475,28.3754632 C5.79169774,29.2168202 
-                            4.42905085,29.2205817 3.5909158,28.3824466 L3.62607133,28.4176022 C2.78924,27.5807709 2.79106286,26.2174551 3.63305475,25.3754632 L15.7904495,13.2180685
-                             C15.2908061,12.2545997 15.008518,11.1602658 15.008518,10 C15.008518,6.13400656 18.1425245,3 22.008518,3 C25.8745114,3 
-                             29.008518,6.13400656 29.008518,10 C29.008518,13.8659934 25.8745114,17 22.008518,17 C20.8482521,17 19.7539183,16.7177118 18.7904495,16.2180685 
-                             L18.7904495,16.2180685 L16.008518,19 L18.008518,21 L15.008518,24 L13.008518,22 L13.008518,22 L13.008518,22 Z M22.008518,14 C24.2176571,14 
-                             26.008518,12.2091391 26.008518,10 C26.008518,7.79086089 24.2176571,6 22.008518,6 C19.7993789,6 18.008518,7.79086089 18.008518,10 C18.008518,12.2091391 
+                            <path d="M13.008518,22 L11.508518,23.5 L11.508518,23.5 L14.008518,26 L11.008518,
+                            29 L8.50851798,26.5 L6.63305475,28.3754632 C5.79169774,29.2168202 
+                            4.42905085,29.2205817 3.5909158,28.3824466 L3.62607133,28.4176022 C2.78924,27.5807709 
+                            2.79106286,26.2174551 3.63305475,25.3754632 L15.7904495,13.2180685
+                             C15.2908061,12.2545997 15.008518,11.1602658 15.008518,10 C15.008518,6.13400656 18.1425245,
+                             3 22.008518,3 C25.8745114,3 
+                             29.008518,6.13400656 29.008518,10 C29.008518,13.8659934 25.8745114,17 22.008518,
+                             17 C20.8482521,17 19.7539183,16.7177118 18.7904495,16.2180685 
+                             L18.7904495,16.2180685 L16.008518,19 L18.008518,21 L15.008518,24 L13.008518,22 L13.008518,
+                             22 L13.008518,22 Z M22.008518,14 C24.2176571,14 
+                             26.008518,12.2091391 26.008518,10 C26.008518,7.79086089 24.2176571,6 22.008518,
+                             6 C19.7993789,6 18.008518,7.79086089 18.008518,10 C18.008518,12.2091391 
                              19.7993789,14 22.008518,14 L22.008518,14 Z" id="key"/>
                         </g>
                     </g>
@@ -515,31 +532,46 @@ class discordCrypt {
             </button>
             <button type="button" id="dc-exchange-btn" style="background-color: transparent;" title="Key Exchange Menu">
                 <svg class="dc-svg" version="1.1" viewBox="0 0 78 78" width="20px" height="20px">
-                    <path d="M72,4.5H6c-3.299,0-6,2.699-6,6V55.5c0,3.301,2.701,6,6,6h66c3.301,0,6-2.699,6-6V10.5  C78,7.2,75.301,4.5,72,4.5z M72,50.5H6V10.5h66V50.5z 
-                    M52.5,67.5h-27c-1.66,0-3,1.341-3,3v3h33v-3C55.5,68.84,54.16,67.5,52.5,67.5z   M26.991,36.5H36v-12h-9.009v-6.729L15.264,30.5l11.728,12.728V36.5z 
+                    <path d="M72,4.5H6c-3.299,0-6,2.699-6,6V55.5c0,3.301,2.701,6,6,6h66c3.301,0,6-2.699,6-6V10.5  
+                    C78,7.2,75.301,4.5,72,4.5z M72,50.5H6V10.5h66V50.5z 
+                    M52.5,67.5h-27c-1.66,0-3,1.341-3,3v3h33v-3C55.5,68.84,54.16,67.5,52.5,67.5z   
+                    M26.991,36.5H36v-12h-9.009v-6.729L15.264,30.5l11.728,12.728V36.5z 
                     M50.836,43.228L62.563,30.5L50.836,17.771V24.5h-9.009v12  h9.009V43.228z" style="fill:#d3d3d3;"/>
                 </svg>
             </button>
-            <button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;" title="Generate & Send New Public Key">
+            <button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;" 
+            title="Generate & Send New Public Key">
                 <svg class="dc-svg iconActive-AKd_jq icon-1R19_H iconMargin-2YXk4F" x="0px" y="0px" viewBox="0 0 58 58">
-                    <path style="fill:#d3d3d3;" d="M27.767,26.73c-2.428-2.291-3.766-5.392-3.766-8.729c0-6.617,5.383-12,12-12s12,5.383,12,12  
-                    c0,3.288-1.372,6.469-3.765,8.728l-1.373-1.455c2.023-1.909,3.138-4.492,3.138-7.272c0-5.514-4.486-10-10-10s-10,4.486-10,10  
+                    <path style="fill:#d3d3d3;" 
+                    d="M27.767,26.73c-2.428-2.291-3.766-5.392-3.766-8.729c0-6.617,5.383-12,12-12s12,5.383,12,12  
+                    c0,3.288-1.372,6.469-3.765,8.728l-1.373-1.455c2.023-1.909,
+                    3.138-4.492,3.138-7.272c0-5.514-4.486-10-10-10s-10,4.486-10,10  
                     c0,2.781,1.114,5.365,3.139,7.274L27.767,26.73z"/>
                     <path style="fill:#d3d3d3;" d="M56.428,38.815c-0.937-0.695-2.188-0.896-3.435-0.55l-15.29,4.227  
-                    C37.891,42.028,38,41.522,38,40.991c0-2.2-1.794-3.991-3.999-3.991h-9.377c-0.667-1-2.363-4-4.623-4H16v-0.999  
-                    C16,30.347,14.654,29,13,29H9c-1.654,0-3,1.347-3,3v17C6,50.655,7.346,52,9,52h4c1.654,0,3-1.345,3-2.999v-0.753l12.14,8.201  
-                    c1.524,1.031,3.297,1.55,5.075,1.55c1.641,0,3.286-0.441,4.742-1.33l18.172-11.101C57.283,44.864,58,43.587,58,42.233v-0.312  
-                    C58,40.688,57.427,39.556,56.428,38.815z M14,49C14,49.553,13.552,50,13,50h-1v-4h-2v4H9c-0.552,0-1-0.447-1-0.999v-17  
-                    C8,31.449,8.448,31,9,31h4c0.552,0,1,0.449,1,1V49z M56,42.233c0,0.66-0.35,1.284-0.913,1.628L36.915,54.962  
+                    C37.891,42.028,38,41.522,38,
+                    40.991c0-2.2-1.794-3.991-3.999-3.991h-9.377c-0.667-1-2.363-4-4.623-4H16v-0.999  
+                    C16,30.347,14.654,29,13,29H9c-1.654,0-3,1.347-3,3v17C6,50.655,7.346,52,9,52h4c1.654,0,
+                    3-1.345,3-2.999v-0.753l12.14,8.201  
+                    c1.524,1.031,3.297,1.55,5.075,1.55c1.641,0,3.286-0.441,4.742-1.33l18.172-11.101C57.283,
+                    44.864,58,43.587,58,42.233v-0.312  
+                    C58,40.688,57.427,39.556,56.428,38.815z M14,49C14,49.553,13.552,
+                    50,13,50h-1v-4h-2v4H9c-0.552,0-1-0.447-1-0.999v-17  
+                    C8,31.449,8.448,31,9,31h4c0.552,0,1,0.449,1,1V49z M56,42.233c0,0.66-0.35,1.284-0.913,
+                    1.628L36.915,54.962  
                     c-2.367,1.443-5.37,1.376-7.655-0.17L16,45.833V35h4c1.06,0,2.469,2.034,3.088,3.409L23.354,39h10.646  
-                    C35.104,39,36,39.892,36,40.988C36,42.098,35.104,43,34,43H29h-5v2h5h5h2l17.525-4.807c0.637-0.18,1.278-0.094,1.71,0.228  
+                    C35.104,39,36,39.892,36,40.988C36,42.098,35.104,43,34,43H29h-5v2h5h5h2l17.525-4.807c0.637-0.18,
+                    1.278-0.094,1.71,0.228  
                     C55.722,40.781,56,41.328,56,41.922V42.233z"/>
-                    <path style="fill:#d3d3d3;" d="M33,25.394v6.607C33,33.655,34.347,35,36,35H38h1h4v-2h-4v-2h2v-2h-2v-3.577  
+                    <path style="fill:#d3d3d3;" d="M33,25.394v6.607C33,33.655,
+                    34.347,35,36,35H38h1h4v-2h-4v-2h2v-2h-2v-3.577  
                     c3.02-1.186,5-4.079,5-7.422c0-2.398-1.063-4.649-2.915-6.177c-1.85-1.524-4.283-2.134-6.683-1.668  
-                    c-3.155,0.614-5.671,3.153-6.261,6.318C27.39,20.523,29.933,24.041,33,25.394z M30.108,16.84c0.44-2.364,2.319-4.262,4.677-4.721  
-                    c1.802-0.356,3.639,0.104,5.028,1.249S42,16.202,42,18c0,2.702-1.719,5.011-4.276,5.745L37,23.954V33h-0.999  
+                    c-3.155,0.614-5.671,3.153-6.261,6.318C27.39,20.523,29.933,24.041,33,
+                    25.394z M30.108,16.84c0.44-2.364,2.319-4.262,4.677-4.721  
+                    c1.802-0.356,3.639,0.104,5.028,1.249S42,
+                    16.202,42,18c0,2.702-1.719,5.011-4.276,5.745L37,23.954V33h-0.999  
                     C35.449,33,35,32.553,35,32v-8.02l-0.689-0.225C31.822,22.943,29.509,20.067,30.108,16.84z"/>
-                    <path d="M36,22c2.206,0,4-1.794,4-4s-1.794-4-4-4s-4,1.794-4,4S33.795,22,36,22z   M36,16c1.103,0,2,0.897,2,2s-0.897,2-2,2s-2-0.897-2-2S34.898,16,36,16z"/>
+                    <path d="M36,22c2.206,0,4-1.794,4-4s-1.794-4-4-4s-4,1.794-4,4S33.795,22,36,22z   
+                    M36,16c1.103,0,2,0.897,2,2s-0.897,2-2,2s-2-0.897-2-2S34.898,16,36,16z"/>
                     <circle style="fill:#d3d3d3;" cx="36" cy="18" r="3"/>
                 </svg>
             </button>
@@ -570,7 +602,8 @@ class discordCrypt {
                     </div>
                     
                     <div class="dc-ruler-align">
-                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-cancel-btn">Cancel</button>
+                        <button class="dc-button dc-button-inverse" 
+                            style="width:100%;" id="dc-cancel-btn">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -706,7 +739,7 @@ class discordCrypt {
                         
                         <div class="dc-ruler-align">
                             <div class="dc-input-label">Default Encryption Password:</div>
-                            <input type="text" class="dc-input-field" id="dc-settings-default-pwd"/>                        
+                            <input type="text" class="dc-input-field" id="dc-settings-default-pwd"/>
                         </div>
                         
                         <div class="dc-ruler-align">
@@ -777,8 +810,8 @@ class discordCrypt {
                             <li>Ask your partner to give you their public key using the same step above.</li>
                             <li>Copy your partner's public key and paste it in the "Secret Computation" tab and 
                             select "Compute Secret Keys".</li>
-                            <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span> the primary and secondary 
-                            keys to be generated.</li>
+                            <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span> 
+                            the primary and secondary keys to be generated.</li>
                             <li>A status bar is provided to easily tell you when both passwords 
                             have been generated.</li>
                             <li>Click the "Apply Generated Passwords" button to apply both passwords to 
@@ -846,7 +879,9 @@ class discordCrypt {
                         </div>
                         <br/><br/><br/>
                 
-                        <strong>Private Key: ( <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span> )</strong><br/>
+                        <strong>Private Key: ( 
+                        <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span>
+                         )</strong><br/>
                         <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"
                          unselectable="on" disabled readonly/>
                         <br/><br/>
@@ -980,7 +1015,7 @@ class discordCrypt {
                 "Oops!\r\n\r\n" +
                 "It seems you didn't read discordCrypt's usage guide. :(\r\n" +
                 "You need to name this plugin exactly as follows to allow it to function correctly.\r\n\r\n" +
-                "\t" + discordCrypt.getPluginName() + "\r\n\r\n\r\n" +
+                `\t${discordCrypt.getPluginName()}\r\n\r\n\r\n` +
                 "You should probably check the usage guide again just in case you missed anything else. :)",
                 'Hi There! - DiscordCrypt'
             );
@@ -1224,7 +1259,7 @@ class discordCrypt {
             );
         }
         catch ( err ) {
-            discordCrypt.log( 'Decryption of configuration file failed - ' + err, 'error' );
+            discordCrypt.log( `Decryption of configuration file failed - ${err}`, 'error' );
             return false;
         }
 
@@ -1255,11 +1290,11 @@ class discordCrypt {
             this.saveConfig();
 
             /* Alert. */
-            discordCrypt.log( 'Updated plugin version from v' + oldVersion + ' to v' + this.getVersion() + '.' );
+            discordCrypt.log( `Updated plugin version from v${oldVersion} to v${this.getVersion()}.` );
             return true;
         }
 
-        discordCrypt.log( 'Loaded configuration file! - v' + this.configFile.version );
+        discordCrypt.log( `Loaded configuration file! - v${this.configFile.version}` );
         return true;
     }
 
@@ -1411,13 +1446,11 @@ class discordCrypt {
      */
     static getPluginsPath() {
         const process = require( 'process' );
-        return (
-            process.platform === 'win32' ?
-                process.env.APPDATA :
-                process.platform === 'darwin' ?
-                    process.env.HOME + '/Library/Preferences' :
-                    process.env.HOME + '/.config'
-        ) + '/BetterDiscord/plugins/';
+        return `${process.platform === 'win32' ?
+            process.env.APPDATA :
+            process.platform === 'darwin' ?
+                process.env.HOME + '/Library/Preferences' :
+                process.env.HOME + '/.config'}/BetterDiscord/plugins/`;
     }
 
     /**
@@ -1441,7 +1474,7 @@ class discordCrypt {
      */
     static checkForUpdate( onUpdateCallback ) {
         /* Update URL and request method. */
-        const update_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/' + discordCrypt.getPluginName();
+        const update_url = `https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/${discordCrypt.getPluginName()}`;
         const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
 
         /* Make sure the callback is a function. */
@@ -1463,7 +1496,7 @@ class discordCrypt {
                             discordCrypt.log( 'Forbidden request when checking for updates.', 'error' );
                             break;
                         default:
-                            discordCrypt.log( 'Error while fetching update: ' + errorString, 'error' );
+                            discordCrypt.log( `Error while fetching update: ${errorString}`, 'error' );
                             break;
                     }
 
@@ -1501,7 +1534,7 @@ class discordCrypt {
 
                 /* If the hash equals the retrieved one, no update is needed. */
                 if ( hash === currentHash ) {
-                    discordCrypt.log( 'No Update Needed - #' + shortHash );
+                    discordCrypt.log( `No Update Needed - #${shortHash}` );
                     return true;
                 }
 
@@ -1531,7 +1564,7 @@ class discordCrypt {
         }
         catch ( ex ) {
             /* Handle failure. */
-            discordCrypt.log( 'Error while retrieving update: ' + ex.toString(), 'warn' );
+            discordCrypt.log( `Error while retrieving update: ${ex.toString()}`, 'warn' );
             return false;
         }
 
@@ -1857,8 +1890,6 @@ class discordCrypt {
                     footer: {
                         text: embedded_footer || 'DiscordCrypt',
                         icon_url: 'https://i.imgur.com/9y1uGB0.png',
-                        url: 'https://gitlab.com/leogx9r/DiscordCrypt/tags/' +
-                        embedded_footer[ 0 ] === 'v' ? embedded_footer : ''
                     },
                     description: embedded_text,
                 }
@@ -1880,7 +1911,7 @@ class discordCrypt {
                     !React.MessageController.sendClydeError( _channel, r.body.code )
                 ) {
                     /* Log the error in case we can't manually dispatch the error. */
-                    discordCrypt.log( 'Error sending message: ' + r.status, 'error' );
+                    discordCrypt.log( `Error sending message: ${r.status}`, 'error' );
 
                     /* Sanity check. */
                     if ( React.MessageDispatcher === null || React.MessageActionTypes === null ) {
@@ -1924,7 +1955,7 @@ class discordCrypt {
      */
     static log( message, method = "info" ) {
         try {
-            console[ method ]( "%c[DiscordCrypt]%c - " + message, "color: #7f007f; font-weight: bold;", "" );
+            console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
         }
         catch ( ex ) {
         }
@@ -1957,7 +1988,7 @@ class discordCrypt {
             return;
 
         /* Remove the element. */
-        $( "#" + id.replace( /^[^a-z]+|[^\w-]+/gi, "" ) ).remove();
+        $( `#${id.replace( /^[^a-z]+|[^\w-]+/gi, "" )}` ).remove();
     }
 
     /* ================= END PROJECT UTILITIES ================= */
@@ -1991,7 +2022,7 @@ class discordCrypt {
                 return method( ... params );
             }
             catch ( e ) {
-                discordCrypt.log( 'Error occurred in ' + description, 'error' )
+                discordCrypt.log( `Error occurred in ${description}`, 'error' )
             }
         };
 
@@ -2012,10 +2043,11 @@ class discordCrypt {
                  * @property {function} originalMethod Reference to the original method that is patched. You can use it
                  *      if you need some special usage. You should explicitly provide a value for `this` and any method
                  *      arguments when you call this function.
-                 * @property {function} callOriginalMethod This is a shortcut for calling original method using `this` and
-                 *      `arguments` from original call.
+                 * @property {function} callOriginalMethod This is a shortcut for calling original method using `this`
+                 *      and `arguments` from original call.
                  * @property {*} returnValue This is a value returned from original function call. This property is
-                 *      available only in `after` callback or in `instead` callback after calling `callOriginalMethod` function.
+                 *      available only in `after` callback or in `instead` callback after calling `callOriginalMethod`
+                 *      function.
                  */
                 const data = {
                     thisObject: this,
@@ -2183,7 +2215,7 @@ class discordCrypt {
                         if ( cfg_exists )
                             unlock_btn.text( 'Invalid Password!' );
                         else
-                            unlock_btn.text( 'Error: ' + error );
+                            unlock_btn.text( `Error: ${error}` );
 
                         /* Clear the text field. */
                         pwd_field[ 0 ].value = '';
@@ -2201,7 +2233,7 @@ class discordCrypt {
                     }
 
                     if ( progress )
-                        master_status.css( 'width', parseInt( progress * 100 ) + '%' );
+                        master_status.css( 'width', `${parseInt( progress * 100 )}%` );
 
                     if ( pwd ) {
                         /* To test whether this is the correct password or not, we have to attempt to use it. */
@@ -2334,7 +2366,7 @@ class discordCrypt {
 
         /* Hide all tabs. */
         for ( let i = 0; i < tab_names.length; i++ )
-            $( '#' + tab_names[ i ] )[ 0 ].style.display = 'none';
+            $( `#${tab_names[ i ]}` )[ 0 ].style.display = 'none';
 
         /* Deactivate all links. */
         for ( let i = 0; i < tabs.length; i++ )
@@ -2943,14 +2975,14 @@ class discordCrypt {
 
             /* Break up the message into lines. */
             msg = msg.replace( /(.{32})/g, ( e ) => {
-                return e + "\r\n"
+                return `${e}\r\n`
             } );
 
             /* Send the message. */
             discordCrypt.sendEmbeddedMessage(
                 msg,
                 this.messageHeader,
-                'v' + this.getVersion().replace( '-debug', '' ),
+                `v${this.getVersion().replace( '-debug', '' )}`,
                 0x551A8B,
                 user_tags,
                 channel_id
@@ -2982,14 +3014,14 @@ class discordCrypt {
 
                 /* Break up the message into lines. */
                 msg = msg.replace( /(.{32})/g, ( e ) => {
-                    return e + "\r\n"
+                    return `${e}\r\n`
                 } );
 
                 /* Send the message. */
                 discordCrypt.sendEmbeddedMessage(
                     msg,
                     this.messageHeader,
-                    'v' + this.getVersion().replace( '-debug', '' ),
+                    `v${this.getVersion().replace( '-debug', '' )}`,
                     0x551A8B,
                     i === 0 ? user_tags : '',
                     channel_id
@@ -3516,12 +3548,12 @@ class discordCrypt {
 
             /* Split the message by adding a new line every 32 characters like a standard PGP message. */
             let formatted_message = message.replace( /(.{32})/g, ( e ) => {
-                return e + "\r\n"
+                return `${e}\r\n`
             } );
 
             /* Calculate the algorithm string. */
-            let algo_str = ( $( '#dc-keygen-method' )[ 0 ].value !== 'ecdh' ? 'DH-' : 'ECDH-' ) +
-                $( '#dc-keygen-algorithm' )[ 0 ].value;
+            let algo_str = `${$( '#dc-keygen-method' )[ 0 ].value !== 'ecdh' ? 'DH-' : 'ECDH-'}` +
+                `${$('#dc-keygen-algorithm' )[ 0 ].value}`;
 
             /* Send the message. */
             let header = `-----BEGIN ${algo_str} PUBLIC KEY-----`,
@@ -3636,8 +3668,8 @@ class discordCrypt {
             }
 
             /* Update the algorithm text. */
-            $( '#dc-handshake-algorithm' )[ 0 ].innerText = 'Exchange Algorithm: ' +
-                discordCrypt.indexToExchangeAlgorithmString( algorithm );
+            $( '#dc-handshake-algorithm' )[ 0 ].innerText =
+                `Exchange Algorithm: ${discordCrypt.indexToExchangeAlgorithmString( algorithm )}`;
 
             /* Get the salt length. */
             salt_len = value.readInt8( 1 );
@@ -3769,7 +3801,7 @@ class discordCrypt {
                         primary_progress = progress * 50;
 
                         $( '#dc-exchange-status' )
-                            .css( 'width', parseInt( primary_progress + secondary_progress ) + '%' );
+                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
                     }
 
                     if ( key ) {
@@ -3819,7 +3851,7 @@ class discordCrypt {
 
                 if ( progress ) {
                     secondary_progress = progress * 50;
-                    $( '#dc-exchange-status' ).css( 'width', parseInt( primary_progress + secondary_progress ) + '%' );
+                    $( '#dc-exchange-status' ).css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
                 }
 
                 if ( key ) {
@@ -3856,8 +3888,8 @@ class discordCrypt {
 
         /* Format the text and copy it to the clipboard. */
         require( 'electron' ).clipboard.writeText(
-            'Primary Key: ' + $( '#dc-handshake-primary-key' )[ 0 ].value + '\r\n\r\n' +
-            'Secondary Key: ' + $( '#dc-handshake-secondary-key' )[ 0 ].value
+            `Primary Key: ${$( '#dc-handshake-primary-key' )[ 0 ].value}\r\n\r\n` +
+            `Secondary Key: ${$('#dc-handshake-secondary-key' )[ 0 ].value}`
         );
 
         /* Nuke. */
@@ -4024,14 +4056,13 @@ class discordCrypt {
 
             /* If no password is currently generated, write the default key. */
             if ( !currentKeys ) {
-                require( 'electron' ).clipboard.writeText( 'Default Password: ' + self.configFile.defaultPassword );
+                require( 'electron' ).clipboard.writeText( `Default Password: ${self.configFile.defaultPassword}` );
                 return;
             }
 
             /* Write to the clipboard. */
             require( 'electron' ).clipboard.writeText(
-                "Primary Key: " + currentKeys.primary + "\r\n\r\n" +
-                "Secondary Key: " + currentKeys.secondary
+                `Primary Key: ${currentKeys.primary}\r\n\r\nSecondary Key: ${currentKeys.secondary}`
             );
 
             /* Alter the button text. */
@@ -4309,20 +4340,20 @@ class discordCrypt {
         for ( let i = 0, k = 0; i < split_msg.length; i++ ) {
             if ( this.__isValidUserName( split_msg[ i ] ) ) {
                 user_tags[ k++ ] = split_msg[ i ];
-                cleaned_msg += split_msg[ i ].split( '#' )[ 0 ] + ' ';
+                cleaned_msg += `${split_msg[ i ].split( '#' )[ 0 ]} `;
             }
             /* Check for @here or @everyone. */
             else if ( split_msg[ i ] === '@everyone' || split_msg[ i ] === '@here' ) {
                 user_tags[ k++ ] = split_msg[ i ];
-                cleaned_msg += split_msg[ i ] + ' ';
+                cleaned_msg += `${split_msg[ i ]} `;
             }
             else
-                cleaned_msg += split_msg[ i ] + ' ';
+                cleaned_msg += `${split_msg[ i ]} `;
         }
 
         /* Join all tags to a single string. */
         for ( let i = 0; i < user_tags.length; i++ )
-            cleaned_tags += user_tags[ i ] + ' ';
+            cleaned_tags += `${user_tags[ i ]} `;
 
         /* Return the parsed message and user tags. */
         return [ cleaned_msg.trim(), cleaned_tags.trim() ];
@@ -4520,7 +4551,7 @@ class discordCrypt {
                     join = `<iframe src=${_extracted[ i ]} width="400px" height="400px"></iframe><br/><br/>`;
 
                 /* Join the message together. */
-                message = message.join( join + `<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
+                message = message.join( `${join}<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
             }
 
             /* Wrap the message in span tags. */
@@ -5214,7 +5245,7 @@ class discordCrypt {
                 /* Perform the post request. */
                 require( 'request' ).post( {
                         headers: form.getHeaders(),
-                        uri: up1_host + '/up',
+                        uri: `${up1_host}/up`,
                         body: form
                     },
                     ( err, res, body ) => {
@@ -5225,8 +5256,8 @@ class discordCrypt {
                             else {
                                 callback(
                                     null,
-                                    up1_host + '/#' + encoded_seed,
-                                    up1_host + `/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
+                                    `${up1_host}/#${encoded_seed}`,
+                                    `${up1_host}/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
                                     encoded_seed
                                 );
                             }
@@ -5276,7 +5307,7 @@ class discordCrypt {
                 /* Perform the post request. */
                 require( 'request' ).post( {
                         headers: form.getHeaders(),
-                        uri: up1_host + '/up',
+                        uri: `${up1_host}/up`,
                         body: form
                     },
                     ( err, res, body ) => {
@@ -5287,8 +5318,8 @@ class discordCrypt {
                             else {
                                 callback(
                                     null,
-                                    up1_host + '/#' + encoded_seed,
-                                    up1_host + `/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
+                                    `${up1_host}/#${encoded_seed}`,
+                                    `${up1_host}/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
                                     encoded_seed
                                 );
                             }
@@ -5985,7 +6016,7 @@ class discordCrypt {
         one_time_salt = undefined,
         kdf_iteration_rounds = 1000
     ) {
-        const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
+        const cipher_name = `${symmetric_cipher}${block_mode === undefined ? '' : '-' + block_mode}`;
         const crypto = require( 'crypto' );
 
         /* Buffered parameters. */
@@ -6079,7 +6110,7 @@ class discordCrypt {
         block_cipher_size = 128,
         kdf_iteration_rounds = 1000
     ) {
-        const cipher_name = symmetric_cipher + ( block_mode === undefined ? '' : '-' + block_mode );
+        const cipher_name = `${symmetric_cipher}${block_mode === undefined ? '' : '-' + block_mode}`;
         const crypto = require( 'crypto' );
 
         /* Buffered parameters. */
