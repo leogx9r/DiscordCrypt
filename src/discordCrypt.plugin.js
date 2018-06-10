@@ -2549,6 +2549,93 @@ class discordCrypt {
     }
 
     /**
+     * @desc Parses a public key message and adds the exchange button to it if necessary.
+     * @param {Object} obj The jQuery object of the current message being examined.
+     * @returns {boolean} Returns true.
+     */
+    parseKeyMessage( obj ){
+        /* Extract the algorithm info from the message's metadata. */
+        let metadata = discordCrypt.__extractKeyInfo( obj.text().replace( /\r?\n|\r/g, '' ), true );
+
+        /* Compute the fingerprint of our currently known public key if any to determine if to proceed. */
+        let local_fingerprint = discordCrypt.sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
+
+        /* Skip if this is our current public key. */
+        if ( metadata[ 'fingerprint' ] === local_fingerprint ){
+            obj.css( 'display', 'none' );
+            return true;
+        }
+
+        /* Create a button allowing the user to perform a key exchange with this public key. */
+        let button = $( "<button>Perform Key Exchange</button>" )
+            .addClass( 'dc-button' )
+            .addClass( 'dc-button-inverse' );
+
+        /* Remove margins. */
+        button.css( 'margin-left', '0' );
+        button.css( 'margin-right', '0' );
+
+        /* Move the button a bit down from the key's text. */
+        button.css( 'margin-top', '2%' );
+
+        /* Allow full width. */
+        button.css( 'width', '100%' );
+
+        /* Handle clicks. */
+        button.click( ( function () {
+
+            /* Simulate pressing the exchange key button. */
+            $( '#dc-exchange-btn' ).click();
+
+            /* If the current algorithm differs, change it and generate then send a new key. */
+            if (
+                $( '#dc-keygen-method' )[ 0 ].value !== metadata[ 'algorithm' ] ||
+                parseInt( $( '#dc-keygen-algorithm' )[ 0 ].value ) !== metadata[ 'bit_length' ]
+            ) {
+                /* Switch. */
+                $( '#dc-keygen-method' )[ 0 ].value = metadata[ 'algorithm' ];
+
+                /* Fire the change event so the second list updates. */
+                $( '#dc-keygen-method' ).change();
+
+                /* Update the key size. */
+                $( '#dc-keygen-algorithm' )[ 0 ].value = metadata[ 'bit_length' ];
+
+                /* Generate a new key pair. */
+                $( '#dc-keygen-gen-btn' ).click();
+
+                /* Send the public key. */
+                $( '#dc-keygen-send-pub-btn' ).click();
+            }
+            /* If we don't have a key yet, generate and send one. */
+            else if ( $( '#dc-pub-key-ta' )[ 0 ].value === '' ) {
+                /* Generate a new key pair. */
+                $( '#dc-keygen-gen-btn' ).click();
+
+                /* Send the public key. */
+                $( '#dc-keygen-send-pub-btn' ).click();
+            }
+
+            /* Open the handshake menu. */
+            $( '#dc-tab-handshake-btn' ).click();
+
+            /* Apply the key to the field. */
+            $( '#dc-handshake-ppk' )[ 0 ].value = obj.text();
+
+            /* Click compute. */
+            $( '#dc-handshake-compute-btn' ).click();
+        } ) );
+
+        /* Add the button. */
+        obj.parent().append( button );
+
+        /* Set the text to an identifiable color. */
+        obj.css( 'color', 'blue' );
+
+        return true;
+    }
+
+    /**
      * @private
      * @desc Parses a message object and attempts to decrypt it..
      * @param {Object} obj The jQuery object of the current message being examined.
@@ -2589,87 +2676,8 @@ class discordCrypt {
         let magic = message.text().slice( 0, 4 );
 
         /* If this is a public key, just add a button and continue. */
-        if ( magic === this.encodedKeyHeader ) {
-            /* Extract the algorithm info from the message's metadata. */
-            let metadata = discordCrypt.__extractKeyInfo( message.text().replace( /\r?\n|\r/g, '' ), true );
-
-            /* Compute the fingerprint of our currently known public key if any to determine if to proceed. */
-            let local_fingerprint = discordCrypt.sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
-
-            /* Skip if this is our current public key. */
-            if ( metadata[ 'fingerprint' ] === local_fingerprint ){
-                message.css( 'display', 'none' );
-                return true;
-            }
-
-            /* Create a button allowing the user to perform a key exchange with this public key. */
-            let button = $( "<button>Perform Key Exchange</button>" )
-                .addClass( 'dc-button' )
-                .addClass( 'dc-button-inverse' );
-
-            /* Remove margins. */
-            button.css( 'margin-left', '0' );
-            button.css( 'margin-right', '0' );
-
-            /* Move the button a bit down from the key's text. */
-            button.css( 'margin-top', '2%' );
-
-            /* Allow full width. */
-            button.css( 'width', '100%' );
-
-            /* Handle clicks. */
-            button.click( ( function () {
-                /* Save for faster access. */
-                let tmp = [];
-                tmp[ 'ea' ] = $( '#dc-keygen-method' )[ 0 ].value;
-                tmp[ 'ks' ] = parseInt( $( '#dc-keygen-algorithm' )[ 0 ].value );
-
-                /* Simulate pressing the exchange key button. */
-                $( '#dc-exchange-btn' ).click();
-
-                /* If the current algorithm differs, change it and generate then send a new key. */
-                if ( tmp[ 'ea' ] !== metadata[ 'algorithm' ] || tmp[ 'ks' ] !== metadata[ 'bit_length' ] ) {
-                    /* Switch. */
-                    $( '#dc-keygen-method' )[ 0 ].value = metadata[ 'algorithm' ];
-
-                    /* Fire the change event so the second list updates. */
-                    $( '#dc-keygen-method' ).change();
-
-                    /* Update the key size. */
-                    $( '#dc-keygen-algorithm' )[ 0 ].value = metadata[ 'bit_length' ];
-
-                    /* Generate a new key pair. */
-                    $( '#dc-keygen-gen-btn' ).click();
-
-                    /* Send the public key. */
-                    $( '#dc-keygen-send-pub-btn' ).click();
-                }
-                /* If we don't have a key yet, generate and send one. */
-                else if ( $( '#dc-pub-key-ta' )[ 0 ].value === '' ) {
-                    /* Generate a new key pair. */
-                    $( '#dc-keygen-gen-btn' ).click();
-
-                    /* Send the public key. */
-                    $( '#dc-keygen-send-pub-btn' ).click();
-                }
-
-                /* Open the handshake menu. */
-                $( '#dc-tab-handshake-btn' ).click();
-
-                /* Apply the key to the field. */
-                $( '#dc-handshake-ppk' )[ 0 ].value = message.text();
-
-                /* Click compute. */
-                $( '#dc-handshake-compute-btn' ).click();
-            } ) );
-
-            /* Add the button. */
-            message.parent().append( button );
-
-            /* Set the text to an identifiable color. */
-            message.css( 'color', 'blue' );
-            return true;
-        }
+        if ( magic === this.encodedKeyHeader )
+            return this.parseKeyMessage( message );
 
         /* Make sure it has the correct header. */
         if ( magic !== this.encodedMessageHeader )
