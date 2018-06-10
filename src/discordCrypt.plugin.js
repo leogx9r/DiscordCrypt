@@ -974,7 +974,7 @@ class discordCrypt {
 
         /* Perform idiot-proof check to make sure the user named the plugin `discordCrypt.plugin.js` */
         if ( !discordCrypt.validPluginName() ) {
-            alert(
+            _alert(
                 "Oops!\r\n\r\n" +
                 "It seems you didn't read discordCrypt's usage guide. :(\r\n" +
                 "You need to name this plugin exactly as follows to allow it to function correctly.\r\n\r\n" +
@@ -2308,7 +2308,7 @@ class discordCrypt {
                             discordCrypt.log(
                                 `Unable to replace the target plugin. ( ${err} )\nDestination: ${replacePath}`, 'error'
                             );
-                            alert( 'Failed to apply the update!', 'Error During Update' );
+                            _alert( 'Failed to apply the update!', 'Error During Update' );
                         }
                     } );
                 } );
@@ -3037,7 +3037,7 @@ class discordCrypt {
                 ( error_string, file_url, deletion_link ) => {
                     /* Do some sanity checking. */
                     if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
-                        alert( error_string, 'Failed to upload the clipboard!' );
+                        _alert( error_string, 'Failed to upload the clipboard!' );
                         return;
                     }
 
@@ -3219,7 +3219,7 @@ class discordCrypt {
                     ( error, progress, pwd ) => {
                         if ( error ) {
                             /* Alert the user. */
-                            alert( 'Error setting the new database password. Check the console for more info.' );
+                            _alert( 'Error setting the new database password. Check the console for more info.' );
 
                             discordCrypt.log( error.toString(), 'error' );
                             return true;
