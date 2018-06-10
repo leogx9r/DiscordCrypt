@@ -83,7 +83,7 @@ class Compiler {
                     console.warn( _data.warnings );
             }
             catch(e){
-                console.warn( `Warning: ${_data.error} ...\nSkipping compression ...` );
+                console.warn( `Warning: ${e.toString()} ...\nSkipping compression ...` );
 
                 /* We still need to convert the Buffer() to a string. */
                 data = data.toString();
