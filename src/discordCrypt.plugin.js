@@ -950,6 +950,14 @@ class discordCrypt {
             "LTIgMiAuOSAyIDIgMnptNi05aC0xVjZjMC0yLjc2LTIuMjQtNS01LTVTNyAzLjI0IDcgNnYySDZjLTEuMSAwLTIgLjktMiAydjEwYzA" +
             "gMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6TTguOSA2YzAtMS43MSAxLjM5LTMuMSAzLjEtMy" +
             "4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlWNnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=";
+
+        /**
+         * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
+         * @type {{string, string}}
+         */
+        this.libraries = {
+            /* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */
+        };
     }
 
     /* ============================================================== */
@@ -1053,25 +1061,18 @@ class discordCrypt {
      * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
      */
     load() {
+        const vm = require( 'vm' );
+
         /* Inject application CSS. */
         discordCrypt.injectCSS( 'dc-css', this.appCss );
 
-        /* Inject SJCL. */
-        discordCrypt.__getRequest(
-            'https://gitlab.com/riseup/up1-cli-client-nodejs/raw/master/sjcl.js',
-            ( statusCode, errorString, data ) => {
-
-                if ( statusCode !== 200 || typeof data !== 'string' ) {
-                    discordCrypt.log( 'Unable to load SJCL library. Encrypted file uploads will be disabled.', 'warn' );
-                    return;
-                }
-
-                require( 'vm' ).runInThisContext( data, {
-                    filename: 'sjcl.js',
-                    displayErrors: true
-                } );
-            }
-        );
+        /* Inject all compiled libraries. */
+        for( let name in this.libraries ){
+            vm.runInThisContext( this.libraries[ name ], {
+                filename: name,
+                displayErrors: false
+            } );
+        }
     }
 
     /**
@@ -1697,6 +1698,7 @@ class discordCrypt {
     }
 
     /**
+     * @private
      * @desc Dumps all function callback handlers with their names, IDs and function prototypes. [ Debug Function ]
      * @returns {Array} Returns an array of all IDs and identifier callbacks.
      */
@@ -2549,6 +2551,7 @@ class discordCrypt {
     }
 
     /**
+     * @private
      * @desc Parses a public key message and adds the exchange button to it if necessary.
      * @param {Object} obj The jQuery object of the current message being examined.
      * @returns {boolean} Returns true.
