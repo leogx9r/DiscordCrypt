@@ -256,6 +256,7 @@ class discordCrypt {
                 top: 5%; bottom: 5%;
                 width: 90%; height: 90%;
                 border: 3px solid #3f3f3f;
+                border-radius: 3px;
             }
             .dc-textarea {
                 font-family: monospace;
@@ -340,7 +341,7 @@ class discordCrypt {
             .dc-overlay-main .tab {
                 overflow: hidden;
                 background-color: rgba(0, 0, 0, .9) !important;
-                border: 1px dotted #ffffff;
+                border-bottom: 3px solid #3f3f3f;
                 padding: 2px;
             }
             .dc-overlay-main .tab button {
