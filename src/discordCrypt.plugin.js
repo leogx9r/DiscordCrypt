@@ -7601,5 +7601,3 @@ class discordCrypt {
 
 /* Required for code coverage reports. */
 module.exports = { discordCrypt };
-
-
