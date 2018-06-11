@@ -70,19 +70,19 @@ class Compiler {
             }
 
             /* Try compressing the library. */
-            try{
+            try {
                 let _data = this.uglifyjs.minify( data.toString(), this.defaultBuilderOptions );
 
                 /* Skip on error. */
-                if( _data.error !== undefined )
+                if ( _data.error !== undefined )
                     throw `${_data.error}`;
                 else
                     data = _data.code;
 
-                if( _data.warnings )
+                if ( _data.warnings )
                     console.warn( _data.warnings );
             }
-            catch(e){
+            catch ( e ) {
                 console.warn( `Warning: ${e.toString()} ...\nSkipping compression ...` );
 
                 /* We still need to convert the Buffer() to a string. */
@@ -120,7 +120,7 @@ class Compiler {
      */
     compilePlugin( plugin_path, tag_name, library_path, output_dir, compress ) {
         const header =
-`//META{"name":"discordCrypt"}*//
+            `//META{"name":"discordCrypt"}*//
 
 /*******************************************************************************
  * MIT License
@@ -177,12 +177,12 @@ class Compiler {
 
         try {
             /* Only do this if we're compressing the plugin. */
-            if( compress ){
+            if ( compress ) {
                 /* Compress the code. */
                 data = this.uglifyjs.minify( data, this.defaultBuilderOptions );
 
                 /* Check if an error occurred. */
-                if( data.error !== undefined )
+                if ( data.error !== undefined )
                     throw `${error}`;
 
                 /* Update the variable. */
@@ -220,7 +220,7 @@ class Compiler {
         let args = require( 'minimist' )( this.process.argv.slice( 2 ) );
 
         /* Display a help message.*/
-        if( !args || args[ 'help' ] || args[ 'h' ] ){
+        if ( !args || args[ 'help' ] || args[ 'h' ] ) {
             console.info(
                 "Usage:\n" +
                 "   --plugin-path|-p         -  Path to the base plugin file to use.\n" +
@@ -230,20 +230,19 @@ class Compiler {
                 "   --enable-compression|-c  -  If used, the plugin file will be compressed.\n" +
                 "\n" +
                 "Example:\n" +
-                `   ${this.process.argv[0]} ${this.process.argv[1]} ` +
-                    `-c -p "${defaults.plugin}" -l "${defaults.lib}" -o "${defaults.output}" -t "${defaults.tag}"`
-
+                `   ${this.process.argv[ 0 ]} ${this.process.argv[ 1 ]} ` +
+                `-c -p "${defaults.plugin}" -l "${defaults.lib}" -o "${defaults.output}" -t "${defaults.tag}"`
             );
             return;
         }
 
         /* Compile with the arguments provided or defaults. */
         this.compilePlugin(
-            args['plugin-path'] || args[ 'p' ] || defaults.plugin,
-            args['tag-name'] || args[ 't' ] || defaults.tag,
-            args['library-path'] || args[ 'l' ] || defaults.lib,
-            args['output-directory'] || args[ 'o' ] || defaults.output,
-            args['enable-compression'] || args[ 'c' ] || defaults.compression
+            args[ 'plugin-path' ] || args[ 'p' ] || defaults.plugin,
+            args[ 'tag-name' ] || args[ 't' ] || defaults.tag,
+            args[ 'library-path' ] || args[ 'l' ] || defaults.lib,
+            args[ 'output-directory' ] || args[ 'o' ] || defaults.output,
+            args[ 'enable-compression' ] || args[ 'c' ] || defaults.compression
         );
     }
 }
