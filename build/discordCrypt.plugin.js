@@ -249,7 +249,6 @@ class discordCrypt {
                 transform: translate(-50%, 50%);
             }
             .dc-overlay-main {
-                margin: 20px;
                 overflow: hidden;
                 position: absolute;
                 left: 5%; right: 5%;
@@ -342,7 +341,6 @@ class discordCrypt {
                 overflow: hidden;
                 background-color: rgba(0, 0, 0, .9) !important;
                 border-bottom: 3px solid #3f3f3f;
-                padding: 2px;
             }
             .dc-overlay-main .tab button {
                 color: #008000;
@@ -3554,7 +3552,7 @@ class discordCrypt {
 
             /* Calculate the algorithm string. */
             let algo_str = `${$( '#dc-keygen-method' )[ 0 ].value !== 'ecdh' ? 'DH-' : 'ECDH-'}` +
-                `${$('#dc-keygen-algorithm' )[ 0 ].value}`;
+                `${$( '#dc-keygen-algorithm' )[ 0 ].value}`;
 
             /* Send the message. */
             let header = `-----BEGIN ${algo_str} PUBLIC KEY-----`,
@@ -3890,7 +3888,7 @@ class discordCrypt {
         /* Format the text and copy it to the clipboard. */
         require( 'electron' ).clipboard.writeText(
             `Primary Key: ${$( '#dc-handshake-primary-key' )[ 0 ].value}\r\n\r\n` +
-            `Secondary Key: ${$('#dc-handshake-secondary-key' )[ 0 ].value}`
+            `Secondary Key: ${$( '#dc-handshake-secondary-key' )[ 0 ].value}`
         );
 
         /* Nuke. */
@@ -7605,5 +7603,3 @@ class discordCrypt {
 
 /* Required for code coverage reports. */
 module.exports = { discordCrypt };
-
-
