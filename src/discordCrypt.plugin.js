@@ -113,13 +113,13 @@ class discordCrypt {
          * @desc Defines what an encrypted message starts with. Must be 4x UTF-16 bytes.
          * @type {string}
          */
-        this.encodedMessageHeader = "㑳㑵㑷㑼";
+        this.encodedMessageHeader = "⢷⢸⢹⢺";
 
         /**
          * @desc Defines what a public key message starts with. Must be 4x UTF-16 bytes.
          * @type {string}
          */
-        this.encodedKeyHeader = "㑼㑷㑵㑳";
+        this.encodedKeyHeader = "⢻⢼⢽⢾";
 
         /**
          * @desc Defines what the header of an encrypted message says.
@@ -6946,10 +6946,7 @@ class discordCrypt {
      * @returns {Array} Returns an array containing 64 characters used for substitution.
      */
     static getUtf16() {
-        return Array.from(
-            "㐀㐁㐂㐃㐄㐅㐇㐒㐓㐔㐕㐖㐗㐜㐞㐡㐣㐥㐧㐨㐩㐫㐪㐭㐰㐱㐲㐳㐴㐶㐷㐹㐼㐽㐿㑁㑂㑃㑅㑇㑈㑉㑊㑏㑑" +
-            "㑒㑓㑕㑣㑢㑡㑠㑟㑞㑝㑜㑤㑥㑦㑧㑨㑩㑪㑫㑵"
-        );
+        return Array.from( "⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿⢿" );
     }
 
     /**

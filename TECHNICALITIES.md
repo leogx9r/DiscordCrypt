@@ -159,10 +159,10 @@ Each message can be determined by the first 4 characters which is a unique magic
 its type.
 
 
-| **Type**           | **Magic**     |
-| ------------------ | ------------- |
-| User Message       | `㑳㑵㑷㑼`    |
-| Public Key Message | `㑼㑷㑵㑳`    |
+| **Type**             | **Magic**   |
+| -------------------- | ----------- |
+| `User Message`       | `⢷⢸⢹⢺`      |
+| `Public Key Message` | `⢻⢼⢽⢾`      |
 
 ### Meta Data Encoding
 
@@ -230,7 +230,8 @@ While all messages are Base64 encoded, Discord does not use a monospace font. Th
 messages to look uneven when sent.
 
 To combat this, after messages are encoded in Base64, a simple method of substitution is used 
-to replace all Base64 characters with a monospace-type font which is Chinese.
+to replace all Base64 characters with a monospace-type width using the 
+[Braille character set](https://en.wikipedia.org/wiki/Braille_Patterns).
 
 Discord itself treats both UTF-8 and UTF-16 characters as the same length ( character-limit-wise ) 
 meaning both a UTF-8 and UTF-16 messages are limited to 2000 characters each.
@@ -240,10 +241,10 @@ This is handled by the methods `substituteMessage`, `metaDataEncode` and `metaDa
 These methods do a 1-1 substitution as follows:
 
 
-| **Character Set** | **String**                                                                                                                           |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Base 64           | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=`                                                                  |
-| Chinese           | `㐀㐁㐂㐃㐄㐅㐇㐒㐓㐔㐕㐖㐗㐜㐞㐡㐣㐥㐧㐨㐩㐫㐪㐭㐰㐱㐲㐳㐴㐶㐷㐹㐼㐽㐿㑁㑂㑃㑅㑇㑈㑉㑊㑏㑑㑒㑓㑕㑣㑢㑡㑠㑟㑞㑝㑜㑤㑥㑦㑧㑨㑩㑪㑫㑵` |
+| **Character Set** | **String**                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------|
+| `Base 64`           | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=`                           |
+| `Braille`           | `⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿⢿`                |
 
 ## General Encryption And Decryption Process
 
