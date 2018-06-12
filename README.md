@@ -161,10 +161,12 @@ exchange feature in this tutorial.
 
 All it takes is three ( 3 ) clicks.
 
-* _Step one_: Generate a key ![s1](images/auto-handshake.png)
+* Generate a key and send a new public key using the Auto-Key-Exchange button. ( ![s1](images/auto-handshake.png) )
     * You may skip this step if your partner is generating their key first. Hooray, down to two ( 2 ) clicks!
-* _Step two_: Once the key appears, click the `Perform Key Exchange` button in the message that just appeared.
-* _Step three_: After the passwords are generated, click the `Apply Generated Passwords` button at the bottom of the pop-up.
+* Once your partner's public key appears, click the `Perform Key Exchange` button in the message that just appeared
+    at the bottom of the message.
+* After the passwords are generated and the progress bar fully fills, click the `Apply Generated Passwords` button 
+located at the bottom of the pop-up window.
 
 
 ###### _Longer Explanation_
@@ -425,7 +427,7 @@ post-processing that Discord itself does. Some examples of these would be emojis
  
 
 * Messages are limited to 1820 characters each.
-    * Due to additional costs of encryption, messages at maximum size will only be able to display 1200 characters
+    * Due to additional costs of encryption, messages at maximum size will only be able to display 1820 characters
     of text..
         * If your message is longer than this, it will be split and sent in multiple messages.
 

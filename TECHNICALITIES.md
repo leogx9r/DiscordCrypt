@@ -27,7 +27,7 @@
 
 # Supported Algorithms
 
-**DiscordCrypt** uses a variety of symmetric encryption algorithms via 
+**DiscordCrypt** uses a variety of symmetric encryption algorithms exposed via 
 [NodeJS](https://en.wikipedia.org/wiki/Node.js)'s [`crypto`](https://nodejs.org/api/crypto.html) module.
 
 In addition to these, two types of key exchanges are supported as well as the ability to generate 
@@ -193,7 +193,7 @@ A user message is expressed in the following format:
 
 #### User Message Authentication
 
-By default, all user messages contain a [HMAC](https://en.wikipedia.org/wiki/HMAC) tag prepended to it.
+All user messages contain a [HMAC](https://en.wikipedia.org/wiki/HMAC) tag prepended to it.
 
 This HMAC uses SHA-256 along with the primary message key to form a hash of the outer ciphertext of the message.
 
@@ -209,7 +209,7 @@ This is prepended such that the variable length message now follows the followin
 This tag is used for authentication to ensure ciphertexts have not been tampered with during transit.
 
 In addition to this, during verification, they are compared in a time-safe manner to prevent possible forms of 
-[timing attacks](https://en.wikipedia.org/wiki/Timing_attack).
+[timing attacks](https://en.wikipedia.org/wiki/Timing_attack) even though they're not required in this use case.
 
 ### Public Key Format
 
@@ -238,7 +238,7 @@ meaning both a UTF-8 and UTF-16 messages are limited to 2000 characters each.
 
 This is handled by the methods `substituteMessage`, `metaDataEncode` and `metaDataDecode`.
 
-These methods do a 1-1 substitution as follows:********
+These methods do a 1-1 substitution as follows:
 
 
 | **Character Set** | **String**                                                                                      |
@@ -318,8 +318,10 @@ Its derivation is done by using the [Scrypt](https://en.wikipedia.org/wiki/Scryp
 | ----------------- | ------------------------------------------------------------------------------------------ |
 | `N`               | The work factor variable. Memory and CPU usage scale linearly with this.                   |
 | `r`               | The block size parameter. Memory usage scales to `2rK` bytes where K is 256 bits.          |
-| `p`               | Parallelization factor. Indicates the number of mixing functions to be run simultaneously. |
+| `p`               | Parallel run factor. Indicates the number of mixing functions to be run simultaneously.    |
 | `dkLen`           | The output size of the hash produced in bytes. Must satisfy `dkLen ≤ (2^32− 1) * 32`.      |
+
+**N.B. Scrypt methods cannot be run in parallel in this implementation so they are run single-threaded.**
 
 This derives a 256-bit key which is used in conjunction with the `aes256_encrypt_gcm`/`aes256_decrypt_gcm` functions.
 
@@ -367,7 +369,12 @@ The `scrypt` derived password is then used with the one-time salt to derive a `k
 Finally, the authentication tag is assigned to `GCM` and verified which either throws an error if message 
 authentication fails or returns the plaintext message.
 
+**N.B. Only a single authentication tag is produced for the final ciphertext in multi-encryption even though
+two salts of 64-bits in length are used for key derivation.**
+
 ## Key Exchange Process
+
+![Public Key Message](images/public-key-message.png)
 
 **DiscordCrypt** uses the Diffie-Hellman exchange algorithm to derive a unique 
 [shared secret](https://en.wikipedia.org/wiki/Shared_secret).
@@ -376,7 +383,7 @@ Once both parties post a public key, a shared secret of the algorithm's bit leng
 
 This secret, along with the two [`user salts`](#public-key-format) attached to each message undergoes 
 [key stretching](https://en.wikipedia.org/wiki/Key_stretching) to derive a primary and secondary password via 
-the `Scrypt` hashing algorithm.
+the `Scrypt` hashing algorithm.to standard Diffie-Hellman and Elliptic-Curve Diffie-Hellman as Diffie-Hellman
 
 The way these keys are produced follows:
 
