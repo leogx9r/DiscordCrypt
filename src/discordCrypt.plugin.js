@@ -680,9 +680,9 @@ class discordCrypt {
                     </div>
                     <br>
                     <div class="dc-ruler-align">
-                        <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">Restart Now</button>
+                        <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">Restart Discord Now</button>
                         <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">
-                        Restart Later</button>
+                        Restart Discord Later</button>
                     </div>
                 </div>
                 <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">
