@@ -2084,6 +2084,10 @@ class discordCrypt {
         return dispatcher._actionHandlers[ methodName ].__cancel;
     }
 
+    /**
+     * @private
+     * @desc Debug function that attempts to hook Discord's internal event handlers for message creation.
+     */
     hookMessageCallbacks() {
 
         /* Find the main message dispatcher if not already found. */
@@ -2102,11 +2106,13 @@ class discordCrypt {
             return;
         }
 
+        /* Hook the message update dispatcher. */
         discordCrypt.hookDispatcher(
             this.messageDispatcher,
             'MESSAGE_UPDATE',
             {
                 after: ( e ) => {
+                    /* Log message objects sent in the current channel. */
                     if ( e.methodArguments[ 0 ].message.channel_id === discordCrypt.getChannelId() )
                         discordCrypt.log( `${JSON.stringify( e.methodArguments[ 0 ].message )}` );
                 }
@@ -2114,6 +2120,10 @@ class discordCrypt {
         );
     }
 
+    /**
+     * @private
+     * @desc Removes all hooks on modules hooked by the hookMessageCallbacks() function.
+     */
     unhookMessageCallbacks() {
         if ( !this.messageDispatcher )
             return;
