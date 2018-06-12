@@ -7306,7 +7306,7 @@ class discordCrypt {
                     return null;
             }
         }
-debugger;
+
         /* Convert the block mode. */
         let mode = block_mode.toLowerCase();
 

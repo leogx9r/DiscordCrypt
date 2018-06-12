@@ -31,11 +31,26 @@ class testRunner {
      */
     constructor() {
         this.sjcl = require( '../lib/sjcl.js' );
+
         this.process = require( 'process' );
+        this.child_process = require( 'child_process' );
 
-        this.discordCrypt = require( '../build/discordCrypt.plugin.js' ).discordCrypt;
+        this.child_process.fork(
+            this.process.argv[ 0 ],
+            {
+                execArgv: [ 'src/build.js', '-o', 'build' ],
+                cwd: this.process.cwd(),
+                env: Object.create( this.process.env )
+            }
+        ).on( 'exit', () => {
 
-        this.discordCrypt_instance = new ( this.discordCrypt )();
+            this.discordCrypt = require( '../build/discordCrypt.plugin.js' ).discordCrypt;
+
+            this.discordCrypt_instance = new ( this.discordCrypt )();
+
+            this.run();
+
+        });
     }
 
     /**
@@ -1123,6 +1138,4 @@ class testRunner {
     }
 }
 
-//(new (require('./test_generator.js').testGenerator)()).generateFullEncryptionTests();
-
-(new testRunner()).run();
+new testRunner();
