@@ -9,12 +9,33 @@ class Compiler {
      * @desc Resolves all necessary modules.
      */
     constructor() {
-        /* Resolve general dependencies. */
+        /**
+         * @desc Cache the FS module for file operations.
+         * @type {module:fs}
+         */
         this.fs = require( 'fs' );
+
+        /**
+         * @desc Cache the PATH module for constructing relative and absolute paths.
+         * @type {module:path}
+         */
         this.path = require( 'path' );
+
+        /**
+         * @desc Cache the PROCESS module for argument retrieval.
+         * @type {NodeJS.Process}
+         */
         this.process = require( 'process' );
+
+        /**
+         * @desc Cache the Uglify-JS ( ES ) Module for compressing sources.
+         */
         this.uglifyjs = require( 'uglify-es' );
 
+        /**
+         * @desc Defines the default options applied to libraries and optionally the main module if enabled.
+         * @type {Object}
+         */
         this.defaultBuilderOptions = {
             parse: {
                 bare_returns: true
