@@ -7390,7 +7390,7 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
+                true,
                 false
             );
         else if ( cipher_index >= 5 && cipher_index <= 9 )
@@ -7399,7 +7399,7 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
+                true,
                 false
             );
         else if ( cipher_index >= 10 && cipher_index <= 14 )
@@ -7408,7 +7408,7 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
+                true,
                 false
             );
         else if ( cipher_index >= 15 && cipher_index <= 19 )
@@ -7417,7 +7417,7 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
+                true,
                 false
             );
         else if ( cipher_index >= 20 && cipher_index <= 24 )
@@ -7426,7 +7426,7 @@ class discordCrypt {
                 secondary_key,
                 mode,
                 pad,
-                use_hmac,
+                true,
                 false
             );
 
