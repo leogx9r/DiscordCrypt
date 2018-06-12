@@ -2972,7 +2972,7 @@ class discordCrypt {
 
             /* Break up the message into lines. */
             msg = msg.replace( /(.{32})/g, ( e ) => {
-                return `${e}\r\n`
+                return `${e}\n`
             } );
 
             /* Send the message. */
@@ -3011,7 +3011,7 @@ class discordCrypt {
 
                 /* Break up the message into lines. */
                 msg = msg.replace( /(.{32})/g, ( e ) => {
-                    return `${e}\r\n`
+                    return `${e}\n`
                 } );
 
                 /* Send the message. */
@@ -3537,7 +3537,7 @@ class discordCrypt {
             if ( $( '#dc-pub-key-ta' )[ 0 ].value === '' )
                 return;
 
-            /* The text area stores a hex encoded binary. Convert it to a Base64 message to save space. */
+            /* The text area stores a hex encoded binary. Convert it to a BaBrse64 message to save space. */
             let message = Buffer.from( $( '#dc-pub-key-ta' )[ 0 ].value, 'hex' ).toString( 'base64' );
 
             /* Add the header to the message and encode it. */
@@ -3545,7 +3545,7 @@ class discordCrypt {
 
             /* Split the message by adding a new line every 32 characters like a standard PGP message. */
             let formatted_message = message.replace( /(.{32})/g, ( e ) => {
-                return `${e}\r\n`
+                return `${e}\n`
             } );
 
             /* Calculate the algorithm string. */
@@ -3723,7 +3723,7 @@ class discordCrypt {
                 return;
             }
 
-            /* Display the first 32 characters of it. */
+            /* Display the first 64 characters of it. */
             $( '#dc-handshake-secret' )[ 0 ].innerText =
                 `Derived Secret: [ ${displaySecret( derived_secret.length > 64 ?
                     derived_secret.substring( 0, 64 ) :
