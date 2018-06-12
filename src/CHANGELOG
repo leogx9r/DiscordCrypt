@@ -1,3 +1,13 @@
+Version 1.1.1
+
+- NOTE: Byte changing will prevent you from reading all old messages.
+
+- Prevent HMAC from being disabled at all even purposely by switching a flag. ( Code can still be edited. )
+- Removed Base64 encoding and now encode directly as all 256 possible Braille characters.
+- Increased maximum message size from 1200 characters to 1820 characters.
+- Optimized internal jQuery usage for faster execution.
+- Decreased general size of messages by 33%.
+
 Version 1.1.0
 
 - NOTE: Character set changing will prevent you from reading all old messages.
