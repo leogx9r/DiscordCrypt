@@ -6957,10 +6957,9 @@ class discordCrypt {
      */
     static isValidUtf16( message ) {
         let c = discordCrypt.getUtf16();
-        let m = message.split( '' ).join( '' );
 
-        for ( let i = 0; i < m.length; i++ )
-            if ( c.indexOf( m[ i ] ) === -1 )
+        for ( let i = 0; i < message.length; i++ )
+            if ( c.indexOf( message[ i ] ) === -1 )
                 return false;
 
         return true;
@@ -7229,14 +7228,8 @@ class discordCrypt {
 
                 result += subset[ index ];
             }
-
-            /* Strip the extra UTF16 character that might somehow be added. */
-            result = result.split( '' ).join( '' );
         }
         else {
-            /* Strip the extra UTF16 character then decode the message. */
-            message = message.split( '' ).join( '' );
-
             /* Calculate the target character. */
             for ( let i = 0; i < message.length; i++ ) {
                 index = subset.indexOf( message[ i ] );
@@ -7315,14 +7308,11 @@ class discordCrypt {
         /* Base64-Character set. */
         let original = discordCrypt.getBase64();
 
-        let result = "", msg, buf;
-
-        /* Strip the extra UTF16 character then decode the message */
-        msg = message.split( '' ).join( '' );
+        let result = "", buf;
 
         /* Calculate the target character. */
-        for ( let i = 0; i < msg.length; i++ )
-            result += original[ subset.indexOf( msg[ i ] ) ];
+        for ( let i = 0; i < message.length; i++ )
+            result += original[ subset.indexOf( message[ i ] ) ];
 
         /* Convert from base64. */
         buf = Buffer.from( result, 'base64' );
