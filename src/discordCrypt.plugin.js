@@ -164,12 +164,6 @@ class discordCrypt {
         this.messageDispatcher = null;
 
         /**
-         * @typedef function EventHandler
-         * @typedef string EventName
-         * @typedef {{EventName: EventHandler}} EventDefinition
-         */
-
-        /**
          * @desc Indexes of each dual-symmetric encryption mode.
          * @type {int[]}
          */
@@ -1452,11 +1446,12 @@ class discordCrypt {
     }
 
     /**
-     * @callback updateCallback
-     * @param {string} file_data The update file's data.
-     * @param {string} short_hash A 64-bit SHA-256 checksum of the new update.
-     * @param {string} new_version The new version of the update.
-     * @param {string} full_changelog The full changelog.
+     * @typedef {Object} updateCallback
+     * @desc The function to execute after an update has been retrieved.
+     * @property {string} file_data The update file's data.
+     * @property {string} short_hash A 64-bit SHA-256 checksum of the new update.
+     * @property {string} new_version The new version of the update.
+     * @property {string} full_changelog The full changelog.
      */
 
     /**
@@ -1613,8 +1608,8 @@ class discordCrypt {
 
         /**
          * @desc Predicate for searching module.
-         * @callback modulePredicate
-         * @param {*} module Module to test.
+         * @typedef {Object} modulePredicate
+         * @property {*} module Module to test.
          * @return {boolean} Returns `true` if `module` matches predicate.
          */
 
@@ -4124,10 +4119,11 @@ class discordCrypt {
     /* ======================= UTILITIES ======================= */
 
     /**
-     * @callback getResultCallback
-     * @param {int} statusCode The HTTP static code of the operation.
-     * @param {string|null} The HTTP error string if an error occurred.
-     * @param {string} data The returned data from the request.
+     * @typedef {Object} getResultCallback
+     * @desc The function to execute at the end of a GET request containing the result or error that occurred.
+     * @property {int} statusCode The HTTP static code of the operation.
+     * @property {string|null} The HTTP error string if an error occurred.
+     * @property {string} data The returned data from the request.
      */
 
     /**
@@ -4368,12 +4364,13 @@ class discordCrypt {
     }
 
     /**
-     * @callback codeBlockDescriptor
-     * @param {int} start_pos The starting position of the code block.
-     * @param {int} end_pos The ending position of the code block.
-     * @param {string} language The language identifier of the code within this block.
-     * @param {string} raw_code The raw code within the code block.
-     * @param {string} captured_block The entire markdown formatted code block.
+     * @typedef {Object} codeBlockDescriptor
+     * @desc Indicates the values present in a markdown-styled code block.
+     * @property {int} start_pos The starting position of the code block.
+     * @property {int} end_pos The ending position of the code block.
+     * @property {string} language The language identifier of the code within this block.
+     * @property {string} raw_code The raw code within the code block.
+     * @property {string} captured_block The entire markdown formatted code block.
      */
 
     /**
@@ -4381,7 +4378,7 @@ class discordCrypt {
      * @desc Extracts raw code blocks from a message and returns a descriptive array.
      *      N.B. This does not remove the code blocks from the message.
      * @param {string} message The message to extract all code blocks from.
-     * @returns {Array} Returns an array of codeBlockDescriptor() objects.
+     * @returns {Array<codeBlockDescriptor>} Returns an array of codeBlockDescriptor() objects.
      */
     static __extractCodeBlocks( message ) {
         /* This regex only extracts code blocks. */
@@ -4640,9 +4637,10 @@ class discordCrypt {
     }
 
     /**
-     * @callback pbkdf2Callback
-     * @param {string} error The error that occurred during processing or null on success.
-     * @param {string} hash The hash either as a hex or Base64 encoded string ( or null on failure ).
+     * @typedef {Object} pbkdf2Callback
+     * @desc The function to execute after an async request for PBKDF2 is completed containing the result or error.
+     * @property {string} error The error that occurred during processing or null on success.
+     * @property {string} hash The hash either as a hex or Base64 encoded string ( or null on failure ).
      */
 
     /**
@@ -5060,11 +5058,12 @@ class discordCrypt {
     }
 
     /**
-     * @callback encryptedFileCallback
-     * @param {string} error_string The error that occurred during operation or null if no error occurred.
-     * @param {Buffer} encrypted_data The resulting encrypted buffer as a Buffer() object.
-     * @param {string} identity The encoded identity of the encrypted file.
-     * @param {string} seed The initial seed used to decrypt the encryption keys of the file.
+     * @typedef {Object} encryptedFileCallback
+     * @desc The function to execute when a file has finished being encrypted.
+     * @property {string} error_string The error that occurred during operation or null if no error occurred.
+     * @property {Buffer} encrypted_data The resulting encrypted buffer as a Buffer() object.
+     * @property {string} identity The encoded identity of the encrypted file.
+     * @property {string} seed The initial seed used to decrypt the encryption keys of the file.
      */
 
     /**
@@ -5195,11 +5194,12 @@ class discordCrypt {
     }
 
     /**
-     * @callback uploadedFileCallback
-     * @param {string} error_string The error that occurred or null if no error occurred.
-     * @param {string} file_url The URL of the uploaded file/
-     * @param {string} deletion_link The link used to delete the file.
-     * @param {string} encoded_seed The encoded encryption key used to decrypt the file.
+     * @typedef {Object} uploadedFileCallback
+     * @desc The function to execute after a file has been uploaded to an Up1 service.
+     * @property {string} error_string The error that occurred or null if no error occurred.
+     * @property {string} file_url The URL of the uploaded file/
+     * @property {string} deletion_link The link used to delete the file.
+     * @property {string} encoded_seed The encoded encryption key used to decrypt the file.
      */
 
     /**
@@ -5347,19 +5347,21 @@ class discordCrypt {
     /* ============== NODE CRYPTO HASH PRIMITIVES ============== */
 
     /**
-     * @callback scryptCallback
-     * @desc Callback must return false repeatedly upon each call to have Scrypt continue running.
+     * @typedef {Object} scryptCallback
+     * @desc The function to execute for Scrypt based status updates.
+     *      The function must return false repeatedly upon each call to have Scrypt continue running.
      *      Once [progress] === 1.f AND [key] is defined, no further calls will be made.
-     * @param {string} error The error message encountered or null.
-     * @param {real} progress The percentage of the operation completed. This ranges from [ 0.00 - 1.00 ].
-     * @param {Buffer} result The output result when completed or null if not completed.
-     * @returns Returns false if the operation is to continue running or true if the cancel the running operation.
+     * @property {string} error The error message encountered or null.
+     * @property {real} progress The percentage of the operation completed. This ranges from [ 0.00 - 1.00 ].
+     * @property {Buffer} result The output result when completed or null if not completed.
+     * @returns {boolean} Returns false if the operation is to continue running or true if the cancel the running
+     *      operation.
      */
 
     /**
      * @public
+     * @see https://github.com/ricmoo/scrypt-js
      * @desc Performs the Scrypt hash function on the given input.
-     *      Original Implementation: https://github.com/ricmoo/scrypt-js
      * @param {string|Buffer|Array} input The input data to hash.
      * @param {string|Buffer|Array} salt The unique salt used for hashing.
      * @param {int} dkLen The desired length of the output in bytes.
@@ -5818,9 +5820,10 @@ class discordCrypt {
     }
 
     /**
-     * @callback hashCallback
-     * @param {string} error The error that occurred or null.
-     * @param {string} hash The hex or Base64 encoded result.
+     * @typedef {Object} hashCallback
+     * @desc The function to execute once the hash is calculated or an error has occurred.
+     * @property {string} error The error that occurred or null.
+     * @property {string} hash The hex or Base64 encoded result.
      */
 
     /**
