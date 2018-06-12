@@ -424,7 +424,7 @@ post-processing that Discord itself does. Some examples of these would be emojis
 
  
 
-* Messages are limited to 1200 characters each.
+* Messages are limited to 1820 characters each.
     * Due to additional costs of encryption, messages at maximum size will only be able to display 1200 characters
     of text..
         * If your message is longer than this, it will be split and sent in multiple messages.
