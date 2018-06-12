@@ -2697,7 +2697,7 @@ class discordCrypt {
          *  MESSAGE FORMAT:
          *
          *  + 0x0000 [ 4        Chars ] - Message Magic | Key Magic
-         *  + 0x0004 [ 8 ( #4 ) Chars ] - Message Metadata ( #1 ) | Key Data ( #3 )
+         *  + 0x0004 [ 4 ( #4 ) Chars ] - Message Metadata ( #1 ) | Key Data ( #3 )
          *  + 0x000C [ ?        Chars ] - Cipher Text
          *
          *  * 0x0004 - Options - Substituted Base64 encoding of a single word stored in Little Endian.
@@ -2729,7 +2729,7 @@ class discordCrypt {
             return false;
 
         /* Try to deserialize the metadata. */
-        let metadata = discordCrypt.metaDataDecode( message.text().slice( 4, 12 ) );
+        let metadata = discordCrypt.metaDataDecode( message.text().slice( 4, 8 ) );
 
         /* Try looking for an algorithm, mode and padding type. */
         /* Algorithm first. */
@@ -2746,7 +2746,7 @@ class discordCrypt {
 
         /* Decrypt the message. */
         dataMsg = discordCrypt.symmetricDecrypt( message.text().replace( /\r?\n|\r/g, '' )
-            .substr( 12 ), primaryKey, secondaryKey, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
+            .substr( 8 ), primaryKey, secondaryKey, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
 
         /* If decryption didn't fail, set the decoded text along with a green foreground. */
         if ( ( typeof dataMsg === 'string' || dataMsg instanceof String ) && dataMsg !== "" ) {
@@ -2884,9 +2884,9 @@ class discordCrypt {
      *      current channel.
      */
     sendEncryptedMessage( message, force_send = false, channel_id = undefined ) {
-        /* Let's use a maximum message size of 1200 instead of 2000 to account for encoding, new line feeds & packet
+        /* Let's use a maximum message size of 1820 instead of 2000 to account for encoding, new line feeds & packet
          header. */
-        const maximum_encoded_data = 1200;
+        const maximum_encoded_data = 1820;
 
         /* Add the message signal handler. */
         const escapeCharacters = [ "#", "/", ":" ];
@@ -2953,14 +2953,8 @@ class discordCrypt {
                 this.configFile.defaultPassword
         );
 
-        /* Returns the number of bytes a given string is in Base64. */
-        function getBase64EncodedLength( len ) {
-            return parseInt( ( len / 3 ) * 4 ) % 4 === 0 ? ( len / 3 ) * 4 :
-                parseInt( ( len / 3 ) * 4 ) + 4 - ( parseInt( ( len / 3 ) * 4 ) % 4 );
-        }
-
         /* If the message length is less than the threshold, we can send it without splitting. */
-        if ( getBase64EncodedLength( cleaned.length ) < maximum_encoded_data ) {
+        if ( ( cleaned.length + 16 ) < maximum_encoded_data ) {
             /* Encrypt the message. */
             let msg = discordCrypt.symmetricEncrypt(
                 cleaned,
@@ -3548,8 +3542,8 @@ class discordCrypt {
             if ( $( '#dc-pub-key-ta' )[ 0 ].value === '' )
                 return;
 
-            /* The text area stores a hex encoded binary. Convert it to a BaBrse64 message to save space. */
-            let message = Buffer.from( $( '#dc-pub-key-ta' )[ 0 ].value, 'hex' ).toString( 'base64' );
+            /* The text area stores a hex encoded binary. Convert it to a buffer prior to encoding. */
+            let message = Buffer.from( $( '#dc-pub-key-ta' )[ 0 ].value, 'hex' );
 
             /* Add the header to the message and encode it. */
             message = self.encodedKeyHeader + discordCrypt.substituteMessage( message, true );
@@ -3632,13 +3626,13 @@ class discordCrypt {
             /* Snip off the header. */
             let blob = $( '#dc-handshake-ppk' )[ 0 ].value.replace( /\r?\n|\r/g, "" ).slice( 4 );
 
-            /* Skip if invalid UTF-16 encoded message. */
-            if ( !discordCrypt.isValidUtf16( blob ) )
+            /* Skip if invalid braille encoded message. */
+            if ( !discordCrypt.isValidBraille( blob ) )
                 return;
 
             try {
                 /* Decode the message. */
-                value = Buffer.from( discordCrypt.substituteMessage( blob ), 'base64' );
+                value = Buffer.from( discordCrypt.substituteMessage( blob ), 'hex' );
             }
             catch ( e ) {
                 /* Update the text. */
@@ -4233,11 +4227,11 @@ class discordCrypt {
             if ( header_present )
                 msg = msg.slice( 4 );
 
-            /* Decode the message to Base64. */
+            /* Decode the message to hex. */
             msg = discordCrypt.substituteMessage( msg );
 
             /* Decode the message to raw bytes. */
-            msg = Buffer.from( msg, 'base64' );
+            msg = Buffer.from( msg, 'hex' );
 
             /* Sanity check. */
             if ( !discordCrypt.isValidExchangeAlgorithm( msg[ 0 ] ) )
@@ -6952,25 +6946,28 @@ class discordCrypt {
     }
 
     /**
-     * @public
-     * @desc Retrieves UTF-16 charset as an Array Object.
-     * @returns {Array} Returns an array containing 64 characters used for substitution.
+     * @desc Returns 256-characters of Braille.
+     * @return {string}
      */
-    static getUtf16() {
-        return Array.from( "⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿⢿" );
+    static getBraille(){
+        return Array.from(
+            "⠀⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖" +
+            "⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭" +
+            "⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿"
+        );
     }
 
     /**
      * @public
-     * @desc Determines if a string has all valid UTF-16 characters according to the result from getUtf16().
+     * @desc Determines if a string has all valid Braille characters according to the result from getBraille()
      * @param {string} message The message to validate.
      * @returns {boolean} Returns true if the message contains only the required character set.
      */
-    static isValidUtf16( message ) {
-        let c = discordCrypt.getUtf16();
+    static isValidBraille( message ){
+        let c = discordCrypt.getBraille();
 
-        for ( let i = 0; i < message.length; i++ )
-            if ( c.indexOf( message[ i ] ) === -1 )
+        for( let i = 0; i < message.length; i++ )
+            if( c.indexOf( message[ i ] ) === -1 )
                 return false;
 
         return true;
@@ -6983,27 +6980,6 @@ class discordCrypt {
      */
     static getBase64() {
         return Array.from( "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" );
-    }
-
-    /**
-     * @public
-     * @desc Determines if a string has all valid Base64 characters including encoding characters.
-     * @param {string} message The message to validate.
-     * @returns {boolean} Returns true if the message contains only the required character set.
-     */
-    static isValidBase64( message ) {
-        try {
-            let b64 = discordCrypt.getBase64();
-
-            for ( let c in message ) {
-                if ( b64.indexOf( c ) === -1 )
-                    return false;
-            }
-
-            return true;
-        } catch ( e ) {
-            return false;
-        }
     }
 
     /**
@@ -7213,32 +7189,26 @@ class discordCrypt {
 
     /**
      * @public
-     * @desc Substitutes an input Base64 message to the UTF-16 equivalent from getUtf16().
+     * @desc Substitutes an input Buffer() object to the Braille equivalent from getBraille().
      * @param {string} message The input message to perform substitution on.
-     * @param {boolean} convert Whether the message is to be converted from Base64 to UTF-16 or from UTF-16 to Base64.
+     * @param {boolean} convert Whether the message is to be converted from hex to Braille or from Braille to hex.
      * @returns {string} Returns the substituted string encoded message.
      * @throws An exception indicating the message contains characters not in the character set.
      */
-    static substituteMessage( /* string */ message, /* boolean */ convert ) {
+    static substituteMessage( message, convert ) {
         /* Target character set. */
-        let subset = discordCrypt.getUtf16();
-
-        /* Base64-Character set. */
-        let original = discordCrypt.getBase64();
+        let subset = discordCrypt.getBraille();
 
         let result = "", index = 0;
 
         if ( convert !== undefined ) {
+            /* Sanity check. */
+            if ( !Buffer.isBuffer( message ) )
+                throw 'Message input is not a buffer.';
+
             /* Calculate the target character. */
-            for ( let i = 0; i < message.length; i++ ) {
-                index = original.indexOf( message[ i ] );
-
-                /* Sanity check. */
-                if ( index === -1 )
-                    throw 'Message contains invalid characters.';
-
-                result += subset[ index ];
-            }
+            for ( let i = 0; i < message.length; i++ )
+                result += subset[ message[ i ] ];
         }
         else {
             /* Calculate the target character. */
@@ -7249,7 +7219,7 @@ class discordCrypt {
                 if ( index === -1 )
                     throw 'Message contains invalid characters.';
 
-                result += original[ subset.indexOf( message[ i ] ) ];
+                result += `0${index.toString( 16 )}`.slice(-2);
             }
         }
 
@@ -7258,52 +7228,32 @@ class discordCrypt {
 
     /**
      * @public
-     * @desc Encodes the given values as a Base64 encoded 32-bit word.
+     * @desc Encodes the given values as a braille encoded 32-bit word.
      * @param {int} cipherIndex The index of the cipher(s) used to encrypt the message
      * @param {int} cipherModeIndex The index of the cipher block mode used for the message.
      * @param {int} paddingIndex The index of the padding scheme for the message.
      * @param {int} pad The padding byte to use.
-     * @returns {string} Returns a substituted UTF-16 string of a Base64 encoded 32-bit word containing these options.
+     * @returns {string} Returns a substituted UTF-16 string of a braille encoded 32-bit word containing these options.
      */
     static metaDataEncode( cipherIndex, cipherModeIndex, paddingIndex, pad ) {
-        /* Buffered word. */
-        let buf = Buffer.alloc( 4 );
-
-        /* Target character set. */
-        let subset = discordCrypt.getUtf16();
-
-        /* Base64-Character set. */
-        let original = discordCrypt.getBase64();
-
-        let result = "", msg;
 
         /* Parse the first 8 bits. */
         if ( typeof cipherIndex === 'string' )
             cipherIndex = discordCrypt.cipherStringToIndex( cipherIndex );
-        buf[ 0 ] = cipherIndex;
 
         /* Parse the next 8 bits. */
         if ( typeof cipherModeIndex === 'string' )
             cipherModeIndex = [ 'cbc', 'cfb', 'ofb' ].indexOf( cipherModeIndex.toLowerCase() );
-        buf[ 1 ] = cipherModeIndex;
 
         /* Parse the next 8 bits. */
         if ( typeof paddingIndex === 'string' )
             paddingIndex = [ 'pkc7', 'ans2', 'iso1', 'iso9' ].indexOf( paddingIndex.toLowerCase() );
-        buf[ 2 ] = paddingIndex;
 
-        /* Add padding. */
-        pad = parseInt( pad );
-        buf[ 3 ] = pad;
+        /* Buffered word. */
+        let buf = Buffer.from( [ cipherIndex, cipherModeIndex, paddingIndex, parseInt( pad ) ] );
 
-        /* Convert to Base64. */
-        msg = buf.toString( 'base64' );
-
-        /* Calculate the target character. */
-        for ( let i = 0; i < msg.length; i++ )
-            result += subset[ original.indexOf( msg[ i ] ) ];
-
-        return result;
+        /* Convert it and return. */
+        return discordCrypt.substituteMessage( buf, true );
     }
 
     /**
@@ -7313,27 +7263,8 @@ class discordCrypt {
      * @returns {int[]} Returns 4 integer indexes of each metadata value.
      */
     static metaDataDecode( message ) {
-        /* Target character set. */
-        let subset = discordCrypt.getUtf16();
-
-        /* Base64-Character set. */
-        let original = discordCrypt.getBase64();
-
-        let result = "", buf;
-
-        /* Calculate the target character. */
-        for ( let i = 0; i < message.length; i++ )
-            result += original[ subset.indexOf( message[ i ] ) ];
-
-        /* Convert from base64. */
-        buf = Buffer.from( result, 'base64' );
-
-        return [
-            buf[ 0 ],
-            buf[ 1 ],
-            buf[ 2 ],
-            buf[ 3 ]
-        ];
+        /* Decode the result and convert the hex to a Buffer. */
+        return Buffer.from( discordCrypt.substituteMessage( message ), 'hex' );
     }
 
     /**
@@ -7434,8 +7365,10 @@ class discordCrypt {
             let tag = discordCrypt.hmac_sha256( Buffer.from( msg, 'hex' ), primary_key, true );
 
             /* Prepend the authentication tag hex string & convert it to Base64. */
-            msg = Buffer.from( tag + msg, 'hex' ).toString( 'base64' );
+            msg = Buffer.from( tag + msg, 'hex' );
         }
+        else
+            msg = Buffer.from( msg, 'base64' );
 
         /* Return the message. */
         return discordCrypt.substituteMessage( msg, true );
@@ -7520,7 +7453,7 @@ class discordCrypt {
             /* If using HMAC, strip off the HMAC and compare it before proceeding. */
             if ( use_hmac ) {
                 /* Convert to a Buffer. */
-                message = Buffer.from( message, 'base64' );
+                message = Buffer.from( message, 'hex' );
 
                 /* Pull off the first 32 bytes as a buffer. */
                 let tag = Buffer.from( message.subarray( 0, 32 ) );

@@ -166,14 +166,14 @@ its type.
 
 ### Meta Data Encoding
 
-Each user message contains 8 characters of [encoded](#byte-encoding) metadata.
+Each user message contains 4 characters of [encoded](#byte-encoding) metadata.
 
 These decode to a 32-bit integer encoded in Little-Endian order whose byte positions indicates the data type.
 
 
 | **Byte Position** | **Description**                                                                   |
 | ----------------- | --------------------------------------------------------------------------------- |
-| `0`               | Details symmetric cipher used to encrypt the message.                             |
+| `0`               | Details symmetric ciphers used to encrypt the message.                            |
 | `1`               | Indicates the block operation mode of the symmetric cipher.                       |
 | `2`               | Contains the padding scheme used to align the message to the cipher's block size. |
 | `3`               | Contains a random byte. ( `Reserved For Future Use` )                             |
@@ -188,7 +188,7 @@ A user message is expressed in the following format:
 | **Character Size** | **Field**    | **Description**                                               |
 | ------------------ | ------------ | ------------------------------------------------------------- |
 | `4`                | Magic        | Indicates an encrypted message.                               |
-| `8`                | Metadata     | Details the message format. See [here](#meta-data-encoding).  |
+| `4`                | Metadata     | Details the message format. See [here](#meta-data-encoding).  |
 | `< Variable >`     | Message      | Contains the encrypted ciphertext.                            |
 
 #### User Message Authentication
@@ -226,11 +226,11 @@ In contrast to a [user message](#user-message-format), a public key message is e
 
 ### Byte Encoding
 
-While all messages are Base64 encoded, Discord does not use a monospace font. This allows 
+While all messages are Base64 or hex encoded, Discord does not use a monospace font. This allows 
 messages to look uneven when sent.
 
-To combat this, after messages are encoded in Base64, a simple method of substitution is used 
-to replace all Base64 characters with a monospace-type width using the 
+To combat this, a simple method of substitution is used to replace all characters 
+in their hex-based representation with a 256-character monospace-type width using the 
 [Braille character set](https://en.wikipedia.org/wiki/Braille_Patterns).
 
 Discord itself treats both UTF-8 and UTF-16 characters as the same length ( character-limit-wise ) 
@@ -238,13 +238,23 @@ meaning both a UTF-8 and UTF-16 messages are limited to 2000 characters each.
 
 This is handled by the methods `substituteMessage`, `metaDataEncode` and `metaDataDecode`.
 
-These methods do a 1-1 substitution as follows:
+These methods do a 1-1 substitution as follows:********
 
 
 | **Character Set** | **String**                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------|
-| `Base 64`           | `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=`                           |
-| `Braille`           | `⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿⢿`                |
+| ----------------- | --------------------------------------------- |
+| `Base 64`           | `000102030405060708` ... `F8F9FAFBFCFDFEFF` |
+| `Braille`           | `⠀⠁⠂⠃⠄⠅⠆⠇` ... `⣸⣹⣺⣻⣼⣽⣾⣿`                |
+
+The raw code for this is defined in the `getBraille()` function seen below.
+
+```javascript
+return Array.from(
+    "⠀⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖" +
+    "⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭" +
+    "⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿"
+);
+```
 
 ## General Encryption And Decryption Process
 
