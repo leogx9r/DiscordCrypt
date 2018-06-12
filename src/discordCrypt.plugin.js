@@ -1881,12 +1881,12 @@ class discordCrypt {
                     encoding: "utf-16",
                     author: {
                         name: embedded_header || '-----MESSAGE-----',
-                        icon_url: 'https://i.imgur.com/NC0PcLA.png',
+                        icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png',
                         url: 'https://discord.me/discordCrypt'
                     },
                     footer: {
                         text: embedded_footer || 'DiscordCrypt',
-                        icon_url: 'https://i.imgur.com/9y1uGB0.png',
+                        icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/app-logo.png',
                     },
                     description: embedded_text,
                 }
