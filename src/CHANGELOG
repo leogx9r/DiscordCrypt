@@ -1,3 +1,15 @@
+Version 1.1.0
+
+- NOTE: Character set changing will prevent you from reading all old messages.
+
+- Switched to a Braille character set instead of Chinese for messages. ( Special thanks to An0. )
+- Embed dependencies directly into the plugin for increased security.
+- Optimized some crucial parts of code for faster execution.
+- Fixed a Clyde sending error for broken messages.
+- Fixed a bug in the UI's settings pane.
+- Minor UI changes for sleeker feel.
+- Host message images on Gitlab.
+
 Version 1.0.10
 
 - Fixed inability for ASAR files ( and potentially others ) to be uploaded.
