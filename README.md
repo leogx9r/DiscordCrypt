@@ -424,6 +424,13 @@ post-processing that Discord itself does. Some examples of these would be emojis
 
  
 
+* Messages are limited to 1200 characters each.
+    * Due to additional costs of encryption, messages at maximum size will only be able to display 1200 characters
+    of text..
+        * If your message is longer than this, it will be split and sent in multiple messages.
+
+ 
+
 * Only text channels are end-to-end encrypted. Voice channels cannot be secured, so what you verbally say in them 
 could still be recorded by Discord.
     * Support for encrypted file uploads was added in `v1.0.5`. However we still recommend using 
