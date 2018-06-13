@@ -1,3 +1,9 @@
+Version 1.1.2
+
+- Fixed a bug for public key parsing errors.
+- Fixed menu bugs for the key and lock icons.
+- Switched ECDH algorithms to their Koblitz curve equivalents over binary fields.
+
 Version 1.1.1
 
 - NOTE: Byte changing will prevent you from reading all old messages.
