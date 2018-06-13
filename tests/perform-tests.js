@@ -22,9 +22,6 @@
  * SOFTWARE.
  ******************************************************************************/
 
-/* Required for unit tests. */
-const nodeunit = require('nodeunit');
-
 class testRunner {
     /**
      * @desc Loads the SJCL library and discordCrypt.
@@ -33,6 +30,7 @@ class testRunner {
         this.sjcl = require( '../lib/sjcl.js' );
 
         this.process = require( 'process' );
+        this.nodeunit = require('nodeunit');
         this.child_process = require( 'child_process' );
 
         this.child_process.fork(
@@ -152,7 +150,7 @@ class testRunner {
         }
 
         /* Actually run all the tests. */
-        nodeunit.reporters.default.run( unit_tests );
+        this.nodeunit.reporters.default.run( unit_tests );
     }
 
     /**
