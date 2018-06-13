@@ -7182,6 +7182,7 @@ class discordCrypt {
 
     /**
      * @public
+     * @see http://www.secg.org/sec2-v2.pdf
      * @desc Generates a Elliptic-Curve Diffie-Hellman key pair.
      * @param {int} size The bit length of the desired key pair.
      *      This must be one of the supported lengths retrieved from getECDHBitSizes().
@@ -7203,7 +7204,7 @@ class discordCrypt {
                 groupName = 'secp384r1';
                 break;
             case 409:
-                groupName = 'sect409r1';
+                groupName = 'sect409k1';
                 break;
             case 521:
                 groupName = 'secp521r1';

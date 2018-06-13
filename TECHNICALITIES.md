@@ -102,14 +102,17 @@ One should generally choose the largest key size when exchanging keys for maximu
 
 The following key sizes in bits are supported:
 
-* 768  Bits ( modp1  )
-* 1024 Bits ( modp2  )
-* 1536 Bits ( modp5  )
-* 2048 Bits ( modp14 ) `[ Generally considered secure ]`
-* 3072 Bits ( modp15 )
-* 4096 Bits ( modp16 )
-* 6144 Bits ( modp17 )
-* 8192 Bits ( modp18 ) ( **Default Key Size** ) `[ Most Secure ]`
+* 768  Bits ( `modp1`  )
+* 1024 Bits ( `modp2`  )
+* 1536 Bits ( `modp5`  )
+* 2048 Bits ( `modp14` )
+* 3072 Bits ( `modp15` )
+* 4096 Bits ( `modp16` )
+* 6144 Bits ( `modp17` )
+* 8192 Bits ( `modp18` ) ( **Default Key Size** )
+
+Please see [here](https://www.rfc-editor.org/rfc/rfc2412.txt) for parameters defined less than 2048 or 
+[here](https://www.rfc-editor.org/rfc/rfc3526.txt) for parameters larger than 2048 bits.
 
 ##### Elliptic Curve Diffie-Hellman
 
@@ -142,12 +145,14 @@ Diffie-Hellman keys with a much faster generation speed.
 
 The following key sizes in bits are supported:
 
-* 224 Bits ( `secp224k1` )
-* 256 Bits ( `secp256k1` ) `[ Generally considered secure ]`
-* 384 Bits ( `secp384r1` )
-* 409 Bits ( `sect409r1` )
-* 521 Bits ( `secp521r1` ) `[ Most Secure ]`
-* 571 Bits ( `sect571k1` ) `[ Considered secure by many but not widely used ]`
+* 224 Bits ( `secp224k1: SECG curve over a 224 bit prime field.` )
+* 256 Bits ( `secp256k1: SECG curve over a 256 bit prime field.` )
+* 384 Bits ( `secp384r1: NIST/SECG curve over a 384 bit prime field.` )
+* 409 Bits ( `sect409k1: NIST/SECG curve over a 409 bit binary field.` )
+* 521 Bits ( `secp521r1: NIST/SECG curve over a 521 bit prime field.` )
+* 571 Bits ( `sect571k1: NIST/SECG curve over a 571 bit binary field.` )
+
+Please see [here](http://www.secg.org/sec2-v2.pdf) for more information on curve parameters.
 
 ## Message Format
 
