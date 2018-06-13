@@ -2603,6 +2603,10 @@ class discordCrypt {
         /* Extract the algorithm info from the message's metadata. */
         let metadata = discordCrypt.__extractKeyInfo( obj.text().replace( /\r?\n|\r/g, '' ), true );
 
+        /* Sanity check for invalid key messages. */
+        if( metadata === null )
+            return true;
+
         /* Compute the fingerprint of our currently known public key if any to determine if to proceed. */
         let local_fingerprint = discordCrypt.sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
 
