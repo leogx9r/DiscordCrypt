@@ -2399,10 +2399,6 @@ class discordCrypt {
      * @desc Inserts the plugin's option toolbar to the current toolbar and handles all triggers.
      */
     loadToolbar() {
-        /* Cache jQuery results. */
-        let dc_passwd_btn = $( '#dc-passwd-btn' ),
-            dc_svg = $( '.dc-svg' ),
-            dc_lock_btn = $( '#dc-lock-btn' );
 
         /* Skip if the configuration hasn't been loaded. */
         if ( !this.configFile )
@@ -2412,12 +2408,17 @@ class discordCrypt {
         if ( discordCrypt.getChannelId() === '@me' )
             return;
 
-        /* Toolbar buttons and their icons if it doesn't exist. */
-        if ( dc_passwd_btn.length !== 0 )
+        /* Add toolbar buttons and their icons if it doesn't exist. */
+        if ( $( '#dc-passwd-btn' ).length !== 0 )
             return;
 
         /* Inject the toolbar. */
         $( this.searchUiClass ).parent().parent().parent().prepend( this.toolbarHtml );
+
+        /* Cache jQuery results. */
+        let dc_passwd_btn = $( '#dc-passwd-btn' ),
+            dc_lock_btn = $( '#dc-lock-btn' ),
+            dc_svg = $( '.dc-svg' );
 
         /* Set the SVG button class. */
         dc_svg.attr( 'class', 'dc-svg' );
