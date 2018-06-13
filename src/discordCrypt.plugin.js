@@ -7194,7 +7194,7 @@ class discordCrypt {
         /* Calculate the appropriate group. */
         switch ( size ) {
             case 224:
-                groupName = 'secp224r1';
+                groupName = 'secp224k1';
                 break;
             case 256:
                 groupName = 'secp256k1';
@@ -7209,7 +7209,7 @@ class discordCrypt {
                 groupName = 'secp521r1';
                 break;
             case 571:
-                groupName = 'sect571r1';
+                groupName = 'sect571k1';
                 break;
             default:
                 return null;

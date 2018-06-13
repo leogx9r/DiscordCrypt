@@ -142,11 +142,12 @@ Diffie-Hellman keys with a much faster generation speed.
 
 The following key sizes in bits are supported:
 
-* 224 Bits ( secp224k1 )
-* 256 Bits ( secp256k1 ) `[ Generally considered secure ]`
-* 409 Bits ( sect409r1 )
-* 521 Bits ( secp521r1 ) `[ Most Secure ]`
-* 571 Bits ( sect571r1 ) `[ Considered secure by many but not widely used ]`
+* 224 Bits ( `secp224k1` )
+* 256 Bits ( `secp256k1` ) `[ Generally considered secure ]`
+* 384 Bits ( `secp384r1` )
+* 409 Bits ( `sect409r1` )
+* 521 Bits ( `secp521r1` ) `[ Most Secure ]`
+* 571 Bits ( `sect571k1` ) `[ Considered secure by many but not widely used ]`
 
 ## Message Format
 
