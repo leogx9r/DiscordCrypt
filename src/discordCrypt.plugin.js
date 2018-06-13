@@ -992,12 +992,12 @@ class discordCrypt {
         /* Perform idiot-proof check to make sure the user named the plugin `discordCrypt.plugin.js` */
         if ( !discordCrypt.validPluginName() ) {
             _alert(
+                'Hi There! - DiscordCrypt',
                 "Oops!\r\n\r\n" +
                 "It seems you didn't read discordCrypt's usage guide. :(\r\n" +
                 "You need to name this plugin exactly as follows to allow it to function correctly.\r\n\r\n" +
                 `\t${discordCrypt.getPluginName()}\r\n\r\n\r\n` +
-                "You should probably check the usage guide again just in case you missed anything else. :)",
-                'Hi There! - DiscordCrypt'
+                "You should probably check the usage guide again just in case you missed anything else. :)"
             );
             return;
         }
@@ -2325,7 +2325,7 @@ class discordCrypt {
                             discordCrypt.log(
                                 `Unable to replace the target plugin. ( ${err} )\nDestination: ${replacePath}`, 'error'
                             );
-                            _alert( 'Failed to apply the update!', 'Error During Update' );
+                            _alert( 'Error During Update', 'Failed to apply the update!' );
                         }
                     } );
                 } );
@@ -3077,7 +3077,7 @@ class discordCrypt {
                 ( error_string, file_url, deletion_link ) => {
                     /* Do some sanity checking. */
                     if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
-                        _alert( error_string, 'Failed to upload the clipboard!' );
+                        _alert( 'Failed to upload the clipboard!', error_string );
                         return;
                     }
 
@@ -3265,7 +3265,10 @@ class discordCrypt {
                     ( error, progress, pwd ) => {
                         if ( error ) {
                             /* Alert the user. */
-                            _alert( 'Error setting the new database password. Check the console for more info.' );
+                            _alert(
+                                'DiscordCrypt Error',
+                                'Error setting the new database password. Check the console for more info.'
+                            );
 
                             discordCrypt.log( error.toString(), 'error' );
                             return true;
