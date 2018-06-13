@@ -134,18 +134,6 @@ class discordCrypt {
         this.masterPassword = null;
 
         /**
-         * @desc Message scanning interval handler's index. Used to stop any running handler.
-         * @type {int}
-         */
-        this.scanInterval = undefined;
-
-        /**
-         * @desc The index of the handler used to reload the toolbar.
-         * @type {int}
-         */
-        this.toolbarReloadInterval = undefined;
-
-        /**
          * @desc The index of the handler used for automatic update checking.
          * @type {int}
          */
@@ -158,10 +146,10 @@ class discordCrypt {
         this.configFile = null;
 
         /**
-         * @desc The main message dispatcher used by Discord. Resolved upon startup.
+         * @desc The main message update event dispatcher used by Discord. Resolved upon startup.
          * @type {Object|null}
          */
-        this.messageDispatcher = null;
+        this.messageUpdateDispatcher = null;
 
         /**
          * @desc Indexes of each dual-symmetric encryption mode.
@@ -1025,23 +1013,6 @@ class discordCrypt {
             return;
         }
 
-        /* Add the toolbar. */
-        this.loadToolbar();
-
-        /* Attach the message handler. */
-        this.attachHandler();
-
-        /* Process any blocks on an interval since Discord loves to throttle messages. */
-        this.scanInterval = setInterval( () => {
-            self.decodeMessages();
-        }, self.configFile.encryptScanDelay );
-
-        /* The toolbar fails to properly load on switches to the friends list. Create an interval to do this. */
-        this.toolbarReloadInterval = setInterval( () => {
-            self.loadToolbar();
-            self.attachHandler();
-        }, 5000 );
-
         /* Don't check for updates if running a debug version. */
         if ( !discordCrypt.__shouldIgnoreUpdates( this.getVersion() ) ) {
             /* Check for any new updates. */
@@ -1052,6 +1023,18 @@ class discordCrypt {
                 self.checkForUpdates();
             }, 3600000 );
         }
+
+        /* Hook switch events. */
+        this.hookMessageCallbacks();
+
+        /* Add the toolbar. */
+        this.loadToolbar();
+
+        /* Attach the message handler. */
+        this.attachHandler();
+
+        /* Decode all messages immediately. */
+        this.decodeMessages();
     }
 
     /**
@@ -1066,11 +1049,8 @@ class discordCrypt {
         /* Remove onMessage event handler hook. */
         $( this.channelTextAreaClass ).off( "keydown.dcrypt" );
 
-        /* Unload the decryption interval. */
-        clearInterval( this.scanInterval );
-
-        /* Unload the toolbar reload interval. */
-        clearInterval( this.toolbarReloadInterval );
+        /* Unhook switch events. */
+        this.unhookMessageCallbacks();
 
         /* Unload the update handler. */
         clearInterval( this.updateHandlerInterval );
@@ -1115,43 +1095,6 @@ class discordCrypt {
         discordCrypt.clearCSS( 'dc-css' );
     }
 
-    /**
-     * @public
-     * @desc Triggered by BetterDiscord when the current channel has been switched.
-     */
-    onSwitch() {
-        /* Skip if no valid configuration is loaded. */
-        if ( !this.configFile )
-            return;
-
-        discordCrypt.log( 'Detected chat switch.', 'debug' );
-
-        /* Add the toolbar. */
-        this.loadToolbar();
-
-        /* Attach the message handler. */
-        this.attachHandler();
-
-        /* Decrypt any messages. */
-        this.decodeMessages();
-    }
-
-    /**
-     * @public
-     * @desc Triggered when the current channel or DM adds a new message to the display.
-     *      Attempt to decode messages once a new message has been received.
-     */
-    onMessage() {
-        /* Skip if no valid configuration is loaded. */
-        if ( !this.configFile )
-            return;
-
-        discordCrypt.log( 'Detected new message.', 'Decoding ...', 'debug' );
-
-        /* Immediately decode the message. */
-        this.decodeMessages();
-    }
-
     /* =================== END STANDARD CALLBACKS =================== */
 
     /* =================== CONFIGURATION DATA CBS =================== */
@@ -1191,7 +1134,7 @@ class discordCrypt {
             defaultPassword: "秘一密比无为有秘习个界一万定为界人是的要人每的但了又你上着密定已",
             /* Defines what needs to be typed at the end of a message to encrypt it. */
             encodeMessageTrigger: "ENC",
-            /* How often to scan for encrypted messages. */
+            /* How long after an event is fired to perform actions. */
             encryptScanDelay: 1000,
             /* Default encryption mode. */
             encryptMode: 7, /* AES(Camellia) */
@@ -1317,19 +1260,8 @@ class discordCrypt {
      * @param {Object} btn The jQuery button to set the update text for.
      */
     saveSettings( btn ) {
-        /* Save self. */
-        const self = this;
-
-        /* Clear the old message decoder. */
-        clearInterval( this.scanInterval );
-
         /* Save the configuration file. */
         this.saveConfig();
-
-        /* Set a new decoder to use any updated configurations. */
-        setInterval( ( function () {
-            self.decodeMessages( true );
-        } ), this.configFile.encryptScanDelay );
 
         /* Tell the user that their settings were applied. */
         btn.innerHTML = "Saved & Applied!";
@@ -1346,22 +1278,11 @@ class discordCrypt {
      * @param {Object} btn The jQuery button to set the update text for.
      */
     resetSettings( btn ) {
-        /* Save self. */
-        const self = this;
-
-        /* Clear the old message decoder. */
-        clearInterval( this.scanInterval );
-
         /* Retrieve the default configuration. */
         this.configFile = this.getDefaultConfig();
 
         /* Save the configuration file to update any settings. */
         this.saveConfig();
-
-        /* Set a new decoder to use any updated configurations. */
-        setInterval( ( function () {
-            self.decodeMessages( true );
-        } ), self.configFile.encryptScanDelay );
 
         /* Tell the user that their settings were reset. */
         btn.innerHTML = "Restored Default Settings!";
@@ -2087,32 +2008,87 @@ class discordCrypt {
      * @desc Debug function that attempts to hook Discord's internal event handlers for message creation.
      */
     hookMessageCallbacks() {
+        let self = this;
 
-        /* Find the main message dispatcher if not already found. */
-        if ( !this.messageDispatcher ) {
-            this.messageDispatcher = discordCrypt.getWebpackModuleSearcher().findByDispatchNames( [
+        /* Find the main switch event dispatcher if not already found. */
+        if ( !this.messageUpdateDispatcher ) {
+            /* Usually ID_78. */
+            this.messageUpdateDispatcher = discordCrypt.getWebpackModuleSearcher().findByDispatchNames( [
+                'LOAD_MESSAGES',
+                'LOAD_MESSAGES_SUCCESS',
+                'LOAD_MESSAGES_FAILURE',
+                'TRUNCATE_MESSAGES',
                 'MESSAGE_CREATE',
                 'MESSAGE_UPDATE',
                 'MESSAGE_DELETE',
-                'LOAD_MESSAGES'
+                'MESSAGE_DELETE_BULK',
+                'MESSAGE_REVEAL',
+                'CHANNEL_SELECT',
+                'CHANNEL_CREATE',
+                'CHANNEL_PRELOAD',
+                'GUILD_CREATE',
+                'GUILD_SELECT',
+                'GUILD_DELETE'
             ] );
         }
 
         /* Don't proceed if it failed. */
-        if ( !this.messageDispatcher ) {
-            discordCrypt.log( `Failed to locate the message dispatcher!`, 'error' );
+        if ( !this.messageUpdateDispatcher ) {
+            discordCrypt.log( `Failed to locate the switch event dispatcher!`, 'error' );
             return;
         }
 
-        /* Hook the message update dispatcher. */
+        /* Hook the switch event dispatcher. */
         discordCrypt.hookDispatcher(
-            this.messageDispatcher,
-            'MESSAGE_UPDATE',
+            this.messageUpdateDispatcher,
+            'CHANNEL_SELECT',
             {
                 after: ( e ) => {
-                    /* Log message objects sent in the current channel. */
-                    if ( e.methodArguments[ 0 ].message.channel_id === discordCrypt.getChannelId() )
-                        discordCrypt.log( `${JSON.stringify( e.methodArguments[ 0 ].message )}` );
+                    /* Skip channels not currently selected. */
+                    if ( discordCrypt.getChannelId() !== e.methodArguments[ 0 ].channelId )
+                        return;
+
+                    /* Delays are required due to windows being loaded async. */
+                    setTimeout(
+                        () => {
+
+                            discordCrypt.log( 'Detected chat switch.', 'debug' );
+
+                            /* Add the toolbar. */
+                            this.loadToolbar();
+
+                            /* Attach the message handler. */
+                            this.attachHandler();
+
+                            /* Decrypt any messages. */
+                            this.decodeMessages();
+
+                        },
+                        self.configFile.encryptScanDelay
+                    );
+                }
+            }
+        );
+        /* Hook incoming message creation dispatcher. */
+        discordCrypt.hookDispatcher(
+            this.messageUpdateDispatcher,
+            'MESSAGE_CREATE',
+            {
+                after: ( e ) => {
+                    /* Skip channels not currently selected. */
+                    if ( discordCrypt.getChannelId() !== e.methodArguments[ 0 ].channelId )
+                        return;
+
+                    /* Delays are required due to windows being loaded async. */
+                    setTimeout(
+                        () => {
+                            discordCrypt.log( 'Detected new message.', 'debug' );
+
+                            /* Decrypt any messages. */
+                            this.decodeMessages();
+                        },
+                        self.configFile.encryptScanDelay
+                    );
                 }
             }
         );
@@ -2123,10 +2099,13 @@ class discordCrypt {
      * @desc Removes all hooks on modules hooked by the hookMessageCallbacks() function.
      */
     unhookMessageCallbacks() {
-        if ( !this.messageDispatcher )
+        /* Skip if no dispatcher was called. */
+        if ( !this.messageUpdateDispatcher )
             return;
 
-        for ( let prop in this.messageDispatcher._actionHandlers ) {
+        /* Iterate over every dispatcher. */
+        for ( let prop in this.messageUpdateDispatcher._actionHandlers ) {
+            /* Search for the hooked property and call it. */
             if ( prop.hasOwnProperty( '__cancel' ) )
                 prop.__cancel();
         }
