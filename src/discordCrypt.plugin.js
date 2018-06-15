@@ -1374,6 +1374,9 @@ class discordCrypt {
      * @public
      * @desc Returns the name of the plugin file expected on the disk.
      * @returns {string}
+     * @example
+     * console.log( discordCrypt.getPluginName() );
+     * // "discordCrypt.plugin.js"
      */
     static getPluginName() {
         return 'discordCrypt.plugin.js';
@@ -1384,6 +1387,9 @@ class discordCrypt {
      * @desc Check if the plugin is named correctly by attempting to open the plugin file in the BetterDiscord
      *      plugin path.
      * @returns {boolean}
+     * @example
+     * console.log( discordCrypt.validPluginName() );
+     * // False
      */
     static validPluginName() {
         return require( 'fs' )
@@ -1395,6 +1401,9 @@ class discordCrypt {
      * @public
      * @desc Returns the platform-specific path to BetterDiscord's plugin directory.
      * @returns {string} The expected path ( which may not exist ) to BetterDiscord's plugin directory.
+     * @example
+     * console.log( discordCrypt.getPluginsPath() );
+     * // "C:\Users\John Doe\AppData\Local/BetterDiscord/plugins"
      */
     static getPluginsPath() {
         const process = require( 'process' );
@@ -1530,6 +1539,9 @@ class discordCrypt {
      * @private
      * @description Returns the current message ID used by Discord.
      * @returns {string | undefined}
+     * @example
+     * console.log( discordCrypt.getChannelId() );
+     * // "414714693498014617"
      */
     static getChannelId() {
         return window.location.pathname.split( '/' ).pop();
@@ -1541,6 +1553,8 @@ class discordCrypt {
      * @param {string} primary_password The primary password.
      * @param {string} secondary_password The secondary password.
      * @returns {{primary: string, secondary: string}} Object containing the two passwords.
+     * console.log( discordCrypt.createPassword( 'Hello', 'World' ) );
+     * // Object {primary: "Hello", secondary: "World"}
      */
     static createPassword( primary_password, secondary_password ) {
         return { primary: primary_password, secondary: secondary_password };
