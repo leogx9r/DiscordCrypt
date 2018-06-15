@@ -134,22 +134,36 @@ class discordCrypt {
         this.masterPassword = null;
 
         /**
+         * @desc Message scanning interval handler's index. Used to stop any running handler.
+         *      Defined only if hooking of modules failed.
+         * @type {int}
+         */
+        this.scanInterval = undefined;
+
+        /**
+         * @desc The index of the handler used to reload the toolbar.
+         *      Defined only if hooking of modules failed.
+         * @type {int}
+         */
+        this.toolbarReloadInterval = undefined;
+
+        /**
          * @desc The index of the handler used for automatic update checking.
          * @type {int}
          */
         this.updateHandlerInterval = undefined;
 
         /**
-         * @desc The configuration file currently in use. Only valid after decryption of the configuration database.
-         * @type {Object|null}
-         */
-        this.configFile = null;
-
-        /**
          * @desc The main message update event dispatcher used by Discord. Resolved upon startup.
          * @type {Object|null}
          */
         this.messageUpdateDispatcher = null;
+
+        /**
+         * @desc The configuration file currently in use. Only valid after decryption of the configuration database.
+         * @type {Object|null}
+         */
+        this.configFile = null;
 
         /**
          * @desc Indexes of each dual-symmetric encryption mode.
@@ -1022,14 +1036,27 @@ class discordCrypt {
             }, 3600000 );
         }
 
-        /* Hook switch events. */
-        this.hookMessageCallbacks();
+        /* Hook switch events as the main event processor or fallback to timed event handlers. */
+        if ( !this.hookMessageCallbacks() ) {
 
-        /* Add the toolbar. */
-        this.loadToolbar();
+            /* Process any blocks on an interval since Discord loves to throttle messages. */
+            this.scanInterval = setInterval( () => {
+                self.decodeMessages();
+            }, self.configFile.encryptScanDelay );
 
-        /* Attach the message handler. */
-        this.attachHandler();
+            /* The toolbar fails to properly load on switches to the friends list. Create an interval to do this. */
+            this.toolbarReloadInterval = setInterval( () => {
+                self.loadToolbar();
+                self.attachHandler();
+            }, 5000 );
+        }
+        else {
+            /* Add the toolbar. */
+            this.loadToolbar();
+
+            /* Attach the message handler. */
+            this.attachHandler();
+        }
 
         /* Decode all messages immediately. */
         this.decodeMessages();
@@ -1047,8 +1074,14 @@ class discordCrypt {
         /* Remove onMessage event handler hook. */
         $( this.channelTextAreaClass ).off( "keydown.dcrypt" );
 
-        /* Unhook switch events. */
-        this.unhookMessageCallbacks();
+        /* Unhook switch events if available or fallback to clearing timed handlers. */
+        if( !this.unhookMessageCallbacks() ){
+            /* Unload the decryption interval. */
+            clearInterval( this.scanInterval );
+
+            /* Unload the toolbar reload interval. */
+            clearInterval( this.toolbarReloadInterval );
+        }
 
         /* Unload the update handler. */
         clearInterval( this.updateHandlerInterval );
@@ -1132,7 +1165,7 @@ class discordCrypt {
             defaultPassword: "秘一密比无为有秘习个界一万定为界人是的要人每的但了又你上着密定已",
             /* Defines what needs to be typed at the end of a message to encrypt it. */
             encodeMessageTrigger: "ENC",
-            /* How long after an event is fired to perform actions. */
+            /* How often to scan for encrypted messages during timed events if applicable. */
             encryptScanDelay: 1000,
             /* Default encryption mode. */
             encryptMode: 7, /* AES(Camellia) */
@@ -1268,6 +1301,9 @@ class discordCrypt {
         setTimeout( ( function () {
             btn.innerHTML = "Save & Apply";
         } ), 1000 );
+
+        /* Force decode messages. */
+        this.decodeMessages( true );
     }
 
     /**
@@ -1289,6 +1325,9 @@ class discordCrypt {
         setTimeout( ( function () {
             btn.innerHTML = "Reset Settings";
         } ), 1000 );
+
+        /* Force decode messages. */
+        this.decodeMessages( true );
     }
 
     /**
@@ -2004,10 +2043,9 @@ class discordCrypt {
     /**
      * @private
      * @desc Debug function that attempts to hook Discord's internal event handlers for message creation.
+     * @return {boolean} Returns true if handler events have been hooked.
      */
     hookMessageCallbacks() {
-        let self = this;
-
         /* Find the main switch event dispatcher if not already found. */
         if ( !this.messageUpdateDispatcher ) {
             /* Usually ID_78. */
@@ -2033,7 +2071,7 @@ class discordCrypt {
         /* Don't proceed if it failed. */
         if ( !this.messageUpdateDispatcher ) {
             discordCrypt.log( `Failed to locate the switch event dispatcher!`, 'error' );
-            return;
+            return false;
         }
 
         /* Hook the switch event dispatcher. */
@@ -2090,16 +2128,19 @@ class discordCrypt {
                 }
             }
         );
+
+        return true;
     }
 
     /**
      * @private
      * @desc Removes all hooks on modules hooked by the hookMessageCallbacks() function.
+     * @return {boolean} Returns true if all methods have been unhooked.
      */
     unhookMessageCallbacks() {
         /* Skip if no dispatcher was called. */
         if ( !this.messageUpdateDispatcher )
-            return;
+            return false;
 
         /* Iterate over every dispatcher. */
         for ( let prop in this.messageUpdateDispatcher._actionHandlers ) {
@@ -2107,6 +2148,8 @@ class discordCrypt {
             if ( prop.hasOwnProperty( '__cancel' ) )
                 prop.__cancel();
         }
+
+        return true;
     }
 
     /**
