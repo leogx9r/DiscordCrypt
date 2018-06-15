@@ -2062,7 +2062,7 @@ class discordCrypt {
                             this.decodeMessages();
 
                         },
-                        self.configFile.encryptScanDelay
+                        1
                     );
                 }
             }
@@ -2085,7 +2085,7 @@ class discordCrypt {
                             /* Decrypt any messages. */
                             this.decodeMessages();
                         },
-                        self.configFile.encryptScanDelay
+                        1
                     );
                 }
             }
