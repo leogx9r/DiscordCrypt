@@ -24,5 +24,7588 @@
  * SOFTWARE.
  ******************************************************************************/
 
-"use strict";class discordCrypt{getName(){return"DiscordCrypt"}getDescription(){return"Provides secure messaging for Discord using various cryptography standards."}getAuthor(){return"Leonardo Gates"}getVersion(){return"1.1.2"}constructor(){this.messageMarkupClass=".markup",this.searchUiClass=".search .search-bar",this.channelTextAreaClass=".content textarea",this.autoCompleteClass=".autocomplete-1vrmpx",this.encodedMessageHeader="\u28b7\u28b8\u28b9\u28ba",this.encodedKeyHeader="\u28bb\u28bc\u28bd\u28be",this.messageHeader="-----ENCRYPTED MESSAGE-----",this.masterPassword=null,this.scanInterval=void 0,this.toolbarReloadInterval=void 0,this.updateHandlerInterval=void 0,this.messageUpdateDispatcher=null,this.configFile=null,this.encryptModes=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24],this.encryptBlockModes=["CBC","CFB","OFB"],this.paddingModes=["PKC7","ANS2","ISO1","ISO9"],this.appCss="\n            a#inbrowserbtn.btn{ display: none }\n            .dc-overlay {\n                position: fixed;\n                font-family: monospace;\n                display: none;\n                width: 100%;\n                height: 100%;\n                left: 0;\n                bottom: 0;\n                right: 0;\n                top: 0;\n                z-index: 1000;\n                cursor: default;\n                transform: translateZ(0px);\n                background: rgba(0, 0, 0, 0.85) !important;\n            }\n            .dc-password-field {\n                width: 95%;\n                margin: 10px;\n                color: #ffffff;\n                height: 10px;\n                padding: 5px;\n                background-color: #000000;\n                border: 2px solid #3a71c1;\n            }\n            .dc-overlay-centerfield {\n                position: absolute;\n                top: 35%;\n                left: 50%;\n                font-size: 20px;\n                color: #ffffff;\n                padding: 16px;\n                border-radius: 20px;\n                background: rgba(0, 0, 0, 0.7);\n                transform: translate(-50%, 50%);\n            }\n            .dc-overlay-main {\n                overflow: hidden;\n                position: absolute;\n                left: 5%; right: 5%;\n                top: 5%; bottom: 5%;\n                width: 90%; height: 90%;\n                border: 3px solid #3f3f3f;\n                border-radius: 3px;\n            }\n            .dc-textarea {\n                font-family: monospace;\n                font-size: 12px;\n                color: #ffffff;\n                background: #000;\n                overflow: auto;\n                padding: 5px;\n                resize: none;\n                height: 100%;\n                width: 100%;\n                margin: 2px;           \n            }\n            .dc-update-field {\n                font-size: 14px;\n                margin: 10px;\n            }\n            ul.dc-list {\n                margin: 10px;\n                padding: 5px;\n                list-style-type: circle;\n            }\n            ul.dc-list > li { padding: 5px; }\n            ul.dc-list-red { color: #ff0000; }\n            .dc-overlay-main textarea {\n                background: transparent !important;\n                cursor: default;\n                font-size: 12px;\n                padding: 5px;\n                margin-top: 10px;\n                border-radius: 2px;\n                resize: none;\n                color: #8e8e8e;\n                width: 70%;\n                overflow-y: hidden;\n                user-select: none;\n            }\n            .dc-overlay-main select {\n                background-color: transparent;\n                border-radius: 3px;\n                font-size: 12px;\n                color: #fff;\n            }\n            .dc-overlay-main select:hover {\n                background-color: #000 !important;\n                color: #fff;\n            }\n            .dc-input-field {\n                font-family: monospace !important;\n                background: #000 !important;\n                color: #fff !important;\n                border-radius: 3px;\n                font-size: 12px;\n                width: 40%;\n                margin-bottom: 10px;\n                margin-top: -5px;\n                margin-left: 10%;\n            }\n            .dc-input-label {\n                font-family: monospace !important;\n                color: #708090;\n                min-width: 20%;\n            }\n            .dc-ruler-align {\n                display: flex;\n                margin: 10px;\n            }\n            .dc-code-block {\n                font-family: monospace !important;\n                font-size: 0.875rem;\n                line-height: 1rem;\n                \n                overflow-x: visible;\n                text-indent: 0;\n                \n                background: rgba(0,0,0,0.42)!important;\n                color: hsla(0,0%,100%,0.7)!important;\n                padding: 6px!important;\n                \n                position: relative;            \n            }\n            .dc-overlay-main .tab {\n                overflow: hidden;\n                background-color: rgba(0, 0, 0, .9) !important;\n                border-bottom: 3px solid #3f3f3f;\n            }\n            .dc-overlay-main .tab button {\n                color: #008000;\n                background-color: inherit;\n                cursor: pointer;\n                padding: 14px 14px;\n                font-size: 14px;\n                transition: 0.5s;\n                font-family: monospace;\n                border-radius: 3px;\n                margin: 3px;\n            }\n            .dc-overlay-main .tab button:hover {\n                background-color: #515c6b;\n            }\n            .dc-overlay-main .tab button.active {\n                background-color: #1f1f2b;\n            }\n            .dc-overlay-main .tab-content {\n                display: none;\n                height: 95%;\n                color: #9298a2;\n                overflow: auto;\n                padding: 10px 25px 5px;\n                animation: fadeEffect 1s;\n                background: rgba(0, 0, 0, 0.7) !important;\n            }\n            .dc-main-overlay .tab-content .dc-hint {\n                margin: 14px;\n                padding-left: 5px;\n                font-size: 12px;\n                color: #f08080;\n            }\n            .dc-svg { \n                color: #fff; opacity: .6;\n                margin: 0 4px;\n                cursor: pointer;\n                width: 24px;\n                height: 24px;\n            }\n            .dc-svg:hover {\n                color: #fff; opacity: .8;\n            }\n            .dc-button{\n                margin-right: 5px;\n                margin-left: 5px;\n                background-color: #7289da;\n                color: #fff;\n                align-items: center;\n                border-radius: 3px;\n                box-sizing: border-box;\n                display: flex;\n                font-size: 14px;\n                width: auto;\n                height: 32px;\n                min-height: 32px;\n                min-width: 60px;\n                font-weight: 500;\n                justify-content: center;\n                line-height: 16px;\n                padding: 2px 16px;\n                position: relative;\n                user-select: none;  \n            }\n            .dc-button:hover{ background-color: #677bc4 !important; }\n            .dc-button:active{ background-color: #5b6eae !important; }\n            .dc-button-inverse{\n                color: #f04747;\n                background: transparent !important;\n                border: 1px solid rgba(240,71,71,.3);\n                transition: color .17s ease,background-color .17s ease,border-color .17s ease;\n            }\n            .dc-button-inverse:hover{\n                border-color: rgba(240,71,71,.6);\n                background: transparent !important;\n            }\n            .dc-button-inverse:active{ background-color: rgba(240,71,71,.1); }\n            .stat-levels {\n                box-shadow: inset 0 0 25px rgba(0,0,0,.5);\n                margin: 5px auto 0 auto;\n                height: 20px;\n                padding: 15px;\n                border: 1px solid #494a4e;\n                border-radius: 10px;\n                background: linear-gradient(#444549 0%, #343539 100%);\n            }\n            .stat-bar {\n                background-color: #2a2b2f;\n                box-shadow: inset 0 5px 15px rgba(0,0,0,.6);\n                height: 8px;\n                overflow: hidden;\n                padding: 3px;\n                border-radius: 3px;\n                margin-bottom: 10px;\n                margin-top: 10px;\n                margin-left: 0;\n            }\n            .stat-bar-rating {\n                border-radius: 4px;\n                float: left;\n                height: 100%;\n                font-size: 12px;\n                color: #ffffff;\n                text-align: center;\n                text-indent: -9999px;\n                background-color: #3a71c1;\n                box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);\n            }\n            .stat-bar-rating { @include stat-bar(#cf3a02, #ff4500, top, bottom); }\n            ",this.toolbarHtml='\n            <button type="button" id="dc-clipboard-upload-btn" style="background-color: transparent;"\n                title="Upload Encrypted Clipboard">\n                <svg x="0px" y="0px" width="30" height="30" viewBox="0 0 18 18" class="dc-svg"> \n                        <path fill="lightgrey"\n                            d="M13 4h-3v-4h-10v14h6v2h10v-9l-3-3zM3 1h4v1h-4v-1zM15 \n                            15h-8v-10h5v3h3v7zM13 7v-2l2 2h-2z"/>\n                </svg>\n            </button>\n            <button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File">\n                <svg class="dc-svg" width="24" height="24" viewBox="0 0 1792 1792" fill="lightgrey">\n                    <path d="M768 384v-128h-128v128h128zm128 128v-128h-128v128h128zm-128 \n                        128v-128h-128v128h128zm128 128v-128h-128v128h128zm700-388q28 28 48 \n                        76t20 88v1152q0 40-28 68t-68 28h-1344q-40 0-68-28t-28-68v-1600q0-40 28-68t68-28h896q40 \n                        0 88 20t76 48zm-444-244v376h376q-10-29-22-41l-313-313q-12-12-41-22zm384 1528v-1024h-416q-40 \n                        0-68-28t-28-68v-416h-128v128h-128v-128h-512v1536h1280zm-627-721l107 349q8 27 8 52 0 83-72.5 \n                        137.5t-183.5 54.5-183.5-54.5-72.5-137.5q0-25 8-52 21-63 120-396v-128h128v128h79q22 0 39 \n                        13t23 34zm-141 465q53 0 90.5-19t37.5-45-37.5-45-90.5-19-90.5 19-37.5 45 37.5 45 90.5 19z">\n                    </path>\n                </svg>           \n            </button>\n            <button type="button" id="dc-settings-btn" style="background-color: transparent;" \n                title="DiscordCrypt Settings">\n                <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32" \n                width="20px" height="20px" xml:space="preserve">\n                    <g>\n                        <path fill="lightgrey" d="M28,10H18v2h10V10z M14,10H4v10h10V10z M32,0H0v28h15.518c1.614,2.411,\n                        4.361,3.999,7.482,4c4.971-0.002,8.998-4.029,9-9   \n                        c0-0.362-0.027-0.718-0.069-1.069L32,22V0z M10,2h12v2H10V2z M6,2h2v2H6V2z M2,2h2v2H2V2z \n                        M23,29.883   \n                        c-3.801-0.009-6.876-3.084-6.885-6.883c0.009-3.801,3.084-6.876,6.885-6.885c3.799,0.009,6.874,\n                        3.084,6.883,6.885   \n                        C29.874,26.799,26.799,29.874,23,29.883z M29.999,\n                        17.348c-0.57-0.706-1.243-1.324-1.999-1.83V14h-4.99c-0.003,0-0.007,0-0.01,0   \n                        s-0.007,0-0.01,0H18v1.516c-2.412,1.614-4,4.361-4,7.483c0,1.054,0.19,2.061,0.523,\n                        3H2V6h27.999V17.348z M30,4h-4V2h4V4z"/>\n                        <path fill="lightgrey" d="M28,\n                        24v-2.001h-1.663c-0.063-0.212-0.145-0.413-0.245-0.606l1.187-1.187l-1.416-1.415l-1.165,1.166   \n                        c-0.22-0.123-0.452-0.221-0.697-0.294V18h-2v1.662c-0.229,0.068-0.446,0.158-0.652,\n                        0.27l-1.141-1.14l-1.415,1.415l1.14,1.14   \n                        c-0.112,0.207-0.202,0.424-0.271,0.653H18v2h1.662c0.073,0.246,0.172,0.479,\n                        0.295,0.698l-1.165,1.163l1.413,1.416l1.188-1.187   \n                        c0.192,0.101,0.394,0.182,0.605,0.245V28H24v-1.665c0.229-0.068,0.445-0.158,\n                        0.651-0.27l1.212,1.212l1.414-1.416l-1.212-1.21   \n                        c0.111-0.206,0.201-0.423,0.27-0.651H28z M22.999,\n                        24.499c-0.829-0.002-1.498-0.671-1.501-1.5c0.003-0.829,0.672-1.498,1.501-1.501   \n                        c0.829,0.003,1.498,0.672,1.5,1.501C24.497,23.828,23.828,24.497,22.999,24.499z"/>\n                    </g>\n                </svg>\n            </button>\n            <button type="button" id="dc-lock-btn" style="background-color: transparent;"/>\n            <button type="button" id="dc-passwd-btn" style="background-color: transparent;" title="Password Settings">\n                <svg class="dc-svg" version="1.1" viewBox="0 0 32 32" width="20px" height="20px">\n                    <g fill="none" fill-rule="evenodd" stroke="none" stroke-width="1">\n                        <g fill="lightgrey">\n                            <path d="M13.008518,22 L11.508518,23.5 L11.508518,23.5 L14.008518,26 L11.008518,\n                            29 L8.50851798,26.5 L6.63305475,28.3754632 C5.79169774,29.2168202 \n                            4.42905085,29.2205817 3.5909158,28.3824466 L3.62607133,28.4176022 C2.78924,27.5807709 \n                            2.79106286,26.2174551 3.63305475,25.3754632 L15.7904495,13.2180685\n                             C15.2908061,12.2545997 15.008518,11.1602658 15.008518,10 C15.008518,6.13400656 18.1425245,\n                             3 22.008518,3 C25.8745114,3 \n                             29.008518,6.13400656 29.008518,10 C29.008518,13.8659934 25.8745114,17 22.008518,\n                             17 C20.8482521,17 19.7539183,16.7177118 18.7904495,16.2180685 \n                             L18.7904495,16.2180685 L16.008518,19 L18.008518,21 L15.008518,24 L13.008518,22 L13.008518,\n                             22 L13.008518,22 Z M22.008518,14 C24.2176571,14 \n                             26.008518,12.2091391 26.008518,10 C26.008518,7.79086089 24.2176571,6 22.008518,\n                             6 C19.7993789,6 18.008518,7.79086089 18.008518,10 C18.008518,12.2091391 \n                             19.7993789,14 22.008518,14 L22.008518,14 Z" id="key"/>\n                        </g>\n                    </g>\n                </svg>\n            </button>\n            <button type="button" id="dc-exchange-btn" style="background-color: transparent;" title="Key Exchange Menu">\n                <svg class="dc-svg" version="1.1" viewBox="0 0 78 78" width="20px" height="20px">\n                    <path d="M72,4.5H6c-3.299,0-6,2.699-6,6V55.5c0,3.301,2.701,6,6,6h66c3.301,0,6-2.699,6-6V10.5  \n                    C78,7.2,75.301,4.5,72,4.5z M72,50.5H6V10.5h66V50.5z \n                    M52.5,67.5h-27c-1.66,0-3,1.341-3,3v3h33v-3C55.5,68.84,54.16,67.5,52.5,67.5z   \n                    M26.991,36.5H36v-12h-9.009v-6.729L15.264,30.5l11.728,12.728V36.5z \n                    M50.836,43.228L62.563,30.5L50.836,17.771V24.5h-9.009v12  h9.009V43.228z" style="fill:#d3d3d3;"/>\n                </svg>\n            </button>\n            <button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;" \n            title="Generate & Send New Public Key">\n                <svg class="dc-svg iconActive-AKd_jq icon-1R19_H iconMargin-2YXk4F" x="0px" y="0px" viewBox="0 0 58 58">\n                    <path style="fill:#d3d3d3;" \n                    d="M27.767,26.73c-2.428-2.291-3.766-5.392-3.766-8.729c0-6.617,5.383-12,12-12s12,5.383,12,12  \n                    c0,3.288-1.372,6.469-3.765,8.728l-1.373-1.455c2.023-1.909,\n                    3.138-4.492,3.138-7.272c0-5.514-4.486-10-10-10s-10,4.486-10,10  \n                    c0,2.781,1.114,5.365,3.139,7.274L27.767,26.73z"/>\n                    <path style="fill:#d3d3d3;" d="M56.428,38.815c-0.937-0.695-2.188-0.896-3.435-0.55l-15.29,4.227  \n                    C37.891,42.028,38,41.522,38,\n                    40.991c0-2.2-1.794-3.991-3.999-3.991h-9.377c-0.667-1-2.363-4-4.623-4H16v-0.999  \n                    C16,30.347,14.654,29,13,29H9c-1.654,0-3,1.347-3,3v17C6,50.655,7.346,52,9,52h4c1.654,0,\n                    3-1.345,3-2.999v-0.753l12.14,8.201  \n                    c1.524,1.031,3.297,1.55,5.075,1.55c1.641,0,3.286-0.441,4.742-1.33l18.172-11.101C57.283,\n                    44.864,58,43.587,58,42.233v-0.312  \n                    C58,40.688,57.427,39.556,56.428,38.815z M14,49C14,49.553,13.552,\n                    50,13,50h-1v-4h-2v4H9c-0.552,0-1-0.447-1-0.999v-17  \n                    C8,31.449,8.448,31,9,31h4c0.552,0,1,0.449,1,1V49z M56,42.233c0,0.66-0.35,1.284-0.913,\n                    1.628L36.915,54.962  \n                    c-2.367,1.443-5.37,1.376-7.655-0.17L16,45.833V35h4c1.06,0,2.469,2.034,3.088,3.409L23.354,39h10.646  \n                    C35.104,39,36,39.892,36,40.988C36,42.098,35.104,43,34,43H29h-5v2h5h5h2l17.525-4.807c0.637-0.18,\n                    1.278-0.094,1.71,0.228  \n                    C55.722,40.781,56,41.328,56,41.922V42.233z"/>\n                    <path style="fill:#d3d3d3;" d="M33,25.394v6.607C33,33.655,\n                    34.347,35,36,35H38h1h4v-2h-4v-2h2v-2h-2v-3.577  \n                    c3.02-1.186,5-4.079,5-7.422c0-2.398-1.063-4.649-2.915-6.177c-1.85-1.524-4.283-2.134-6.683-1.668  \n                    c-3.155,0.614-5.671,3.153-6.261,6.318C27.39,20.523,29.933,24.041,33,\n                    25.394z M30.108,16.84c0.44-2.364,2.319-4.262,4.677-4.721  \n                    c1.802-0.356,3.639,0.104,5.028,1.249S42,\n                    16.202,42,18c0,2.702-1.719,5.011-4.276,5.745L37,23.954V33h-0.999  \n                    C35.449,33,35,32.553,35,32v-8.02l-0.689-0.225C31.822,22.943,29.509,20.067,30.108,16.84z"/>\n                    <path d="M36,22c2.206,0,4-1.794,4-4s-1.794-4-4-4s-4,1.794-4,4S33.795,22,36,22z   \n                    M36,16c1.103,0,2,0.897,2,2s-0.897,2-2,2s-2-0.897-2-2S34.898,16,36,16z"/>\n                    <circle style="fill:#d3d3d3;" cx="36" cy="18" r="3"/>\n                </svg>\n            </button>\n            ',this.masterPasswordHtml='\n            <div id="dc-master-overlay" class="dc-overlay">\n                <div id="dc-overlay-centerfield" class="dc-overlay-centerfield" style="top: 30%">\n                    <h2 style="color:#ff0000;" id="dc-header-master-msg"></h2>\n                    <br/><br/>\n                    \n                    <span id="dc-prompt-master-msg"></span><br/>\n                    <input type="password" class="dc-password-field" id="dc-db-password"/>\n                    <br/>\n                    \n                    <div class="stat stat-bar">\n                        <span id = "dc-master-status" class="stat-bar-rating" style="width: 0;"/>\n                    </div>\n\n                    <div class="dc-ruler-align">\n                        <button class="dc-button" style="width:100%;" id="dc-unlock-database-btn"/>\n                    </div>\n                    \n                    <div class="dc-ruler-align">\n                        <button class="dc-button dc-button-inverse" \n                            style="width:100%;" id="dc-cancel-btn">Cancel</button>\n                    </div>\n                </div>\n            </div>\n            ',this.settingsMenuHtml='\n            <div id="dc-overlay" class="dc-overlay">\n                <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">\n                    <div class="dc-ruler-align">\n                        <input type="text" class="dc-input-field" id="dc-file-path" \n                            style="width: 100%;padding: 2px;margin-left: 4px;" readonly/>\n                        <button class="dc-button dc-button-inverse" type="button" id="dc-select-file-path-btn" \n                            style="top: -8px;"> . . .</button>\n                    </div>\n                    \n                    <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea" \n                        placeholder="Enter any addition text to send with your message ..." maxlength="1100"/>\n                        \n                    <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">\n                        <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox">\n                            <span style="margin-top: 5px;">Send Deletion Link</span>\n                    </div>\n                    <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">\n                        <input id="dc-file-name-random-checkbox" class="ui-switch-checkbox" type="checkbox" checked>\n                        <span style="margin-top: 5px;">Randomize File Name</span>\n                    </div>\n                    \n                    <div class="stat stat-bar">\n                        <span id = "dc-file-upload-status" class="stat-bar-rating" style="width: 0;"/>\n                    </div>\n\n                    <div class="dc-ruler-align">\n                        <button class="dc-button" style="width:100%;" id="dc-file-upload-btn">Upload</button>\n                    </div>\n                    \n                    <div class="dc-ruler-align">\n                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">\n                        Close</button>\n                    </div>\n                </div>\n                <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">\n                    <span>Primary Password:</span>\n                    <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>\n                    \n                    <span>Secondary Password:</span>\n                    <input type="password" class="dc-password-field" id="dc-password-secondary" placeholder="..."/><br/>\n                    \n                    <div class="dc-ruler-align">\n                        <button class="dc-button" id="dc-save-pwd">Update Passwords</button>\n                        <button class="dc-button dc-button-inverse" id="dc-reset-pwd">Reset Passwords</button>\n                        <button class="dc-button dc-button-inverse" id="dc-cancel-btn">Cancel</button>\n                    </div>\n                    \n                    <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">\n                    Copy Current Passwords</button>\n                </div>\n                <div id="dc-update-overlay" class="dc-overlay-centerfield" \n                style="top: 5%;border: 1px solid;display: none">\n                    <span>DiscordCrypt: Update Available</span>\n                    <div class="dc-ruler-align">\n                        <strong class="dc-hint dc-update-field" id="dc-new-version"/>\n                    </div>\n                    <div class="dc-ruler-align">\n                        <strong class="dc-hint dc-update-field" id="dc-old-version"/>\n                    </div>\n                    <div class="dc-ruler-align">\n                        <strong class="dc-hint dc-update-field">Changelog:</strong></div>\n                    <div class="dc-ruler-align">\n                        <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly/>\n                    </div>\n                    <br>\n                    <div class="dc-ruler-align">\n                        <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">\n                        Restart Discord Now</button>\n                        <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">\n                        Restart Discord Later</button>\n                    </div>\n                </div>\n                <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">\n                    <div class="tab" id="dc-settings-tab">\n                        <button class=\'dc-tab-link\' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>\n                    </div>\n                    <div class="tab-content" id="dc-settings" style="display: block;">\n                        <p style="text-align: center;">\n                            <b>DiscordCrypt Settings</b>\n                        </p>\n                        <br/><br/>\n                        \n                        <div class="dc-ruler-align">\n                            <div class="dc-input-label">Primary Cipher:</div>\n                            <select class="dc-input-field" id="dc-primary-cipher">\n                                <option value="bf" selected>Blowfish ( 512-Bit )</option>\n                                <option value="aes">AES ( 256-Bit )</option>\n                                <option value="camel">Camellia ( 256-Bit )</option>\n                                <option value="tdes">TripleDES ( 192-Bit )</option>\n                                <option value="idea">IDEA ( 128-Bit )</option>\n                            </select>\n                        </div>\n                        \n                        <div class="dc-ruler-align">\n                            <div class="dc-input-label">Secondary Cipher:</div>\n                            <select class="dc-input-field" id="dc-secondary-cipher">\n                                <option value="bf">Blowfish ( 512-Bit )</option>\n                                <option value="aes">AES ( 256-Bit )</option>\n                                <option value="camel">Camellia ( 256-Bit )</option>\n                                <option value="idea">IDEA ( 256-Bit )</option>\n                                <option value="tdes">TripleDES ( 192-Bit )</option>\n                            </select>\n                        </div>\n                        \n                        <div class="dc-ruler-align">\n                            <div class="dc-input-label">Padding Mode:</div>\n                            <select class="dc-input-field" id="dc-settings-padding-mode">\n                                <option value="pkc7">PKCS #7</option>\n                                <option value="ans2">ANSI X9.23</option>\n                                <option value="iso1">ISO 10126</option>\n                                <option value="iso9">ISO 97971</option>\n                            </select>\n                        </div>\n                        \n                        <div class="dc-ruler-align">\n                            <div class="dc-input-label">Cipher Operation Mode:</div>\n                            <select class="dc-input-field" id="dc-settings-cipher-mode">\n                                <option value="cbc">Cipher Block Chaining</option>\n                                <option value="cfb">Cipher Feedback Mode</option>\n                                <option value="ofb">Output Feedback Mode</option>\n                            </select>\n                        </div>\n                        \n                        <div class="dc-ruler-align">\n                            <div class="dc-input-label">Default Encryption Password:</div>\n                            <input type="text" class="dc-input-field" id="dc-settings-default-pwd"/>\n                        </div>\n                        \n                        <div class="dc-ruler-align">\n                            <div class="dc-input-label">Encryption Scanning Frequency:</div>\n                            <input type="text" class="dc-input-field" id="dc-settings-scan-delay"/>\n                        </div>\n                        \n                        <div class="dc-ruler-align">\n                            <div class="dc-input-label">Message Trigger:</div>\n                            <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger"/>\n                        </div>\n                        \n                        <div style="font-size: 9px;">\n                            <div style="display: flex;">\n                                <div style="width: 30%;"></div>\n                                <p class="dc-hint">\n                                The suffix at the end of a typed message to indicate whether to encrypt the text.</p>\n                            </div>\n                            <div style="display: flex;">\n                                <div style="width: 30%;"></div>\n                                <p class="dc-hint">Example: <u>This message will be encrypted.|ENC</u></p>\n                            </div>\n                        </div>\n                        \n                        <div class="dc-ruler-align">\n                            <div class="dc-input-label">New Master Database Password:</div>\n                            <input type="text" class="dc-input-field" id="dc-master-password"/>\n                        </div>\n                        \n                        <div class="dc-ruler-align">\n                            <button id="dc-settings-save-btn" class="dc-button">Save & Apply</button>\n                            <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">\n                            Reset Settings</button>\n                        </div>\n                    </div>\n                </div>\n                <div id="dc-overlay-exchange" class="dc-overlay-main" style="display: none;">\n                    <div class="tab" id="dc-exchange-tab">\n                        <button class=\'dc-tab-link\' id="dc-tab-info-btn">Info</button>\n                        <button class=\'dc-tab-link\' id="dc-tab-keygen-btn">Key Generation</button>\n                        <button class=\'dc-tab-link\' id="dc-tab-handshake-btn">Secret Computation</button>\n                        <button class=\'dc-tab-link\' id="dc-exit-exchange-btn" style="float:right;">[ X ]</button>\n                    </div>\n                    <div class="tab-content" id="dc-about-tab" style="display: block;">\n                        <p style="text-align: center;">\n                            <b>Key Exchanger</b>\n                        </p>\n                        <br/>\n                        \n                        <strong>What is this used for?</strong>\n                        <ul class="dc-list">\n                            <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt \n                            requires a secure channel to exchange these keys.</li>\n                            <li>Using this generator, you may create new keys using standard algorithms such as \n                            DH or ECDH for manual handshaking.</li>\n                            <li>Follow the steps below and you can generate a password between channels or users \n                            while being able to publicly post the messages.</li>\n                            <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with \n                            the Scrypt KDF function to derive two keys.</li>\n                        </ul>\n                        <br/>\n                        \n                        <strong>How do I use this?</strong>\n                        <ul class="dc-list">\n                            <li>Generate a key pair using the specified algorithm and key size on the \n                            "Key Generation" tab.</li>\n                            <li>Give your partner your public key by clicking the "Send Public Key" button.</li>\n                            <li>Ask your partner to give you their public key using the same step above.</li>\n                            <li>Copy your partner\'s public key and paste it in the "Secret Computation" tab and \n                            select "Compute Secret Keys".</li>\n                            <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span> \n                            the primary and secondary keys to be generated.</li>\n                            <li>A status bar is provided to easily tell you when both passwords \n                            have been generated.</li>\n                            <li>Click the "Apply Generated Passwords" button to apply both passwords to \n                            the current user or channel.</li>\n                        </ul>\n                        \n                        <strong>Algorithms Supported:</strong>\n                        <ul class="dc-list">\n                            <li>\n                                <a title="Diffie\u2013Hellman key exchange" \n                                href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"\n                                 target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>\n                            </li>\n                            <li>\n                                <a title="Elliptic curve Diffie\u2013Hellman" \n                                href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman"\n                                 target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>\n                            </li>\n                        </ul>\n                        \n                        <span style="text-decoration: underline; color: #ff0000;">\n                            <strong>DO NOT:</strong>\n                        </span>\n                        <ul class="dc-list dc-list-red">\n                            <li>\n                                <strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong>\n                            </li>\n                            <li>\n                                <strong>Alter your public key or have your partner alter theirs in any way.</strong>\n                            </li>\n                            <li>\n                                <strong>Insert a random public key.</strong>\n                            </li>\n                        </ul>\n                    </div>\n                    <div class="tab-content" id="dc-keygen-tab" style="display: block;">\n                        <p style="text-align: center;">\n                            <b style="font-size: large;">Secure Key Generation</b>\n                        </p>\n                        <br/>\n                        \n                        <strong>Exchange Algorithm:</strong>\n                        <select id="dc-keygen-method">\n                            <option value="dh" selected>Diffie-Hellman</option>\n                            <option value="ecdh">Elliptic-Curve Diffie-Hellman</option>\n                        </select>\n                        <br/><br/>\n                \n                        <strong>Key Length ( Bits ):</strong>\n                        <select id="dc-keygen-algorithm">\n                            <option value="768">768</option>\n                            <option value="1024">1024</option>\n                            <option value="1536">1536</option>\n                            <option value="2048">2048</option>\n                            <option value="3072">3072</option>\n                            <option value="4096">4096</option>\n                            <option value="6144">6144</option>\n                            <option value="8192" selected>8192</option>\n                        </select>\n                        <br/><br/>\n                \n                        <div class="dc-ruler-align">\n                            <button id="dc-keygen-gen-btn" class="dc-button">Generate</button>\n                            <button id="dc-keygen-clear-btn" class="dc-button dc-button-inverse">Clear</button>\n                        </div>\n                        <br/><br/><br/>\n                \n                        <strong>Private Key: ( \n                        <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span>\n                         )</strong><br/>\n                        <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"\n                         unselectable="on" disabled readonly/>\n                        <br/><br/>\n                \n                        <strong>Public Key:</strong><br/>\n                        <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192" \n                        unselectable="on" disabled readonly/>\n                        <br/><br/>\n                \n                        <div class="dc-ruler-align">\n                            <button id="dc-keygen-send-pub-btn" class="dc-button">Send Public Key</button>\n                        </div>\n                        <br/>\n                        \n                        <ul class="dc-list dc-list-red">\n                            <li>Never rely on copying these keys. Use the "Send Public Key" button \n                            to send your key.</li>\n                            <li>Public keys are automatically encoded with a random salts.</li>\n                            <li>Posting these keys directly won\'t work since they aren\'t encoded \n                            in the format required.</li>\n                        </ul>\n                    </div>\n                    <div class="tab-content" id="dc-handshake-tab">\n                        <p style="text-align: center;">\n                            <b style="font-size: large;">Key Derivation</b>\n                        </p>\n                        <br/>\n                        \n                        <p>\n                            <span style="text-decoration: underline; color: #ff0000;">\n                                <strong>NOTE:</strong>\n                            </span>\n                        </p>\n                        <ul class="dc-list dc-list-red">\n                            <li>Copy your partner\'s private key EXACTLY as it was posted.</li>\n                            <li>Your last generated private key from the "Key Generation" tab \n                            will be used to compute these keys.</li>\n                        </ul>\n                        <br/>\n                        \n                        <strong>Partner\'s Public Key:</strong><br/>\n                        <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384"/>\n                        <br/><br/>\n                        \n                        <div class="dc-ruler-align">\n                            <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">\n                            Paste From Clipboard</button>\n                            <button id="dc-handshake-compute-btn" class="dc-button">Compute Secret Keys</button>\n                        </div>\n                        \n                        <ul class="dc-list dc-list-red">\n                            <li id="dc-handshake-algorithm">...</li>\n                            <li id="dc-handshake-salts">...</li>\n                            <li id="dc-handshake-secret">...</li>\n                        </ul>\n                        <br/>\n                        \n                        <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>\n                        <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"\n                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>\n                        <br/><br/>\n                        \n                        <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>\n                        <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"\n                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>\n                        <br/><br/>\n                        \n                        <div class="stat stat-bar" style="width:70%;">\n                            <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>\n                        </div><br/>\n                        \n                        <div class="dc-ruler-align">\n                            <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">\n                            Copy Keys & Nuke</button>\n                            <button id="dc-handshake-apply-keys-btn" class="dc-button">\n                            Apply Generated Passwords</button>\n                        </div>\n                    </div>\n                </div>\n            </div>\n            ',this.unlockIcon="PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xIDAgMi0uOSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgNyA2aDEuOWMwLTEuNzEgMS4zOS0zLjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAydjEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6bTAgMTJINlYxMGgxMnYxMHoiPjwvcGF0aD48L3N2Zz4=",this.lockIcon="PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI0djI0SDBWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJlZj0iI2EiLz48L2NsaXBQYXRoPjxwYXRoIGNsaXAtcGF0aD0idXJsKCNiKSIgZD0iTTEyIDE3YzEuMSAwIDItLjkgMi0ycy0uOS0yLTItMi0yIC45LTIgMiAuOSAyIDIgMnptNi05aC0xVjZjMC0yLjc2LTIuMjQtNS01LTVTNyAzLjI0IDcgNnYySDZjLTEuMSAwLTIgLjktMiAydjEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6TTguOSA2YzAtMS43MSAxLjM5LTMuMSAzLjEtMy4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlWNnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=",this.libraries={"currify.js":'!function(n){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=n();else if("function"==typeof define&&define.amd)define([],n);else{var r;(r="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this).currify=n()}}(function(){var n,r,e;return function n(r,e,t){function o(f,u){if(!e[f]){if(!r[f]){var c="function"==typeof require&&require;if(!u&&c)return c(f,!0);if(i)return i(f,!0);var p=new Error("Cannot find module \'"+f+"\'");throw p.code="MODULE_NOT_FOUND",p}var l=e[f]={exports:{}};r[f][0].call(l.exports,function(n){var e=r[f][1][n];return o(e||n)},l,l.exports,n,r,e,t)}return e[f].exports}for(var i="function"==typeof require&&require,f=0;f<t.length;f++)o(t[f]);return o}({currify:[function(n,r,e){"use strict";var t=function n(r){return[function(n){return r.apply(void 0,arguments)},function(n,e){return r.apply(void 0,arguments)},function(n,e,t){return r.apply(void 0,arguments)},function(n,e,t,o){return r.apply(void 0,arguments)},function(n,e,t,o,i){return r.apply(void 0,arguments)}]};function o(n){if("function"!=typeof n)throw Error("fn should be function!")}r.exports=function n(r){for(var e=arguments.length,i=Array(e>1?e-1:0),f=1;f<e;f++)i[f-1]=arguments[f];if(o(r),i.length>=r.length)return r.apply(void 0,i);var u=function e(){return n.apply(void 0,[r].concat(i,Array.prototype.slice.call(arguments)))},c=r.length-i.length-1,p;return t(u)[c]||u}},{}]},{},["currify"])("currify")});\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIjAiXSwibmFtZXMiOlsiZiIsImV4cG9ydHMiLCJtb2R1bGUiLCJkZWZpbmUiLCJhbWQiLCJnIiwid2luZG93IiwiZ2xvYmFsIiwic2VsZiIsInRoaXMiLCJjdXJyaWZ5IiwiZSIsInQiLCJuIiwiciIsInMiLCJvIiwidSIsImEiLCJyZXF1aXJlIiwiaSIsIkVycm9yIiwiY29kZSIsImwiLCJjYWxsIiwibGVuZ3RoIiwiZm4iLCJhcHBseSIsInVuZGVmaW5lZCIsImFyZ3VtZW50cyIsImIiLCJjIiwiZCIsImNoZWNrIiwiX2xlbiIsImFyZ3MiLCJBcnJheSIsIl9rZXkiLCJhZ2FpbiIsImNvbmNhdCIsInByb3RvdHlwZSIsInNsaWNlIiwiY291bnQiLCJmdW5jIl0sIm1hcHBpbmdzIjoiQ0FBQSxTQUFVQSxHQUFHLEdBQW9CLGlCQUFWQyxTQUFvQyxvQkFBVEMsT0FBc0JBLE9BQU9ELFFBQVFELFNBQVMsR0FBbUIsbUJBQVRHLFFBQXFCQSxPQUFPQyxJQUFLRCxVQUFVSCxPQUFPLENBQUMsSUFBSUssR0FBa0NBLEVBQWIsb0JBQVRDLE9BQXdCQSxPQUErQixvQkFBVEMsT0FBd0JBLE9BQTZCLG9CQUFQQyxLQUFzQkEsS0FBWUMsTUFBT0MsUUFBVVYsS0FBNVQsQ0FBbVUsV0FBVyxJQUFJRyxFQUFPRCxFQUFPRCxFQUFRLE9BQU8sU0FBVVUsRUFBRUMsRUFBRUMsRUFBRUMsR0FBRyxTQUFTQyxFQUFFQyxFQUFFQyxHQUFHLElBQUlKLEVBQUVHLEdBQUcsQ0FBQyxJQUFJSixFQUFFSSxHQUFHLENBQUMsSUFBSUUsRUFBa0IsbUJBQVRDLFNBQXFCQSxRQUFRLElBQUlGLEdBQUdDLEVBQUUsT0FBT0EsRUFBRUYsR0FBRSxHQUFJLEdBQUdJLEVBQUUsT0FBT0EsRUFBRUosR0FBRSxHQUFJLElBQUloQixFQUFFLElBQUlxQixNQUFNLHVCQUF1QkwsRUFBRSxLQUFLLE1BQU1oQixFQUFFc0IsS0FBSyxtQkFBbUJ0QixFQUFFLElBQUl1QixFQUFFVixFQUFFRyxJQUFJZixZQUFZVyxFQUFFSSxHQUFHLEdBQUdRLEtBQUtELEVBQUV0QixRQUFRLFNBQVNVLEdBQUcsSUFBSUUsRUFBRUQsRUFBRUksR0FBRyxHQUFHTCxHQUFHLE9BQU9JLEVBQUVGLEdBQUlGLElBQUlZLEVBQUVBLEVBQUV0QixRQUFRVSxFQUFFQyxFQUFFQyxFQUFFQyxHQUFHLE9BQU9ELEVBQUVHLEdBQUdmLFFBQWtELElBQTFDLElBQUltQixFQUFrQixtQkFBVEQsU0FBcUJBLFFBQWdCSCxFQUFFLEVBQUVBLEVBQUVGLEVBQUVXLE9BQU9ULElBQUlELEVBQUVELEVBQUVFLElBQUksT0FBT0QsRUFBdmIsRUFBNGJMLFNBQVcsU0FBU1MsRUFBUWpCLEVBQU9ELEdBQ3QwQixhQUVBLElBQUlELEVBQUksU0FBU0EsRUFBRTBCLEdBQ2YsT0FFSSxTQUFVUixHQUNOLE9BQU9RLEVBQUdDLFdBQU1DLEVBQVdDLFlBQzVCLFNBQVVYLEVBQUdZLEdBQ1osT0FBT0osRUFBR0MsV0FBTUMsRUFBV0MsWUFDNUIsU0FBVVgsRUFBR1ksRUFBR0MsR0FDZixPQUFPTCxFQUFHQyxXQUFNQyxFQUFXQyxZQUM1QixTQUFVWCxFQUFHWSxFQUFHQyxFQUFHQyxHQUNsQixPQUFPTixFQUFHQyxXQUFNQyxFQUFXQyxZQUM1QixTQUFVWCxFQUFHWSxFQUFHQyxFQUFHQyxFQUFHckIsR0FDckIsT0FBT2UsRUFBR0MsV0FBTUMsRUFBV0MsY0F1QnZDLFNBQVNJLEVBQU1QLEdBQ1gsR0FBa0IsbUJBQVBBLEVBQW1CLE1BQU1MLE1BQU0sMEJBcEI5Q25CLEVBQU9ELFFBQVUsU0FBU1MsRUFBUWdCLEdBQzlCLElBQUssSUFBSVEsRUFBT0wsVUFBVUosT0FBUVUsRUFBT0MsTUFBTUYsRUFBTyxFQUFJQSxFQUFPLEVBQUksR0FBSUcsRUFBTyxFQUFHQSxFQUFPSCxFQUFNRyxJQUM1RkYsRUFBS0UsRUFBTyxHQUFLUixVQUFVUSxHQUsvQixHQUZBSixFQUFNUCxHQUVGUyxFQUFLVixRQUFVQyxFQUFHRCxPQUFRLE9BQU9DLEVBQUdDLFdBQU1DLEVBQVdPLEdBRXpELElBQUlHLEVBQVEsU0FBU0EsSUFDakIsT0FBTzVCLEVBQVFpQixXQUFNQyxHQUFZRixHQUFJYSxPQUFPSixFQUFNQyxNQUFNSSxVQUFVQyxNQUFNakIsS0FBS0ssY0FHN0VhLEVBQVFoQixFQUFHRCxPQUFTVSxFQUFLVixPQUFTLEVBQ2xDa0IsRUFFSixPQUZXM0MsRUFBRXNDLEdBQU9JLElBRUxKLGFBTVosV0F6Q2dXLENBeUNwViJ9',"sjcl.js":'"use strict";function r(t){throw t}var s=void 0,v=!1;function H(){return function(){}}var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(t){this.toString=function(){return"CORRUPT: "+this.message},this.message=t},invalid:function(t){this.toString=function(){return"INVALID: "+this.message},this.message=t},bug:function(t){this.toString=function(){return"BUG: "+this.message},this.message=t},notReady:function(t){this.toString=function(){return"NOT READY: "+this.message},this.message=t}}},a;function aa(t,e,n){4!==e.length&&r(new sjcl.exception.invalid("invalid aes block size"));var i=t.b[n],s=e[0]^i[0],c=e[n?3:1]^i[1],o=e[2]^i[2];e=e[n?1:3]^i[3];var a,h,l,u=i.length/4-2,f,d=4,p=[0,0,0,0];t=(a=t.l[n])[0];var y=a[1],g=a[2],m=a[3],b=a[4];for(f=0;f<u;f++)a=t[s>>>24]^y[c>>16&255]^g[o>>8&255]^m[255&e]^i[d],h=t[c>>>24]^y[o>>16&255]^g[e>>8&255]^m[255&s]^i[d+1],l=t[o>>>24]^y[e>>16&255]^g[s>>8&255]^m[255&c]^i[d+2],e=t[e>>>24]^y[s>>16&255]^g[c>>8&255]^m[255&o]^i[d+3],d+=4,s=a,c=h,o=l;for(f=0;4>f;f++)p[n?3&-f:f]=b[s>>>24]<<24^b[c>>16&255]<<16^b[o>>8&255]<<8^b[255&e]^i[d++],a=s,s=c,c=o,o=e,e=a;return p}function da(t,e){var r,n=sjcl.random.A[t],i=[];for(r in n)n.hasOwnProperty(r)&&i.push(n[r]);for(r=0;r<i.length;r++)i[r](e)}function Q(t){"undefined"!=typeof window&&window.performance&&"function"==typeof window.performance.now?sjcl.random.addEntropy(window.performance.now(),t,"loadtime"):sjcl.random.addEntropy((new Date).valueOf(),t,"loadtime")}function ba(t){t.b=ca(t).concat(ca(t)),t.B=new sjcl.cipher.aes(t.b)}function ca(t){for(var e=0;4>e&&(t.h[e]=t.h[e]+1|0,!t.h[e]);e++);return t.B.encrypt(t.h)}function P(t,e){return function(){e.apply(t,arguments)}}"undefined"!=typeof module&&module.exports&&(module.exports=sjcl),"function"==typeof define&&define([],function(){return sjcl}),sjcl.cipher.aes=function(t){this.l[0][0][0]||this.q();var e,n,i,s,c=this.l[0][4],o=this.l[1],a=1;for(4!==(e=t.length)&&6!==e&&8!==e&&r(new sjcl.exception.invalid("invalid aes key size")),this.b=[i=t.slice(0),s=[]],t=e;t<4*e+28;t++)n=i[t-1],(0==t%e||8===e&&4==t%e)&&(n=c[n>>>24]<<24^c[n>>16&255]<<16^c[n>>8&255]<<8^c[255&n],0==t%e&&(n=n<<8^n>>>24^a<<24,a=a<<1^283*(a>>7))),i[t]=i[t-e]^n;for(e=0;t;e++,t--)n=i[3&e?t:t-4],s[e]=4>=t||4>e?n:o[0][c[n>>>24]]^o[1][c[n>>16&255]]^o[2][c[n>>8&255]]^o[3][c[255&n]]},sjcl.cipher.aes.prototype={encrypt:function(t){return aa(this,t,0)},decrypt:function(t){return aa(this,t,1)},l:[[[],[],[],[],[]],[[],[],[],[],[]]],q:function(){var t=this.l[0],e=this.l[1],r=t[4],n=e[4],i,s,c,o=[],a=[],h,l,u,f;for(i=0;256>i;i++)a[(o[i]=i<<1^283*(i>>7))^i]=i;for(s=c=0;!r[s];s^=h||1,c=a[c]||1)for(u=(u=c^c<<1^c<<2^c<<3^c<<4)>>8^255&u^99,r[s]=u,n[u]=s,f=16843009*(l=o[i=o[h=o[s]]])^65537*i^257*h^16843008*s,l=257*o[u]^16843008*u,i=0;4>i;i++)t[i][s]=l=l<<24^l>>>8,e[i][u]=f=f<<24^f>>>8;for(i=0;5>i;i++)t[i]=t[i].slice(0),e[i]=e[i].slice(0)}},sjcl.bitArray={bitSlice:function(t,e,r){return t=sjcl.bitArray.M(t.slice(e/32),32-(31&e)).slice(1),r===s?t:sjcl.bitArray.clamp(t,r-e)},extract:function(t,e,r){var n=Math.floor(-e-r&31);return(-32&(e+r-1^e)?t[e/32|0]<<32-n^t[e/32+1|0]>>>n:t[e/32|0]>>>n)&(1<<r)-1},concat:function(t,e){if(0===t.length||0===e.length)return t.concat(e);var r=t[t.length-1],n=sjcl.bitArray.getPartial(r);return 32===n?t.concat(e):sjcl.bitArray.M(e,n,0|r,t.slice(0,t.length-1))},bitLength:function(t){var e=t.length;return 0===e?0:32*(e-1)+sjcl.bitArray.getPartial(t[e-1])},clamp:function(t,e){if(32*t.length<e)return t;var r=(t=t.slice(0,Math.ceil(e/32))).length;return e&=31,0<r&&e&&(t[r-1]=sjcl.bitArray.partial(e,t[r-1]&2147483648>>e-1,1)),t},partial:function(t,e,r){return 32===t?e:(r?0|e:e<<32-t)+1099511627776*t},getPartial:function(t){return Math.round(t/1099511627776)||32},equal:function(t,e){if(sjcl.bitArray.bitLength(t)!==sjcl.bitArray.bitLength(e))return v;var r=0,n;for(n=0;n<t.length;n++)r|=t[n]^e[n];return 0===r},M:function(t,e,r,n){var i;for(i=0,n===s&&(n=[]);32<=e;e-=32)n.push(r),r=0;if(0===e)return n.concat(t);for(i=0;i<t.length;i++)n.push(r|t[i]>>>e),r=t[i]<<32-e;return i=t.length?t[t.length-1]:0,t=sjcl.bitArray.getPartial(i),n.push(sjcl.bitArray.partial(e+t&31,32<e+t?r:n.pop(),1)),n},u:function(t,e){return[t[0]^e[0],t[1]^e[1],t[2]^e[2],t[3]^e[3]]},byteswapM:function(t){var e,r;for(e=0;e<t.length;++e)r=t[e],t[e]=r>>>24|r>>>8&65280|(65280&r)<<8|r<<24;return t}},sjcl.codec.utf8String={fromBits:function(t){var e="",r=sjcl.bitArray.bitLength(t),n,i;for(n=0;n<r/8;n++)0==(3&n)&&(i=t[n/4]),e+=String.fromCharCode(i>>>24),i<<=8;return decodeURIComponent(escape(e))},toBits:function(t){t=unescape(encodeURIComponent(t));var e=[],r,n=0;for(r=0;r<t.length;r++)n=n<<8|t.charCodeAt(r),3==(3&r)&&(e.push(n),n=0);return 3&r&&e.push(sjcl.bitArray.partial(8*(3&r),n)),e}},sjcl.codec.base64={I:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",fromBits:function(t,e,r){var n="",i=0,s=sjcl.codec.base64.I,c=0,o=sjcl.bitArray.bitLength(t);for(r&&(s=s.substr(0,62)+"-_"),r=0;6*n.length<o;)n+=s.charAt((c^t[r]>>>i)>>>26),6>i?(c=t[r]<<6-i,i+=26,r++):(c<<=6,i-=6);for(;3&n.length&&!e;)n+="=";return n},toBits:function(t,e){t=t.replace(/\\s|=/g,"");var n=[],i,s=0,c=sjcl.codec.base64.I,o=0,a;for(e&&(c=c.substr(0,62)+"-_"),i=0;i<t.length;i++)0>(a=c.indexOf(t.charAt(i)))&&r(new sjcl.exception.invalid("this isn\'t base64!")),26<s?(s-=26,n.push(o^a>>>s),o=a<<32-s):o^=a<<32-(s+=6);return 56&s&&n.push(sjcl.bitArray.partial(56&s,o,1)),n}},sjcl.codec.base64url={fromBits:function(t){return sjcl.codec.base64.fromBits(t,1,1)},toBits:function(t){return sjcl.codec.base64.toBits(t,1)}},sjcl.codec.bytes={fromBits:function(t){var e=[],r=sjcl.bitArray.bitLength(t),n,i;for(n=0;n<r/8;n++)0==(3&n)&&(i=t[n/4]),e.push(i>>>24),i<<=8;return e},toBits:function(t){var e=[],r,n=0;for(r=0;r<t.length;r++)n=n<<8|t[r],3==(3&r)&&(e.push(n),n=0);return 3&r&&e.push(sjcl.bitArray.partial(8*(3&r),n)),e}},sjcl.hash.sha256=function(t){this.b[0]||this.q(),t?(this.e=t.e.slice(0),this.d=t.d.slice(0),this.c=t.c):this.reset()},sjcl.hash.sha256.hash=function(t){return(new sjcl.hash.sha256).update(t).finalize()},sjcl.hash.sha256.prototype={blockSize:512,reset:function(){return this.e=this.i.slice(0),this.d=[],this.c=0,this},update:function(t){"string"==typeof t&&(t=sjcl.codec.utf8String.toBits(t));var e,r=this.d=sjcl.bitArray.concat(this.d,t);for(e=this.c,t=this.c=e+sjcl.bitArray.bitLength(t),e=512+e&-512;e<=t;e+=512)this.n(r.splice(0,16));return this},finalize:function(){var t,e=this.d,r=this.e,e;for(t=(e=sjcl.bitArray.concat(e,[sjcl.bitArray.partial(1,1)])).length+2;15&t;t++)e.push(0);for(e.push(Math.floor(this.c/4294967296)),e.push(0|this.c);e.length;)this.n(e.splice(0,16));return this.reset(),r},i:[],b:[],q:function(){function t(t){return 4294967296*(t-Math.floor(t))|0}var e=0,r=2,n;t:for(;64>e;r++){for(n=2;n*n<=r;n++)if(0==r%n)continue t;8>e&&(this.i[e]=t(Math.pow(r,.5))),this.b[e]=t(Math.pow(r,1/3)),e++}},n:function(t){var e,r,n=t.slice(0),i=this.e,s=this.b,c=i[0],o=i[1],a=i[2],h=i[3],l=i[4],u=i[5],f=i[6],d=i[7];for(t=0;64>t;t++)16>t?e=n[t]:(e=n[t+1&15],r=n[t+14&15],e=n[15&t]=(e>>>7^e>>>18^e>>>3^e<<25^e<<14)+(r>>>17^r>>>19^r>>>10^r<<15^r<<13)+n[15&t]+n[t+9&15]|0),e=e+d+(l>>>6^l>>>11^l>>>25^l<<26^l<<21^l<<7)+(f^l&(u^f))+s[t],d=f,f=u,u=l,l=h+e|0,h=a,a=o,c=e+((o=c)&a^h&(o^a))+(o>>>2^o>>>13^o>>>22^o<<30^o<<19^o<<10)|0;i[0]=i[0]+c|0,i[1]=i[1]+o|0,i[2]=i[2]+a|0,i[3]=i[3]+h|0,i[4]=i[4]+l|0,i[5]=i[5]+u|0,i[6]=i[6]+f|0,i[7]=i[7]+d|0}},sjcl.hash.sha512=function(t){this.b[0]||this.q(),t?(this.e=t.e.slice(0),this.d=t.d.slice(0),this.c=t.c):this.reset()},sjcl.hash.sha512.hash=function(t){return(new sjcl.hash.sha512).update(t).finalize()},sjcl.hash.sha512.prototype={blockSize:1024,reset:function(){return this.e=this.i.slice(0),this.d=[],this.c=0,this},update:function(t){"string"==typeof t&&(t=sjcl.codec.utf8String.toBits(t));var e,r=this.d=sjcl.bitArray.concat(this.d,t);for(e=this.c,t=this.c=e+sjcl.bitArray.bitLength(t),e=1024+e&-1024;e<=t;e+=1024)this.n(r.splice(0,32));return this},finalize:function(){var t,e=this.d,r=this.e,e;for(t=(e=sjcl.bitArray.concat(e,[sjcl.bitArray.partial(1,1)])).length+4;31&t;t++)e.push(0);for(e.push(0),e.push(0),e.push(Math.floor(this.c/4294967296)),e.push(0|this.c);e.length;)this.n(e.splice(0,32));return this.reset(),r},i:[],T:[12372232,13281083,9762859,1914609,15106769,4090911,4308331,8266105],b:[],V:[2666018,15689165,5061423,9034684,4764984,380953,1658779,7176472,197186,7368638,14987916,16757986,8096111,1480369,13046325,6891156,15813330,5187043,9229749,11312229,2818677,10937475,4324308,1135541,6741931,11809296,16458047,15666916,11046850,698149,229999,945776,13774844,2541862,12856045,9810911,11494366,7844520,15576806,8533307,15795044,4337665,16291729,5553712,15684120,6662416,7413802,12308920,13816008,4303699,9366425,10176680,13195875,4295371,6546291,11712675,15708924,1519456,15772530,6568428,6495784,8568297,13007125,7492395,2515356,12632583,14740254,7262584,1535930,13146278,16321966,1853211,294276,13051027,13221564,1051980,4080310,6651434,14088940,4675607],q:function(){function t(t){return 4294967296*(t-Math.floor(t))|0}function e(t){return 1099511627776*(t-Math.floor(t))&255}var r=0,n=2,i;t:for(;80>r;n++){for(i=2;i*i<=n;i++)if(0==n%i)continue t;8>r&&(this.i[2*r]=t(Math.pow(n,.5)),this.i[2*r+1]=e(Math.pow(n,.5))<<24|this.T[r]),this.b[2*r]=t(Math.pow(n,1/3)),this.b[2*r+1]=e(Math.pow(n,1/3))<<24|this.V[r],r++}},n:function(t){var e,r,n=t.slice(0),i=this.e,s=this.b,c=i[0],o=i[1],a=i[2],h=i[3],l=i[4],u=i[5],f=i[6],d=i[7],p=i[8],y=i[9],g=i[10],m=i[11],b=i[12],v=i[13],j=i[14],w=i[15],A=c,L=o,B=a,C=h,E=l,U=u,k=f,x=d,V=p,M=y,S=g,D=m,P=b,R=v,O=j,z=w;for(t=0;80>t;t++){if(16>t)e=n[2*t],r=n[2*t+1];else{var I;r=n[2*(t-15)],e=((I=n[2*(t-15)+1])<<31|r>>>1)^(I<<24|r>>>8)^r>>>7;var T=(r<<31|I>>>1)^(r<<24|I>>>8)^(r<<25|I>>>7);r=n[2*(t-2)];var q,I=((q=n[2*(t-2)+1])<<13|r>>>19)^(r<<3|q>>>29)^r>>>6,q=(r<<13|q>>>19)^(q<<3|r>>>29)^(r<<26|q>>>6),G=n[2*(t-7)],Q=n[2*(t-16)],W=n[2*(t-16)+1];e=e+G+((r=T+n[2*(t-7)+1])>>>0<T>>>0?1:0),e+=I+((r+=q)>>>0<q>>>0?1:0),e+=Q+((r+=W)>>>0<W>>>0?1:0)}n[2*t]=e|=0,n[2*t+1]=r|=0;var G=V&S^~V&P,Y=M&D^~M&R,q=A&B^A&E^B&E,X=L&C^L&U^C&U,Q=(L<<4|A>>>28)^(A<<30|L>>>2)^(A<<25|L>>>7),W=(A<<4|L>>>28)^(L<<30|A>>>2)^(L<<25|A>>>7),_=s[2*t],F=s[2*t+1],I,T,I,T,I,T,I,T=(T=(T=(T=O+((M<<18|V>>>14)^(M<<14|V>>>18)^(V<<23|M>>>9))+((I=z+((V<<18|M>>>14)^(V<<14|M>>>18)^(M<<23|V>>>9)))>>>0<z>>>0?1:0))+(G+((I=I+Y)>>>0<Y>>>0?1:0)))+(_+((I=I+F)>>>0<F>>>0?1:0)))+(e+((I=I+r|0)>>>0<r>>>0?1:0));e=Q+q+((r=W+X)>>>0<W>>>0?1:0),O=P,z=R,P=S,R=D,S=V,D=M,V=k+T+((M=x+I|0)>>>0<x>>>0?1:0)|0,k=E,x=U,E=B,U=C,B=A,C=L,A=T+e+((L=I+r|0)>>>0<I>>>0?1:0)|0}o=i[1]=o+L|0,i[0]=c+A+(o>>>0<L>>>0?1:0)|0,h=i[3]=h+C|0,i[2]=a+B+(h>>>0<C>>>0?1:0)|0,u=i[5]=u+U|0,i[4]=l+E+(u>>>0<U>>>0?1:0)|0,d=i[7]=d+x|0,i[6]=f+k+(d>>>0<x>>>0?1:0)|0,y=i[9]=y+M|0,i[8]=p+V+(y>>>0<M>>>0?1:0)|0,m=i[11]=m+D|0,i[10]=g+S+(m>>>0<D>>>0?1:0)|0,v=i[13]=v+R|0,i[12]=b+P+(v>>>0<R>>>0?1:0)|0,w=i[15]=w+z|0,i[14]=j+O+(w>>>0<z>>>0?1:0)|0}},sjcl.mode.ccm={name:"ccm",s:[],listenProgress:function(t){sjcl.mode.ccm.s.push(t)},unListenProgress:function(t){-1<(t=sjcl.mode.ccm.s.indexOf(t))&&sjcl.mode.ccm.s.splice(t,1)},H:function(t){var e=sjcl.mode.ccm.s.slice(),r;for(r=0;r<e.length;r+=1)e[r](t)},encrypt:function(t,e,n,i,s){var c,o=e.slice(0),a=sjcl.bitArray,h=a.bitLength(n)/8,l=a.bitLength(o)/8;for(s=s||64,i=i||[],7>h&&r(new sjcl.exception.invalid("ccm: iv must be at least 7 bytes")),c=2;4>c&&l>>>8*c;c++);return c<15-h&&(c=15-h),n=a.clamp(n,8*(15-c)),e=sjcl.mode.ccm.o(t,e,n,i,s,c),o=sjcl.mode.ccm.p(t,o,n,e,s,c),a.concat(o.data,o.tag)},decrypt:function(t,e,n,i,s){s=s||64,i=i||[];var c=sjcl.bitArray,o=c.bitLength(n)/8,a=c.bitLength(e),h=c.clamp(e,a-s),l=c.bitSlice(e,a-s),a=(a-s)/8;for(7>o&&r(new sjcl.exception.invalid("ccm: iv must be at least 7 bytes")),e=2;4>e&&a>>>8*e;e++);return e<15-o&&(e=15-o),n=c.clamp(n,8*(15-e)),h=sjcl.mode.ccm.p(t,h,n,l,s,e),t=sjcl.mode.ccm.o(t,h.data,n,i,s,e),c.equal(h.tag,t)||r(new sjcl.exception.corrupt("ccm: tag doesn\'t match")),h.data},K:function(t,e,r,n,i,s){var c=[],o=sjcl.bitArray,a=o.u;if(n=[o.partial(8,(e.length?64:0)|n-2<<2|s-1)],(n=o.concat(n,r))[3]|=i,n=t.encrypt(n),e.length)for(65279>=(r=o.bitLength(e)/8)?c=[o.partial(16,r)]:4294967295>=r&&(c=o.concat([o.partial(16,65534)],[r])),c=o.concat(c,e),e=0;e<c.length;e+=4)n=t.encrypt(a(n,c.slice(e,e+4).concat([0,0,0])));return n},o:function(t,e,n,i,s,c){var o=sjcl.bitArray,a=o.u;for(((s/=8)%2||4>s||16<s)&&r(new sjcl.exception.invalid("ccm: invalid tag length")),(4294967295<i.length||4294967295<e.length)&&r(new sjcl.exception.bug("ccm: can\'t deal with 4GiB or more data")),n=sjcl.mode.ccm.K(t,i,n,s,o.bitLength(e)/8,c),i=0;i<e.length;i+=4)n=t.encrypt(a(n,e.slice(i,i+4).concat([0,0,0])));return o.clamp(n,8*s)},p:function(t,e,r,n,i,s){var c,o=sjcl.bitArray;c=o.u;var a=e.length,h=o.bitLength(e),l=a/50,u=l;if(r=o.concat([o.partial(8,s-1)],r).concat([0,0,0]).slice(0,4),n=o.bitSlice(c(n,t.encrypt(r)),0,i),!a)return{tag:n,data:[]};for(c=0;c<a;c+=4)c>l&&(sjcl.mode.ccm.H(c/a),l+=u),r[3]++,i=t.encrypt(r),e[c]^=i[0],e[c+1]^=i[1],e[c+2]^=i[2],e[c+3]^=i[3];return{tag:n,data:o.clamp(e,h)}}},sjcl.prng=function(t){this.f=[new sjcl.hash.sha256],this.j=[0],this.F=0,this.t={},this.D=0,this.J={},this.L=this.g=this.k=this.S=0,this.b=[0,0,0,0,0,0,0,0],this.h=[0,0,0,0],this.B=s,this.C=t,this.r=v,this.A={progress:{},seeded:{}},this.m=this.R=0,this.v=1,this.w=2,this.O=65536,this.G=[0,48,64,96,128,192,256,384,512,768,1024],this.P=3e4,this.N=80},sjcl.prng.prototype={randomWords:function(t,e){var n=[],i,s;if((i=this.isReady(e))===this.m&&r(new sjcl.exception.notReady("generator isn\'t seeded")),i&this.w){i=!(i&this.v),s=[];var c=0,o;for(this.L=s[0]=(new Date).valueOf()+this.P,o=0;16>o;o++)s.push(4294967296*Math.random()|0);for(o=0;o<this.f.length&&(s=s.concat(this.f[o].finalize()),c+=this.j[o],this.j[o]=0,i||!(this.F&1<<o));o++);for(this.F>=1<<this.f.length&&(this.f.push(new sjcl.hash.sha256),this.j.push(0)),this.g-=c,c>this.k&&(this.k=c),this.F++,this.b=sjcl.hash.sha256.hash(this.b.concat(s)),this.B=new sjcl.cipher.aes(this.b),i=0;4>i&&(this.h[i]=this.h[i]+1|0,!this.h[i]);i++);}for(i=0;i<t;i+=4)0==(i+1)%this.O&&ba(this),s=ca(this),n.push(s[0],s[1],s[2],s[3]);return ba(this),n.slice(0,t)},setDefaultParanoia:function(t,e){0===t&&"Setting paranoia=0 will ruin your security; use it only for testing"!==e&&r("Setting paranoia=0 will ruin your security; use it only for testing"),this.C=t},addEntropy:function(t,e,n){n=n||"user";var i,c,o=(new Date).valueOf(),a=this.t[n],h=this.isReady(),l=0;switch((i=this.J[n])===s&&(i=this.J[n]=this.S++),a===s&&(a=this.t[n]=0),this.t[n]=(this.t[n]+1)%this.f.length,typeof t){case"number":e===s&&(e=1),this.f[a].update([i,this.D++,1,e,o,1,0|t]);break;case"object":if("[object Uint32Array]"===(n=Object.prototype.toString.call(t))){for(c=[],n=0;n<t.length;n++)c.push(t[n]);t=c}else for("[object Array]"!==n&&(l=1),n=0;n<t.length&&!l;n++)"number"!=typeof t[n]&&(l=1);if(!l){if(e===s)for(n=e=0;n<t.length;n++)for(c=t[n];0<c;)e++,c>>>=1;this.f[a].update([i,this.D++,2,e,o,t.length].concat(t))}break;case"string":e===s&&(e=t.length),this.f[a].update([i,this.D++,3,e,o,t.length]),this.f[a].update(t);break;default:l=1}l&&r(new sjcl.exception.bug("random: addEntropy only supports number, array of numbers or string")),this.j[a]+=e,this.g+=e,h===this.m&&(this.isReady()!==this.m&&da("seeded",Math.max(this.k,this.g)),da("progress",this.getProgress()))},isReady:function(t){return t=this.G[t!==s?t:this.C],this.k&&this.k>=t?this.j[0]>this.N&&(new Date).valueOf()>this.L?this.w|this.v:this.v:this.g>=t?this.w|this.m:this.m},getProgress:function(t){return t=this.G[t||this.C],this.k>=t?1:this.g>t?1:this.g/t},startCollectors:function(){this.r||(this.a={loadTimeCollector:P(this,this.W),mouseCollector:P(this,this.X),keyboardCollector:P(this,this.U),accelerometerCollector:P(this,this.Q),touchCollector:P(this,this.Y)},window.addEventListener?(window.addEventListener("load",this.a.loadTimeCollector,v),window.addEventListener("mousemove",this.a.mouseCollector,v),window.addEventListener("keypress",this.a.keyboardCollector,v),window.addEventListener("devicemotion",this.a.accelerometerCollector,v),window.addEventListener("touchmove",this.a.touchCollector,v)):document.attachEvent?(document.attachEvent("onload",this.a.loadTimeCollector),document.attachEvent("onmousemove",this.a.mouseCollector),document.attachEvent("keypress",this.a.keyboardCollector)):r(new sjcl.exception.bug("can\'t attach event")),this.r=!0)},stopCollectors:function(){this.r&&(window.removeEventListener?(window.removeEventListener("load",this.a.loadTimeCollector,v),window.removeEventListener("mousemove",this.a.mouseCollector,v),window.removeEventListener("keypress",this.a.keyboardCollector,v),window.removeEventListener("devicemotion",this.a.accelerometerCollector,v),window.removeEventListener("touchmove",this.a.touchCollector,v)):document.detachEvent&&(document.detachEvent("onload",this.a.loadTimeCollector),document.detachEvent("onmousemove",this.a.mouseCollector),document.detachEvent("keypress",this.a.keyboardCollector)),this.r=v)},addEventListener:function(t,e){this.A[t][this.R++]=e},removeEventListener:function(t,e){var r,n,i=this.A[t],s=[];for(n in i)i.hasOwnProperty(n)&&i[n]===e&&s.push(n);for(r=0;r<s.length;r++)delete i[n=s[r]]},U:function(){Q(1)},X:function(t){var e,r;try{e=t.x||t.clientX||t.offsetX||0,r=t.y||t.clientY||t.offsetY||0}catch(t){r=e=0}0!=e&&0!=r&&sjcl.random.addEntropy([e,r],2,"mouse"),Q(0)},Y:function(t){t=t.touches[0]||t.changedTouches[0],sjcl.random.addEntropy([t.pageX||t.clientX,t.pageY||t.clientY],1,"touch"),Q(0)},W:function(){Q(2)},Q:function(t){if(t=t.accelerationIncludingGravity.x||t.accelerationIncludingGravity.y||t.accelerationIncludingGravity.z,window.orientation){var e=window.orientation;"number"==typeof e&&sjcl.random.addEntropy(e,1,"accelerometer")}t&&sjcl.random.addEntropy(t,2,"accelerometer"),Q(0)}},sjcl.random=new sjcl.prng(6);t:try{var V,ea,W,fa;if(fa="undefined"!=typeof module){var ka;if(ka=module.exports){var la;try{la=require("crypto")}catch(t){la=null}ka=(ea=la)&&ea.randomBytes}fa=ka}if(fa)V=ea.randomBytes(128),V=new Uint32Array(new Uint8Array(V).buffer),sjcl.random.addEntropy(V,1024,"crypto[\'randomBytes\']");else if("undefined"!=typeof window&&"undefined"!=typeof Uint32Array){if(W=new Uint32Array(32),window.crypto&&window.crypto.getRandomValues)window.crypto.getRandomValues(W);else{if(!window.msCrypto||!window.msCrypto.getRandomValues)break t;window.msCrypto.getRandomValues(W)}sjcl.random.addEntropy(W,1024,"crypto[\'getRandomValues\']")}}catch(t){"undefined"!=typeof window&&window.console&&(console.log("There was an error collecting entropy from the browser:"),console.log(t))}sjcl.arrayBuffer=sjcl.arrayBuffer||{},"undefined"==typeof ArrayBuffer&&((a=this).ArrayBuffer=function(){},a.DataView=function(){}),sjcl.arrayBuffer.ccm={mode:"ccm",defaults:{tlen:128},compat_encrypt:function(t,e,r,n,i){var s=sjcl.codec.arrayBuffer.fromBits(e,!0,16);return e=sjcl.bitArray.bitLength(e)/8,n=n||[],t=sjcl.arrayBuffer.ccm.encrypt(t,s,r,n,i||64,e),r=sjcl.codec.arrayBuffer.toBits(t.ciphertext_buffer),r=sjcl.bitArray.clamp(r,8*e),sjcl.bitArray.concat(r,t.tag)},compat_decrypt:function(t,e,r,n,i){i=i||64,n=n||[];var s=sjcl.bitArray,c=s.bitLength(e),o=s.clamp(e,c-i);return e=s.bitSlice(e,c-i),o=sjcl.codec.arrayBuffer.fromBits(o,!0,16),t=sjcl.arrayBuffer.ccm.decrypt(t,o,r,e,n,i,(c-i)/8),sjcl.bitArray.clamp(sjcl.codec.arrayBuffer.toBits(t),c-i)},encrypt:function(t,e,r,n,i,s){var c,o=sjcl.bitArray,a=o.bitLength(r)/8;for(n=n||[],i=i||sjcl.arrayBuffer.ccm.defaults.tlen,s=s||e.byteLength,i=Math.ceil(i/8),c=2;4>c&&s>>>8*c;c++);return c<15-a&&(c=15-a),r=o.clamp(r,8*(15-c)),n=sjcl.arrayBuffer.ccm.o(t,e,r,n,i,s,c),{ciphertext_buffer:e,tag:n=sjcl.arrayBuffer.ccm.p(t,e,r,n,i,c)}},decrypt:function(t,e,n,i,s,c,o){var a,h=sjcl.bitArray,l=h.bitLength(n)/8;for(s=s||[],c=c||sjcl.arrayBuffer.ccm.defaults.tlen,o=o||e.byteLength,c=Math.ceil(c/8),a=2;4>a&&o>>>8*a;a++);return a<15-l&&(a=15-l),n=h.clamp(n,8*(15-a)),i=sjcl.arrayBuffer.ccm.p(t,e,n,i,c,a),t=sjcl.arrayBuffer.ccm.o(t,e,n,s,c,o,a),sjcl.bitArray.equal(i,t)||r(new sjcl.exception.corrupt("ccm: tag doesn\'t match")),e},o:function(t,e,r,n,i,s,c){if(r=sjcl.mode.ccm.K(t,n,r,i,s,c),0!==e.byteLength){for(n=new DataView(e);s<e.byteLength;s++)n.setUint8(s,0);for(s=0;s<n.byteLength;s+=16)r[0]^=n.getUint32(s),r[1]^=n.getUint32(s+4),r[2]^=n.getUint32(s+8),r[3]^=n.getUint32(s+12),r=t.encrypt(r)}return sjcl.bitArray.clamp(r,8*i)},p:function(t,e,r,n,i,s){var c,o,a,h,l;o=(c=sjcl.bitArray).u;var u=e.byteLength/50,f=u;if(new DataView(new ArrayBuffer(16)),r=c.concat([c.partial(8,s-1)],r).concat([0,0,0]).slice(0,4),n=c.bitSlice(o(n,t.encrypt(r)),0,8*i),r[3]++,0===r[3]&&r[2]++,0!==e.byteLength)for(i=new DataView(e),l=0;l<i.byteLength;l+=16)l>u&&(sjcl.mode.ccm.H(l/e.byteLength),u+=f),h=t.encrypt(r),c=i.getUint32(l),o=i.getUint32(l+4),s=i.getUint32(l+8),a=i.getUint32(l+12),i.setUint32(l,c^h[0]),i.setUint32(l+4,o^h[1]),i.setUint32(l+8,s^h[2]),i.setUint32(l+12,a^h[3]),r[3]++,0===r[3]&&r[2]++;return n}},"undefined"==typeof ArrayBuffer&&function(t){t.ArrayBuffer=function(){},t.DataView=function(){}}(this),sjcl.codec.arrayBuffer={fromBits:function(t,e,n){var i;if(e=e==s||e,n=n||8,0===t.length)return new ArrayBuffer(0);for(i=sjcl.bitArray.bitLength(t)/8,0!=sjcl.bitArray.bitLength(t)%8&&r(new sjcl.exception.invalid("Invalid bit size, must be divisble by 8 to fit in an arraybuffer correctly")),e&&0!=i%n&&(i+=n-i%n),n=new DataView(new ArrayBuffer(4*t.length)),e=0;e<t.length;e++)n.setUint32(4*e,t[e]<<32);if((t=new DataView(new ArrayBuffer(i))).byteLength===n.byteLength)return n.buffer;for(i=n.byteLength<t.byteLength?n.byteLength:t.byteLength,e=0;e<i;e++)t.setUint8(e,n.getUint8(e));return t.buffer},toBits:function(t){var e=[],r,n,i;if(0===t.byteLength)return[];for(r=(n=new DataView(t)).byteLength-n.byteLength%4,t=0;t<r;t+=4)e.push(n.getUint32(t));if(0!=n.byteLength%4){i=new DataView(new ArrayBuffer(4)),t=0;for(var s=n.byteLength%4;t<s;t++)i.setUint8(t+4-s,n.getUint8(r+t));e.push(sjcl.bitArray.partial(n.byteLength%4*8,i.getUint32(0)))}return e},Z:function(t){function e(t){return 4<=(t+="").length?t:Array(4-t.length+1).join("0")+t}t=new DataView(t);for(var r="",n=0;n<t.byteLength;n+=2)0==n%16&&(r+="\\n"+n.toString(16)+"\\t"),r+=e(t.getUint16(n).toString(16))+" ";typeof console===s&&(console=console||{log:function(){}}),console.log(r.toUpperCase())}};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIjAiXSwibmFtZXMiOlsiciIsImEiLCJzIiwidiIsIkgiLCJzamNsIiwiY2lwaGVyIiwiaGFzaCIsImtleWV4Y2hhbmdlIiwibW9kZSIsIm1pc2MiLCJjb2RlYyIsImV4Y2VwdGlvbiIsImNvcnJ1cHQiLCJ0aGlzIiwidG9TdHJpbmciLCJtZXNzYWdlIiwiaW52YWxpZCIsImJ1ZyIsIm5vdFJlYWR5IiwiYWEiLCJiIiwiYyIsImxlbmd0aCIsImQiLCJlIiwiZyIsImYiLCJoIiwiayIsIm4iLCJsIiwibSIsInAiLCJ3IiwiRCIsIkIiLCJFIiwiQyIsImRhIiwicmFuZG9tIiwiQSIsImhhc093blByb3BlcnR5IiwicHVzaCIsIlEiLCJ3aW5kb3ciLCJwZXJmb3JtYW5jZSIsIm5vdyIsImFkZEVudHJvcHkiLCJEYXRlIiwidmFsdWVPZiIsImJhIiwiY2EiLCJjb25jYXQiLCJhZXMiLCJlbmNyeXB0IiwiUCIsImFwcGx5IiwiYXJndW1lbnRzIiwibW9kdWxlIiwiZXhwb3J0cyIsImRlZmluZSIsInEiLCJzbGljZSIsInByb3RvdHlwZSIsImRlY3J5cHQiLCJiaXRBcnJheSIsImJpdFNsaWNlIiwiTSIsImNsYW1wIiwiZXh0cmFjdCIsIk1hdGgiLCJmbG9vciIsImdldFBhcnRpYWwiLCJiaXRMZW5ndGgiLCJjZWlsIiwicGFydGlhbCIsInJvdW5kIiwiZXF1YWwiLCJwb3AiLCJ1IiwiYnl0ZXN3YXBNIiwidXRmOFN0cmluZyIsImZyb21CaXRzIiwiU3RyaW5nIiwiZnJvbUNoYXJDb2RlIiwiZGVjb2RlVVJJQ29tcG9uZW50IiwiZXNjYXBlIiwidG9CaXRzIiwidW5lc2NhcGUiLCJlbmNvZGVVUklDb21wb25lbnQiLCJjaGFyQ29kZUF0IiwiYmFzZTY0IiwiSSIsInN1YnN0ciIsImNoYXJBdCIsInJlcGxhY2UiLCJpbmRleE9mIiwiYmFzZTY0dXJsIiwiYnl0ZXMiLCJzaGEyNTYiLCJyZXNldCIsInVwZGF0ZSIsImZpbmFsaXplIiwiYmxvY2tTaXplIiwiaSIsInNwbGljZSIsInBvdyIsInNoYTUxMiIsIlQiLCJWIiwiZ2EiLCJSIiwiaGEiLCJTIiwieCIsInQiLCJGIiwiSiIsIkciLCJYIiwiSyIsInkiLCJMIiwiVSIsIlkiLCJOIiwieiIsIloiLCIkIiwiTyIsImlhIiwibWEiLCJuYSIsImphIiwiY2NtIiwibmFtZSIsImxpc3RlblByb2dyZXNzIiwidW5MaXN0ZW5Qcm9ncmVzcyIsIm8iLCJkYXRhIiwidGFnIiwicHJuZyIsImoiLCJwcm9ncmVzcyIsInNlZWRlZCIsInJhbmRvbVdvcmRzIiwiaXNSZWFkeSIsInNldERlZmF1bHRQYXJhbm9pYSIsIk9iamVjdCIsImNhbGwiLCJtYXgiLCJnZXRQcm9ncmVzcyIsInN0YXJ0Q29sbGVjdG9ycyIsImxvYWRUaW1lQ29sbGVjdG9yIiwiVyIsIm1vdXNlQ29sbGVjdG9yIiwia2V5Ym9hcmRDb2xsZWN0b3IiLCJhY2NlbGVyb21ldGVyQ29sbGVjdG9yIiwidG91Y2hDb2xsZWN0b3IiLCJhZGRFdmVudExpc3RlbmVyIiwiZG9jdW1lbnQiLCJhdHRhY2hFdmVudCIsInN0b3BDb2xsZWN0b3JzIiwicmVtb3ZlRXZlbnRMaXN0ZW5lciIsImRldGFjaEV2ZW50IiwiY2xpZW50WCIsIm9mZnNldFgiLCJjbGllbnRZIiwib2Zmc2V0WSIsInRvdWNoZXMiLCJjaGFuZ2VkVG91Y2hlcyIsInBhZ2VYIiwicGFnZVkiLCJhY2NlbGVyYXRpb25JbmNsdWRpbmdHcmF2aXR5Iiwib3JpZW50YXRpb24iLCJlYSIsImZhIiwia2EiLCJsYSIsInJlcXVpcmUiLCJvYSIsInJhbmRvbUJ5dGVzIiwiVWludDMyQXJyYXkiLCJVaW50OEFycmF5IiwiYnVmZmVyIiwiY3J5cHRvIiwiZ2V0UmFuZG9tVmFsdWVzIiwibXNDcnlwdG8iLCJwYSIsImNvbnNvbGUiLCJsb2ciLCJhcnJheUJ1ZmZlciIsIkFycmF5QnVmZmVyIiwiRGF0YVZpZXciLCJkZWZhdWx0cyIsInRsZW4iLCJjb21wYXRfZW5jcnlwdCIsImNpcGhlcnRleHRfYnVmZmVyIiwiY29tcGF0X2RlY3J5cHQiLCJieXRlTGVuZ3RoIiwic2V0VWludDgiLCJnZXRVaW50MzIiLCJzZXRVaW50MzIiLCJnZXRVaW50OCIsIkFycmF5Iiwiam9pbiIsImdldFVpbnQxNiIsInRvVXBwZXJDYXNlIl0sIm1hcHBpbmdzIjoiQUFFQSxhQUFhLFNBQVNBLEVBQUVDLEdBQUcsTUFBTUEsRUFBRyxJQUFJQyxPQUFFLEVBQU9DLEdBQUUsRUFBRyxTQUFTQyxJQUFJLE9BQU8sYUFBYyxJQUFJQyxNQUFNQyxVQUFVQyxRQUFRQyxlQUFlQyxRQUFRQyxRQUFRQyxTQUFTQyxXQUFXQyxRQUFRLFNBQVNaLEdBQUdhLEtBQUtDLFNBQVMsV0FBVyxNQUFNLFlBQVlELEtBQUtFLFNBQVNGLEtBQUtFLFFBQVFmLEdBQUdnQixRQUFRLFNBQVNoQixHQUFHYSxLQUFLQyxTQUFTLFdBQVcsTUFBTSxZQUFZRCxLQUFLRSxTQUFTRixLQUFLRSxRQUFRZixHQUFHaUIsSUFBSSxTQUFTakIsR0FBR2EsS0FBS0MsU0FBUyxXQUFXLE1BQU0sUUFBUUQsS0FBS0UsU0FBU0YsS0FBS0UsUUFBUWYsR0FBR2tCLFNBQVMsU0FBU2xCLEdBQUdhLEtBQUtDLFNBQVMsV0FBVyxNQUFNLGNBQWNELEtBQUtFLFNBQVNGLEtBQUtFLFFBQVFmLEtBQTI0akJBLEVBQXRzaEIsU0FBU21CLEdBQUduQixFQUFFb0IsRUFBRUMsR0FBRyxJQUFJRCxFQUFFRSxRQUFRdkIsRUFBRSxJQUFJSyxLQUFLTyxVQUFVSyxRQUFRLDJCQUEyQixJQUFJTyxFQUFFdkIsRUFBRW9CLEVBQUVDLEdBQUdHLEVBQUVKLEVBQUUsR0FBR0csRUFBRSxHQUFHRSxFQUFFTCxFQUFFQyxFQUFFLEVBQUUsR0FBR0UsRUFBRSxHQUFHRyxFQUFFTixFQUFFLEdBQUdHLEVBQUUsR0FBR0gsRUFBRUEsRUFBRUMsRUFBRSxFQUFFLEdBQUdFLEVBQUUsR0FBRyxJQUFJSSxFQUFFQyxFQUFFQyxFQUFFQyxFQUFFUCxFQUFFRCxPQUFPLEVBQUUsRUFBRVMsRUFBRUMsRUFBRSxFQUFFQyxHQUFH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',"smalltalk.js":'"use strict";$("head").append("<style>.smalltalk{display:flex;align-items:center;flex-direction:column;justify-content:center;transition:200ms opacity;bottom:0;left:0;overflow:auto;padding:20px;position:fixed;right:0;top:0;z-index:100}.smalltalk + .smalltalk{transition:ease 1s;display:none}.smalltalk .page{border-radius:3px;background:white;box-shadow:0 4px 23px 5px rgba(0, 0, 0, .2), 0 2px 6px rgba(0, 0, 0, .15);color:#333;min-width:400px;padding:0;position:relative;z-index:0}@media only screen and (max-width: 500px){.smalltalk .page{min-width:0}}.smalltalk .page > .close-button{background: url(\'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAQAAAC1QeVaAAAAUklEQVR4XqXPYQrAIAhAYW/gXd8NJxTopVqsGEhtf+L9/ERU2k/HSMFQpKcYJeNFI9Be0LCMij8cYyjj5EHIivGBkwLfrbX3IF8PqumVmnDpEG+eDsKibPG2JwAAAABJRU5ErkJggg==\') no-repeat center;height:14px;position:absolute;right:7px;top:7px;width:14px;z-index:1}.smalltalk .page > .close-button:hover{background-image:url(\'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAQAAAC1QeVaAAAAnUlEQVR4XoWQQQ6CQAxFewjkJkMCyXgJPMk7AiYczyBeZEAX6AKctGIaN+bt+trk9wtGQc/IkhnoKGxqqiWxOSZalapWFZ6VrIUDExsN0a5JRBq9LoVOR0eEQMoEhKizXhhsn0p1sCWVo7CwOf1RytPL8CPvwuBUoHL6ugeK30CVD1TqK7V/hdpe+VNChhOzV8xWny/+xosHF8578W/Hmc1OOC3wmwAAAABJRU5ErkJggg==\')}.smalltalk .page header{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px;user-select:none;color:#333;font-size:120%;font-weight:bold;margin:0;padding:14px 17px;text-shadow:white 0 1px 2px}.smalltalk .page .content-area{overflow:hidden;text-overflow:ellipsis;padding:6px 17px;position:relative}.smalltalk .page .action-area{padding:14px 17px}button{font-family:Ubuntu, Arial, sans-serif}.smalltalk .smalltalk,.smalltalk button{min-height:2em;min-width:4em}.smalltalk button{appearance:none;user-select:none;background-image:linear-gradient(#ededed, #ededed 38%, #dedede);border:1px solid rgba(0, 0, 0, 0.25);border-radius:2px;box-shadow:0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);color:#444;font:inherit;margin:0 1px 0 0;text-shadow:0 1px 0 rgb(240, 240, 240)}.smalltalk button::-moz-focus-inner{border:0}.smalltalk button:enabled:active{background-image:linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);box-shadow:none;text-shadow:none}.smalltalk .page .button-strip{display:flex;flex-direction:row;justify-content:flex-end}.smalltalk .page .button-strip > button{margin-left:10px}.smalltalk input{width:100%;border:1px solid #bfbfbf;border-radius:2px;box-sizing:border-box;color:#444;font:inherit;margin:0;min-height:2em;padding:3px;outline:none}.smalltalk button:enabled:focus,.smalltalk input:enabled:focus{transition:border-color 200ms;border-color:rgb(77, 144, 254);outline:none}");const BUTTON_OK=["OK"],BUTTON_OK_CANCEL=["OK","Cancel"],__smalltalk_remove=__smalltalk_bind(__smalltalk_removeEl,".smalltalk"),__smalltalk_store=t=>{const a={value:t};return function(t){return arguments.length?(a.value=t,t):a.value}};function _alert(t,a){return __smalltalk_showDialog(t,a,"",BUTTON_OK,{cancel:!1})}function _prompt(t,a,e="",l){const n=__smalltalk_getType(l),o=String(e).replace(/"/g,"&quot;"),s=`<input type="${n}" value="${o}" data-name="js-input">`;return __smalltalk_showDialog(t,a,s,BUTTON_OK_CANCEL,l)}function _confirm(t,a,e){return __smalltalk_showDialog(t,a,"",BUTTON_OK_CANCEL,e)}function __smalltalk_getType(t={}){const{type:a}=t;return"password"===a?"password":"text"}function __smalltalk_getTemplate(t,a,e,l){const n=a.replace(/\\n/g,"<br>");return`<div class="page">\\n        <div data-name="js-close" class="close-button"></div>\\n        <header>${t}</header>\\n        <div class="content-area">${n}${e}</div>\\n        <div class="action-area">\\n            <div class="button-strip"> ${l.map((t,a)=>`<button tabindex=${a} data-name="js-${t.toLowerCase()}">${t}</button>`).join("")}\\n            </div>\\n        </div>\\n    </div>`}function __smalltalk_showDialog(t,a,e,l,n){const o=__smalltalk_store(),s=__smalltalk_store(),i=document.createElement("div"),r=["cancel","close","ok"],_=new Promise((t,a)=>{const e=n&&!n.cancel,l=()=>{};o(t),s(e?l:a)});return i.innerHTML=__smalltalk_getTemplate(t,a,e,l),i.className="smalltalk",document.body.appendChild(i),__smalltalk_find(i,["ok","input"]).forEach(t=>t.focus()),__smalltalk_find(i,["input"]).forEach(t=>{t.setSelectionRange(0,e.length)}),__smalltalk_addListenerAll("click",i,r,t=>__smalltalk_closeDialog(t.target,i,o(),s())),["click","contextmenu"].forEach(t=>i.addEventListener(t,()=>__smalltalk_find(i,["ok","input"]).forEach(t=>t.focus()))),i.addEventListener("keydown",currify(__smalltalk_keyDownEvent)(i,o(),s())),_}function __smalltalk_keyDownEvent(t,a,e,l){const n={ENTER:13,ESC:27,TAB:9,LEFT:37,UP:38,RIGHT:39,DOWN:40},o=l.keyCode,s=l.target,i=["ok","cancel","input"],r=__smalltalk_find(t,i).map(__smalltalk_getDataName);switch(o){case n.ENTER:__smalltalk_closeDialog(s,t,a,e),l.preventDefault();break;case n.ESC:__smalltalk_remove(),e();break;case n.TAB:l.shiftKey&&__smalltalk_tab(t,r),__smalltalk_tab(t,r),l.preventDefault();break;default:["left","right","up","down"].filter(t=>o===n[t.toUpperCase()]).forEach(()=>{__smalltalk_changeButtonFocus(t,r)})}l.stopPropagation()}function __smalltalk_getDataName(t){return t.getAttribute("data-name").replace("js-","")}function __smalltalk_changeButtonFocus(t,a){const e=document.activeElement,l=__smalltalk_getDataName(e),n=/ok|cancel/.test(l),o=a.length-1,s=t=>"cancel"===t?"ok":"cancel";if("input"===l||!o||!n)return;const i=s(l);__smalltalk_find(t,[i]).forEach(t=>{t.focus()})}const __smalltalk_getIndex=(t,a)=>a===t?0:a+1;function __smalltalk_tab(t,a){const e=document.activeElement,l=__smalltalk_getDataName(e),n=a.length-1,o=a.indexOf(l),s=__smalltalk_getIndex(n,o),i=a[s];__smalltalk_find(t,[i]).forEach(t=>t.focus())}function __smalltalk_closeDialog(t,a,e,l){const n=t.getAttribute("data-name").replace("js-","");if(/close|cancel/.test(n))return l(),void __smalltalk_remove();const o=__smalltalk_find(a,["input"]).reduce((t,a)=>a.value,null);e(o),__smalltalk_remove()}function __smalltalk_find(t,a){const e=t=>t,l=a.map(a=>t.querySelector(`[data-name="js-${a}"]`)).filter(e);return l}function __smalltalk_addListenerAll(t,a,e,l){__smalltalk_find(a,e).forEach(a=>a.addEventListener(t,l))}function __smalltalk_removeEl(t){const a=document.querySelector(t);a.parentElement.removeChild(a)}function __smalltalk_bind(t,...a){return()=>t(...a)}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIjAiXSwibmFtZXMiOlsiJCIsImFwcGVuZCIsIkJVVFRPTl9PSyIsIkJVVFRPTl9PS19DQU5DRUwiLCJfX3NtYWxsdGFsa19yZW1vdmUiLCJfX3NtYWxsdGFsa19iaW5kIiwiX19zbWFsbHRhbGtfcmVtb3ZlRWwiLCJfX3NtYWxsdGFsa19zdG9yZSIsInZhbHVlIiwiZGF0YSIsImFyZ3VtZW50cyIsImxlbmd0aCIsIl9hbGVydCIsInRpdGxlIiwibXNnIiwiX19zbWFsbHRhbGtfc2hvd0RpYWxvZyIsImNhbmNlbCIsIl9wcm9tcHQiLCJvcHRpb25zIiwidHlwZSIsIl9fc21hbGx0YWxrX2dldFR5cGUiLCJ2YWwiLCJTdHJpbmciLCJyZXBsYWNlIiwidmFsdWVTdHIiLCJfY29uZmlybSIsIl9fc21hbGx0YWxrX2dldFRlbXBsYXRlIiwiYnV0dG9ucyIsImVuY29kZWRNc2ciLCJtYXAiLCJuYW1lIiwiaSIsInRvTG93ZXJDYXNlIiwiam9pbiIsIm9rIiwiZGlhbG9nIiwiZG9jdW1lbnQiLCJjcmVhdGVFbGVtZW50IiwiY2xvc2VCdXR0b25zIiwicHJvbWlzZSIsIlByb21pc2UiLCJyZXNvbHZlIiwicmVqZWN0Iiwibm9DYW5jZWwiLCJlbXB0eSIsImlubmVySFRNTCIsImNsYXNzTmFtZSIsImJvZHkiLCJhcHBlbmRDaGlsZCIsIl9fc21hbGx0YWxrX2ZpbmQiLCJmb3JFYWNoIiwiZWwiLCJmb2N1cyIsInNldFNlbGVjdGlvblJhbmdlIiwiX19zbWFsbHRhbGtfYWRkTGlzdGVuZXJBbGwiLCJldmVudCIsIl9fc21hbGx0YWxrX2Nsb3NlRGlhbG9nIiwidGFyZ2V0IiwiYWRkRXZlbnRMaXN0ZW5lciIsImN1cnJpZnkiLCJfX3NtYWxsdGFsa19rZXlEb3duRXZlbnQiLCJLRVkiLCJFTlRFUiIsIkVTQyIsIlRBQiIsIkxFRlQiLCJVUCIsIlJJR0hUIiwiRE9XTiIsImtleUNvZGUiLCJuYW1lc0FsbCIsIm5hbWVzIiwiX19zbWFsbHRhbGtfZ2V0RGF0YU5hbWUiLCJwcmV2ZW50RGVmYXVsdCIsInNoaWZ0S2V5IiwiX19zbWFsbHRhbGtfdGFiIiwiZmlsdGVyIiwidG9VcHBlckNhc2UiLCJfX3NtYWxsdGFsa19jaGFuZ2VCdXR0b25Gb2N1cyIsInN0b3BQcm9wYWdhdGlvbiIsImdldEF0dHJpYnV0ZSIsImFjdGl2ZSIsImFjdGl2ZUVsZW1lbnQiLCJhY3RpdmVOYW1lIiwiaXNCdXR0b24iLCJ0ZXN0IiwiY291bnQiLCJnZXROYW1lIiwiX19zbWFsbHRhbGtfZ2V0SW5kZXgiLCJpbmRleCIsImFjdGl2ZUluZGV4IiwiaW5kZXhPZiIsInJlZHVjZSIsImVsZW1lbnQiLCJub3RFbXB0eSIsImEiLCJlbGVtZW50cyIsInF1ZXJ5U2VsZWN0b3IiLCJwYXJlbnQiLCJmbiIsInBhcmVudEVsZW1lbnQiLCJyZW1vdmVDaGlsZCIsImFyZ3MiXSwibWFwcGluZ3MiOiJBQUFBLGFBRUFBLEVBQUUsUUFBUUMsT0FBTyw2bkZBRWpCLE1BQU1DLFdBQWEsTUFDYkMsa0JBQW9CLEtBQU0sVUFFMUJDLG1CQUFxQkMsaUJBQWtCQyxxQkFBc0IsY0FHN0RDLGtCQUFzQkMsSUFDeEIsTUFBTUMsR0FDRkQsTUFBQUEsR0FHSixPQUFPLFNBQVdBLEdBQ2QsT0FBTUUsVUFBVUMsUUFHaEJGLEVBQUtELE1BQVFBLEVBRU5BLEdBSklDLEVBQUtELFFBUXhCLFNBQVNJLE9BQVFDLEVBQU9DLEdBQ3BCLE9BQU9DLHVCQUF3QkYsRUFBT0MsRUFBSyxHQUFJWixXQUFhYyxRQUFRLElBR3hFLFNBQVNDLFFBQVNKLEVBQU9DLEVBQUtOLEVBQVEsR0FBSVUsR0FDdEMsTUFBTUMsRUFBT0Msb0JBQXFCRixHQUU1QkcsRUFBTUMsT0FBUWQsR0FDZmUsUUFBUyxLQUFNLFVBRWRDLGtCQUE0QkwsYUFBa0JFLDJCQUVwRCxPQUFPTix1QkFBd0JGLEVBQU9DLEVBQUtVLEVBQVVyQixpQkFBa0JlLEdBRzNFLFNBQVNPLFNBQVVaLEVBQU9DLEVBQUtJLEdBQzNCLE9BQU9ILHVCQUF3QkYsRUFBT0MsRUFBSyxHQUFJWCxp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'}}start(){const t=this;discordCrypt.validPluginName()?this.configFile?(discordCrypt.__shouldIgnoreUpdates(this.getVersion())||(this.checkForUpdates(),this.updateHandlerInterval=setInterval(()=>{t.checkForUpdates()},36e5)),this.hookMessageCallbacks()?(this.loadToolbar(),this.attachHandler()):(this.scanInterval=setInterval(()=>{t.decodeMessages()},t.configFile.encryptScanDelay),this.toolbarReloadInterval=setInterval(()=>{t.loadToolbar(),t.attachHandler()},5e3)),this.decodeMessages()):this.loadMasterPassword():_alert("Hi There! - DiscordCrypt","Oops!\r\n\r\nIt seems you didn't read discordCrypt's usage guide. :(\r\nYou need to name this plugin exactly as follows to allow it to function correctly.\r\n\r\n"+`\t${discordCrypt.getPluginName()}\r\n\r\n\r\n`+"You should probably check the usage guide again just in case you missed anything else. :)")}stop(){discordCrypt.validPluginName()&&($(this.channelTextAreaClass).off("keydown.dcrypt"),this.unhookMessageCallbacks()||(clearInterval(this.scanInterval),clearInterval(this.toolbarReloadInterval)),clearInterval(this.updateHandlerInterval),$("#dc-overlay").remove(),$("#dc-lock-btn").remove(),$("#dc-passwd-btn").remove(),$("#dc-exchange-btn").remove(),$("#dc-settings-btn").remove(),$("#dc-toolbar-line").remove(),this.configFile=null)}load(){const t=require("vm");discordCrypt.injectCSS("dc-css",this.appCss);for(let e in this.libraries)t.runInThisContext(this.libraries[e],{filename:e,displayErrors:!1})}unload(){discordCrypt.clearCSS("dc-css")}onUpdate(){}getDefaultConfig(){return{version:this.getVersion(),defaultPassword:"\u79d8\u4e00\u5bc6\u6bd4\u65e0\u4e3a\u6709\u79d8\u4e60\u4e2a\u754c\u4e00\u4e07\u5b9a\u4e3a\u754c\u4eba\u662f\u7684\u8981\u4eba\u6bcf\u7684\u4f46\u4e86\u53c8\u4f60\u4e0a\u7740\u5bc6\u5b9a\u5df2",encodeMessageTrigger:"ENC",encryptScanDelay:1e3,encryptMode:7,encryptBlockMode:"CBC",encodeAll:!0,paddingMode:"PKC7",passList:{},up1Host:"https://share.riseup.net",up1ApiKey:"59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs"}}configExists(){let t=bdPluginStorage.get(this.getName(),"config");return t&&null!==t&&""!==t}loadConfig(){discordCrypt.log("Loading configuration file ...");let t=bdPluginStorage.get(this.getName(),"config");if(!t||null===t||""===t)return this.configFile=this.getDefaultConfig(),this.saveConfig(),!0;try{this.configFile=JSON.parse(discordCrypt.aes256_decrypt_gcm(t.data,this.masterPassword,"PKC7","utf8",!1))}catch(t){return discordCrypt.log(`Decryption of configuration file failed - ${t}`,"error"),!1}if(!this.configFile||!this.configFile.version)return discordCrypt.log("Decryption of configuration file failed.","error"),!1;if(this.configFile.version!==this.getVersion()){this.onUpdate();let t=this.configFile.version,e=this.configFile.passList;return this.configFile=this.getDefaultConfig(),this.configFile.passList=e,this.saveConfig(),discordCrypt.log(`Updated plugin version from v${t} to v${this.getVersion()}.`),!0}return discordCrypt.log(`Loaded configuration file! - v${this.configFile.version}`),!0}saveConfig(){discordCrypt.log("Saving configuration file ..."),bdPluginStorage.set(this.getName(),"config",{data:discordCrypt.aes256_encrypt_gcm(JSON.stringify(this.configFile),this.masterPassword,"PKC7",!1)})}saveSettings(t){this.saveConfig(),t.innerHTML="Saved & Applied!",setTimeout(function(){t.innerHTML="Save & Apply"},1e3),this.decodeMessages(!0)}resetSettings(t){this.configFile=this.getDefaultConfig(),this.saveConfig(),t.innerHTML="Restored Default Settings!",setTimeout(function(){t.innerHTML="Reset Settings"},1e3),this.decodeMessages(!0)}updatePasswords(){if("block"!==$("#dc-overlay-password")[0].style.display)return;let t=$("#dc-password-primary"),e=$("#dc-password-secondary");""!==t[0].value&&t[0].value.length>1?(this.configFile.passList[discordCrypt.getChannelId()]=discordCrypt.createPassword(t[0].value,""),""!==e[0].value&&e[0].value.length>1&&(this.configFile.passList[discordCrypt.getChannelId()].secondary=e[0].value),t[0].value="",e[0].value=""):delete this.configFile.passList[discordCrypt.getChannelId()],this.saveConfig(),this.decodeMessages(!0)}static getPluginName(){return"discordCrypt.plugin.js"}static validPluginName(){return require("fs").existsSync(require("path").join(discordCrypt.getPluginsPath(),discordCrypt.getPluginName()))}static getPluginsPath(){const t=require("process");return`${"win32"===t.platform?t.env.APPDATA:"darwin"===t.platform?t.env.HOME+"/Library/Preferences":t.env.HOME+"/.config"}/BetterDiscord/plugins/`}static checkForUpdate(t){const e=`https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/${discordCrypt.getPluginName()}`,s="https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG";if("function"!=typeof t)return!1;try{discordCrypt.__getRequest(e,(e,U,F)=>{if(200!==e){switch(e){case 404:discordCrypt.log("Update URL is broken.","error");break;case 403:discordCrypt.log("Forbidden request when checking for updates.","error");break;default:discordCrypt.log(`Error while fetching update: ${U}`,"error")}return}F=F.replace("\r","");let i='//META{"name":"discordCrypt"}*//\n';try{i=require("fs").readFileSync(require("path").join(discordCrypt.getPluginsPath(),discordCrypt.getPluginName())).toString().replace("\r","")}catch(t){}if(F.split("\n")[0]!==i.split("\n")[0])return void discordCrypt.log("Plugin metadata is missing from either the local or update file.","error");let n=discordCrypt.sha256(i),r=discordCrypt.sha256(F),Q=Buffer.from(r,"base64").toString("hex").slice(0,8);if(r===n)return discordCrypt.log(`No Update Needed - #${Q}`),!0;let a="";try{a=F.match(/('[0-9]+\.[0-9]+\.[0-9]+')/gi).toString().replace(/('*')/g,"")}catch(t){}try{discordCrypt.__getRequest(s,(e,s,U)=>{t(F,Q,a,200==e?U:"")})}catch(e){discordCrypt.log("Error fetching the changelog.","warn"),t(F,Q,a,"")}})}catch(t){return discordCrypt.log(`Error while retrieving update: ${t.toString()}`,"warn"),!1}return!0}static getChannelId(){return window.location.pathname.split("/").pop()}static createPassword(t,e){return{primary:t,secondary:e}}static getWebpackModuleSearcher(){const t="function"==typeof webpackJsonp?webpackJsonp([],{__extra_id__:(t,e,s)=>e.default=s},["__extra_id__"]).default:webpackJsonp.push([[],{__extra_id__:(t,e,s)=>t.exports=s},[["__extra_id__"]]]);delete t.m.__extra_id__,delete t.c.__extra_id__;const e=(e,s)=>{for(let s in t.c)if(t.c.hasOwnProperty(s)){let U=t.c[s].exports;if(U&&U.__esModule&&U.default&&(U=U.default),U&&e(U))return U}if(s){discordCrypt.log("Couldn't find module in existing cache. Loading all modules.","warn");for(let s=0;s<t.m.length;++s)try{let U=t(s);if(U&&U.__esModule&&U.default&&e(U.default))return U.default;if(U&&e(U))return U}catch(t){}discordCrypt.log("Cannot find React module.","warn")}return null},s=(t,s=!0)=>e(e=>t.every(t=>void 0!==e[t]),s),U=(t,s=!0)=>e(e=>e.displayName===t,s),F=(t,s=!1)=>e(e=>void 0!==e._dispatchToken&&e._dispatchToken===`ID_${t}`&&void 0!==e._actionHandlers,s),i=t=>{for(let e=0;e<500;e++){let s=F(e);if(s&&t.every(t=>s._actionHandlers.hasOwnProperty(t)))return s}return null};return{find:e,findByUniqueProperties:s,findByDisplayName:U,findByDispatchToken:F,findByDispatchNames:i}}static dumpWebpackModuleCallbacks(){let t=discordCrypt.getWebpackModuleSearcher().findByDispatchToken,e=[];for(let s=0;s<500;s++){let U=t(s);if(U){e[s]={};for(let t in U._actionHandlers)U._actionHandlers.hasOwnProperty(t)&&(e[s][t]=U._actionHandlers[t].prototype.constructor.toString().split("{")[0])}}return e}static getReactModules(){const t=discordCrypt.getWebpackModuleSearcher();return{ChannelProps:"@me"===discordCrypt.getChannelId()?null:discordCrypt.__getElementReactOwner($("form")[0]).props.channel,MessageParser:t.findByUniqueProperties(["createMessage","parse","unparse"]),MessageController:t.findByUniqueProperties(["sendClydeError","sendBotMessage"]),MessageActionTypes:t.findByUniqueProperties(["ActionTypes","ActivityTypes"]),MessageDispatcher:t.findByUniqueProperties(["dispatch","maybeDispatch","dirtyDispatch"]),MessageQueue:t.findByUniqueProperties(["enqueue","handleSend","handleResponse"]),HighlightJS:t.findByUniqueProperties(["initHighlighting","highlightBlock","highlightAuto"])}}static sendEmbeddedMessage(t,e,s,U=5577355,F="",i){let n=!1;const r=discordCrypt.getReactModules();if("string"==typeof F&&F.length){if(null===r.MessageParser)return void discordCrypt.log("Could not locate the MessageParser module!","error");try{((F=r.MessageParser.parse(r.ChannelProps,F).content).includes("@everyone")||F.includes("@here"))&&(n=!0)}catch(t){F=""}}else F="";let Q=parseInt(require("crypto").randomBytes(6).toString("hex"),16),a=void 0!==i?i:discordCrypt.getChannelId();null!==r.MessageQueue?r.MessageQueue.enqueue({type:"send",message:{channelId:a,nonce:Q,content:F,mention_everyone:n,tts:!1,embed:{type:"rich",url:"https://gitlab.com/leogx9r/DiscordCrypt",color:U||5577355,timestamp:(new Date).toISOString(),output_mime_type:"text/x-html",encoding:"utf-16",author:{name:e||"-----MESSAGE-----",icon_url:"https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png",url:"https://discord.me/discordCrypt"},footer:{text:s||"DiscordCrypt",icon_url:"https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/app-logo.png"},description:t}}},t=>{if(null!==r.MessageController){if(t.ok)r.MessageController.receiveMessage(a,t.body);else if(t.status>=400&&t.status<500&&t.body&&!r.MessageController.sendClydeError(a,t.body.code)){if(discordCrypt.log(`Error sending message: ${t.status}`,"error"),null===r.MessageDispatcher||null===r.MessageActionTypes)return void discordCrypt.log("Could not locate the MessageDispatcher module!","error");r.MessageDispatcher.dispatch({type:r.MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,messageId:Q,channelId:a})}}else discordCrypt.log("Could not locate the MessageController module!","error")}):discordCrypt.log("Could not locate the MessageQueue module!","error")}static log(t,e="info"){try{console[e](`%c[DiscordCrypt]%c - ${t}`,"color: #7f007f; font-weight: bold;","")}catch(t){}}static injectCSS(t,e){$("head").append($("<style>",{id:t.replace(/^[^a-z]+|[^\w-]+/gi,""),html:e}))}static clearCSS(t){t&&"string"==typeof t&&t.length&&$(`#${t.replace(/^[^a-z]+|[^\w-]+/gi,"")}`).remove()}static hookDispatcher(t,e,s){const{before:U,after:F,instead:i,once:n=!1,silent:r=!1}=s,Q=t._actionHandlers[e],a=()=>{r||discordCrypt.log(`Unhooking "${e}" ...`),t[e]=Q},B=(t,e)=>(...s)=>{try{return t(...s)}catch(t){discordCrypt.log(`Error occurred in ${e}`,"error")}};return t._actionHandlers[e].__hooked||(r||discordCrypt.log(`Hooking "${e}" ...`),t._actionHandlers[e]=function(){const t={thisObject:this,methodArguments:arguments,cancelPatch:a,originalMethod:Q,callOriginalMethod:()=>t.returnValue=t.originalMethod.apply(t.thisObject,t.methodArguments)};if(i){const s=B(i,`${e} called hook via 'instead'.`)(t);void 0!==s&&(t.returnValue=s)}else U&&B(U,`${e} called hook via 'before'.`)(t),t.callOriginalMethod(),F&&B(F,`${e} called hook via 'after'.`)(t);return n&&a(),t.returnValue},t._actionHandlers[e].__hooked=!0,t._actionHandlers[e].__cancel=a),t._actionHandlers[e].__cancel}hookMessageCallbacks(){return this.messageUpdateDispatcher||(this.messageUpdateDispatcher=discordCrypt.getWebpackModuleSearcher().findByDispatchNames(["LOAD_MESSAGES","LOAD_MESSAGES_SUCCESS","LOAD_MESSAGES_FAILURE","TRUNCATE_MESSAGES","MESSAGE_CREATE","MESSAGE_UPDATE","MESSAGE_DELETE","MESSAGE_DELETE_BULK","MESSAGE_REVEAL","CHANNEL_SELECT","CHANNEL_CREATE","CHANNEL_PRELOAD","GUILD_CREATE","GUILD_SELECT","GUILD_DELETE"])),this.messageUpdateDispatcher?(discordCrypt.hookDispatcher(this.messageUpdateDispatcher,"CHANNEL_SELECT",{after:t=>{discordCrypt.getChannelId()===t.methodArguments[0].channelId&&setTimeout(()=>{discordCrypt.log("Detected chat switch.","debug"),this.loadToolbar(),this.attachHandler(),this.decodeMessages()},1)}}),discordCrypt.hookDispatcher(this.messageUpdateDispatcher,"MESSAGE_CREATE",{after:t=>{discordCrypt.getChannelId()===t.methodArguments[0].channelId&&setTimeout(()=>{discordCrypt.log("Detected new message.","debug"),this.decodeMessages()},1)}}),!0):(discordCrypt.log("Failed to locate the switch event dispatcher!","error"),!1)}unhookMessageCallbacks(){if(!this.messageUpdateDispatcher)return!1;for(let t in this.messageUpdateDispatcher._actionHandlers)t.hasOwnProperty("__cancel")&&t.__cancel();return!0}loadMasterPassword(){const t=this;if(0!==$("#dc-master-overlay").length)return;const e=t.configExists(),s=e?"Unlock Database":"Create Database";$(document.body).prepend(this.masterPasswordHtml);const U=$("#dc-db-password"),F=$("#dc-cancel-btn"),i=$("#dc-unlock-database-btn"),n=$("#dc-master-status"),r=$("#dc-header-master-msg"),Q=$("#dc-prompt-master-msg");r.text(e?"---------- Database Is Locked ----------":"---------- Database Not Found ----------"),Q.text(e?"Enter Password:":"Enter New Password:"),i.text(s),document.getElementById("dc-master-overlay").style.display="block",U.on("keydown",function(t){let e;13===(t.keyCode||t.which)&&i.click()}),i.click(function(){i.attr("disabled",!0),e?i.text("Unlocking Database ..."):i.text("Creating Database ...");let F=U[0].value;if(null===F||""===F)return i.text(s),void i.attr("disabled",!1);discordCrypt.scrypt(Buffer.from(F),Buffer.from(discordCrypt.whirlpool(F,!0),"hex"),32,4096,8,1,(F,r,Q)=>{if(F)return e?i.text("Invalid Password!"):i.text(`Error: ${F}`),U[0].value="",n.css("width","0%"),setTimeout(function(){i.text(s)},1e3),discordCrypt.log(F.toString(),"error"),!0;if(r&&n.css("width",`${parseInt(100*r)}%`),Q){if(t.masterPassword=Buffer.from(Q,"hex"),!t.loadConfig())return t.configFile=null,e?i.text("Invalid Password!"):i.text("Failed to create the database!"),U[0].value="",n.css("width","0%"),setTimeout(function(){i.text(s)},1e3),i.attr("disabled",!1),!1;t.start(),e?i.text("Unlocked Successfully!"):i.text("Created Successfully!"),setTimeout(function(){$("#dc-master-overlay").remove()},1e3)}return!1})}),F.click(function(){setTimeout(function(){$("#dc-master-overlay").remove(),t.masterPassword=null,t.configFile=null},300)})}checkForUpdates(){const t=this;setTimeout(()=>{try{discordCrypt.checkForUpdate((e,s,U,F)=>{const i=require("path").join(discordCrypt.getPluginsPath(),discordCrypt.getPluginName()),n=require("fs");$("#dc-overlay")[0].style.display="block",$("#dc-update-overlay")[0].style.display="block",$("#dc-new-version").text(`New Version: ${""===U?"N/A":U} ( #${s} )`),$("#dc-old-version").text(`Old Version: ${t.getVersion()}`);let r=$("#dc-changelog");r.val("string"==typeof F&&F.length>0?F:"N/A"),r.scrollTop(0),n.writeFile(i,e,t=>{t&&(discordCrypt.log(`Unable to replace the target plugin. ( ${t} )\nDestination: ${i}`,"error"),_alert("Error During Update","Failed to apply the update!"))})})}catch(t){discordCrypt.log(t,"warn")}},1e3)}static setActiveTab(t){let e=["dc-about-tab","dc-keygen-tab","dc-handshake-tab"],s=$(".dc-tab-link");for(let t=0;t<e.length;t++)$(`#${e[t]}`)[0].style.display="none";for(let t=0;t<s.length;t++)s[t].className=s[t].className.split(" active").join("");switch(t){case 0:$("#dc-tab-info-btn")[0].className+=" active",$("#dc-about-tab")[0].style.display="block";break;case 1:$("#dc-tab-keygen-btn")[0].className+=" active",$("#dc-keygen-tab")[0].style.display="block";break;case 2:$("#dc-tab-handshake-btn")[0].className+=" active",$("#dc-handshake-tab")[0].style.display="block"}}loadToolbar(){if(!this.configFile)return;if("@me"===discordCrypt.getChannelId())return;if(0!==$("#dc-passwd-btn").length)return;$(this.searchUiClass).parent().parent().parent().prepend(this.toolbarHtml);let t=$("#dc-passwd-btn"),e=$("#dc-lock-btn"),s=$(".dc-svg");s.attr("class","dc-svg"),e.length>0&&(this.configFile.encodeAll?(e.attr("title","Disable Message Encryption"),e[0].innerHTML=Buffer.from(this.lockIcon,"base64").toString("utf8")):(e.attr("title","Enable Message Encryption"),e[0].innerHTML=Buffer.from(this.unlockIcon,"base64").toString("utf8")),s.attr("class","dc-svg")),$(document.body).prepend(this.settingsMenuHtml),discordCrypt.setActiveTab(0),$("#dc-settings-encrypt-trigger")[0].value=this.configFile.encodeMessageTrigger,$("#dc-settings-default-pwd")[0].value=this.configFile.defaultPassword,$("#dc-settings-scan-delay")[0].value=this.configFile.encryptScanDelay,$("#dc-settings-padding-mode")[0].value=this.configFile.paddingMode.toLowerCase(),$("#dc-settings-cipher-mode")[0].value=this.configFile.encryptBlockMode.toLowerCase(),$("#dc-primary-cipher")[0].value=discordCrypt.cipherIndexToString(this.configFile.encryptMode,!1),$("#dc-secondary-cipher")[0].value=discordCrypt.cipherIndexToString(this.configFile.encryptMode,!0),$("#dc-clipboard-upload-btn").click(discordCrypt.on_upload_encrypted_clipboard_button_clicked(this)),$("#dc-file-btn").click(discordCrypt.on_file_button_clicked),$("#dc-select-file-path-btn").click(discordCrypt.on_alter_file_button_clicked),$("#dc-file-upload-btn").click(discordCrypt.on_upload_file_button_clicked(this)),$("#dc-file-cancel-btn").click(discordCrypt.on_cancel_file_upload_button_clicked),$("#dc-settings-btn").click(discordCrypt.on_settings_button_clicked),$("#dc-exit-settings-btn").click(discordCrypt.on_settings_close_button_clicked),$("#dc-settings-save-btn").click(discordCrypt.on_save_settings_button_clicked(this)),$("#dc-settings-reset-btn").click(discordCrypt.on_reset_settings_button_clicked(this)),$("#dc-restart-now-btn").click(discordCrypt.on_restart_now_button_clicked),$("#dc-restart-later-btn").click(discordCrypt.on_restart_later_button_clicked),$("#dc-tab-info-btn").click(discordCrypt.on_info_tab_button_clicked),$("#dc-tab-keygen-btn").click(discordCrypt.on_exchange_tab_button_clicked),$("#dc-tab-handshake-btn").click(discordCrypt.on_handshake_tab_button_clicked),$("#dc-exit-exchange-btn").click(discordCrypt.on_close_exchange_button_clicked),$("#dc-exchange-btn").click(discordCrypt.on_open_exchange_button_clicked),$("#dc-quick-exchange-btn").click(discordCrypt.on_quick_send_public_key_button_clicked),$("#dc-keygen-method").change(discordCrypt.on_exchange_algorithm_changed),$("#dc-keygen-gen-btn").click(discordCrypt.on_generate_new_key_pair_button_clicked),$("#dc-keygen-clear-btn").click(discordCrypt.on_keygen_clear_button_clicked),$("#dc-keygen-send-pub-btn").click(discordCrypt.on_keygen_send_public_key_button_clicked(this)),$("#dc-handshake-paste-btn").click(discordCrypt.on_handshake_paste_public_key_button_clicked),$("#dc-handshake-compute-btn").click(discordCrypt.on_handshake_compute_button_clicked(this)),$("#dc-handshake-cpy-keys-btn").click(discordCrypt.on_handshake_copy_keys_button_clicked),$("#dc-handshake-apply-keys-btn").click(discordCrypt.on_handshake_apply_keys_button_clicked(this)),t.click(discordCrypt.on_passwd_button_clicked),$("#dc-save-pwd").click(discordCrypt.on_save_passwords_button_clicked(this)),$("#dc-reset-pwd").click(discordCrypt.on_reset_passwords_button_clicked(this)),$("#dc-cancel-btn").click(discordCrypt.on_cancel_password_button_clicked),$("#dc-cpy-pwds-btn").click(discordCrypt.on_copy_current_passwords_button_clicked(this)),e.click(discordCrypt.on_lock_button_clicked(this))}attachHandler(){const t=this;let e=$(this.channelTextAreaClass);1===e.length&&e.off("keydown.dcrypt").on("keydown.dcrypt",function(e){let s=e.keyCode||e.which;t.configFile&&13===s&&(e.shiftKey||$(t.autoCompleteClass)[0]||0==t.sendEncryptedMessage($(this).val())&&(discordCrypt.__getElementReactOwner($("form")[0]).setState({textValue:""}),e.preventDefault(),e.stopPropagation()))})}parseKeyMessage(t){let e=discordCrypt.__extractKeyInfo(t.text().replace(/\r?\n|\r/g,""),!0);if(null===e)return!0;let s=discordCrypt.sha256(Buffer.from($("#dc-pub-key-ta").val(),"hex"),"hex");if(e.fingerprint===s)return t.css("display","none"),!0;let U=$("<button>Perform Key Exchange</button>").addClass("dc-button").addClass("dc-button-inverse");return U.css("margin-left","0"),U.css("margin-right","0"),U.css("margin-top","2%"),U.css("width","100%"),U.click(function(){let s=$("#dc-keygen-method"),U=$("#dc-keygen-algorithm");$("#dc-exchange-btn").click(),s[0].value!==e.algorithm||parseInt(U[0].value)!==e.bit_length?(s[0].value=e.algorithm,s.change(),U[0].value=e.bit_length,$("#dc-keygen-gen-btn").click(),$("#dc-keygen-send-pub-btn").click()):""===$("#dc-pub-key-ta")[0].value&&($("#dc-keygen-gen-btn").click(),$("#dc-keygen-send-pub-btn").click()),$("#dc-tab-handshake-btn").click(),$("#dc-handshake-ppk")[0].value=t.text(),$("#dc-handshake-compute-btn").click()}),t.parent().append(U),t.css("color","blue"),!0}parseSymmetric(t,e,s,U){let F=$(t),i;if(F.text().length<=12)return!1;let n=F.text().slice(0,4);if(n===this.encodedKeyHeader)return this.parseKeyMessage(F);if(n!==this.encodedMessageHeader)return!1;let r=discordCrypt.metaDataDecode(F.text().slice(4,8));if(r[0]>=this.encryptModes.length)return!1;if(r[1]>=this.encryptBlockModes.length)return!1;if(r[2]>=this.paddingModes.length)return!1;if(("string"==typeof(i=discordCrypt.symmetricDecrypt(F.text().replace(/\r?\n|\r/g,"").substr(8),e,s,r[0],r[1],r[2],!0))||i instanceof String)&&""!==i){if(F.parent().parent().parent().parent().css("max-width","100%"),i=discordCrypt.postProcessMessage(i,this.configFile.up1Host),F[0].innerHTML=i.html,i.code)if(null!==U.HighlightJS){let t=$(F.children()[0]).children();for(let e=0;e<t.length;e++)U.HighlightJS.highlightBlock($(t[e]).children()[0]),$(t[e]).children()[0].className="hljs"}else discordCrypt.log("Could not locate HighlightJS module!","error");F.css("color","green")}else 1===i?F.text("[ ERROR ] AUTHENTICATION OF CIPHER TEXT FAILED !!!"):2===i?F.text("[ ERROR ] FAILED TO DECRYPT CIPHER TEXT !!!"):F.text("[ ERROR ] DECRYPTION FAILURE. INVALID KEY OR MALFORMED MESSAGE !!!"),F.css("color","red");return!0}static postProcessMessage(t,e){const s={"&":"&amp;","<":"&lt",">":"&gt;"};t=t.replace(/[&<>]/g,t=>s[t]);let U=discordCrypt.__buildCodeBlockMessage(t),F=U.code,i;return{url:(U=discordCrypt.__buildUrlMessage(U.html,e)).url,code:F,html:U.html}}decodeMessages(){if(!this.configFile||!this.configFile.version)return;const t=this;let e=discordCrypt.getChannelId(),s=Buffer.from(this.configFile.passList[e]&&this.configFile.passList[e].primary?this.configFile.passList[e].primary:this.configFile.defaultPassword),U=Buffer.from(this.configFile.passList[e]&&this.configFile.passList[e].secondary?this.configFile.passList[e].secondary:this.configFile.defaultPassword),F=discordCrypt.getReactModules();$(this.messageMarkupClass).each(function(){this.className.includes("embedDescription")&&void 0===$(this).data("dc-parsed")&&(t.parseSymmetric(this,s,U,F),$(this).data("dc-parsed",!0))})}sendEncryptedMessage(t,e=!1,s){const U=1820,F=["#","/",":"],i=require("crypto");let n;if(-1!==F.indexOf(t[0]))return 1;if(!1!==e||this.configFile.passList[discordCrypt.getChannelId()]&&this.configFile.passList[discordCrypt.getChannelId()].primary&&this.configFile.encodeAll)n=t;else{if((t=t.split("|")).length<=0)return 1;if(t[t.length-1]!==this.configFile.encodeMessageTrigger)return 1;n=t[0]}if(0===n.length)return 1;let r=discordCrypt.__extractTags(n);0!==r[0].length&&(n=r[0]);let Q=r[1].length>0?r[1]:"",a=Buffer.from(this.configFile.passList[discordCrypt.getChannelId()]?this.configFile.passList[discordCrypt.getChannelId()].primary:this.configFile.defaultPassword),B=Buffer.from(this.configFile.passList[discordCrypt.getChannelId()]?this.configFile.passList[discordCrypt.getChannelId()].secondary:this.configFile.defaultPassword);if(n.length+16<1820){let t=discordCrypt.symmetricEncrypt(n,a,B,this.configFile.encryptMode,this.configFile.encryptBlockMode,this.configFile.paddingMode,!0);t=(t=this.encodedMessageHeader+discordCrypt.metaDataEncode(this.configFile.encryptMode,this.configFile.encryptBlockMode,this.configFile.paddingMode,parseInt(i.randomBytes(1)[0]))+t).replace(/(.{32})/g,t=>`${t}\n`),discordCrypt.sendEmbeddedMessage(t,this.messageHeader,`v${this.getVersion().replace("-debug","")}`,5577355,Q,s)}else{let t=discordCrypt.__splitStringChunks(n,1820);for(let e=0;e<t.length;e++){let U=discordCrypt.symmetricEncrypt(t[e],a,B,this.configFile.encryptMode,this.configFile.encryptBlockMode,this.configFile.paddingMode,!0);U=(U=this.encodedMessageHeader+discordCrypt.metaDataEncode(this.configFile.encryptMode,this.configFile.encryptBlockMode,this.configFile.paddingMode,parseInt(i.randomBytes(1)[0]))+U).replace(/(.{32})/g,t=>`${t}\n`),discordCrypt.sendEmbeddedMessage(U,this.messageHeader,`v${this.getVersion().replace("-debug","")}`,5577355,0===e?Q:"",s)}}return 0}static on_file_button_clicked(){$("#dc-overlay")[0].style.display="block",$("#dc-overlay-upload")[0].style.display="block"}static on_alter_file_button_clicked(){let t=require("electron").remote.dialog.showOpenDialog({title:"Select a file to encrypt and upload",label:"Select",message:"Maximum file size is 50 MB",properties:["openFile","showHiddenFiles","treatPackageAsDirectory"]});t.length&&t[0].length&&$("#dc-file-path").val(t[0])}static on_upload_encrypted_clipboard_button_clicked(t){return()=>{let e=discordCrypt.getChannelId();discordCrypt.__up1UploadClipboard(t.configFile.up1Host,t.configFile.up1ApiKey,sjcl,(s,U,F)=>{null===s&&"string"==typeof U&&"string"==typeof F?(t.sendEncryptedMessage(`${U}`,!0,e),require("electron").clipboard.writeText(`Delete URL: ${F}`)):_alert("Failed to upload the clipboard!",s)})}}static on_upload_file_button_clicked(t){return()=>{const e=require("original-fs");let s=$("#dc-file-path"),U=$("#dc-file-upload-btn"),F=$("#dc-file-message-textarea"),i=$("#dc-file-deletion-checkbox").is(":checked"),n=$("#dc-file-name-random-checkbox").is(":checked");F.val().length>0&&t.sendEncryptedMessage(F.val(),!0);let r=discordCrypt.getChannelId();F.val(""),e.existsSync(s.val())?(U.text("Uploading ..."),U[0].className="dc-button dc-button-inverse",discordCrypt.__up1UploadFile(s.val(),t.configFile.up1Host,t.configFile.up1ApiKey,sjcl,(e,F,n)=>{if(null!==e||"string"!=typeof F||"string"!=typeof n)return U.text("Failed to upload the file!"),discordCrypt.log(e,"error"),s.val(""),void setTimeout(()=>{U.text("Upload"),U[0].className="dc-button"},1e3);t.sendEncryptedMessage(`${F}${i?"\n\nDelete URL: "+n:""}`,!0,r),s.val(""),U.text("Upload Successful!"),setTimeout(()=>{U.text("Upload"),U[0].className="dc-button",$("#dc-file-cancel-btn").click()},1e3)},n)):s.val("")}}static on_cancel_file_upload_button_clicked(){$("#dc-file-path").val(""),$("#dc-overlay")[0].style.display="none",$("#dc-overlay-upload")[0].style.display="none"}static on_settings_button_clicked(){$("#dc-overlay")[0].style.display="block",$("#dc-overlay-settings")[0].style.display="block"}static on_settings_close_button_clicked(){$("#dc-overlay")[0].style.display="none",$("#dc-overlay-settings")[0].style.display="none"}static on_save_settings_button_clicked(t){return()=>{let e=$("#dc-primary-cipher"),s=$("#dc-secondary-cipher"),U=$("#dc-master-password");if(t.configFile.encodeMessageTrigger=$("#dc-settings-encrypt-trigger")[0].value,t.configFile.encryptBlockMode=$("#dc-settings-cipher-mode")[0].value,t.configFile.defaultPassword=$("#dc-settings-default-pwd")[0].value,t.configFile.encryptScanDelay=$("#dc-settings-scan-delay")[0].value,t.configFile.paddingMode=$("#dc-settings-padding-mode")[0].value,t.configFile.encryptMode=discordCrypt.cipherStringToIndex(e[0].value,s[0].value),e[0].value=discordCrypt.cipherIndexToString(t.configFile.encryptMode,!1),s[0].value=discordCrypt.cipherIndexToString(t.configFile.encryptMode,!0),""!==U[0].value){let e=U[0].value;U[0].value="",discordCrypt.scrypt(Buffer.from(e),Buffer.from(discordCrypt.whirlpool(e,!0),"hex"),32,4096,8,1,(e,s,U)=>e?(_alert("DiscordCrypt Error","Error setting the new database password. Check the console for more info."),discordCrypt.log(e.toString(),"error"),!0):(U&&(t.masterPassword=Buffer.from(U,"hex"),t.saveSettings($("#dc-settings-save-btn")[0])),!1))}else t.saveSettings($("#dc-settings-save-btn")[0])}}static on_reset_settings_button_clicked(t){return()=>{t.resetSettings($("#dc-settings-reset-btn")[0]),$("#dc-master-password")[0].value="",$("#dc-settings-default-pwd")[0].value=t.configFile.defaultPassword,$("#dc-settings-scan-delay")[0].value=t.configFile.encryptScanDelay,$("#dc-settings-encrypt-trigger")[0].value=t.configFile.encodeMessageTrigger,$("#dc-settings-padding-mode")[0].value=t.configFile.paddingMode.toLowerCase(),$("#dc-settings-cipher-mode")[0].value=t.configFile.encryptBlockMode.toLowerCase(),$("#dc-primary-cipher")[0].value=discordCrypt.cipherIndexToString(t.configFile.encryptMode,!1),$("#dc-secondary-cipher")[0].value=discordCrypt.cipherIndexToString(t.configFile.encryptMode,!0)}}static on_restart_now_button_clicked(){location.reload()}static on_restart_later_button_clicked(){$("#dc-overlay")[0].style.display="none",$("#dc-update-overlay")[0].style.display="none"}static on_info_tab_button_clicked(){discordCrypt.setActiveTab(0)}static on_exchange_tab_button_clicked(){discordCrypt.setActiveTab(1)}static on_handshake_tab_button_clicked(){discordCrypt.setActiveTab(2)}static on_close_exchange_button_clicked(){$("#dc-overlay")[0].style.display="none",$("#dc-overlay-exchange")[0].style.display="none"}static on_open_exchange_button_clicked(){$("#dc-overlay")[0].style.display="block",$("#dc-overlay-exchange")[0].style.display="block"}static on_quick_send_public_key_button_clicked(){$("#dc-keygen-gen-btn").click(),$("#dc-keygen-send-pub-btn").click()}static on_exchange_algorithm_changed(){let t=discordCrypt.getDHBitSizes(),e=discordCrypt.getECDHBitSizes();switch($("#dc-keygen-algorithm option").each(function(){$(this).remove()}),dc_keygen_method[0].value){case"dh":for(let e=0;e<t.length;e++){let s=t[e];dc_keygen_algorithm[0].append(new Option(s,s,e===t.length-1))}break;case"ecdh":for(let t=0;t<e.length;t++){let s=e[t];$("#dc-keygen-algorithm")[0].append(new Option(s,s,t===e.length-1))}break;default:return}}static on_generate_new_key_pair_button_clicked(){let t=discordCrypt.getDHBitSizes(),e=discordCrypt.getECDHBitSizes(),s=32,U=16,F,i,n,r,Q,a=require("crypto"),B=$("#dc-keygen-method"),c=$("#dc-keygen-algorithm");switch(B[0].value){case"dh":Q=discordCrypt.generateDH(parseInt(c[0].value)),i=t.indexOf(parseInt(c[0].value));break;case"ecdh":Q=discordCrypt.generateECDH(parseInt(c[0].value)),i=e.indexOf(parseInt(c[0].value))+t.length;break;default:return}Q&&void 0!==Q&&void 0!==Q.getPrivateKey&&void 0!==Q.getPublicKey&&(discordCrypt.privateExchangeKey=Q,F=parseInt(a.randomBytes(1).toString("hex"),16)%16+16,r=Buffer.from(Q.getPublicKey("hex","ecdh"===B[0].value?"compressed":void 0),"hex"),(n=Buffer.alloc(2+F+r.length)).writeInt8(i,0),n.writeInt8(F,1),a.randomBytes(F).copy(n,2),r.copy(n,2+F),$("#dc-pub-key-ta")[0].value=n.toString("hex"),$("#dc-priv-key-ta")[0].value=Q.getPrivateKey("hex"))}static on_keygen_clear_button_clicked(){$("#dc-pub-key-ta")[0].value=$("#dc-priv-key-ta")[0].value=""}static on_keygen_send_public_key_button_clicked(t){return()=>{let e=$("#dc-pub-key-ta");if(""===e[0].value)return;let s=Buffer.from(e[0].value,"hex"),U=(s=t.encodedKeyHeader+discordCrypt.substituteMessage(s,!0)).replace(/(.{32})/g,t=>`${t}\n`),F=`${"ecdh"!==$("#dc-keygen-method")[0].value?"DH-":"ECDH-"}`+`${$("#dc-keygen-algorithm")[0].value}`,i=`-----BEGIN ${F} PUBLIC KEY-----`,n=`-----END ${F} PUBLIC KEY----- | v${t.getVersion().replace("-debug","")}`;discordCrypt.sendEmbeddedMessage(U,i,n,7471104),$("#dc-keygen-send-pub-btn")[0].innerText="Sent The Public Key!",setTimeout(function(){$("#dc-keygen-send-pub-btn")[0].innerText="Send Public Key"},1e3)}}static on_handshake_paste_public_key_button_clicked(){$("#dc-handshake-ppk")[0].value=require("electron").clipboard.readText()}static on_handshake_compute_button_clicked(t){return()=>{let e,s,U,F,i,n,r,Q,a=$("#dc-pub-key-ta"),B=$("#dc-priv-key-ta"),c=$("#dc-handshake-ppk"),l=$("#dc-handshake-compute-btn");function d(t){const e="!@#$%^&*()_-+=[{]}\\|'\";:/?.>,<";let s="";for(let U=0;U<parseInt(t.length/2);U++)s+=e[parseInt(t.substr(2*U,2))&e.length-1];return s}if(!c[0].value||!c[0].value.length)return;if(!a[0].value||!a[0].value.length)return l[0].innerText="You Didn't Generate A Key!",void setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3);if(c[0].value.replace(/\r?\n|\r/g,"").slice(0,4)!==t.encodedKeyHeader)return;let o=c[0].value.replace(/\r?\n|\r/g,"").slice(4);if(!discordCrypt.isValidBraille(o))return;try{e=Buffer.from(discordCrypt.substituteMessage(o),"hex")}catch(t){return l[0].innerText="Invalid Public Key!",void setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3)}if(s=e.readInt8(0),!discordCrypt.isValidExchangeAlgorithm(s))return l[0].innerText="Invalid Algorithm!",void setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3);let R=Buffer.from(a[0].value,"hex");if(R.readInt8(0)!==s)return l[0].innerText="Mismatched Algorithm!",void setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3);if($("#dc-handshake-algorithm")[0].innerText=`Exchange Algorithm: ${discordCrypt.indexToExchangeAlgorithmString(s)}`,(F=e.readInt8(1))<16||F>32)return l[0].innerText="Invalid Salt Length!",void setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3);if(i=Buffer.from(e.subarray(2,2+F)),n=R.readInt8(1),r=Buffer.from(R.subarray(2,2+n)),$("#dc-handshake-salts")[0].innerText=`Salts: [ ${d(i.toString("hex"))}, `+`${d(r.toString("hex"))} ]`,U=Buffer.from(e.subarray(2+F)).toString("hex"),!discordCrypt.privateExchangeKey||void 0===discordCrypt.privateExchangeKey||void 0===discordCrypt.privateExchangeKey.computeSecret)return l[0].innerText="Failed To Calculate Private Key!",void setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3);let L=discordCrypt.computeExchangeSharedSecret(discordCrypt.privateExchangeKey,U,!1,!1);if(!L||!L.length)return l[0].innerText="Failed To Derive Key!",void setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3);if($("#dc-handshake-secret")[0].innerText=`Derived Secret: [ ${d(L.length>64?L.substring(0,64):L)} ]`,n===F){for(let t=2;t<parseInt(n/4);t+=4){let e=r.readUInt32BE(t),s=i.readUInt32BE(t);if(e!==s){Q=e>s;break}}if(void 0===Q)return l[0].innerText="Both Salts Are Equal ?!",void setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3)}else Q=n>F;let x=Buffer.from(discordCrypt.sha512(Q?r:i,!0),"hex"),E=Buffer.from(discordCrypt.whirlpool(Q?i:r,!0),"hex"),y=0,p=0;discordCrypt.scrypt(Buffer.from(L+E.toString("hex"),"hex"),x,256,3072,16,2,(t,e,s)=>t?(l[0].innerText="Failed Generating Primary Key!",setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3),!0):(e&&(y=50*e,$("#dc-exchange-status").css("width",`${parseInt(y+p)}%`)),s&&($("#dc-handshake-prim-lbl").text(`Primary Key: ( Quality - ${discordCrypt.entropicBitLength(s.toString("base64"))} Bits )`),$("#dc-handshake-primary-key")[0].value=s.toString("base64"),l[0].innerText="Compute Secret Keys",$("#dc-handshake-algorithm")[0].innerText="...",$("#dc-handshake-secret")[0].innerText="...",$("#dc-handshake-salts")[0].innerText="...",$("#dc-exchange-status").css("width","0%")),!1));let u=Q?r:i,V=Q?i:r,S=Buffer.from(u.toString("hex")+L+V.toString("hex"),"hex");discordCrypt.scrypt(S,E,256,3072,8,1,(t,e,s)=>t?(l[0].innerText="Failed Generating Secondary Key!",setTimeout(function(){l[0].innerText="Compute Secret Keys"},1e3),!0):(e&&(p=50*e,$("#dc-exchange-status").css("width",`${parseInt(y+p)}%`)),s&&($("#dc-handshake-sec-lbl").text(`Secondary Key: ( Quality - ${discordCrypt.entropicBitLength(s.toString("base64"))} Bits )`),$("#dc-handshake-secondary-key")[0].value=s.toString("base64")),!1)),l[0].innerText="Generating Keys ...",discordCrypt.privateExchangeKey=void 0,c[0].value="",B[0].value="",a[0].value=""}}static on_handshake_copy_keys_button_clicked(){let t=$("#dc-handshake-primary-key"),e=$("#dc-handshake-secondary-key");""!==t[0].value&&""!==e[0].value&&(require("electron").clipboard.writeText(`Primary Key: ${t[0].value}\r\n\r\n`+`Secondary Key: ${e[0].value}`),t[0].value=e[0].value="",$("#dc-handshake-cpy-keys-btn")[0].innerText="Coped Keys To Clipboard!",setTimeout(function(){$("#dc-handshake-cpy-keys-btn")[0].innerText="Copy Keys & Nuke",$("#dc-handshake-prim-lbl").text("Primary Key: "),$("#dc-handshake-sec-lbl").text("Secondary Key: ")},1e3))}static on_handshake_apply_keys_button_clicked(t){return()=>{let e=$("#dc-handshake-primary-key"),s=$("#dc-handshake-secondary-key");if(!e[0].value||!e[0].value.length)return;if(!s[0].value||!s[0].value.length)return;let U=discordCrypt.createPassword(e[0].value,s[0].value);e[0].value=s[0].value="",t.configFile.passList[discordCrypt.getChannelId()]=U,t.saveConfig(),$("#dc-handshake-apply-keys-btn")[0].innerText="Applied & Saved!",setTimeout(function(){$("#dc-handshake-apply-keys-btn")[0].innerText="Apply Generated Passwords",$("#dc-handshake-prim-lbl").text("Primary Key: "),$("#dc-handshake-sec-lbl").text("Secondary Key: "),$("#dc-overlay")[0].style.display="none",$("#dc-overlay-exchange")[0].style.display="none",discordCrypt.setActiveTab(0)},1e3)}}static on_passwd_button_clicked(){$("#dc-overlay")[0].style.display="block",$("#dc-overlay-password")[0].style.display="block"}static on_save_passwords_button_clicked(t){return()=>{let e=$("#dc-save-pwd");t.updatePasswords(),e.text("Saved!"),setTimeout(function(){e.text("Save Password"),$("#dc-password-primary")[0].value="",$("#dc-password-secondary")[0].value="",$("#dc-overlay")[0].style.display="none",$("#dc-overlay-password")[0].style.display="none"},1e3)}}static on_reset_passwords_button_clicked(t){return()=>{let e=$("#dc-reset-pwd");delete t.configFile.passList[discordCrypt.getChannelId()],t.saveConfig(),e.text("Password Reset!"),setTimeout(function(){e.text("Reset Password"),$("#dc-password-primary")[0].value="",$("#dc-password-secondary")[0].value="",$("#dc-overlay")[0].style.display="none",$("#dc-overlay-password")[0].style.display="none"},1e3)}}static on_cancel_password_button_clicked(){$("#dc-password-primary")[0].value="",$("#dc-password-secondary")[0].value="",setTimeout(function(){$("#dc-overlay")[0].style.display="none",$("#dc-overlay-password")[0].style.display="none"},250)}static on_copy_current_passwords_button_clicked(t){return()=>{let e=t.configFile.passList[discordCrypt.getChannelId()];e?(require("electron").clipboard.writeText(`Primary Key: ${e.primary}\r\n\r\nSecondary Key: ${e.secondary}`),$("#dc-cpy-pwds-btn").text("Copied Keys To Clipboard!"),setTimeout(function(){$("#dc-cpy-pwds-btn").text("Copy Current Passwords!"),$("#dc-cancel-btn").click()},1e3)):require("electron").clipboard.writeText(`Default Password: ${t.configFile.defaultPassword}`)}}static on_lock_button_clicked(t){return()=>{let e=$("#dc-lock-btn");t.configFile.encodeAll?(e.attr("title","Enable Message Encryption"),e[0].innerHTML=Buffer.from(t.unlockIcon,"base64").toString("utf8"),t.configFile.encodeAll=!1):(e.attr("title","Disable Message Encryption"),e[0].innerHTML=Buffer.from(t.lockIcon,"base64").toString("utf8"),t.configFile.encodeAll=!0),$(".dc-svg").attr("class","dc-svg"),t.saveConfig()}}static __shouldIgnoreUpdates(t){const e=require("fs"),s=require("path"),U=s.join(discordCrypt.getPluginsPath(),discordCrypt.getPluginName());return e.existsSync(U)&&(e.lstatSync(U).isSymbolicLink()||-1!==t.indexOf("-debug"))}static __getRequest(t,e){try{require("request")(t,(t,s,U)=>{e(s.statusCode,s.statusMessage,U)})}catch(t){e(-1,t.toString())}}static __getElementReactOwner(t,{include:e,exclude:s=["Popout","Tooltip","Scroller","BackgroundFlash"]}={}){if(void 0===t)return;const U=t=>t[Object.keys(t).find(t=>t.startsWith("__reactInternalInstance"))],F=void 0===e,i=F?s:e;function n(t){const e=t.type.displayName||t.type.name||null;return null!==e&&!!(i.includes(e)^F)}for(let e=U(t).return;!_.isNil(e);e=e.return)if(!_.isNil(e)&&!_.isNil(e.stateNode)&&!(e.stateNode instanceof HTMLElement)&&n(e))return e.stateNode}static __extractKeyInfo(t,e=!1){try{let s=[],U=t;return e&&(U=U.slice(4)),U=discordCrypt.substituteMessage(U),U=Buffer.from(U,"hex"),discordCrypt.isValidExchangeAlgorithm(U[0])?(s.fingerprint=discordCrypt.sha256(U,!0),s.bit_length=discordCrypt.indexToAlgorithmBitLength(U[0]),s.algorithm=discordCrypt.indexToExchangeAlgorithmString(U[0]).split("-")[0].toLowerCase(),s):null}catch(t){return null}}static __splitStringChunks(t,e){if(!e||e<0)return t;const s=Math.ceil(t.length/e),U=new Array(s);for(let F=0,i=0;F<s;++F,i+=e)U[F]=t.substr(i,e);return U}static __isValidUserName(t){if("string"!=typeof t)return!1;if("@"!==t[0])return!1;for(let e=1;e<t.length;e++){if(" "===t[e]||"@"===t[e])return!1;if(1!==e&&"#"===t[e]&&t.length-e-1==4)try{let s=t.slice(e+1,e+5);return!isNaN(s)&&parseInt(s,10)==s}catch(t){return!1}}return!1}static __extractTags(t){let e=t.split(" "),s="",U="",F=[];for(let t=0,s=0;t<e.length;t++)this.__isValidUserName(e[t])?(F[s++]=e[t],U+=`${e[t].split("#")[0]} `):"@everyone"===e[t]||"@here"===e[t]?(F[s++]=e[t],U+=`${e[t]} `):U+=`${e[t]} `;for(let t=0;t<F.length;t++)s+=`${F[t]} `;return[U.trim(),s.trim()]}static __extractCodeBlocks(t){let e=new RegExp(/^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm),s=new RegExp(/(`([^`].*?)`)/g),U,F=[];for(;U=e.exec(t);)F.push({start_pos:U.index,end_pos:U.index+U[1].length,language:0===U[3].trim().length?"text":U[3].trim(),raw_code:U[4],captured_block:U[1]});for(;U=s.exec(t);)F.push({start_pos:U.index,end_pos:U.index+U[0].length,language:"inline",raw_code:t.substr(U.index,U.index+U[0].length).split("`")[1],captured_block:U[0]});return F}static __extractUrls(t){let e=new RegExp(/(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gi),s,U=[];for(;s=e.exec(t);)U.push(s[0]);return U}static __buildCodeBlockMessage(t){try{let e=discordCrypt.__extractCodeBlocks(t);if(!e.length)throw"No code blocks available.";for(let s=0;s<e.length;s++)if("inline"!==e[s].language){let U="",F=e[s].raw_code.replace("\r","").split("\n");for(let t=1;t<F.length-1;t++)U+=`<li>${F[t]}</li>`;t=(t=t.split(e[s].captured_block)).join('<div class="markup line-scanned" data-colour="true" style="color: rgb(111, 0, 0);">'+`<pre class="hljs"><code class="dc-code-block hljs \n                        ${"text"===e[s].language?"":e[s].language}"\n                         style="position: relative;">`+`<ol>${U}</ol></code></pre></div>`)}else t=(t=t.split(e[s].captured_block)).join(`<code class="inline">${e[s].raw_code}</code>`);return{code:!0,html:t}}catch(e){return{code:!1,html:t}}}static __buildUrlMessage(t,e){try{let s=discordCrypt.__extractUrls(t);if(!s.length)throw"No URLs available.";for(let U=0;U<s.length;U++){let F="";t=t.split(s[U]),void 0!==e&&s[U].startsWith(`${e}/#`)&&-1===s[U].indexOf("del?ident=")&&(F=`<iframe src=${s[U]} width="400px" height="400px"></iframe><br/><br/>`),t=t.join(`${F}<a target="_blank" href="${s[U]}">${s[U]}</a>`)}return{url:!0,html:`<span>${t}</span>`}}catch(e){return{url:!1,html:t}}}static __toBuffer(t,e){if(Buffer.isBuffer(t))return t;if("string"==typeof t)return Buffer.from(t,void 0===e?"utf8":e?"hex":"base64");if(Array.isArray(t))return Buffer.from(t);throw"Input is neither an Array(), Buffer() or a string."}static __createHash(t,e,s,U,F){try{const i=require("crypto"),n=U?i.createHmac(e,F):i.createHash(e);return n.update(t),n.digest(s?"hex":"base64")}catch(t){return""}}static __pbkdf2(t,e,s,U,F,i,n,r,Q){const a=require("crypto");let B,c;if("object"==typeof t?B=Buffer.isBuffer(t)?t:Array.isArray?Buffer.from(t):Buffer.from(t,void 0===U?"utf8":U?"hex":"base64"):"string"==typeof t&&(B=Buffer.from(t,"utf8")),"object"==typeof e?c=Buffer.isBuffer(e)?e:Array.isArray?Buffer.from(e):Buffer.from(e,void 0===F?"utf8":F?"hex":"base64"):"string"==typeof e&&(c=Buffer.from(e,"utf8")),"function"==typeof i)a.pbkdf2(B,c,Q,r,n,(t,e)=>{i(t,t?"":e.toString(s?"hex":"base64"))});else try{return a.pbkdf2Sync(B,c,Q,r,n).toString(s?"hex":"base64")}catch(t){throw t}}static __padMessage(t,e,s,U,F){let i,n;function r(t,e){return t%e===e?e:e-t%e}function Q(t,e,s){if(void 0===s){let s=Buffer.alloc(t.length+e);return t.copy(s),Buffer.alloc(e).fill(e).copy(s,t.length),s}return t.slice(0,t.length-t.readInt8(t.length-1))}function a(t,e,s){if(void 0===s){let s=Buffer.alloc(t.length+e);return t.copy(s),Buffer.alloc(e-1).fill(0).copy(s,t.length),Buffer.alloc(1).fill(e).copy(s,t.length+e-1),s}return t.slice(0,t.length-t.readInt8(t.length-1))}function B(t,e,s){const U=require("crypto");if(void 0===s){let s=Buffer.alloc(t.length+e);return t.copy(s),U.randomBytes(e-1).copy(s,t.length),s.writeUInt8(e,t.length+e-1),s}return t.slice(0,t.length-t.readUInt8(t.length-1))}function c(t,e,s){if(void 0===s){let s=Buffer.alloc(t.length+e);return t.copy(s),Buffer.alloc(1).fill(128).copy(s,t.length),Buffer.alloc(e-1).fill(0).copy(t,t.length+1),s}{let e=t.length-1;for(;e>0&&0===t[e];e--);let s=t.slice(0,e+1);return s.slice(0,s.length-1)}}switch(i=discordCrypt.__toBuffer(t,U),n=F?0:r(i.length,s/8),e.toUpperCase()){case"PKC7":return Q(i,n,F);case"ANS2":return a(i,n,F);case"ISO1":return B(i,n,F);case"ISO9":return c(i,n,F);default:return""}}static __isValidCipher(t){const e=require("crypto");let s=!1,U=t.toLowerCase();return e.getCiphers().every(t=>t!==U||(s=!0,!1)),s}static __validateKeyIV(t,e=256,s){let U=e/8;if(t.length!==U){let e;switch(U){case 8:e=discordCrypt.whirlpool64;break;case 16:e=discordCrypt.sha512_128;break;case 20:e=discordCrypt.sha160;break;case 24:e=discordCrypt.whirlpool192;break;case 32:e=discordCrypt.sha256;break;case 64:e=void 0!==s?discordCrypt.sha512:discordCrypt.whirlpool;break;default:throw"Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys are supported."}return Buffer.from(e(t,!0),"hex")}return Buffer.from(t)}static __validateMessage(t,e){try{return discordCrypt.__toBuffer(t,e)}catch(t){throw"exception - Invalid message type."}}static __getFileMimeType(t){let e=require("mime-types").lookup(require("path").extname(t));return!1===e?"application/octet-stream":e}static __clipboardToBuffer(){let t=require("electron").clipboard;if(!t)return{mime_type:"",name:"",data:null};let e=require("original-fs"),s=require("path");if(0===t.availableFormats().length)return{mime_type:"",name:"",data:null};let U=t.availableFormats(),F,i="",n="",r=!1;for(let Q=0;Q<U.length;Q++){let a=U[Q].split("/");switch(a[0]){case"image":switch(a[1].toLowerCase()){case"png":F=t.readImage().toPNG();break;case"bmp":case"bitmap":F=t.readImage().toBitmap();break;case"jpg":case"jpeg":F=t.readImage().toJPEG(100)}break;case"text":i=t.readText(),e.existsSync(i)?(F=e.readFileSync(i),n=s.basename(i),r=!0):F=Buffer.from(i,"utf8")}if(F&&F.length>0)return r&&(U[Q]=discordCrypt.__getFileMimeType(i)),{mime_type:U[Q],name:n,data:F}}return{mime_type:"",name:"",data:null}}static __up1EncryptBuffer(t,e,s,U,F){const i=require("crypto");function n(t){t="string"==typeof t?U.codec.base64url.toBits(t):U.codec.bytes.toBits(t);let e=U.hash.sha512.hash(t);return{seed:t,key:U.bitArray.bitSlice(e,0,256),iv:U.bitArray.bitSlice(e,256,384),ident:U.bitArray.bitSlice(e,384,512)}}function r(t){let e=Buffer.alloc(2*t.length);for(let s=0,U=t.length;s<U;s++)e.writeUInt16BE(t.charCodeAt(s),2*s);return e}try{if(t.length>5e7)return void F("Input size must be < 50 MB.");t=Buffer.concat([r(JSON.stringify({mime:e,name:s})),Buffer.from([0,0]),t]),t=U.codec.bytes.toBits(new Uint8Array(t));let Q=n(i.randomBytes(16));t=U.arrayBuffer.ccm.compat_encrypt(new U.cipher.aes(Q.key),t,Q.iv),F(null,Buffer.from(U.codec.bytes.fromBits(t)),U.codec.base64url.fromBits(Q.ident),U.codec.base64url.fromBits(Q.seed))}catch(t){F(t.toString())}}static __up1EncryptFile(t,e,s,U=!1){const F=require("crypto"),i=require("path"),n=require("original-fs");try{if(n.statSync(t).size>5e7)return void s("File size must be < 50 MB.");n.readFile(t,(n,r)=>{null===n?discordCrypt.__up1EncryptBuffer(r,discordCrypt.__getFileMimeType(t),U?F.pseudoRandomBytes(8).toString("hex")+i.extname(t):i.basename(t),e,s):s(n.toString())})}catch(t){s(t.toString())}}static __up1UploadClipboard(t,e,s,U,F){let i=void 0===F?discordCrypt.__clipboardToBuffer():F;if(!i.mime_type.length||null===i.data)return void U("Invalid clipboard data.");let n=0===i.name.length?require("crypto").pseudoRandomBytes(16).toString("hex"):i.name;this.__up1EncryptBuffer(i.data,i.mime_type,n,s,(s,F,i,n)=>{if(null!==s)return void U(s);let r=new(require("form-data"));r.append("ident",i),r.append("file",F,{filename:"file",contentType:"text/plain"}),void 0!==e&&"string"==typeof e&&r.append("api_key",e),require("request").post({headers:r.getHeaders(),uri:`${t}/up`,body:r},(e,s,F)=>{try{null!==e?U(e):U(null,`${t}/#${n}`,`${t}/del?ident=${i}&delkey=${JSON.parse(F).delkey}`,n)}catch(t){U(t.toString())}})})}static __up1UploadFile(t,e,s,U,F,i=!1){this.__up1EncryptFile(t,U,(t,U,i,n)=>{if(null!==t)return void F(t);let r=new(require("form-data"));r.append("ident",i),r.append("file",U,{filename:"file",contentType:"text/plain"}),void 0!==s&&"string"==typeof s&&r.append("api_key",s),require("request").post({headers:r.getHeaders(),uri:`${e}/up`,body:r},(t,s,U)=>{try{null!==t?F(t):F(null,`${e}/#${n}`,`${e}/del?ident=${i}&delkey=${JSON.parse(U).delkey}`,n)}catch(t){F(t.toString())}})},i)}static scrypt(t,e,s,U=16384,F=8,i=1,n=null){let r,Q;function a(t,e,s,U){try{return Buffer.from(discordCrypt.pbkdf2_sha256(t,e,!0,void 0,void 0,s,U),"hex")}catch(t){return discordCrypt.log(t.toString(),"error"),Buffer.alloc(1)}}function B(t,e,s,U,F){let i,n,r,Q;for(i=0,n=16*(2*s-1);i<16;i++)F[i]=t[n+i];for(i=0;i<2*s;i++){for(n=0,r=16*i;n<16;n++)F[n]^=t[r+n];for(n=0;n<16;n++)U[n]=F[n];let s=(t,e)=>t<<e|t>>>32-e;for(n=8;n>0;n-=2)U[4]^=s(U[0]+U[12],7),U[8]^=s(U[4]+U[0],9),U[12]^=s(U[8]+U[4],13),U[0]^=s(U[12]+U[8],18),U[9]^=s(U[5]+U[1],7),U[13]^=s(U[9]+U[5],9),U[1]^=s(U[13]+U[9],13),U[5]^=s(U[1]+U[13],18),U[14]^=s(U[10]+U[6],7),U[2]^=s(U[14]+U[10],9),U[6]^=s(U[2]+U[14],13),U[10]^=s(U[6]+U[2],18),U[3]^=s(U[15]+U[11],7),U[7]^=s(U[3]+U[15],9),U[11]^=s(U[7]+U[3],13),U[15]^=s(U[11]+U[7],18),U[1]^=s(U[0]+U[3],7),U[2]^=s(U[1]+U[0],9),U[3]^=s(U[2]+U[1],13),U[0]^=s(U[3]+U[2],18),U[6]^=s(U[5]+U[4],7),U[7]^=s(U[6]+U[5],9),U[4]^=s(U[7]+U[6],13),U[5]^=s(U[4]+U[7],18),U[11]^=s(U[10]+U[9],7),U[8]^=s(U[11]+U[10],9),U[9]^=s(U[8]+U[11],13),U[10]^=s(U[9]+U[8],18),U[12]^=s(U[15]+U[14],7),U[13]^=s(U[12]+U[15],9),U[14]^=s(U[13]+U[12],13),U[15]^=s(U[14]+U[13],18);for(n=0;n<16;++n)F[n]+=U[n];for(n=0,r=e+16*i;n<16;n++)t[n+r]=F[n]}for(i=0;i<s;i++)for(n=0,r=e+2*i*16,Q=16*i;n<16;n++)t[Q+n]=t[r+n];for(i=0;i<s;i++)for(n=0,r=e+16*(2*i+1),Q=16*(i+s);n<16;n++)t[Q+n]=t[r+n]}function c(t,e,U,F,i,n){let r,Q,c,l=a(t,e,128*i*F,1),d=new Uint32Array(32*i*F);for(let t=0;t<d.length;t++){let e=4*t;d[t]=(255&l[e+3])<<24|(255&l[e+2])<<16|(255&l[e+1])<<8|(255&l[e])<<0}let o=new Uint32Array(64*F),R=new Uint32Array(32*F*U),L=32*F,x=new Uint32Array(16),E=new Uint32Array(16);r=i*U*2,Q=0,c=null;let y=!1,p=0,u=0,V,S,h=parseInt(1e3/F),f="undefined"!=typeof setImmediate?setImmediate:setTimeout;const g=function(){if(y)return n(new Error("cancelled"),Q/r);let e,b,C,m,k;switch(p){case 0:S=32*u*F;for(let t=0;t<L;t++)o[t]=d[S+t];p=1,V=0;case 1:for((e=U-V)>h&&(e=h),b=0;b<e;b++){for(C=(V+b)*L,m=L;m--;)R[m+C]=o[m];B(o,L,F,x,E)}if(V+=e,Q+=e,(k=parseInt(1e3*Q/r))!==c){if(y=n(null,Q/r))break;c=k}if(V<U)break;V=0,p=2;case 2:for((e=U-V)>h&&(e=h),b=0;b<e;b++){for(m=0,C=(o[16*(2*F-1)]&U-1)*L;m<L;m++)o[m]^=R[C+m];B(o,L,F,x,E)}if(V+=e,Q+=e,(k=parseInt(1e3*Q/r))!==c){if(y=n(null,Q/r))break;c=k}if(V<U)break;for(m=0;m<L;m++)d[S+m]=o[m];if(++u<i){p=0;break}for(l=[],b=0;b<d.length;b++)l.push(d[b]>>0&255),l.push(d[b]>>8&255),l.push(d[b]>>16&255),l.push(d[b]>>24&255);return n(null,1,Buffer.from(a(t,Buffer.from(l),s,1)));default:return n(new Error("invalid state"),0)}f(g)};g()}if("object"==typeof t||"string"==typeof t)if(Array.isArray(t))r=Buffer.from(t);else if(Buffer.isBuffer(t))r=t;else{if("string"!=typeof t)return discordCrypt.log("Invalid input parameter type specified!","error"),!1;r=Buffer.from(t,"utf8")}if("object"==typeof e||"string"==typeof e)if(Array.isArray(e))Q=Buffer.from(e);else if(Buffer.isBuffer(e))Q=e;else{if("string"!=typeof e)return discordCrypt.log("Invalid salt parameter type specified!","error"),!1;Q=Buffer.from(e,"utf8")}return"number"!=typeof s?(discordCrypt.log("Invalid dkLen parameter specified. Must be a numeric value.","error"),!1):s<=0||s>=65536?(discordCrypt.log("Invalid dkLen parameter specified. Must be a numeric value.","error"),!1):!U||U&U-1!=0?(discordCrypt.log("Parameter N must be a power of 2.","error"),!1):void 0!==n&&null!==n?(setTimeout(()=>{c(r,Q,U,F,i,n)},1),!0):(discordCrypt.log("No callback specified.","error"),!1)}static whirlpool64(t,e){return Buffer.from(discordCrypt.whirlpool(t,!0),"hex").slice(0,8).toString(e?"hex":"base64")}static sha512_128(t,e){return Buffer.from(discordCrypt.sha512(t,!0),"hex").slice(0,16).toString(e?"hex":"base64")}static whirlpool192(t,e){return Buffer.from(discordCrypt.sha512(t,!0),"hex").slice(0,24).toString(e?"hex":"base64")}static sha160(t,e){return discordCrypt.__createHash(t,"sha1",e)}static sha256(t,e){return discordCrypt.__createHash(t,"sha256",e)}static sha512(t,e){return discordCrypt.__createHash(t,"sha512",e)}static whirlpool(t,e){return discordCrypt.__createHash(t,"whirlpool",e)}static hmac_sha256(t,e,s){return discordCrypt.__createHash(t,"sha256",s,!0,e)}static hmac_sha512(t,e,s){return discordCrypt.__createHash(t,"sha512",s,!0,e)}static hmac_whirlpool(t,e,s){return discordCrypt.__createHash(t,"whirlpool",s,!0,e)}static pbkdf2_sha160(t,e,s,U,F,i=32,n=5e3,r){return discordCrypt.__pbkdf2(t,e,s,U,F,r,"sha1",i,n)}static pbkdf2_sha256(t,e,s,U,F,i=32,n=5e3,r){return discordCrypt.__pbkdf2(t,e,s,U,F,r,"sha256",i,n)}static pbkdf2_sha512(t,e,s,U,F,i=32,n=5e3,r){return discordCrypt.__pbkdf2(t,e,s,U,F,r,"sha512",i,n)}static pbkdf2_whirlpool(t,e,s,U,F,i=32,n=5e3,r){return discordCrypt.__pbkdf2(t,e,s,U,F,r,"whirlpool",i,n)}static __encrypt(t,e,s,U,F,i,n,r=256,Q=128,a,B=1e3){const c=`${t}${void 0===e?"":"-"+e}`,l=require("crypto");let d,o,R,L,x,E;if(!discordCrypt.__isValidCipher(c)||-1===["cbc","cfb","ofb"].indexOf(e.toLowerCase()))return null;if(d=discordCrypt.__padMessage(U,s,r,n),o=discordCrypt.__validateKeyIV(F,r),void 0!==a){if(!(L=discordCrypt.__toBuffer(a))||0===L.length)return null;8!==L.length&&(L=Buffer.from(discordCrypt.whirlpool64(L,!0),"hex"))}else L=l.randomBytes(8);R=(x=discordCrypt.pbkdf2_sha256(o.toString("hex"),L.toString("hex"),!0,!0,!0,Q/8+r/8,B)).slice(0,Q/8),o=x.slice(Q/8,Q/8+r/8),(E=l.createCipheriv(c,o,R)).setAutoPadding(!1);let y=E.update(d,void 0,"hex");return y+=E.final("hex"),Buffer.from(L.toString("hex")+y,"hex").toString(i?"hex":"base64")}static __decrypt(t,e,s,U,F,i,n,r=256,Q=128,a=1e3){const B=`${t}${void 0===e?"":"-"+e}`,c=require("crypto");let l,d,o,R,L,x;if(!discordCrypt.__isValidCipher(B)||-1===["cbc","ofb","cfb"].indexOf(e.toLowerCase()))return null;l=discordCrypt.__validateMessage(U,n),d=discordCrypt.__validateKeyIV(F,r),R=l.slice(0,8),o=(L=discordCrypt.pbkdf2_sha256(d.toString("hex"),R.toString("hex"),!0,!0,!0,Q/8+r/8,a)).slice(0,Q/8),d=L.slice(Q/8,Q/8+r/8),l=l.slice(8),(x=c.createDecipheriv(B,d,o)).setAutoPadding(!1);let E=x.update(l,void 0,"hex");return E+=x.final("hex"),(E=discordCrypt.__padMessage(E,s,r,!0,!0)).toString(i)}static blowfish512_encrypt(t,e,s,U,F=!1,i,n,r=1e3){const Q=512,a=64;return discordCrypt.__encrypt("bf",s,U,t,e,F,i,512,64,n,r)}static blowfish512_decrypt(t,e,s,U,F="utf8",i,n=1e3){const r=512,Q=64;return discordCrypt.__decrypt("bf",s,U,t,e,F,i,512,64,n)}static aes256_encrypt(t,e,s,U,F=!1,i,n,r=1e3){const Q=256,a=128;return discordCrypt.__encrypt("aes-256",s,U,t,e,F,i,256,128,n,r)}static aes256_decrypt(t,e,s,U,F="utf8",i,n=1e3){const r=256,Q=128;return discordCrypt.__decrypt("aes-256",s,U,t,e,F,i,256,128,n)}static aes256_encrypt_gcm(t,e,s,U=!1,F,i,n,r=1e3){const Q=128,a=256,B="aes-256-gcm",c=require("crypto");let l,d,o,R,L,x;if(l=discordCrypt.__padMessage(t,s,256,F),d=discordCrypt.__validateKeyIV(e,256),void 0!==n){if(!(R=discordCrypt.__toBuffer(n))||0===R.length)return null;8!==R.length&&(R=Buffer.from(discordCrypt.whirlpool64(R,!0),"hex"))}else R=c.randomBytes(8);o=(L=discordCrypt.pbkdf2_sha256(d.toString("hex"),R.toString("hex"),!0,!0,!0,48,r)).slice(0,16),d=L.slice(16,48),x=c.createCipheriv(B,d,o),void 0!==i&&x.setAAD(discordCrypt.__toBuffer(i)),x.setAutoPadding(!1);let E=x.update(l,void 0,"hex");return E+=x.final("hex"),Buffer.from(x.getAuthTag().toString("hex")+R.toString("hex")+E,"hex").toString(U?"hex":"base64")}static aes256_decrypt_gcm(t,e,s,U="utf8",F,i,n=1e3){const r=128,Q=256,a="aes-256-gcm",B=require("crypto");let c,l,d,o,R,L,x;c=discordCrypt.__validateMessage(t,F),l=discordCrypt.__validateKeyIV(e,256),R=c.slice(0,16),o=(c=c.slice(16)).slice(0,8),c=c.slice(8),d=(L=discordCrypt.pbkdf2_sha256(l.toString("hex"),o.toString("hex"),!0,!0,!0,48,n)).slice(0,16),l=L.slice(16,48),(x=B.createDecipheriv(a,l,d)).setAuthTag(R),void 0!==i&&x.setAAD(discordCrypt.__toBuffer(i)),x.setAutoPadding(!1);let E=x.update(c,void 0,"hex");return E+=x.final("hex"),(E=discordCrypt.__padMessage(E,s,256,!0,!0)).toString(U)}static camellia256_encrypt(t,e,s,U,F=!1,i,n,r=1e3){const Q=256,a=128;return discordCrypt.__encrypt("camellia-256",s,U,t,e,F,i,256,128,n,r)}static camellia256_decrypt(t,e,s,U,F="utf8",i,n=1e3){const r=256,Q=128;return discordCrypt.__decrypt("camellia-256",s,U,t,e,F,i,256,128,n)}static tripledes192_encrypt(t,e,s,U,F=!1,i,n,r=1e3){const Q=192,a=64;return discordCrypt.__encrypt("des-ede3",s,U,t,e,F,i,192,64,n,r)}static tripledes192_decrypt(t,e,s,U,F="utf8",i,n=1e3){const r=192,Q=64;return discordCrypt.__decrypt("des-ede3",s,U,t,e,F,i,192,64,n)}static idea128_encrypt(t,e,s,U,F=!1,i,n,r=1e3){const Q=128,a=64;return discordCrypt.__encrypt("idea",s,U,t,e,F,i,128,64,n,r)}static idea128_decrypt(t,e,s,U,F="utf8",i,n=1e3){const r=128,Q=64;return discordCrypt.__decrypt("idea",s,U,t,e,F,i,128,64,n)}static cipherStringToIndex(t,e){let s=0;if("number"==typeof t)return t;switch("string"==typeof t&&-1!==t.search("-")&&void 0===e&&(e=(t=t.split("-")[0]).split("-")[1]),t){case"bf":break;case"aes":s=1;break;case"camel":s=2;break;case"idea":s=3;break;case"tdes":s=4;break;default:return 0}if(void 0!==e)switch(e){case"bf":break;case"aes":s+=5;break;case"camel":s+=10;break;case"idea":s+=15;break;case"tdes":s+=20}return s}static cipherIndexToString(t,e){return void 0!==e&&e?t>=20?"tdes":t>=15?"idea":t>=10?"camel":t>=5?"aes":"bf":(t>=20?t-=20:t>=15&&t<=19?t-=15:t>=10&&t<=14?t-=10:t>=5&&t<=9&&(t-=5),1===t?"aes":2===t?"camel":3===t?"idea":4===t?"tdes":"bf")}static entropicBitLength(t){let e=Object.create(null),s,U=0,F=t.length;for(s in t.split("").forEach(t=>{e[t]?e[t]++:e[t]=1}),e){let t=e[s]/F;U-=t*Math.log(t)/Math.log(2)}return parseInt(U*F)}static getBraille(){return Array.from("\u2800\u2801\u2802\u2803\u2804\u2805\u2806\u2807\u2808\u2809\u280a\u280b\u280c\u280d\u280e\u280f\u2810\u2811\u2812\u2813\u2814\u2815\u2816\u2817\u2818\u2819\u281a\u281b\u281c\u281d\u281e\u281f\u2820\u2821\u2822\u2823\u2824\u2825\u2826\u2827\u2828\u2829\u282a\u282b\u282c\u282d\u282e\u282f\u2830\u2831\u2832\u2833\u2834\u2835\u2836\u2837\u2838\u2839\u283a\u283b\u283c\u283d\u283e\u283f\u2840\u2841\u2842\u2843\u2844\u2845\u2846\u2847\u2848\u2849\u284a\u284b\u284c\u284d\u284e\u284f\u2850\u2851\u2852\u2853\u2854\u2855\u2856\u2857\u2858\u2859\u285a\u285b\u285c\u285d\u285e\u285f\u2860\u2861\u2862\u2863\u2864\u2865\u2866\u2867\u2868\u2869\u286a\u286b\u286c\u286d\u286e\u286f\u2870\u2871\u2872\u2873\u2874\u2875\u2876\u2877\u2878\u2879\u287a\u287b\u287c\u287d\u287e\u287f\u2880\u2881\u2882\u2883\u2884\u2885\u2886\u2887\u2888\u2889\u288a\u288b\u288c\u288d\u288e\u288f\u2890\u2891\u2892\u2893\u2894\u2895\u2896\u2897\u2898\u2899\u289a\u289b\u289c\u289d\u289e\u289f\u28a0\u28a1\u28a2\u28a3\u28a4\u28a5\u28a6\u28a7\u28a8\u28a9\u28aa\u28ab\u28ac\u28ad\u28ae\u28af\u28b0\u28b1\u28b2\u28b3\u28b4\u28b5\u28b6\u28b7\u28b8\u28b9\u28ba\u28bb\u28bc\u28bd\u28be\u28bf\u28c0\u28c1\u28c2\u28c3\u28c4\u28c5\u28c6\u28c7\u28c8\u28c9\u28ca\u28cb\u28cc\u28cd\u28ce\u28cf\u28d0\u28d1\u28d2\u28d3\u28d4\u28d5\u28d6\u28d7\u28d8\u28d9\u28da\u28db\u28dc\u28dd\u28de\u28df\u28e0\u28e1\u28e2\u28e3\u28e4\u28e5\u28e6\u28e7\u28e8\u28e9\u28ea\u28eb\u28ec\u28ed\u28ee\u28ef\u28f0\u28f1\u28f2\u28f3\u28f4\u28f5\u28f6\u28f7\u28f8\u28f9\u28fa\u28fb\u28fc\u28fd\u28fe\u28ff")}static isValidBraille(t){let e=discordCrypt.getBraille();for(let s=0;s<t.length;s++)if(-1===e.indexOf(t[s]))return!1;return!0}static getBase64(){return Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=")}static getDHBitSizes(){return[768,1024,1536,2048,3072,4096,6144,8192]}static getECDHBitSizes(){return[224,256,384,409,521,571]}static isValidExchangeAlgorithm(t){return t>=0&&t<=discordCrypt.getDHBitSizes().length+discordCrypt.getECDHBitSizes().length-1}static indexToExchangeAlgorithmString(t){let e=discordCrypt.getDHBitSizes(),s=discordCrypt.getECDHBitSizes(),U=["DH-","ECDH-"];return discordCrypt.isValidExchangeAlgorithm(t)?t<=e.length-1?U[0]+e[t]:U[1]+s[t-e.length]:"Invalid Algorithm"}static indexToAlgorithmBitLength(t){let e=discordCrypt.getDHBitSizes(),s=discordCrypt.getECDHBitSizes();return discordCrypt.isValidExchangeAlgorithm(t)?t<=e.length-1?e[t]:s[t-e.length]:0}static computeExchangeSharedSecret(t,e,s,U){let F,i;F=s?"base64":"hex",i=U?"base64":"hex";try{return t.computeSecret(e,F,i)}catch(t){return null}}static generateDH(t,e){let s,U;switch(t){case 768:s="modp1";break;case 1024:s="modp2";break;case 1536:s="modp5";break;case 2048:s="modp14";break;case 3072:s="modp15";break;case 4096:s="modp16";break;case 6144:s="modp17";break;case 8192:s="modp18";break;default:return null}try{U=require("crypto").getDiffieHellman(s)}catch(t){return null}return void 0!==U&&null!==U&&void 0!==U.generateKeys&&(void 0===e?U.generateKeys():void 0!==U.setPrivateKey&&U.setPrivateKey(e)),U}static generateECDH(t,e){let s,U;switch(t){case 224:s="secp224k1";break;case 256:s="secp256k1";break;case 384:s="secp384r1";break;case 409:s="sect409k1";break;case 521:s="secp521r1";break;case 571:s="sect571k1";break;default:return null}try{U=require("crypto").createECDH(s)}catch(t){return null}return void 0!==U&&null!==U&&void 0!==U.generateKeys&&(void 0===e?U.generateKeys("hex","compressed"):void 0!==U.setPrivateKey&&U.setPrivateKey(e)),U}static substituteMessage(t,e){let s=discordCrypt.getBraille(),U="",F=0;if(void 0!==e){if(!Buffer.isBuffer(t))throw"Message input is not a buffer.";for(let e=0;e<t.length;e++)U+=s[t[e]]}else for(let e=0;e<t.length;e++){if(-1===(F=s.indexOf(t[e])))throw"Message contains invalid characters.";U+=`0${F.toString(16)}`.slice(-2)}return U}static metaDataEncode(t,e,s,U){"string"==typeof t&&(t=discordCrypt.cipherStringToIndex(t)),"string"==typeof e&&(e=["cbc","cfb","ofb"].indexOf(e.toLowerCase())),"string"==typeof s&&(s=["pkc7","ans2","iso1","iso9"].indexOf(s.toLowerCase()));let F=Buffer.from([t,e,s,parseInt(U)]);return discordCrypt.substituteMessage(F,!0)}static metaDataDecode(t){return Buffer.from(discordCrypt.substituteMessage(t),"hex")}static symmetricEncrypt(t,e,s,U,F,i){function n(t,e,s,U,F){switch(s){case 0:return discordCrypt.blowfish512_encrypt(t,e,U,F);case 1:return discordCrypt.aes256_encrypt(t,e,U,F);case 2:return discordCrypt.camellia256_encrypt(t,e,U,F);case 3:return discordCrypt.idea128_encrypt(t,e,U,F);case 4:return discordCrypt.tripledes192_encrypt(t,e,U,F);default:return null}}let r=F.toLowerCase(),Q=i,a="";if(U>=0&&U<=4)a=discordCrypt.blowfish512_encrypt(n(t,e,U,r,Q),s,r,Q,!0,!1);else if(U>=5&&U<=9)a=discordCrypt.aes256_encrypt(n(t,e,U-5,r,Q),s,r,Q,!0,!1);else if(U>=10&&U<=14)a=discordCrypt.camellia256_encrypt(n(t,e,U-10,r,Q),s,r,Q,!0,!1);else if(U>=15&&U<=19)a=discordCrypt.idea128_encrypt(n(t,e,U-15,r,Q),s,r,Q,!0,!1);else{if(!(U>=20&&U<=24))throw`Unknown cipher selected: ${U}`;a=discordCrypt.tripledes192_encrypt(n(t,e,U-20,r,Q),s,r,Q,!0,!1)}let B=discordCrypt.hmac_sha256(Buffer.from(a,"hex"),e,!0);return a=Buffer.from(B+a,"hex"),discordCrypt.substituteMessage(a,!0)}static symmetricDecrypt(t,e,s,U,F,i){const n=require("crypto");function r(t,e,s,U,F,i="utf8",n){switch(s){case 0:return discordCrypt.blowfish512_decrypt(t,e,U,F,i,n);case 1:return discordCrypt.aes256_decrypt(t,e,U,F,i,n);case 2:return discordCrypt.camellia256_decrypt(t,e,U,F,i,n);case 3:return discordCrypt.idea128_decrypt(t,e,U,F,i,n);case 4:return discordCrypt.tripledes192_decrypt(t,e,U,F,i,n);default:return null}}let Q,a;if("string"!=typeof F)if(0===F)Q="cbc";else if(1===F)Q="cfb";else{if(2!==F)return"";Q="ofb"}if("string"!=typeof i)if(0===i)a="pkc7";else if(1===i)a="ans2";else if(2===i)a="iso1";else{if(3!==i)return"";a="iso9"}try{t=Buffer.from(discordCrypt.substituteMessage(t),"hex");let F=Buffer.from(t.subarray(0,32));t=Buffer.from(t.subarray(32));let i=Buffer.from(discordCrypt.hmac_sha256(t,e,!0),"hex");return n.timingSafeEqual(i,F)?U>=0&&U<=4?r(discordCrypt.blowfish512_decrypt(t,s,Q,a,"base64"),e,U,Q,a,"utf8",!1):U>=5&&U<=9?r(discordCrypt.aes256_decrypt(t,s,Q,a,"base64"),e,U-5,Q,a,"utf8",!1):U>=10&&U<=14?r(discordCrypt.camellia256_decrypt(t,s,Q,a,"base64"),e,U-10,Q,a,"utf8",!1):U>=15&&U<=19?r(discordCrypt.idea128_decrypt(t,s,Q,a,"base64"),e,U-15,Q,a,"utf8",!1):U>=20&&U<=24?r(discordCrypt.tripledes192_decrypt(t,s,Q,a,"base64"),e,U-20,Q,a,"utf8",!1):-3:1}catch(t){return 2}}}module.exports={discordCrypt:discordCrypt};
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIjAiXSwibmFtZXMiOlsiZGlzY29yZENyeXB0IiwiW29iamVjdCBPYmplY3RdIiwidGhpcyIsIm1lc3NhZ2VNYXJrdXBDbGFzcyIsInNlYXJjaFVpQ2xhc3MiLCJjaGFubmVsVGV4dEFyZWFDbGFzcyIsImF1dG9Db21wbGV0ZUNsYXNzIiwiZW5jb2RlZE1lc3NhZ2VIZWFkZXIiLCJlbmNvZGVkS2V5SGVhZGVyIiwibWVzc2FnZUhlYWRlciIsIm1hc3RlclBhc3N3b3JkIiwic2NhbkludGVydmFsIiwidW5kZWZpbmVkIiwidG9vbGJhclJlbG9hZEludGVydmFsIiwidXBkYXRlSGFuZGxlckludGVydmFsIiwibWVzc2FnZVVwZGF0ZURpc3BhdGNoZXIiLCJjb25maWdGaWxlIiwiZW5jcnlwdE1vZGVzIiwiZW5jcnlwdEJsb2NrTW9kZXMiLCJwYWRkaW5nTW9kZXMiLCJhcHBDc3MiLCJ0b29sYmFySHRtbCIsIm1hc3RlclBhc3N3b3JkSHRtbCIsInNldHRpbmdzTWVudUh0bWwiLCJ1bmxvY2tJY29uIiwibG9ja0ljb24iLCJsaWJyYXJpZXMiLCJjdXJyaWZ5LmpzIiwic2pjbC5qcyIsInNtYWxsdGFsay5qcyIsInNlbGYiLCJ2YWxpZFBsdWdpbk5hbWUiLCJfX3Nob3VsZElnbm9yZVVwZGF0ZXMiLCJnZXRWZXJzaW9uIiwiY2hlY2tGb3JVcGRhdGVzIiwic2V0SW50ZXJ2YWwiLCJob29rTWVzc2FnZUNhbGxiYWNrcyIsImxvYWRUb29sYmFyIiwiYXR0YWNoSGFuZGxlciIsImRlY29kZU1lc3NhZ2VzIiwiZW5jcnlwdFNjYW5EZWxheSIsImxvYWRNYXN0ZXJQYXNzd29yZCIsIl9hbGVydCIsImdldFBsdWdpbk5hbWUiLCIkIiwib2ZmIiwidW5ob29rTWVzc2FnZUNhbGxiYWNrcyIsImNsZWFySW50ZXJ2YWwiLCJyZW1vdmUiLCJ2bSIsInJlcXVpcmUiLCJpbmplY3RDU1MiLCJuYW1lIiwicnVuSW5UaGlzQ29udGV4dCIsImZpbGVuYW1lIiwiZGlzcGxheUVycm9ycyIsImNsZWFyQ1NTIiwidmVyc2lvbiIsImRlZmF1bHRQYXNzd29yZCIsImVuY29kZU1lc3NhZ2VUcmlnZ2VyIiwiZW5jcnlwdE1vZGUiLCJlbmNyeXB0QmxvY2tNb2RlIiwiZW5jb2RlQWxsIiwicGFkZGluZ01vZGUiLCJwYXNzTGlzdCIsInVwMUhvc3QiLCJ1cDFBcGlLZXkiLCJkYXRhIiwiYmRQbHVnaW5TdG9yYWdlIiwiZ2V0IiwiZ2V0TmFtZSIsImxvZyIsImdldERlZmF1bHRDb25maWciLCJzYXZlQ29uZmlnIiwiSlNPTiIsInBhcnNlIiwiYWVzMjU2X2RlY3J5cHRfZ2NtIiwiZXJyIiwib25VcGRhdGUiLCJvbGRWZXJzaW9uIiwib2xkQ2FjaGUiLCJzZXQiLCJhZXMyNTZfZW5jcnlwdF9nY20iLCJzdHJpbmdpZnkiLCJidG4iLCJpbm5lckhUTUwiLCJzZXRUaW1lb3V0Iiwic3R5bGUiLCJkaXNwbGF5IiwicHJpbSIsInNlYyIsInZhbHVlIiwibGVuZ3RoIiwiZ2V0Q2hhbm5lbElkIiwiY3JlYXRlUGFzc3dvcmQiLCJzZWNvbmRhcnkiLCJleGlzdHNTeW5jIiwiam9pbiIsImdldFBsdWdpbnNQYXRoIiwicHJvY2VzcyIsInBsYXRmb3JtIiwiZW52IiwiQVBQREFUQSIsIkhPTUUiLCJvblVwZGF0ZUNhbGxiYWNrIiwidXBkYXRlX3VybCIsImNoYW5nZWxvZ191cmwiLCJfX2dldFJlcXVlc3QiLCJzdGF0dXNDb2RlIiwiZXJyb3JTdHJpbmciLCJyZXBsYWNlIiwibG9jYWxGaWxlIiwicmVhZEZpbGVTeW5jIiwidG9TdHJpbmciLCJlIiwic3BsaXQiLCJjdXJyZW50SGFzaCIsInNoYTI1NiIsImhhc2giLCJzaG9ydEhhc2giLCJCdWZmZXIiLCJmcm9tIiwic2xpY2UiLCJ2ZXJzaW9uX251bWJlciIsIm1hdGNoIiwiY2hhbmdlbG9nIiwiZXgiLCJ3aW5kb3ciLCJsb2NhdGlvbiIsInBhdGhuYW1lIiwicG9wIiwicHJpbWFyeV9wYXNzd29yZCIsInNlY29uZGFyeV9wYXNzd29yZCIsInByaW1hcnkiLCJyZXEiLCJ3ZWJwYWNrSnNvbnAiLCJfX2V4dHJhX2lkX18iLCJtb2R1bGUiLCJfZXhwb3J0XyIsImRlZmF1bHQiLCJwdXNoIiwiX21vZHVsZV8iLCJleHBvcnRzIiwibSIsImMiLCJmaW5kIiwiZmlsdGVyIiwiZm9yY2VfbG9hZCIsImkiLCJoYXNPd25Qcm9wZXJ0eSIsIl9fZXNNb2R1bGUiLCJmaW5kQnlVbmlxdWVQcm9wZXJ0aWVzIiwicHJvcE5hbWVzIiwiZXZlcnkiLCJwcm9wIiwiZmluZEJ5RGlzcGxheU5hbWUiLCJkaXNwbGF5TmFtZSIsImZpbmRCeURpc3BhdGNoVG9rZW4iLCJ0b2tlbiIsImZpbmRCeURpc3BhdGNoTmFtZXMiLCJkaXNwYXRjaE5hbWVzIiwiZGlzcGF0Y2hlciIsIl9hY3Rpb25IYW5kbGVycyIsImZpbmRlciIsImdldFdlYnBhY2tNb2R1bGVTZWFyY2hlciIsImR1bXAiLCJwcm90b3R5cGUiLCJjb25zdHJ1Y3RvciIsIldlYnBhY2tNb2R1bGVzIiwiQ2hhbm5lbFByb3BzIiwiX19nZXRFbGVtZW50UmVhY3RPd25lciIsInByb3BzIiwiY2hhbm5lbCIsIk1lc3NhZ2VQYXJzZXIiLCJNZXNzYWdlQ29udHJvbGxlciIsIk1lc3NhZ2VBY3Rpb25UeXBlcyIsIk1lc3NhZ2VEaXNwYXRjaGVyIiwiTWVzc2FnZVF1ZXVlIiwiSGlnaGxpZ2h0SlMiLCJlbWJlZGRlZF90ZXh0IiwiZW1iZWRkZWRfaGVhZGVyIiwiZW1iZWRkZWRfZm9vdGVyIiwiZW1iZWRkZWRfY29sb3IiLCJtZXNzYWdlX2NvbnRlbnQiLCJjaGFubmVsX2lkIiwibWVudGlvbl9ldmVyeW9uZSIsIlJlYWN0IiwiZ2V0UmVhY3RNb2R1bGVzIiwiY29udGVudCIsImluY2x1ZGVzIiwiX25vbmNlIiwicGFyc2VJbnQiLCJyYW5kb21CeXRlcyIsIl9jaGFubmVsIiwiZW5xdWV1ZSIsInR5cGUiLCJtZXNzYWdlIiwiY2hhbm5lbElkIiwibm9uY2UiLCJ0dHMiLCJlbWJlZCIsInVybCIsImNvbG9yIiwidGltZXN0YW1wIiwiRGF0ZSIsInRvSVNPU3RyaW5nIiwib3V0cHV0X21pbWVfdHlwZSIsImVuY29kaW5nIiwiYXV0aG9yIiwiaWNvbl91cmwiLCJmb290ZXIiLCJ0ZXh0IiwiZGVzY3JpcHRpb24iLCJyIiwib2siLCJyZWNlaXZlTWVzc2FnZSIsImJvZHkiLCJzdGF0dXMiLCJzZW5kQ2x5ZGVFcnJvciIsImNvZGUiLCJkaXNwYXRjaCIsIkFjdGlvblR5cGVzIiwiTUVTU0FHRV9TRU5EX0ZBSUxFRCIsIm1lc3NhZ2VJZCIsIm1ldGhvZCIsImNvbnNvbGUiLCJpZCIsImNzcyIsImFwcGVuZCIsImh0bWwiLCJtZXRob2ROYW1lIiwib3B0aW9ucyIsImJlZm9yZSIsImFmdGVyIiwiaW5zdGVhZCIsIm9uY2UiLCJzaWxlbnQiLCJvcmlnTWV0aG9kIiwiY2FuY2VsIiwic3VwcHJlc3NFcnJvcnMiLCJwYXJhbXMiLCJfX2hvb2tlZCIsInRoaXNPYmplY3QiLCJtZXRob2RBcmd1bWVudHMiLCJhcmd1bWVudHMiLCJjYW5jZWxQYXRjaCIsIm9yaWdpbmFsTWV0aG9kIiwiY2FsbE9yaWdpbmFsTWV0aG9kIiwicmV0dXJuVmFsdWUiLCJhcHBseSIsInRlbXBSZXQiLCJfX2NhbmNlbCIsImhvb2tEaXNwYXRjaGVyIiwiY2ZnX2V4aXN0cyIsImNvbmZpZ0V4aXN0cyIsImFjdGlvbl9tc2ciLCJkb2N1bWVudCIsInByZXBlbmQiLCJwd2RfZmllbGQiLCJjYW5jZWxfYnRuIiwidW5sb2NrX2J0biIsIm1hc3Rlcl9zdGF0dXMiLCJtYXN0ZXJfaGVhZGVyX21lc3NhZ2UiLCJtYXN0ZXJfcHJvbXB0X21lc3NhZ2UiLCJnZXRFbGVtZW50QnlJZCIsIm9uIiwia2V5Q29kZSIsIndoaWNoIiwiY2xpY2siLCJhdHRyIiwicGFzc3dvcmQiLCJzY3J5cHQiLCJ3aGlybHBvb2wiLCJlcnJvciIsInByb2dyZXNzIiwicHdkIiwibG9hZENvbmZpZyIsInN0YXJ0IiwiY2hlY2tGb3JVcGRhdGUiLCJmaWxlX2RhdGEiLCJzaG9ydF9oYXNoIiwibmV3X3ZlcnNpb24iLCJmdWxsX2NoYW5nZWxvZyIsInJlcGxhY2VQYXRoIiwiZnMiLCJkY19jaGFuZ2Vsb2ciLCJ2YWwiLCJzY3JvbGxUb3AiLCJ3cml0ZUZpbGUiLCJpbmRleCIsInRhYl9uYW1lcyIsInRhYnMiLCJjbGFzc05hbWUiLCJwYXJlbnQiLCJkY19wYXNzd2RfYnRuIiwiZGNfbG9ja19idG4iLCJkY19zdmciLCJzZXRBY3RpdmVUYWIiLCJ0b0xvd2VyQ2FzZSIsImNpcGhlckluZGV4VG9TdHJpbmciLCJvbl91cGxvYWRfZW5jcnlwdGVkX2NsaXBib2FyZF9idXR0b25fY2xpY2tlZCIsIm9uX2ZpbGVfYnV0dG9uX2NsaWNrZWQiLCJvbl9hbHRlcl9maWxlX2J1dHRvbl9jbGlja2VkIiwib25fdXBsb2FkX2ZpbGVfYnV0dG9uX2NsaWNrZWQiLCJvbl9jYW5jZWxfZmlsZV91cGxvYWRfYnV0dG9uX2NsaWNrZWQiLCJvbl9zZXR0aW5nc19idXR0b25fY2xpY2tlZCIsIm9uX3NldHRpbmdzX2Nsb3NlX2J1dHRvbl9jbGlja2VkIiwib25fc2F2ZV9zZXR0aW5nc19idXR0b25fY2xpY2tlZCIsIm9uX3Jlc2V0X3NldHRpbmdzX2J1dHRvbl9jbGlja2VkIiwib25fcmVzdGFydF9ub3dfYnV0dG9uX2NsaWNrZWQiLCJvbl9yZXN0YXJ0X2xhdGVyX2J1dHRvbl9jbGlja2VkIiwib25faW5mb190YWJfYnV0dG9uX2NsaWNrZWQiLCJvbl9leGNoYW5nZV90YWJfYnV0dG9uX2NsaWNrZWQiLCJvbl9oYW5kc2hha2VfdGFiX2J1dHRvbl9jbGlja2VkIiwib25fY2xvc2VfZXhjaGFuZ2VfYnV0dG9uX2NsaWNrZWQiLCJvbl9vcGVuX2V4Y2hhbmdlX2J1dHRvbl9jbGlja2VkIiwib25fcXVpY2tfc2VuZF9wdWJsaWNfa2V5X2J1dHRvbl9jbGlja2VkIiwiY2hhbmdlIiwib25fZXhjaGFuZ2VfYWxnb3JpdGhtX2NoYW5nZWQiLCJvbl9nZW5lcmF0ZV9uZXdfa2V5X3BhaXJfYnV0dG9uX2NsaWNrZWQiLCJvbl9rZXlnZW5fY2xlYXJfYnV0dG9uX2NsaWNrZWQiLCJvbl9rZXlnZW5fc2VuZF9wdWJsaWNfa2V5X2J1dHRvbl9jbGlja2VkIiwib25faGFuZHNoYWtlX3Bhc3RlX3B1YmxpY19rZXlfYnV0dG9uX2NsaWNrZWQiLCJvbl9oYW5kc2hha2VfY29tcHV0ZV9idXR0b25fY2xpY2tlZCIsIm9uX2hhbmRzaGFrZV9jb3B5X2tleXNfYnV0dG9uX2NsaWNrZWQiLCJvbl9oYW5kc2hha2VfYXBwbHlfa2V5c19idXR0b25fY2xpY2tlZCIsIm9uX3Bhc3N3ZF9idXR0b25fY2xpY2tlZCIsIm9uX3NhdmVfcGFzc3dvcmRzX2J1dHRvbl9jbGlja2VkIiwib25fcmVzZXRfcGFzc3dvcmRzX2J1dHRvbl9jbGlja2VkIiwib25fY2FuY2VsX3Bhc3N3b3JkX2J1dHRvbl9jbGlja2VkIiwib25fY29weV9jdXJyZW50X3Bhc3N3b3Jkc19idXR0b25fY2xpY2tlZCIsIm9uX2xvY2tfYnV0dG9uX2NsaWNrZWQiLCJ0ZXh0YXJlYSIsInNoaWZ0S2V5Iiwic2VuZEVuY3J5cHRlZE1lc3NhZ2UiLCJzZXRTdGF0ZSIsInRleHRWYWx1ZSIsInByZXZlbnREZWZhdWx0Iiwic3RvcFByb3BhZ2F0aW9uIiwib2JqIiwibWV0YWRhdGEiLCJfX2V4dHJhY3RLZXlJbmZvIiwibG9jYWxfZmluZ2VycHJpbnQiLCJidXR0b24iLCJhZGRDbGFzcyIsImRjX2tleWdlbl9tZXRob2QiLCJkY19rZXlnZW5fYWxnb3JpdGhtIiwicHJpbWFyeUtleSIsInNlY29uZGFyeUtleSIsIlJlYWN0TW9kdWxlcyIsImRhdGFNc2ciLCJtYWdpYyIsInBhcnNlS2V5TWVzc2FnZSIsIm1ldGFEYXRhRGVjb2RlIiwic3ltbWV0cmljRGVjcnlwdCIsInN1YnN0ciIsIlN0cmluZyIsInBvc3RQcm9jZXNzTWVzc2FnZSIsImVsZW1lbnRzIiwiY2hpbGRyZW4iLCJoaWdobGlnaHRCbG9jayIsImVtYmVkX2xpbmtfcHJlZml4IiwiaHRtbF9lc2NhcGVfY2hhcmFjdGVycyIsIiYiLCI8IiwiPiIsIngiLCJwcm9jZXNzZWQiLCJfX2J1aWxkQ29kZUJsb2NrTWVzc2FnZSIsImhhc0NvZGUiLCJoYXNVcmwiLCJfX2J1aWxkVXJsTWVzc2FnZSIsImVhY2giLCJwYXJzZVN5bW1ldHJpYyIsImZvcmNlX3NlbmQiLCJtYXhpbXVtX2VuY29kZWRfZGF0YSIsImVzY2FwZUNoYXJhY3RlcnMiLCJjcnlwdG8iLCJjbGVhbmVkIiwiaW5kZXhPZiIsInBhcnNlZCIsIl9fZXh0cmFjdFRhZ3MiLCJ1c2VyX3RhZ3MiLCJwcmltYXJ5UGFzc3dvcmQiLCJzZWNvbmRhcnlQYXNzd29yZCIsIm1zZyIsInN5bW1ldHJpY0VuY3J5cHQiLCJtZXRhRGF0YUVuY29kZSIsInNlbmRFbWJlZGRlZE1lc3NhZ2UiLCJwYWNrZXRzIiwiX19zcGxpdFN0cmluZ0NodW5rcyIsImZpbGUiLCJyZW1vdGUiLCJkaWFsb2ciLCJzaG93T3BlbkRpYWxvZyIsInRpdGxlIiwibGFiZWwiLCJwcm9wZXJ0aWVzIiwiX191cDFVcGxvYWRDbGlwYm9hcmQiLCJzamNsIiwiZXJyb3Jfc3RyaW5nIiwiZmlsZV91cmwiLCJkZWxldGlvbl9saW5rIiwiY2xpcGJvYXJkIiwid3JpdGVUZXh0IiwiZmlsZV9wYXRoX2ZpZWxkIiwiZmlsZV91cGxvYWRfYnRuIiwibWVzc2FnZV90ZXh0YXJlYSIsInNlbmRfZGVsZXRpb25fbGluayIsImlzIiwicmFuZG9taXplX2ZpbGVfbmFtZSIsIl9fdXAxVXBsb2FkRmlsZSIsImRjX3ByaW1hcnlfY2lwaGVyIiwiZGNfc2Vjb25kYXJ5X2NpcGhlciIsImRjX21hc3Rlcl9wYXNzd29yZCIsImNpcGhlclN0cmluZ1RvSW5kZXgiLCJzYXZlU2V0dGluZ3MiLCJyZXNldFNldHRpbmdzIiwicmVsb2FkIiwiZGhfYmwiLCJnZXRESEJpdFNpemVzIiwiZWNkaF9ibCIsImdldEVDREhCaXRTaXplcyIsInYiLCJPcHRpb24iLCJtYXhfc2FsdF9sZW4iLCJtaW5fc2FsdF9sZW4iLCJzYWx0X2xlbiIsInJhd19idWZmZXIiLCJwdWJfYnVmZmVyIiwia2V5IiwiZ2VuZXJhdGVESCIsImdlbmVyYXRlRUNESCIsImdldFByaXZhdGVLZXkiLCJnZXRQdWJsaWNLZXkiLCJwcml2YXRlRXhjaGFuZ2VLZXkiLCJhbGxvYyIsIndyaXRlSW50OCIsImNvcHkiLCJkY19wdWJfa2V5X3RhIiwiZm9ybWF0dGVkX21lc3NhZ2UiLCJzdWJzdGl0dXRlTWVzc2FnZSIsImFsZ29fc3RyIiwiaGVhZGVyIiwiaW5uZXJUZXh0IiwicmVhZFRleHQiLCJhbGdvcml0aG0iLCJwYXlsb2FkIiwic2FsdCIsInVzZXJfc2FsdF9sZW4iLCJ1c2VyX3NhbHQiLCJpc1VzZXJTYWx0UHJpbWFyeSIsImRjX3ByaXZfa2V5X3RhIiwiZGNfaGFuZHNoYWtlX3BwayIsImRjX2hhbmRzaGFrZV9jb21wdXRlX2J0biIsImRpc3BsYXlTZWNyZXQiLCJpbnB1dF9oZXgiLCJjaGFyc2V0Iiwib3V0cHV0IiwiYmxvYiIsImlzVmFsaWRCcmFpbGxlIiwicmVhZEludDgiLCJpc1ZhbGlkRXhjaGFuZ2VBbGdvcml0aG0iLCJ1c2VyX3B1Yl9rZXkiLCJpbmRleFRvRXhjaGFuZ2VBbGdvcml0aG1TdHJpbmciLCJzdWJhcnJheSIsImNvbXB1dGVTZWNyZXQiLCJkZXJpdmVkX3NlY3JldCIsImNvbXB1dGVFeGNoYW5nZVNoYXJlZFNlY3JldCIsInN1YnN0cmluZyIsInVzbCIsInJlYWRVSW50MzJCRSIsInNsIiwicHJpbWFyeV9oYXNoIiwic2hhNTEyIiwic2Vjb25kYXJ5X2hhc2giLCJwcmltYXJ5X3Byb2dyZXNzIiwic2Vjb25kYXJ5X3Byb2dyZXNzIiwiZW50cm9waWNCaXRMZW5ndGgiLCJwcmltYXJ5X3NhbHQiLCJzZWNvbmRhcnlfc2FsdCIsImRjX2hhbmRzaGFrZV9wcmltYXJ5X2tleSIsImRjX2hhbmRzaGFrZV9zZWNvbmRhcnlfa2V5IiwidXBkYXRlUGFzc3dvcmRzIiwiY3VycmVudEtleXMiLCJwYXRoIiwicGx1Z2luX2ZpbGUiLCJsc3RhdFN5bmMiLCJpc1N5bWJvbGljTGluayIsImNhbGxiYWNrIiwicmVzcG9uc2UiLCJyZXN1bHQiLCJzdGF0dXNNZXNzYWdlIiwiZWxlbWVudCIsImluY2x1ZGUiLCJleGNsdWRlIiwiZ2V0T3duZXJSZWFjdEluc3RhbmNlIiwiT2JqZWN0Iiwia2V5cyIsImsiLCJzdGFydHNXaXRoIiwiZXhjbHVkaW5nIiwiY2xhc3NGaWx0ZXIiLCJvd25lciIsInJldHVybiIsIl8iLCJpc05pbCIsInN0YXRlTm9kZSIsIkhUTUxFbGVtZW50Iiwia2V5X21lc3NhZ2UiLCJoZWFkZXJfcHJlc2VudCIsImluZGV4VG9BbGdvcml0aG1CaXRMZW5ndGgiLCJpbnB1dF9zdHJpbmciLCJtYXhfbGVuZ3RoIiwibnVtX2NodW5rcyIsIk1hdGgiLCJjZWlsIiwicmV0IiwiQXJyYXkiLCJvZmZzZXQiLCJuIiwiaXNOYU4iLCJzcGxpdF9tc2ciLCJjbGVhbmVkX3RhZ3MiLCJjbGVhbmVkX21zZyIsIl9faXNWYWxpZFVzZXJOYW1lIiwidHJpbSIsImNvZGVfYmxvY2tfZXhwciIsIlJlZ0V4cCIsImlubGluZV9ibG9ja19leHByIiwiX21hdGNoZWQiLCJfY29kZV9ibG9ja3MiLCJleGVjIiwic3RhcnRfcG9zIiwiZW5kX3BvcyIsImxhbmd1YWdlIiwicmF3X2NvZGUiLCJjYXB0dXJlZF9ibG9jayIsInVybF9leHByIiwibWF0Y2hlZCIsInVybHMiLCJfZXh0cmFjdGVkIiwiX19leHRyYWN0Q29kZUJsb2NrcyIsIl9saW5lcyIsIl9jb2RlIiwiaiIsIl9fZXh0cmFjdFVybHMiLCJpbnB1dCIsImlzX2lucHV0X2hleCIsImlzQnVmZmVyIiwiaXNBcnJheSIsInRvX2hleCIsImhtYWMiLCJzZWNyZXQiLCJjcmVhdGVIbWFjIiwiY3JlYXRlSGFzaCIsInVwZGF0ZSIsImRpZ2VzdCIsImlzX3NhbHRfaGV4Iiwia2V5X2xlbmd0aCIsIml0ZXJhdGlvbnMiLCJfaW5wdXQiLCJfc2FsdCIsInBia2RmMiIsInBia2RmMlN5bmMiLCJwYWRkaW5nX3NjaGVtZSIsImJsb2NrX3NpemUiLCJpc19oZXgiLCJyZW1vdmVfcGFkZGluZyIsIl9tZXNzYWdlIiwiX3BhZEJ5dGVzIiwiX19nZXRQYWRkaW5nTGVuZ3RoIiwidG90YWxMZW5ndGgiLCJibG9ja1NpemUiLCJfX1BLQ1M3IiwicGFkZGluZ0J5dGVzIiwicGFkZGVkIiwiZmlsbCIsIl9fQU5TSVg5MjMiLCJfX0lTTzEwMTI2Iiwid3JpdGVVSW50OCIsInJlYWRVSW50OCIsIl9fSVNPOTc5NzEiLCJsYXN0SW5kZXgiLCJfX3RvQnVmZmVyIiwidG9VcHBlckNhc2UiLCJjaXBoZXIiLCJpc1ZhbGlkIiwiY2lwaGVyX25hbWUiLCJnZXRDaXBoZXJzIiwicyIsImtleV9zaXplX2JpdHMiLCJ1c2Vfd2hpcmxwb29sIiwia2V5Qnl0ZXMiLCJ3aGlybHBvb2w2NCIsInNoYTUxMl8xMjgiLCJzaGExNjAiLCJ3aGlybHBvb2wxOTIiLCJpc19tZXNzYWdlX2hleCIsImZpbGVfcGF0aCIsImxvb2t1cCIsImV4dG5hbWUiLCJtaW1lX3R5cGUiLCJhdmFpbGFibGVGb3JtYXRzIiwidG1wIiwiaXNfZmlsZSIsImZvcm1hdCIsInJlYWRJbWFnZSIsInRvUE5HIiwidG9CaXRtYXAiLCJ0b0pQRUciLCJiYXNlbmFtZSIsIl9fZ2V0RmlsZU1pbWVUeXBlIiwiZmlsZV9uYW1lIiwiZ2V0UGFyYW1zIiwic2VlZCIsImNvZGVjIiwiYmFzZTY0dXJsIiwidG9CaXRzIiwiYnl0ZXMiLCJvdXQiLCJiaXRBcnJheSIsImJpdFNsaWNlIiwiaXYiLCJpZGVudCIsInN0cjJhYiIsInN0ciIsImJ1ZiIsInN0ckxlbiIsIndyaXRlVUludDE2QkUiLCJjaGFyQ29kZUF0IiwiY29uY2F0IiwibWltZSIsIlVpbnQ4QXJyYXkiLCJhcnJheUJ1ZmZlciIsImNjbSIsImNvbXBhdF9lbmNyeXB0IiwiYWVzIiwiZnJvbUJpdHMiLCJzdGF0U3luYyIsInNpemUiLCJyZWFkRmlsZSIsIl9fdXAxRW5jcnlwdEJ1ZmZlciIsInBzZXVkb1JhbmRvbUJ5dGVzIiwidXAxX2hvc3QiLCJ1cDFfYXBpX2tleSIsImNsaXBib2FyZF9kYXRhIiwiX19jbGlwYm9hcmRUb0J1ZmZlciIsImVuY3J5cHRlZF9kYXRhIiwiaWRlbnRpdHkiLCJlbmNvZGVkX3NlZWQiLCJmb3JtIiwiY29udGVudFR5cGUiLCJwb3N0IiwiaGVhZGVycyIsImdldEhlYWRlcnMiLCJ1cmkiLCJyZXMiLCJkZWxrZXkiLCJfX3VwMUVuY3J5cHRGaWxlIiwiZGtMZW4iLCJOIiwicCIsImNiIiwiX2luIiwiUEJLREYyX1NIQTI1NiIsInBia2RmMl9zaGEyNTYiLCJTYWxzYTIwX0Jsb2NrTWl4IiwiQlkiLCJZaSIsIl9YIiwibCIsIlIiLCJhIiwiYiIsIl9fcGVyZm9ybSIsInRvdGFsT3BzIiwiY3VycmVudE9wcyIsImxhc3RQZXJjZW50YWdlIiwiQiIsIlVpbnQzMkFycmF5IiwiWFkiLCJWIiwic3RvcCIsInN0YXRlIiwic3RhdGVDb3VudCIsImkxIiwiQmkiLCJsaW1pdCIsIm5leHRUaWNrIiwic2V0SW1tZWRpYXRlIiwiaW5jcmVtZW50YWxTTWl4IiwiRXJyb3IiLCJzdGVwcyIsInkiLCJ6IiwiY3VycmVudFBlcmNlbnRhZ2UiLCJfX2NyZWF0ZUhhc2giLCJtZXNzYWdlX2lzX2hleCIsInNhbHRfaXNfaGV4IiwiX19wYmtkZjIiLCJzeW1tZXRyaWNfY2lwaGVyIiwiYmxvY2tfbW9kZSIsImNvbnZlcnRfdG9faGV4IiwiYmxvY2tfY2lwaGVyX3NpemUiLCJvbmVfdGltZV9zYWx0Iiwia2RmX2l0ZXJhdGlvbl9yb3VuZHMiLCJfa2V5IiwiX2l2IiwiX2Rlcml2ZWQiLCJfZW5jcnlwdCIsIl9faXNWYWxpZENpcGhlciIsIl9fcGFkTWVzc2FnZSIsIl9fdmFsaWRhdGVLZXlJViIsImNyZWF0ZUNpcGhlcml2Iiwic2V0QXV0b1BhZGRpbmciLCJfY3QiLCJmaW5hbCIsIm91dHB1dF9mb3JtYXQiLCJfZGVjcnlwdCIsIl9fdmFsaWRhdGVNZXNzYWdlIiwiY3JlYXRlRGVjaXBoZXJpdiIsIl9wdCIsImNpcGhlcl9tb2RlIiwicGFkZGluZ19tb2RlIiwia2V5U2l6ZSIsIl9fZW5jcnlwdCIsIl9fZGVjcnlwdCIsImFkZGl0aW9uYWxfZGF0YSIsInNldEFBRCIsImdldEF1dGhUYWciLCJfYXV0aFRhZyIsInNldEF1dGhUYWciLCJwcmltYXJ5X2NpcGhlciIsInNlY29uZGFyeV9jaXBoZXIiLCJzZWFyY2giLCJnZXRfc2Vjb25kYXJ5IiwiaCIsImNyZWF0ZSIsInN1bSIsImxlbiIsImZvckVhY2giLCJnZXRCcmFpbGxlIiwiYmFzZSIsInByaXZhdGVfa2V5IiwicHVibGljX2tleSIsImlzX2Jhc2VfNjQiLCJ0b19iYXNlXzY0IiwiaW5fZm9ybSIsIm91dF9mb3JtIiwiZ3JvdXBOYW1lIiwiZ2V0RGlmZmllSGVsbG1hbiIsImdlbmVyYXRlS2V5cyIsInNldFByaXZhdGVLZXkiLCJjcmVhdGVFQ0RIIiwiY29udmVydCIsInN1YnNldCIsImNpcGhlckluZGV4IiwiY2lwaGVyTW9kZUluZGV4IiwicGFkZGluZ0luZGV4IiwicGFkIiwicHJpbWFyeV9rZXkiLCJzZWNvbmRhcnlfa2V5IiwiY2lwaGVyX2luZGV4IiwiaGFuZGxlRW5jb2RlU2VnbWVudCIsIm1vZGUiLCJibG93ZmlzaDUxMl9lbmNyeXB0IiwiYWVzMjU2X2VuY3J5cHQiLCJjYW1lbGxpYTI1Nl9lbmNyeXB0IiwiaWRlYTEyOF9lbmNyeXB0IiwidHJpcGxlZGVzMTkyX2VuY3J5cHQiLCJ0YWciLCJobWFjX3NoYTI1NiIsImhhbmRsZURlY29kZVNlZ21lbnQiLCJibG93ZmlzaDUxMl9kZWNyeXB0IiwiYWVzMjU2X2RlY3J5cHQiLCJjYW1lbGxpYTI1Nl9kZWNyeXB0IiwiaWRlYTEyOF9kZWNyeXB0IiwidHJpcGxlZGVzMTkyX2RlY3J5cHQiLCJjb21wdXRlZF90YWciLCJ0aW1pbmdTYWZlRXF1YWwiXSwibWFwcGluZ3MiOiJBQTBCQSxtQkFNTUEsYUFRRkMsVUFDSSxNQUFPLGVBUVhBLGlCQUNJLE1BQU8sOEVBUVhBLFlBQ0ksTUFBTyxpQkFRWEEsYUFDSSxNQUFPLFFBV1hBLGNBYUlDLEtBQUtDLG1CQUFxQixV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QUFJOEMsR0FFdkIsSUFBTUEsRUFBSSxFQUFHQSxFQUFJLEdBQUlBLElBQ2pCbkwsRUFBR21MLEdBQU02SCxFQUFJN0gsR0FRakIsSUFBSStILEVBQUksQ0FBRUMsRUFBR0MsSUFDQUQsR0FBS0MsRUFBUUQsSUFBUSxHQUFLQyxFQUd2QyxJQUFNakksRUFBSSxFQUFHQSxFQUFJLEVBQUdBLEdBQUssRUFDckJuTCxFQUFHLElBQVVrVCxFQUFHbFQsRUFBRyxHQUFTQSxFQUFHLElBQVEsR0FDdkNBLEVBQUcsSUFBVWtULEVBQUdsVCxFQUFHLEdBQVNBLEVBQUcsR0FBUSxHQUN2Q0EsRUFBRyxLQUFVa1QsRUFBR2xULEVBQUcsR0FBU0EsRUFBRyxHQUFRLElBQ3ZDQSxFQUFHLElBQVVrVCxFQUFHbFQsRUFBRyxJQUFTQSxFQUFHLEdBQVEsSUFDdkNBLEVBQUcsSUFBVWtULEVBQUdsVCxFQUFHLEdBQVNBLEVBQUcsR0FBUSxHQUN2Q0EsRUFBRyxLQUFVa1QsRUFBR2xULEVBQUcsR0FBU0EsRUFBRyxHQUFRLEdBQ3ZDQSxFQUFHLElBQVVrVCxFQUFHbFQsRUFBRyxJQUFTQSxFQUFHLEdBQVEsSUFDdkNBLEVBQUcsSUFBVWtULEVBQUdsVCxFQUFHLEdBQVNBLEVBQUcsSUFBUSxJQUN2Q0EsRUFBRyxLQUFVa1QsRUFBR2xULEVBQUcsSUFBU0EsRUFBRyxHQUFRLEdBQ3ZDQSxFQUFHLElBQVVrVCxFQUFHbFQsRUFBRyxJQUFTQSxFQUFHLElBQVEsR0FDdkNBLEVBQUcsSUFBVWtULEVBQUdsVCxFQUFHLEdBQVNBLEVBQUcsSUFBUSxJQUN2Q0EsRUFBRyxLQUFVa1QsRUFBR2xULEVBQUcsR0FBU0EsRUFBRyxHQUFRLElBQ3ZDQSxFQUFHLElBQVVrVCxFQUFHbFQsRUFBRyxJQUFTQSxFQUFHLElBQVEsR0FDdkNBLEVBQUcsSUFBVWtULEVBQUdsVCxFQUFHLEdBQVNBLEVBQUcsSUFBUSxHQUN2Q0EsRUFBRyxLQUFVa1QsRUFBR2xULEVBQUcsR0FBU0EsRUFBRyxHQUFRLElBQ3ZDQSxFQUFHLEtBQVVrVCxFQUFHbFQs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
+"use strict";
+
+/**
+ * @public
+ * @desc Main plugin prototype.
+ */
+class discordCrypt {
+    /* ============================================================== */
+
+    /**
+     * @public
+     * @desc Returns the name of the plugin.
+     * @returns {string}
+     */
+    getName() {
+        return 'DiscordCrypt';
+    }
+
+    /**
+     * @public
+     * @desc Returns the description of the plugin.
+     * @returns {string}
+     */
+    getDescription() {
+        return 'Provides secure messaging for Discord using various cryptography standards.';
+    }
+
+    /**
+     * @public
+     * @desc Returns the plugin's original author.
+     * @returns {string}
+     */
+    getAuthor() {
+        return 'Leonardo Gates';
+    }
+
+    /**
+     * @public
+     * @desc Returns the current version of the plugin.
+     * @returns {string}
+     */
+    getVersion() {
+        return '1.1.2';
+    }
+
+    /* ============================================================== */
+
+    /**
+     * @public
+     * @desc Initializes an instance of DiscordCrypt.
+     * @example
+     * let instance = new discordCrypt();
+     */
+    constructor() {
+
+        /* ============================================ */
+
+        /**
+         * Discord class names that changes ever so often because they're douches.
+         * These will usually be the culprit if the plugin breaks.
+         */
+
+        /**
+         * @desc Used to scan each message for an embedded descriptor.
+         * @type {string}
+         */
+        this.messageMarkupClass = '.markup';
+        /**
+         * @desc Used to find the search toolbar to inject all option buttons.
+         * @type {string}
+         */
+        this.searchUiClass = '.search .search-bar';
+        /**
+         * @desc Used to hook messages being sent.
+         * @type {string}
+         */
+        this.channelTextAreaClass = '.content textarea';
+        /**
+         * @desc Used to detect if the autocomplete dialog is opened.
+         * @type {string}
+         */
+        this.autoCompleteClass = '.autocomplete-1vrmpx';
+
+        /* ============================================ */
+
+        /**
+         * @desc Defines what an encrypted message starts with. Must be 4x UTF-16 bytes.
+         * @type {string}
+         */
+        this.encodedMessageHeader = "⢷⢸⢹⢺";
+
+        /**
+         * @desc Defines what a public key message starts with. Must be 4x UTF-16 bytes.
+         * @type {string}
+         */
+        this.encodedKeyHeader = "⢻⢼⢽⢾";
+
+        /**
+         * @desc Defines what the header of an encrypted message says.
+         * @type {string}
+         */
+        this.messageHeader = '-----ENCRYPTED MESSAGE-----';
+
+        /**
+         * @desc Master database password. This is a Buffer() containing a 256-bit key.
+         * @type {Buffer|null}
+         */
+        this.masterPassword = null;
+
+        /**
+         * @desc Message scanning interval handler's index. Used to stop any running handler.
+         *      Defined only if hooking of modules failed.
+         * @type {int}
+         */
+        this.scanInterval = undefined;
+
+        /**
+         * @desc The index of the handler used to reload the toolbar.
+         *      Defined only if hooking of modules failed.
+         * @type {int}
+         */
+        this.toolbarReloadInterval = undefined;
+
+        /**
+         * @desc The index of the handler used for automatic update checking.
+         * @type {int}
+         */
+        this.updateHandlerInterval = undefined;
+
+        /**
+         * @desc The main message update event dispatcher used by Discord. Resolved upon startup.
+         * @type {Object|null}
+         */
+        this.messageUpdateDispatcher = null;
+
+        /**
+         * @desc The configuration file currently in use. Only valid after decryption of the configuration database.
+         * @type {Object|null}
+         */
+        this.configFile = null;
+
+        /**
+         * @desc Indexes of each dual-symmetric encryption mode.
+         * @type {int[]}
+         */
+        this.encryptModes = [
+            /* Blowfish(Blowfish, AES, Camellia, IDEA, TripleDES) */
+            0, 1, 2, 3, 4,
+            /* AES(Blowfish, AES, Camellia, IDEA, TripleDES) */
+            5, 6, 7, 8, 9,
+            /* Camellia(Blowfish, AES, Camellia, IDEA, TripleDES) */
+            10, 11, 12, 13, 14,
+            /* IDEA(Blowfish, AES, Camellia, IDEA, TripleDES) */
+            15, 16, 17, 18, 19,
+            /* TripleDES(Blowfish, AES, Camellia, IDEA, TripleDES) */
+            20, 21, 22, 23, 24
+        ];
+
+        /**
+         * @desc Symmetric block modes of operation.
+         * @type {string[]}
+         */
+        this.encryptBlockModes = [
+            'CBC', /* Cipher Block-Chaining */
+            'CFB', /* Cipher Feedback Mode */
+            'OFB', /* Output Feedback Mode */
+        ];
+
+        /**
+         * @desc Shorthand padding modes for block ciphers referred to in the code.
+         * @type {string[]}
+         */
+        this.paddingModes = [
+            'PKC7', /* PKCS #7 */
+            'ANS2', /* ANSI X.923 */
+            'ISO1', /* ISO-10126 */
+            'ISO9', /* ISO-97972 */
+        ];
+
+        /**
+         * @desc Defines the CSS for the application overlays.
+         * @type {string}
+         */
+        this.appCss = `
+            a#inbrowserbtn.btn{ display: none }
+            .dc-overlay {
+                position: fixed;
+                font-family: monospace;
+                display: none;
+                width: 100%;
+                height: 100%;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                top: 0;
+                z-index: 1000;
+                cursor: default;
+                transform: translateZ(0px);
+                background: rgba(0, 0, 0, 0.85) !important;
+            }
+            .dc-password-field {
+                width: 95%;
+                margin: 10px;
+                color: #ffffff;
+                height: 10px;
+                padding: 5px;
+                background-color: #000000;
+                border: 2px solid #3a71c1;
+            }
+            .dc-overlay-centerfield {
+                position: absolute;
+                top: 35%;
+                left: 50%;
+                font-size: 20px;
+                color: #ffffff;
+                padding: 16px;
+                border-radius: 20px;
+                background: rgba(0, 0, 0, 0.7);
+                transform: translate(-50%, 50%);
+            }
+            .dc-overlay-main {
+                overflow: hidden;
+                position: absolute;
+                left: 5%; right: 5%;
+                top: 5%; bottom: 5%;
+                width: 90%; height: 90%;
+                border: 3px solid #3f3f3f;
+                border-radius: 3px;
+            }
+            .dc-textarea {
+                font-family: monospace;
+                font-size: 12px;
+                color: #ffffff;
+                background: #000;
+                overflow: auto;
+                padding: 5px;
+                resize: none;
+                height: 100%;
+                width: 100%;
+                margin: 2px;           
+            }
+            .dc-update-field {
+                font-size: 14px;
+                margin: 10px;
+            }
+            ul.dc-list {
+                margin: 10px;
+                padding: 5px;
+                list-style-type: circle;
+            }
+            ul.dc-list > li { padding: 5px; }
+            ul.dc-list-red { color: #ff0000; }
+            .dc-overlay-main textarea {
+                background: transparent !important;
+                cursor: default;
+                font-size: 12px;
+                padding: 5px;
+                margin-top: 10px;
+                border-radius: 2px;
+                resize: none;
+                color: #8e8e8e;
+                width: 70%;
+                overflow-y: hidden;
+                user-select: none;
+            }
+            .dc-overlay-main select {
+                background-color: transparent;
+                border-radius: 3px;
+                font-size: 12px;
+                color: #fff;
+            }
+            .dc-overlay-main select:hover {
+                background-color: #000 !important;
+                color: #fff;
+            }
+            .dc-input-field {
+                font-family: monospace !important;
+                background: #000 !important;
+                color: #fff !important;
+                border-radius: 3px;
+                font-size: 12px;
+                width: 40%;
+                margin-bottom: 10px;
+                margin-top: -5px;
+                margin-left: 10%;
+            }
+            .dc-input-label {
+                font-family: monospace !important;
+                color: #708090;
+                min-width: 20%;
+            }
+            .dc-ruler-align {
+                display: flex;
+                margin: 10px;
+            }
+            .dc-code-block {
+                font-family: monospace !important;
+                font-size: 0.875rem;
+                line-height: 1rem;
+                
+                overflow-x: visible;
+                text-indent: 0;
+                
+                background: rgba(0,0,0,0.42)!important;
+                color: hsla(0,0%,100%,0.7)!important;
+                padding: 6px!important;
+                
+                position: relative;            
+            }
+            .dc-overlay-main .tab {
+                overflow: hidden;
+                background-color: rgba(0, 0, 0, .9) !important;
+                border-bottom: 3px solid #3f3f3f;
+            }
+            .dc-overlay-main .tab button {
+                color: #008000;
+                background-color: inherit;
+                cursor: pointer;
+                padding: 14px 14px;
+                font-size: 14px;
+                transition: 0.5s;
+                font-family: monospace;
+                border-radius: 3px;
+                margin: 3px;
+            }
+            .dc-overlay-main .tab button:hover {
+                background-color: #515c6b;
+            }
+            .dc-overlay-main .tab button.active {
+                background-color: #1f1f2b;
+            }
+            .dc-overlay-main .tab-content {
+                display: none;
+                height: 95%;
+                color: #9298a2;
+                overflow: auto;
+                padding: 10px 25px 5px;
+                animation: fadeEffect 1s;
+                background: rgba(0, 0, 0, 0.7) !important;
+            }
+            .dc-main-overlay .tab-content .dc-hint {
+                margin: 14px;
+                padding-left: 5px;
+                font-size: 12px;
+                color: #f08080;
+            }
+            .dc-svg { 
+                color: #fff; opacity: .6;
+                margin: 0 4px;
+                cursor: pointer;
+                width: 24px;
+                height: 24px;
+            }
+            .dc-svg:hover {
+                color: #fff; opacity: .8;
+            }
+            .dc-button{
+                margin-right: 5px;
+                margin-left: 5px;
+                background-color: #7289da;
+                color: #fff;
+                align-items: center;
+                border-radius: 3px;
+                box-sizing: border-box;
+                display: flex;
+                font-size: 14px;
+                width: auto;
+                height: 32px;
+                min-height: 32px;
+                min-width: 60px;
+                font-weight: 500;
+                justify-content: center;
+                line-height: 16px;
+                padding: 2px 16px;
+                position: relative;
+                user-select: none;  
+            }
+            .dc-button:hover{ background-color: #677bc4 !important; }
+            .dc-button:active{ background-color: #5b6eae !important; }
+            .dc-button-inverse{
+                color: #f04747;
+                background: transparent !important;
+                border: 1px solid rgba(240,71,71,.3);
+                transition: color .17s ease,background-color .17s ease,border-color .17s ease;
+            }
+            .dc-button-inverse:hover{
+                border-color: rgba(240,71,71,.6);
+                background: transparent !important;
+            }
+            .dc-button-inverse:active{ background-color: rgba(240,71,71,.1); }
+            .stat-levels {
+                box-shadow: inset 0 0 25px rgba(0,0,0,.5);
+                margin: 5px auto 0 auto;
+                height: 20px;
+                padding: 15px;
+                border: 1px solid #494a4e;
+                border-radius: 10px;
+                background: linear-gradient(#444549 0%, #343539 100%);
+            }
+            .stat-bar {
+                background-color: #2a2b2f;
+                box-shadow: inset 0 5px 15px rgba(0,0,0,.6);
+                height: 8px;
+                overflow: hidden;
+                padding: 3px;
+                border-radius: 3px;
+                margin-bottom: 10px;
+                margin-top: 10px;
+                margin-left: 0;
+            }
+            .stat-bar-rating {
+                border-radius: 4px;
+                float: left;
+                height: 100%;
+                font-size: 12px;
+                color: #ffffff;
+                text-align: center;
+                text-indent: -9999px;
+                background-color: #3a71c1;
+                box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+            }
+            .stat-bar-rating { @include stat-bar(#cf3a02, #ff4500, top, bottom); }
+            `;
+
+        /**
+         * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
+         * @type {string}
+         */
+        this.toolbarHtml =
+            `
+            <button type="button" id="dc-clipboard-upload-btn" style="background-color: transparent;"
+                title="Upload Encrypted Clipboard">
+                <svg x="0px" y="0px" width="30" height="30" viewBox="0 0 18 18" class="dc-svg"> 
+                        <path fill="lightgrey"
+                            d="M13 4h-3v-4h-10v14h6v2h10v-9l-3-3zM3 1h4v1h-4v-1zM15 
+                            15h-8v-10h5v3h3v7zM13 7v-2l2 2h-2z"/>
+                </svg>
+            </button>
+            <button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File">
+                <svg class="dc-svg" width="24" height="24" viewBox="0 0 1792 1792" fill="lightgrey">
+                    <path d="M768 384v-128h-128v128h128zm128 128v-128h-128v128h128zm-128 
+                        128v-128h-128v128h128zm128 128v-128h-128v128h128zm700-388q28 28 48 
+                        76t20 88v1152q0 40-28 68t-68 28h-1344q-40 0-68-28t-28-68v-1600q0-40 28-68t68-28h896q40 
+                        0 88 20t76 48zm-444-244v376h376q-10-29-22-41l-313-313q-12-12-41-22zm384 1528v-1024h-416q-40 
+                        0-68-28t-28-68v-416h-128v128h-128v-128h-512v1536h1280zm-627-721l107 349q8 27 8 52 0 83-72.5 
+                        137.5t-183.5 54.5-183.5-54.5-72.5-137.5q0-25 8-52 21-63 120-396v-128h128v128h79q22 0 39 
+                        13t23 34zm-141 465q53 0 90.5-19t37.5-45-37.5-45-90.5-19-90.5 19-37.5 45 37.5 45 90.5 19z">
+                    </path>
+                </svg>           
+            </button>
+            <button type="button" id="dc-settings-btn" style="background-color: transparent;" 
+                title="DiscordCrypt Settings">
+                <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32" 
+                width="20px" height="20px" xml:space="preserve">
+                    <g>
+                        <path fill="lightgrey" d="M28,10H18v2h10V10z M14,10H4v10h10V10z M32,0H0v28h15.518c1.614,2.411,
+                        4.361,3.999,7.482,4c4.971-0.002,8.998-4.029,9-9   
+                        c0-0.362-0.027-0.718-0.069-1.069L32,22V0z M10,2h12v2H10V2z M6,2h2v2H6V2z M2,2h2v2H2V2z 
+                        M23,29.883   
+                        c-3.801-0.009-6.876-3.084-6.885-6.883c0.009-3.801,3.084-6.876,6.885-6.885c3.799,0.009,6.874,
+                        3.084,6.883,6.885   
+                        C29.874,26.799,26.799,29.874,23,29.883z M29.999,
+                        17.348c-0.57-0.706-1.243-1.324-1.999-1.83V14h-4.99c-0.003,0-0.007,0-0.01,0   
+                        s-0.007,0-0.01,0H18v1.516c-2.412,1.614-4,4.361-4,7.483c0,1.054,0.19,2.061,0.523,
+                        3H2V6h27.999V17.348z M30,4h-4V2h4V4z"/>
+                        <path fill="lightgrey" d="M28,
+                        24v-2.001h-1.663c-0.063-0.212-0.145-0.413-0.245-0.606l1.187-1.187l-1.416-1.415l-1.165,1.166   
+                        c-0.22-0.123-0.452-0.221-0.697-0.294V18h-2v1.662c-0.229,0.068-0.446,0.158-0.652,
+                        0.27l-1.141-1.14l-1.415,1.415l1.14,1.14   
+                        c-0.112,0.207-0.202,0.424-0.271,0.653H18v2h1.662c0.073,0.246,0.172,0.479,
+                        0.295,0.698l-1.165,1.163l1.413,1.416l1.188-1.187   
+                        c0.192,0.101,0.394,0.182,0.605,0.245V28H24v-1.665c0.229-0.068,0.445-0.158,
+                        0.651-0.27l1.212,1.212l1.414-1.416l-1.212-1.21   
+                        c0.111-0.206,0.201-0.423,0.27-0.651H28z M22.999,
+                        24.499c-0.829-0.002-1.498-0.671-1.501-1.5c0.003-0.829,0.672-1.498,1.501-1.501   
+                        c0.829,0.003,1.498,0.672,1.5,1.501C24.497,23.828,23.828,24.497,22.999,24.499z"/>
+                    </g>
+                </svg>
+            </button>
+            <button type="button" id="dc-lock-btn" style="background-color: transparent;"/>
+            <button type="button" id="dc-passwd-btn" style="background-color: transparent;" title="Password Settings">
+                <svg class="dc-svg" version="1.1" viewBox="0 0 32 32" width="20px" height="20px">
+                    <g fill="none" fill-rule="evenodd" stroke="none" stroke-width="1">
+                        <g fill="lightgrey">
+                            <path d="M13.008518,22 L11.508518,23.5 L11.508518,23.5 L14.008518,26 L11.008518,
+                            29 L8.50851798,26.5 L6.63305475,28.3754632 C5.79169774,29.2168202 
+                            4.42905085,29.2205817 3.5909158,28.3824466 L3.62607133,28.4176022 C2.78924,27.5807709 
+                            2.79106286,26.2174551 3.63305475,25.3754632 L15.7904495,13.2180685
+                             C15.2908061,12.2545997 15.008518,11.1602658 15.008518,10 C15.008518,6.13400656 18.1425245,
+                             3 22.008518,3 C25.8745114,3 
+                             29.008518,6.13400656 29.008518,10 C29.008518,13.8659934 25.8745114,17 22.008518,
+                             17 C20.8482521,17 19.7539183,16.7177118 18.7904495,16.2180685 
+                             L18.7904495,16.2180685 L16.008518,19 L18.008518,21 L15.008518,24 L13.008518,22 L13.008518,
+                             22 L13.008518,22 Z M22.008518,14 C24.2176571,14 
+                             26.008518,12.2091391 26.008518,10 C26.008518,7.79086089 24.2176571,6 22.008518,
+                             6 C19.7993789,6 18.008518,7.79086089 18.008518,10 C18.008518,12.2091391 
+                             19.7993789,14 22.008518,14 L22.008518,14 Z" id="key"/>
+                        </g>
+                    </g>
+                </svg>
+            </button>
+            <button type="button" id="dc-exchange-btn" style="background-color: transparent;" title="Key Exchange Menu">
+                <svg class="dc-svg" version="1.1" viewBox="0 0 78 78" width="20px" height="20px">
+                    <path d="M72,4.5H6c-3.299,0-6,2.699-6,6V55.5c0,3.301,2.701,6,6,6h66c3.301,0,6-2.699,6-6V10.5  
+                    C78,7.2,75.301,4.5,72,4.5z M72,50.5H6V10.5h66V50.5z 
+                    M52.5,67.5h-27c-1.66,0-3,1.341-3,3v3h33v-3C55.5,68.84,54.16,67.5,52.5,67.5z   
+                    M26.991,36.5H36v-12h-9.009v-6.729L15.264,30.5l11.728,12.728V36.5z 
+                    M50.836,43.228L62.563,30.5L50.836,17.771V24.5h-9.009v12  h9.009V43.228z" style="fill:#d3d3d3;"/>
+                </svg>
+            </button>
+            <button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;" 
+            title="Generate & Send New Public Key">
+                <svg class="dc-svg iconActive-AKd_jq icon-1R19_H iconMargin-2YXk4F" x="0px" y="0px" viewBox="0 0 58 58">
+                    <path style="fill:#d3d3d3;" 
+                    d="M27.767,26.73c-2.428-2.291-3.766-5.392-3.766-8.729c0-6.617,5.383-12,12-12s12,5.383,12,12  
+                    c0,3.288-1.372,6.469-3.765,8.728l-1.373-1.455c2.023-1.909,
+                    3.138-4.492,3.138-7.272c0-5.514-4.486-10-10-10s-10,4.486-10,10  
+                    c0,2.781,1.114,5.365,3.139,7.274L27.767,26.73z"/>
+                    <path style="fill:#d3d3d3;" d="M56.428,38.815c-0.937-0.695-2.188-0.896-3.435-0.55l-15.29,4.227  
+                    C37.891,42.028,38,41.522,38,
+                    40.991c0-2.2-1.794-3.991-3.999-3.991h-9.377c-0.667-1-2.363-4-4.623-4H16v-0.999  
+                    C16,30.347,14.654,29,13,29H9c-1.654,0-3,1.347-3,3v17C6,50.655,7.346,52,9,52h4c1.654,0,
+                    3-1.345,3-2.999v-0.753l12.14,8.201  
+                    c1.524,1.031,3.297,1.55,5.075,1.55c1.641,0,3.286-0.441,4.742-1.33l18.172-11.101C57.283,
+                    44.864,58,43.587,58,42.233v-0.312  
+                    C58,40.688,57.427,39.556,56.428,38.815z M14,49C14,49.553,13.552,
+                    50,13,50h-1v-4h-2v4H9c-0.552,0-1-0.447-1-0.999v-17  
+                    C8,31.449,8.448,31,9,31h4c0.552,0,1,0.449,1,1V49z M56,42.233c0,0.66-0.35,1.284-0.913,
+                    1.628L36.915,54.962  
+                    c-2.367,1.443-5.37,1.376-7.655-0.17L16,45.833V35h4c1.06,0,2.469,2.034,3.088,3.409L23.354,39h10.646  
+                    C35.104,39,36,39.892,36,40.988C36,42.098,35.104,43,34,43H29h-5v2h5h5h2l17.525-4.807c0.637-0.18,
+                    1.278-0.094,1.71,0.228  
+                    C55.722,40.781,56,41.328,56,41.922V42.233z"/>
+                    <path style="fill:#d3d3d3;" d="M33,25.394v6.607C33,33.655,
+                    34.347,35,36,35H38h1h4v-2h-4v-2h2v-2h-2v-3.577  
+                    c3.02-1.186,5-4.079,5-7.422c0-2.398-1.063-4.649-2.915-6.177c-1.85-1.524-4.283-2.134-6.683-1.668  
+                    c-3.155,0.614-5.671,3.153-6.261,6.318C27.39,20.523,29.933,24.041,33,
+                    25.394z M30.108,16.84c0.44-2.364,2.319-4.262,4.677-4.721  
+                    c1.802-0.356,3.639,0.104,5.028,1.249S42,
+                    16.202,42,18c0,2.702-1.719,5.011-4.276,5.745L37,23.954V33h-0.999  
+                    C35.449,33,35,32.553,35,32v-8.02l-0.689-0.225C31.822,22.943,29.509,20.067,30.108,16.84z"/>
+                    <path d="M36,22c2.206,0,4-1.794,4-4s-1.794-4-4-4s-4,1.794-4,4S33.795,22,36,22z   
+                    M36,16c1.103,0,2,0.897,2,2s-0.897,2-2,2s-2-0.897-2-2S34.898,16,36,16z"/>
+                    <circle style="fill:#d3d3d3;" cx="36" cy="18" r="3"/>
+                </svg>
+            </button>
+            `;
+
+        /**
+         * @desc Contains the raw HTML injected into the overlay to prompt for the master password for database
+         *      unlocking.
+         * @type {string}
+         */
+        this.masterPasswordHtml =
+            `
+            <div id="dc-master-overlay" class="dc-overlay">
+                <div id="dc-overlay-centerfield" class="dc-overlay-centerfield" style="top: 30%">
+                    <h2 style="color:#ff0000;" id="dc-header-master-msg"></h2>
+                    <br/><br/>
+                    
+                    <span id="dc-prompt-master-msg"></span><br/>
+                    <input type="password" class="dc-password-field" id="dc-db-password"/>
+                    <br/>
+                    
+                    <div class="stat stat-bar">
+                        <span id = "dc-master-status" class="stat-bar-rating" style="width: 0;"/>
+                    </div>
+
+                    <div class="dc-ruler-align">
+                        <button class="dc-button" style="width:100%;" id="dc-unlock-database-btn"/>
+                    </div>
+                    
+                    <div class="dc-ruler-align">
+                        <button class="dc-button dc-button-inverse" 
+                            style="width:100%;" id="dc-cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            `;
+
+        /**
+         * @desc Defines the raw HTML used describing each option menu.
+         * @type {string}
+         */
+        this.settingsMenuHtml =
+            `
+            <div id="dc-overlay" class="dc-overlay">
+                <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">
+                    <div class="dc-ruler-align">
+                        <input type="text" class="dc-input-field" id="dc-file-path" 
+                            style="width: 100%;padding: 2px;margin-left: 4px;" readonly/>
+                        <button class="dc-button dc-button-inverse" type="button" id="dc-select-file-path-btn" 
+                            style="top: -8px;"> . . .</button>
+                    </div>
+                    
+                    <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea" 
+                        placeholder="Enter any addition text to send with your message ..." maxlength="1100"/>
+                        
+                    <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
+                        <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox">
+                            <span style="margin-top: 5px;">Send Deletion Link</span>
+                    </div>
+                    <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
+                        <input id="dc-file-name-random-checkbox" class="ui-switch-checkbox" type="checkbox" checked>
+                        <span style="margin-top: 5px;">Randomize File Name</span>
+                    </div>
+                    
+                    <div class="stat stat-bar">
+                        <span id = "dc-file-upload-status" class="stat-bar-rating" style="width: 0;"/>
+                    </div>
+
+                    <div class="dc-ruler-align">
+                        <button class="dc-button" style="width:100%;" id="dc-file-upload-btn">Upload</button>
+                    </div>
+                    
+                    <div class="dc-ruler-align">
+                        <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">
+                        Close</button>
+                    </div>
+                </div>
+                <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">
+                    <span>Primary Password:</span>
+                    <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>
+                    
+                    <span>Secondary Password:</span>
+                    <input type="password" class="dc-password-field" id="dc-password-secondary" placeholder="..."/><br/>
+                    
+                    <div class="dc-ruler-align">
+                        <button class="dc-button" id="dc-save-pwd">Update Passwords</button>
+                        <button class="dc-button dc-button-inverse" id="dc-reset-pwd">Reset Passwords</button>
+                        <button class="dc-button dc-button-inverse" id="dc-cancel-btn">Cancel</button>
+                    </div>
+                    
+                    <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">
+                    Copy Current Passwords</button>
+                </div>
+                <div id="dc-update-overlay" class="dc-overlay-centerfield" 
+                style="top: 5%;border: 1px solid;display: none">
+                    <span>DiscordCrypt: Update Available</span>
+                    <div class="dc-ruler-align">
+                        <strong class="dc-hint dc-update-field" id="dc-new-version"/>
+                    </div>
+                    <div class="dc-ruler-align">
+                        <strong class="dc-hint dc-update-field" id="dc-old-version"/>
+                    </div>
+                    <div class="dc-ruler-align">
+                        <strong class="dc-hint dc-update-field">Changelog:</strong></div>
+                    <div class="dc-ruler-align">
+                        <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly/>
+                    </div>
+                    <br>
+                    <div class="dc-ruler-align">
+                        <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">
+                        Restart Discord Now</button>
+                        <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">
+                        Restart Discord Later</button>
+                    </div>
+                </div>
+                <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">
+                    <div class="tab" id="dc-settings-tab">
+                        <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>
+                    </div>
+                    <div class="tab-content" id="dc-settings" style="display: block;">
+                        <p style="text-align: center;">
+                            <b>DiscordCrypt Settings</b>
+                        </p>
+                        <br/><br/>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Primary Cipher:</div>
+                            <select class="dc-input-field" id="dc-primary-cipher">
+                                <option value="bf" selected>Blowfish ( 512-Bit )</option>
+                                <option value="aes">AES ( 256-Bit )</option>
+                                <option value="camel">Camellia ( 256-Bit )</option>
+                                <option value="tdes">TripleDES ( 192-Bit )</option>
+                                <option value="idea">IDEA ( 128-Bit )</option>
+                            </select>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Secondary Cipher:</div>
+                            <select class="dc-input-field" id="dc-secondary-cipher">
+                                <option value="bf">Blowfish ( 512-Bit )</option>
+                                <option value="aes">AES ( 256-Bit )</option>
+                                <option value="camel">Camellia ( 256-Bit )</option>
+                                <option value="idea">IDEA ( 256-Bit )</option>
+                                <option value="tdes">TripleDES ( 192-Bit )</option>
+                            </select>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Padding Mode:</div>
+                            <select class="dc-input-field" id="dc-settings-padding-mode">
+                                <option value="pkc7">PKCS #7</option>
+                                <option value="ans2">ANSI X9.23</option>
+                                <option value="iso1">ISO 10126</option>
+                                <option value="iso9">ISO 97971</option>
+                            </select>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Cipher Operation Mode:</div>
+                            <select class="dc-input-field" id="dc-settings-cipher-mode">
+                                <option value="cbc">Cipher Block Chaining</option>
+                                <option value="cfb">Cipher Feedback Mode</option>
+                                <option value="ofb">Output Feedback Mode</option>
+                            </select>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Default Encryption Password:</div>
+                            <input type="text" class="dc-input-field" id="dc-settings-default-pwd"/>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Encryption Scanning Frequency:</div>
+                            <input type="text" class="dc-input-field" id="dc-settings-scan-delay"/>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">Message Trigger:</div>
+                            <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger"/>
+                        </div>
+                        
+                        <div style="font-size: 9px;">
+                            <div style="display: flex;">
+                                <div style="width: 30%;"></div>
+                                <p class="dc-hint">
+                                The suffix at the end of a typed message to indicate whether to encrypt the text.</p>
+                            </div>
+                            <div style="display: flex;">
+                                <div style="width: 30%;"></div>
+                                <p class="dc-hint">Example: <u>This message will be encrypted.|ENC</u></p>
+                            </div>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <div class="dc-input-label">New Master Database Password:</div>
+                            <input type="text" class="dc-input-field" id="dc-master-password"/>
+                        </div>
+                        
+                        <div class="dc-ruler-align">
+                            <button id="dc-settings-save-btn" class="dc-button">Save & Apply</button>
+                            <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">
+                            Reset Settings</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="dc-overlay-exchange" class="dc-overlay-main" style="display: none;">
+                    <div class="tab" id="dc-exchange-tab">
+                        <button class='dc-tab-link' id="dc-tab-info-btn">Info</button>
+                        <button class='dc-tab-link' id="dc-tab-keygen-btn">Key Generation</button>
+                        <button class='dc-tab-link' id="dc-tab-handshake-btn">Secret Computation</button>
+                        <button class='dc-tab-link' id="dc-exit-exchange-btn" style="float:right;">[ X ]</button>
+                    </div>
+                    <div class="tab-content" id="dc-about-tab" style="display: block;">
+                        <p style="text-align: center;">
+                            <b>Key Exchanger</b>
+                        </p>
+                        <br/>
+                        
+                        <strong>What is this used for?</strong>
+                        <ul class="dc-list">
+                            <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt 
+                            requires a secure channel to exchange these keys.</li>
+                            <li>Using this generator, you may create new keys using standard algorithms such as 
+                            DH or ECDH for manual handshaking.</li>
+                            <li>Follow the steps below and you can generate a password between channels or users 
+                            while being able to publicly post the messages.</li>
+                            <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with 
+                            the Scrypt KDF function to derive two keys.</li>
+                        </ul>
+                        <br/>
+                        
+                        <strong>How do I use this?</strong>
+                        <ul class="dc-list">
+                            <li>Generate a key pair using the specified algorithm and key size on the 
+                            "Key Generation" tab.</li>
+                            <li>Give your partner your public key by clicking the "Send Public Key" button.</li>
+                            <li>Ask your partner to give you their public key using the same step above.</li>
+                            <li>Copy your partner's public key and paste it in the "Secret Computation" tab and 
+                            select "Compute Secret Keys".</li>
+                            <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span> 
+                            the primary and secondary keys to be generated.</li>
+                            <li>A status bar is provided to easily tell you when both passwords 
+                            have been generated.</li>
+                            <li>Click the "Apply Generated Passwords" button to apply both passwords to 
+                            the current user or channel.</li>
+                        </ul>
+                        
+                        <strong>Algorithms Supported:</strong>
+                        <ul class="dc-list">
+                            <li>
+                                <a title="Diffie–Hellman key exchange" 
+                                href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"
+                                 target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>
+                            </li>
+                            <li>
+                                <a title="Elliptic curve Diffie–Hellman" 
+                                href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman"
+                                 target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>
+                            </li>
+                        </ul>
+                        
+                        <span style="text-decoration: underline; color: #ff0000;">
+                            <strong>DO NOT:</strong>
+                        </span>
+                        <ul class="dc-list dc-list-red">
+                            <li>
+                                <strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong>
+                            </li>
+                            <li>
+                                <strong>Alter your public key or have your partner alter theirs in any way.</strong>
+                            </li>
+                            <li>
+                                <strong>Insert a random public key.</strong>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="tab-content" id="dc-keygen-tab" style="display: block;">
+                        <p style="text-align: center;">
+                            <b style="font-size: large;">Secure Key Generation</b>
+                        </p>
+                        <br/>
+                        
+                        <strong>Exchange Algorithm:</strong>
+                        <select id="dc-keygen-method">
+                            <option value="dh" selected>Diffie-Hellman</option>
+                            <option value="ecdh">Elliptic-Curve Diffie-Hellman</option>
+                        </select>
+                        <br/><br/>
+                
+                        <strong>Key Length ( Bits ):</strong>
+                        <select id="dc-keygen-algorithm">
+                            <option value="768">768</option>
+                            <option value="1024">1024</option>
+                            <option value="1536">1536</option>
+                            <option value="2048">2048</option>
+                            <option value="3072">3072</option>
+                            <option value="4096">4096</option>
+                            <option value="6144">6144</option>
+                            <option value="8192" selected>8192</option>
+                        </select>
+                        <br/><br/>
+                
+                        <div class="dc-ruler-align">
+                            <button id="dc-keygen-gen-btn" class="dc-button">Generate</button>
+                            <button id="dc-keygen-clear-btn" class="dc-button dc-button-inverse">Clear</button>
+                        </div>
+                        <br/><br/><br/>
+                
+                        <strong>Private Key: ( 
+                        <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span>
+                         )</strong><br/>
+                        <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"
+                         unselectable="on" disabled readonly/>
+                        <br/><br/>
+                
+                        <strong>Public Key:</strong><br/>
+                        <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192" 
+                        unselectable="on" disabled readonly/>
+                        <br/><br/>
+                
+                        <div class="dc-ruler-align">
+                            <button id="dc-keygen-send-pub-btn" class="dc-button">Send Public Key</button>
+                        </div>
+                        <br/>
+                        
+                        <ul class="dc-list dc-list-red">
+                            <li>Never rely on copying these keys. Use the "Send Public Key" button 
+                            to send your key.</li>
+                            <li>Public keys are automatically encoded with a random salts.</li>
+                            <li>Posting these keys directly won't work since they aren't encoded 
+                            in the format required.</li>
+                        </ul>
+                    </div>
+                    <div class="tab-content" id="dc-handshake-tab">
+                        <p style="text-align: center;">
+                            <b style="font-size: large;">Key Derivation</b>
+                        </p>
+                        <br/>
+                        
+                        <p>
+                            <span style="text-decoration: underline; color: #ff0000;">
+                                <strong>NOTE:</strong>
+                            </span>
+                        </p>
+                        <ul class="dc-list dc-list-red">
+                            <li>Copy your partner's private key EXACTLY as it was posted.</li>
+                            <li>Your last generated private key from the "Key Generation" tab 
+                            will be used to compute these keys.</li>
+                        </ul>
+                        <br/>
+                        
+                        <strong>Partner's Public Key:</strong><br/>
+                        <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384"/>
+                        <br/><br/>
+                        
+                        <div class="dc-ruler-align">
+                            <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">
+                            Paste From Clipboard</button>
+                            <button id="dc-handshake-compute-btn" class="dc-button">Compute Secret Keys</button>
+                        </div>
+                        
+                        <ul class="dc-list dc-list-red">
+                            <li id="dc-handshake-algorithm">...</li>
+                            <li id="dc-handshake-salts">...</li>
+                            <li id="dc-handshake-secret">...</li>
+                        </ul>
+                        <br/>
+                        
+                        <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>
+                        <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"
+                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
+                        <br/><br/>
+                        
+                        <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>
+                        <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"
+                         style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
+                        <br/><br/>
+                        
+                        <div class="stat stat-bar" style="width:70%;">
+                            <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>
+                        </div><br/>
+                        
+                        <div class="dc-ruler-align">
+                            <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">
+                            Copy Keys & Nuke</button>
+                            <button id="dc-handshake-apply-keys-btn" class="dc-button">
+                            Apply Generated Passwords</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            `;
+
+        /**
+         * @desc The Base64 encoded SVG containing the unlocked status icon.
+         * @type {string}
+         */
+        this.unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0I" +
+            "DI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xIDAgMi0u" +
+            "OSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgNyA2aDEuOWM" +
+            "wLTEuNzEgMS4zOS0zLjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAydjEwYzAgMS4xLj" +
+            "kgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6bTAgMTJINlYxMGgxMnYxMHoiPjwvcGF0aD48L3N2Zz4=";
+
+        /**
+         * @desc The Base64 encoded SVG containing the locked status icon.
+         * @type {string}
+         */
+        this.lockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI" +
+            "0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI0djI0SD" +
+            "BWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJlZj0iI2EiL" +
+            "z48L2NsaXBQYXRoPjxwYXRoIGNsaXAtcGF0aD0idXJsKCNiKSIgZD0iTTEyIDE3YzEuMSAwIDItLjkgMi0ycy0uOS0yLTItMi0yIC45" +
+            "LTIgMiAuOSAyIDIgMnptNi05aC0xVjZjMC0yLjc2LTIuMjQtNS01LTVTNyAzLjI0IDcgNnYySDZjLTEuMSAwLTIgLjktMiAydjEwYzA" +
+            "gMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6TTguOSA2YzAtMS43MSAxLjM5LTMuMSAzLjEtMy" +
+            "4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlWNnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=";
+
+        /**
+         * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
+         * @type {{string, string}}
+         */
+        this.libraries = {
+                        'currify.js': "!function(n){if(\"object\"==typeof exports&&\"undefined\"!=typeof module)module.exports=n();else if(\"function\"==typeof define&&define.amd)define([],n);else{var r;(r=\"undefined\"!=typeof window?window:\"undefined\"!=typeof global?global:\"undefined\"!=typeof self?self:this).currify=n()}}(function(){var n,r,e;return function n(r,e,t){function o(f,u){if(!e[f]){if(!r[f]){var c=\"function\"==typeof require&&require;if(!u&&c)return c(f,!0);if(i)return i(f,!0);var p=new Error(\"Cannot find module '\"+f+\"'\");throw p.code=\"MODULE_NOT_FOUND\",p}var l=e[f]={exports:{}};r[f][0].call(l.exports,function(n){var e=r[f][1][n];return o(e||n)},l,l.exports,n,r,e,t)}return e[f].exports}for(var i=\"function\"==typeof require&&require,f=0;f<t.length;f++)o(t[f]);return o}({currify:[function(n,r,e){\"use strict\";var t=function n(r){return[function(n){return r.apply(void 0,arguments)},function(n,e){return r.apply(void 0,arguments)},function(n,e,t){return r.apply(void 0,arguments)},function(n,e,t,o){return r.apply(void 0,arguments)},function(n,e,t,o,i){return r.apply(void 0,arguments)}]};function o(n){if(\"function\"!=typeof n)throw Error(\"fn should be function!\")}r.exports=function n(r){for(var e=arguments.length,i=Array(e>1?e-1:0),f=1;f<e;f++)i[f-1]=arguments[f];if(o(r),i.length>=r.length)return r.apply(void 0,i);var u=function e(){return n.apply(void 0,[r].concat(i,Array.prototype.slice.call(arguments)))},c=r.length-i.length-1,p;return t(u)[c]||u}},{}]},{},[\"currify\"])(\"currify\")});\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIjAiXSwibmFtZXMiOlsiZiIsImV4cG9ydHMiLCJtb2R1bGUiLCJkZWZpbmUiLCJhbWQiLCJnIiwid2luZG93IiwiZ2xvYmFsIiwic2VsZiIsInRoaXMiLCJjdXJyaWZ5IiwiZSIsInQiLCJuIiwiciIsInMiLCJvIiwidSIsImEiLCJyZXF1aXJlIiwiaSIsIkVycm9yIiwiY29kZSIsImwiLCJjYWxsIiwibGVuZ3RoIiwiZm4iLCJhcHBseSIsInVuZGVmaW5lZCIsImFyZ3VtZW50cyIsImIiLCJjIiwiZCIsImNoZWNrIiwiX2xlbiIsImFyZ3MiLCJBcnJheSIsIl9rZXkiLCJhZ2FpbiIsImNvbmNhdCIsInByb3RvdHlwZSIsInNsaWNlIiwiY291bnQiLCJmdW5jIl0sIm1hcHBpbmdzIjoiQ0FBQSxTQUFVQSxHQUFHLEdBQW9CLGlCQUFWQyxTQUFvQyxvQkFBVEMsT0FBc0JBLE9BQU9ELFFBQVFELFNBQVMsR0FBbUIsbUJBQVRHLFFBQXFCQSxPQUFPQyxJQUFLRCxVQUFVSCxPQUFPLENBQUMsSUFBSUssR0FBa0NBLEVBQWIsb0JBQVRDLE9BQXdCQSxPQUErQixvQkFBVEMsT0FBd0JBLE9BQTZCLG9CQUFQQyxLQUFzQkEsS0FBWUMsTUFBT0MsUUFBVVYsS0FBNVQsQ0FBbVUsV0FBVyxJQUFJRyxFQUFPRCxFQUFPRCxFQUFRLE9BQU8sU0FBVVUsRUFBRUMsRUFBRUMsRUFBRUMsR0FBRyxTQUFTQyxFQUFFQyxFQUFFQyxHQUFHLElBQUlKLEVBQUVHLEdBQUcsQ0FBQyxJQUFJSixFQUFFSSxHQUFHLENBQUMsSUFBSUUsRUFBa0IsbUJBQVRDLFNBQXFCQSxRQUFRLElBQUlGLEdBQUdDLEVBQUUsT0FBT0EsRUFBRUYsR0FBRSxHQUFJLEdBQUdJLEVBQUUsT0FBT0EsRUFBRUosR0FBRSxHQUFJLElBQUloQixFQUFFLElBQUlxQixNQUFNLHVCQUF1QkwsRUFBRSxLQUFLLE1BQU1oQixFQUFFc0IsS0FBSyxtQkFBbUJ0QixFQUFFLElBQUl1QixFQUFFVixFQUFFRyxJQUFJZixZQUFZVyxFQUFFSSxHQUFHLEdBQUdRLEtBQUtELEVBQUV0QixRQUFRLFNBQVNVLEdBQUcsSUFBSUUsRUFBRUQsRUFBRUksR0FBRyxHQUFHTCxHQUFHLE9BQU9JLEVBQUVGLEdBQUlGLElBQUlZLEVBQUVBLEVBQUV0QixRQUFRVSxFQUFFQyxFQUFFQyxFQUFFQyxHQUFHLE9BQU9ELEVBQUVHLEdBQUdmLFFBQWtELElBQTFDLElBQUltQixFQUFrQixtQkFBVEQsU0FBcUJBLFFBQWdCSCxFQUFFLEVBQUVBLEVBQUVGLEVBQUVXLE9BQU9ULElBQUlELEVBQUVELEVBQUVFLElBQUksT0FBT0QsRUFBdmIsRUFBNGJMLFNBQVcsU0FBU1MsRUFBUWpCLEVBQU9ELEdBQ3QwQixhQUVBLElBQUlELEVBQUksU0FBU0EsRUFBRTBCLEdBQ2YsT0FFSSxTQUFVUixHQUNOLE9BQU9RLEVBQUdDLFdBQU1DLEVBQVdDLFlBQzVCLFNBQVVYLEVBQUdZLEdBQ1osT0FBT0osRUFBR0MsV0FBTUMsRUFBV0MsWUFDNUIsU0FBVVgsRUFBR1ksRUFBR0MsR0FDZixPQUFPTCxFQUFHQyxXQUFNQyxFQUFXQyxZQUM1QixTQUFVWCxFQUFHWSxFQUFHQyxFQUFHQyxHQUNsQixPQUFPTixFQUFHQyxXQUFNQyxFQUFXQyxZQUM1QixTQUFVWCxFQUFHWSxFQUFHQyxFQUFHQyxFQUFHckIsR0FDckIsT0FBT2UsRUFBR0MsV0FBTUMsRUFBV0MsY0F1QnZDLFNBQVNJLEVBQU1QLEdBQ1gsR0FBa0IsbUJBQVBBLEVBQW1CLE1BQU1MLE1BQU0sMEJBcEI5Q25CLEVBQU9ELFFBQVUsU0FBU1MsRUFBUWdCLEdBQzlCLElBQUssSUFBSVEsRUFBT0wsVUFBVUosT0FBUVUsRUFBT0MsTUFBTUYsRUFBTyxFQUFJQSxFQUFPLEVBQUksR0FBSUcsRUFBTyxFQUFHQSxFQUFPSCxFQUFNRyxJQUM1RkYsRUFBS0UsRUFBTyxHQUFLUixVQUFVUSxHQUsvQixHQUZBSixFQUFNUCxHQUVGUyxFQUFLVixRQUFVQyxFQUFHRCxPQUFRLE9BQU9DLEVBQUdDLFdBQU1DLEVBQVdPLEdBRXpELElBQUlHLEVBQVEsU0FBU0EsSUFDakIsT0FBTzVCLEVBQVFpQixXQUFNQyxHQUFZRixHQUFJYSxPQUFPSixFQUFNQyxNQUFNSSxVQUFVQyxNQUFNakIsS0FBS0ssY0FHN0VhLEVBQVFoQixFQUFHRCxPQUFTVSxFQUFLVixPQUFTLEVBQ2xDa0IsRUFFSixPQUZXM0MsRUFBRXNDLEdBQU9JLElBRUxKLGFBTVosV0F6Q2dXLENBeUNwViJ9",
+            'sjcl.js': "\"use strict\";function r(t){throw t}var s=void 0,v=!1;function H(){return function(){}}var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(t){this.toString=function(){return\"CORRUPT: \"+this.message},this.message=t},invalid:function(t){this.toString=function(){return\"INVALID: \"+this.message},this.message=t},bug:function(t){this.toString=function(){return\"BUG: \"+this.message},this.message=t},notReady:function(t){this.toString=function(){return\"NOT READY: \"+this.message},this.message=t}}},a;function aa(t,e,n){4!==e.length&&r(new sjcl.exception.invalid(\"invalid aes block size\"));var i=t.b[n],s=e[0]^i[0],c=e[n?3:1]^i[1],o=e[2]^i[2];e=e[n?1:3]^i[3];var a,h,l,u=i.length/4-2,f,d=4,p=[0,0,0,0];t=(a=t.l[n])[0];var y=a[1],g=a[2],m=a[3],b=a[4];for(f=0;f<u;f++)a=t[s>>>24]^y[c>>16&255]^g[o>>8&255]^m[255&e]^i[d],h=t[c>>>24]^y[o>>16&255]^g[e>>8&255]^m[255&s]^i[d+1],l=t[o>>>24]^y[e>>16&255]^g[s>>8&255]^m[255&c]^i[d+2],e=t[e>>>24]^y[s>>16&255]^g[c>>8&255]^m[255&o]^i[d+3],d+=4,s=a,c=h,o=l;for(f=0;4>f;f++)p[n?3&-f:f]=b[s>>>24]<<24^b[c>>16&255]<<16^b[o>>8&255]<<8^b[255&e]^i[d++],a=s,s=c,c=o,o=e,e=a;return p}function da(t,e){var r,n=sjcl.random.A[t],i=[];for(r in n)n.hasOwnProperty(r)&&i.push(n[r]);for(r=0;r<i.length;r++)i[r](e)}function Q(t){\"undefined\"!=typeof window&&window.performance&&\"function\"==typeof window.performance.now?sjcl.random.addEntropy(window.performance.now(),t,\"loadtime\"):sjcl.random.addEntropy((new Date).valueOf(),t,\"loadtime\")}function ba(t){t.b=ca(t).concat(ca(t)),t.B=new sjcl.cipher.aes(t.b)}function ca(t){for(var e=0;4>e&&(t.h[e]=t.h[e]+1|0,!t.h[e]);e++);return t.B.encrypt(t.h)}function P(t,e){return function(){e.apply(t,arguments)}}\"undefined\"!=typeof module&&module.exports&&(module.exports=sjcl),\"function\"==typeof define&&define([],function(){return sjcl}),sjcl.cipher.aes=function(t){this.l[0][0][0]||this.q();var e,n,i,s,c=this.l[0][4],o=this.l[1],a=1;for(4!==(e=t.length)&&6!==e&&8!==e&&r(new sjcl.exception.invalid(\"invalid aes key size\")),this.b=[i=t.slice(0),s=[]],t=e;t<4*e+28;t++)n=i[t-1],(0==t%e||8===e&&4==t%e)&&(n=c[n>>>24]<<24^c[n>>16&255]<<16^c[n>>8&255]<<8^c[255&n],0==t%e&&(n=n<<8^n>>>24^a<<24,a=a<<1^283*(a>>7))),i[t]=i[t-e]^n;for(e=0;t;e++,t--)n=i[3&e?t:t-4],s[e]=4>=t||4>e?n:o[0][c[n>>>24]]^o[1][c[n>>16&255]]^o[2][c[n>>8&255]]^o[3][c[255&n]]},sjcl.cipher.aes.prototype={encrypt:function(t){return aa(this,t,0)},decrypt:function(t){return aa(this,t,1)},l:[[[],[],[],[],[]],[[],[],[],[],[]]],q:function(){var t=this.l[0],e=this.l[1],r=t[4],n=e[4],i,s,c,o=[],a=[],h,l,u,f;for(i=0;256>i;i++)a[(o[i]=i<<1^283*(i>>7))^i]=i;for(s=c=0;!r[s];s^=h||1,c=a[c]||1)for(u=(u=c^c<<1^c<<2^c<<3^c<<4)>>8^255&u^99,r[s]=u,n[u]=s,f=16843009*(l=o[i=o[h=o[s]]])^65537*i^257*h^16843008*s,l=257*o[u]^16843008*u,i=0;4>i;i++)t[i][s]=l=l<<24^l>>>8,e[i][u]=f=f<<24^f>>>8;for(i=0;5>i;i++)t[i]=t[i].slice(0),e[i]=e[i].slice(0)}},sjcl.bitArray={bitSlice:function(t,e,r){return t=sjcl.bitArray.M(t.slice(e/32),32-(31&e)).slice(1),r===s?t:sjcl.bitArray.clamp(t,r-e)},extract:function(t,e,r){var n=Math.floor(-e-r&31);return(-32&(e+r-1^e)?t[e/32|0]<<32-n^t[e/32+1|0]>>>n:t[e/32|0]>>>n)&(1<<r)-1},concat:function(t,e){if(0===t.length||0===e.length)return t.concat(e);var r=t[t.length-1],n=sjcl.bitArray.getPartial(r);return 32===n?t.concat(e):sjcl.bitArray.M(e,n,0|r,t.slice(0,t.length-1))},bitLength:function(t){var e=t.length;return 0===e?0:32*(e-1)+sjcl.bitArray.getPartial(t[e-1])},clamp:function(t,e){if(32*t.length<e)return t;var r=(t=t.slice(0,Math.ceil(e/32))).length;return e&=31,0<r&&e&&(t[r-1]=sjcl.bitArray.partial(e,t[r-1]&2147483648>>e-1,1)),t},partial:function(t,e,r){return 32===t?e:(r?0|e:e<<32-t)+1099511627776*t},getPartial:function(t){return Math.round(t/1099511627776)||32},equal:function(t,e){if(sjcl.bitArray.bitLength(t)!==sjcl.bitArray.bitLength(e))return v;var r=0,n;for(n=0;n<t.length;n++)r|=t[n]^e[n];return 0===r},M:function(t,e,r,n){var i;for(i=0,n===s&&(n=[]);32<=e;e-=32)n.push(r),r=0;if(0===e)return n.concat(t);for(i=0;i<t.length;i++)n.push(r|t[i]>>>e),r=t[i]<<32-e;return i=t.length?t[t.length-1]:0,t=sjcl.bitArray.getPartial(i),n.push(sjcl.bitArray.partial(e+t&31,32<e+t?r:n.pop(),1)),n},u:function(t,e){return[t[0]^e[0],t[1]^e[1],t[2]^e[2],t[3]^e[3]]},byteswapM:function(t){var e,r;for(e=0;e<t.length;++e)r=t[e],t[e]=r>>>24|r>>>8&65280|(65280&r)<<8|r<<24;return t}},sjcl.codec.utf8String={fromBits:function(t){var e=\"\",r=sjcl.bitArray.bitLength(t),n,i;for(n=0;n<r/8;n++)0==(3&n)&&(i=t[n/4]),e+=String.fromCharCode(i>>>24),i<<=8;return decodeURIComponent(escape(e))},toBits:function(t){t=unescape(encodeURIComponent(t));var e=[],r,n=0;for(r=0;r<t.length;r++)n=n<<8|t.charCodeAt(r),3==(3&r)&&(e.push(n),n=0);return 3&r&&e.push(sjcl.bitArray.partial(8*(3&r),n)),e}},sjcl.codec.base64={I:\"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\",fromBits:function(t,e,r){var n=\"\",i=0,s=sjcl.codec.base64.I,c=0,o=sjcl.bitArray.bitLength(t);for(r&&(s=s.substr(0,62)+\"-_\"),r=0;6*n.length<o;)n+=s.charAt((c^t[r]>>>i)>>>26),6>i?(c=t[r]<<6-i,i+=26,r++):(c<<=6,i-=6);for(;3&n.length&&!e;)n+=\"=\";return n},toBits:function(t,e){t=t.replace(/\\s|=/g,\"\");var n=[],i,s=0,c=sjcl.codec.base64.I,o=0,a;for(e&&(c=c.substr(0,62)+\"-_\"),i=0;i<t.length;i++)0>(a=c.indexOf(t.charAt(i)))&&r(new sjcl.exception.invalid(\"this isn't base64!\")),26<s?(s-=26,n.push(o^a>>>s),o=a<<32-s):o^=a<<32-(s+=6);return 56&s&&n.push(sjcl.bitArray.partial(56&s,o,1)),n}},sjcl.codec.base64url={fromBits:function(t){return sjcl.codec.base64.fromBits(t,1,1)},toBits:function(t){return sjcl.codec.base64.toBits(t,1)}},sjcl.codec.bytes={fromBits:function(t){var e=[],r=sjcl.bitArray.bitLength(t),n,i;for(n=0;n<r/8;n++)0==(3&n)&&(i=t[n/4]),e.push(i>>>24),i<<=8;return e},toBits:function(t){var e=[],r,n=0;for(r=0;r<t.length;r++)n=n<<8|t[r],3==(3&r)&&(e.push(n),n=0);return 3&r&&e.push(sjcl.bitArray.partial(8*(3&r),n)),e}},sjcl.hash.sha256=function(t){this.b[0]||this.q(),t?(this.e=t.e.slice(0),this.d=t.d.slice(0),this.c=t.c):this.reset()},sjcl.hash.sha256.hash=function(t){return(new sjcl.hash.sha256).update(t).finalize()},sjcl.hash.sha256.prototype={blockSize:512,reset:function(){return this.e=this.i.slice(0),this.d=[],this.c=0,this},update:function(t){\"string\"==typeof t&&(t=sjcl.codec.utf8String.toBits(t));var e,r=this.d=sjcl.bitArray.concat(this.d,t);for(e=this.c,t=this.c=e+sjcl.bitArray.bitLength(t),e=512+e&-512;e<=t;e+=512)this.n(r.splice(0,16));return this},finalize:function(){var t,e=this.d,r=this.e,e;for(t=(e=sjcl.bitArray.concat(e,[sjcl.bitArray.partial(1,1)])).length+2;15&t;t++)e.push(0);for(e.push(Math.floor(this.c/4294967296)),e.push(0|this.c);e.length;)this.n(e.splice(0,16));return this.reset(),r},i:[],b:[],q:function(){function t(t){return 4294967296*(t-Math.floor(t))|0}var e=0,r=2,n;t:for(;64>e;r++){for(n=2;n*n<=r;n++)if(0==r%n)continue t;8>e&&(this.i[e]=t(Math.pow(r,.5))),this.b[e]=t(Math.pow(r,1/3)),e++}},n:function(t){var e,r,n=t.slice(0),i=this.e,s=this.b,c=i[0],o=i[1],a=i[2],h=i[3],l=i[4],u=i[5],f=i[6],d=i[7];for(t=0;64>t;t++)16>t?e=n[t]:(e=n[t+1&15],r=n[t+14&15],e=n[15&t]=(e>>>7^e>>>18^e>>>3^e<<25^e<<14)+(r>>>17^r>>>19^r>>>10^r<<15^r<<13)+n[15&t]+n[t+9&15]|0),e=e+d+(l>>>6^l>>>11^l>>>25^l<<26^l<<21^l<<7)+(f^l&(u^f))+s[t],d=f,f=u,u=l,l=h+e|0,h=a,a=o,c=e+((o=c)&a^h&(o^a))+(o>>>2^o>>>13^o>>>22^o<<30^o<<19^o<<10)|0;i[0]=i[0]+c|0,i[1]=i[1]+o|0,i[2]=i[2]+a|0,i[3]=i[3]+h|0,i[4]=i[4]+l|0,i[5]=i[5]+u|0,i[6]=i[6]+f|0,i[7]=i[7]+d|0}},sjcl.hash.sha512=function(t){this.b[0]||this.q(),t?(this.e=t.e.slice(0),this.d=t.d.slice(0),this.c=t.c):this.reset()},sjcl.hash.sha512.hash=function(t){return(new sjcl.hash.sha512).update(t).finalize()},sjcl.hash.sha512.prototype={blockSize:1024,reset:function(){return this.e=this.i.slice(0),this.d=[],this.c=0,this},update:function(t){\"string\"==typeof t&&(t=sjcl.codec.utf8String.toBits(t));var e,r=this.d=sjcl.bitArray.concat(this.d,t);for(e=this.c,t=this.c=e+sjcl.bitArray.bitLength(t),e=1024+e&-1024;e<=t;e+=1024)this.n(r.splice(0,32));return this},finalize:function(){var t,e=this.d,r=this.e,e;for(t=(e=sjcl.bitArray.concat(e,[sjcl.bitArray.partial(1,1)])).length+4;31&t;t++)e.push(0);for(e.push(0),e.push(0),e.push(Math.floor(this.c/4294967296)),e.push(0|this.c);e.length;)this.n(e.splice(0,32));return this.reset(),r},i:[],T:[12372232,13281083,9762859,1914609,15106769,4090911,4308331,8266105],b:[],V:[2666018,15689165,5061423,9034684,4764984,380953,1658779,7176472,197186,7368638,14987916,16757986,8096111,1480369,13046325,6891156,15813330,5187043,9229749,11312229,2818677,10937475,4324308,1135541,6741931,11809296,16458047,15666916,11046850,698149,229999,945776,13774844,2541862,12856045,9810911,11494366,7844520,15576806,8533307,15795044,4337665,16291729,5553712,15684120,6662416,7413802,12308920,13816008,4303699,9366425,10176680,13195875,4295371,6546291,11712675,15708924,1519456,15772530,6568428,6495784,8568297,13007125,7492395,2515356,12632583,14740254,7262584,1535930,13146278,16321966,1853211,294276,13051027,13221564,1051980,4080310,6651434,14088940,4675607],q:function(){function t(t){return 4294967296*(t-Math.floor(t))|0}function e(t){return 1099511627776*(t-Math.floor(t))&255}var r=0,n=2,i;t:for(;80>r;n++){for(i=2;i*i<=n;i++)if(0==n%i)continue t;8>r&&(this.i[2*r]=t(Math.pow(n,.5)),this.i[2*r+1]=e(Math.pow(n,.5))<<24|this.T[r]),this.b[2*r]=t(Math.pow(n,1/3)),this.b[2*r+1]=e(Math.pow(n,1/3))<<24|this.V[r],r++}},n:function(t){var e,r,n=t.slice(0),i=this.e,s=this.b,c=i[0],o=i[1],a=i[2],h=i[3],l=i[4],u=i[5],f=i[6],d=i[7],p=i[8],y=i[9],g=i[10],m=i[11],b=i[12],v=i[13],j=i[14],w=i[15],A=c,L=o,B=a,C=h,E=l,U=u,k=f,x=d,V=p,M=y,S=g,D=m,P=b,R=v,O=j,z=w;for(t=0;80>t;t++){if(16>t)e=n[2*t],r=n[2*t+1];else{var I;r=n[2*(t-15)],e=((I=n[2*(t-15)+1])<<31|r>>>1)^(I<<24|r>>>8)^r>>>7;var T=(r<<31|I>>>1)^(r<<24|I>>>8)^(r<<25|I>>>7);r=n[2*(t-2)];var q,I=((q=n[2*(t-2)+1])<<13|r>>>19)^(r<<3|q>>>29)^r>>>6,q=(r<<13|q>>>19)^(q<<3|r>>>29)^(r<<26|q>>>6),G=n[2*(t-7)],Q=n[2*(t-16)],W=n[2*(t-16)+1];e=e+G+((r=T+n[2*(t-7)+1])>>>0<T>>>0?1:0),e+=I+((r+=q)>>>0<q>>>0?1:0),e+=Q+((r+=W)>>>0<W>>>0?1:0)}n[2*t]=e|=0,n[2*t+1]=r|=0;var G=V&S^~V&P,Y=M&D^~M&R,q=A&B^A&E^B&E,X=L&C^L&U^C&U,Q=(L<<4|A>>>28)^(A<<30|L>>>2)^(A<<25|L>>>7),W=(A<<4|L>>>28)^(L<<30|A>>>2)^(L<<25|A>>>7),_=s[2*t],F=s[2*t+1],I,T,I,T,I,T,I,T=(T=(T=(T=O+((M<<18|V>>>14)^(M<<14|V>>>18)^(V<<23|M>>>9))+((I=z+((V<<18|M>>>14)^(V<<14|M>>>18)^(M<<23|V>>>9)))>>>0<z>>>0?1:0))+(G+((I=I+Y)>>>0<Y>>>0?1:0)))+(_+((I=I+F)>>>0<F>>>0?1:0)))+(e+((I=I+r|0)>>>0<r>>>0?1:0));e=Q+q+((r=W+X)>>>0<W>>>0?1:0),O=P,z=R,P=S,R=D,S=V,D=M,V=k+T+((M=x+I|0)>>>0<x>>>0?1:0)|0,k=E,x=U,E=B,U=C,B=A,C=L,A=T+e+((L=I+r|0)>>>0<I>>>0?1:0)|0}o=i[1]=o+L|0,i[0]=c+A+(o>>>0<L>>>0?1:0)|0,h=i[3]=h+C|0,i[2]=a+B+(h>>>0<C>>>0?1:0)|0,u=i[5]=u+U|0,i[4]=l+E+(u>>>0<U>>>0?1:0)|0,d=i[7]=d+x|0,i[6]=f+k+(d>>>0<x>>>0?1:0)|0,y=i[9]=y+M|0,i[8]=p+V+(y>>>0<M>>>0?1:0)|0,m=i[11]=m+D|0,i[10]=g+S+(m>>>0<D>>>0?1:0)|0,v=i[13]=v+R|0,i[12]=b+P+(v>>>0<R>>>0?1:0)|0,w=i[15]=w+z|0,i[14]=j+O+(w>>>0<z>>>0?1:0)|0}},sjcl.mode.ccm={name:\"ccm\",s:[],listenProgress:function(t){sjcl.mode.ccm.s.push(t)},unListenProgress:function(t){-1<(t=sjcl.mode.ccm.s.indexOf(t))&&sjcl.mode.ccm.s.splice(t,1)},H:function(t){var e=sjcl.mode.ccm.s.slice(),r;for(r=0;r<e.length;r+=1)e[r](t)},encrypt:function(t,e,n,i,s){var c,o=e.slice(0),a=sjcl.bitArray,h=a.bitLength(n)/8,l=a.bitLength(o)/8;for(s=s||64,i=i||[],7>h&&r(new sjcl.exception.invalid(\"ccm: iv must be at least 7 bytes\")),c=2;4>c&&l>>>8*c;c++);return c<15-h&&(c=15-h),n=a.clamp(n,8*(15-c)),e=sjcl.mode.ccm.o(t,e,n,i,s,c),o=sjcl.mode.ccm.p(t,o,n,e,s,c),a.concat(o.data,o.tag)},decrypt:function(t,e,n,i,s){s=s||64,i=i||[];var c=sjcl.bitArray,o=c.bitLength(n)/8,a=c.bitLength(e),h=c.clamp(e,a-s),l=c.bitSlice(e,a-s),a=(a-s)/8;for(7>o&&r(new sjcl.exception.invalid(\"ccm: iv must be at least 7 bytes\")),e=2;4>e&&a>>>8*e;e++);return e<15-o&&(e=15-o),n=c.clamp(n,8*(15-e)),h=sjcl.mode.ccm.p(t,h,n,l,s,e),t=sjcl.mode.ccm.o(t,h.data,n,i,s,e),c.equal(h.tag,t)||r(new sjcl.exception.corrupt(\"ccm: tag doesn't match\")),h.data},K:function(t,e,r,n,i,s){var c=[],o=sjcl.bitArray,a=o.u;if(n=[o.partial(8,(e.length?64:0)|n-2<<2|s-1)],(n=o.concat(n,r))[3]|=i,n=t.encrypt(n),e.length)for(65279>=(r=o.bitLength(e)/8)?c=[o.partial(16,r)]:4294967295>=r&&(c=o.concat([o.partial(16,65534)],[r])),c=o.concat(c,e),e=0;e<c.length;e+=4)n=t.encrypt(a(n,c.slice(e,e+4).concat([0,0,0])));return n},o:function(t,e,n,i,s,c){var o=sjcl.bitArray,a=o.u;for(((s/=8)%2||4>s||16<s)&&r(new sjcl.exception.invalid(\"ccm: invalid tag length\")),(4294967295<i.length||4294967295<e.length)&&r(new sjcl.exception.bug(\"ccm: can't deal with 4GiB or more data\")),n=sjcl.mode.ccm.K(t,i,n,s,o.bitLength(e)/8,c),i=0;i<e.length;i+=4)n=t.encrypt(a(n,e.slice(i,i+4).concat([0,0,0])));return o.clamp(n,8*s)},p:function(t,e,r,n,i,s){var c,o=sjcl.bitArray;c=o.u;var a=e.length,h=o.bitLength(e),l=a/50,u=l;if(r=o.concat([o.partial(8,s-1)],r).concat([0,0,0]).slice(0,4),n=o.bitSlice(c(n,t.encrypt(r)),0,i),!a)return{tag:n,data:[]};for(c=0;c<a;c+=4)c>l&&(sjcl.mode.ccm.H(c/a),l+=u),r[3]++,i=t.encrypt(r),e[c]^=i[0],e[c+1]^=i[1],e[c+2]^=i[2],e[c+3]^=i[3];return{tag:n,data:o.clamp(e,h)}}},sjcl.prng=function(t){this.f=[new sjcl.hash.sha256],this.j=[0],this.F=0,this.t={},this.D=0,this.J={},this.L=this.g=this.k=this.S=0,this.b=[0,0,0,0,0,0,0,0],this.h=[0,0,0,0],this.B=s,this.C=t,this.r=v,this.A={progress:{},seeded:{}},this.m=this.R=0,this.v=1,this.w=2,this.O=65536,this.G=[0,48,64,96,128,192,256,384,512,768,1024],this.P=3e4,this.N=80},sjcl.prng.prototype={randomWords:function(t,e){var n=[],i,s;if((i=this.isReady(e))===this.m&&r(new sjcl.exception.notReady(\"generator isn't seeded\")),i&this.w){i=!(i&this.v),s=[];var c=0,o;for(this.L=s[0]=(new Date).valueOf()+this.P,o=0;16>o;o++)s.push(4294967296*Math.random()|0);for(o=0;o<this.f.length&&(s=s.concat(this.f[o].finalize()),c+=this.j[o],this.j[o]=0,i||!(this.F&1<<o));o++);for(this.F>=1<<this.f.length&&(this.f.push(new sjcl.hash.sha256),this.j.push(0)),this.g-=c,c>this.k&&(this.k=c),this.F++,this.b=sjcl.hash.sha256.hash(this.b.concat(s)),this.B=new sjcl.cipher.aes(this.b),i=0;4>i&&(this.h[i]=this.h[i]+1|0,!this.h[i]);i++);}for(i=0;i<t;i+=4)0==(i+1)%this.O&&ba(this),s=ca(this),n.push(s[0],s[1],s[2],s[3]);return ba(this),n.slice(0,t)},setDefaultParanoia:function(t,e){0===t&&\"Setting paranoia=0 will ruin your security; use it only for testing\"!==e&&r(\"Setting paranoia=0 will ruin your security; use it only for testing\"),this.C=t},addEntropy:function(t,e,n){n=n||\"user\";var i,c,o=(new Date).valueOf(),a=this.t[n],h=this.isReady(),l=0;switch((i=this.J[n])===s&&(i=this.J[n]=this.S++),a===s&&(a=this.t[n]=0),this.t[n]=(this.t[n]+1)%this.f.length,typeof t){case\"number\":e===s&&(e=1),this.f[a].update([i,this.D++,1,e,o,1,0|t]);break;case\"object\":if(\"[object Uint32Array]\"===(n=Object.prototype.toString.call(t))){for(c=[],n=0;n<t.length;n++)c.push(t[n]);t=c}else for(\"[object Array]\"!==n&&(l=1),n=0;n<t.length&&!l;n++)\"number\"!=typeof t[n]&&(l=1);if(!l){if(e===s)for(n=e=0;n<t.length;n++)for(c=t[n];0<c;)e++,c>>>=1;this.f[a].update([i,this.D++,2,e,o,t.length].concat(t))}break;case\"string\":e===s&&(e=t.length),this.f[a].update([i,this.D++,3,e,o,t.length]),this.f[a].update(t);break;default:l=1}l&&r(new sjcl.exception.bug(\"random: addEntropy only supports number, array of numbers or string\")),this.j[a]+=e,this.g+=e,h===this.m&&(this.isReady()!==this.m&&da(\"seeded\",Math.max(this.k,this.g)),da(\"progress\",this.getProgress()))},isReady:function(t){return t=this.G[t!==s?t:this.C],this.k&&this.k>=t?this.j[0]>this.N&&(new Date).valueOf()>this.L?this.w|this.v:this.v:this.g>=t?this.w|this.m:this.m},getProgress:function(t){return t=this.G[t||this.C],this.k>=t?1:this.g>t?1:this.g/t},startCollectors:function(){this.r||(this.a={loadTimeCollector:P(this,this.W),mouseCollector:P(this,this.X),keyboardCollector:P(this,this.U),accelerometerCollector:P(this,this.Q),touchCollector:P(this,this.Y)},window.addEventListener?(window.addEventListener(\"load\",this.a.loadTimeCollector,v),window.addEventListener(\"mousemove\",this.a.mouseCollector,v),window.addEventListener(\"keypress\",this.a.keyboardCollector,v),window.addEventListener(\"devicemotion\",this.a.accelerometerCollector,v),window.addEventListener(\"touchmove\",this.a.touchCollector,v)):document.attachEvent?(document.attachEvent(\"onload\",this.a.loadTimeCollector),document.attachEvent(\"onmousemove\",this.a.mouseCollector),document.attachEvent(\"keypress\",this.a.keyboardCollector)):r(new sjcl.exception.bug(\"can't attach event\")),this.r=!0)},stopCollectors:function(){this.r&&(window.removeEventListener?(window.removeEventListener(\"load\",this.a.loadTimeCollector,v),window.removeEventListener(\"mousemove\",this.a.mouseCollector,v),window.removeEventListener(\"keypress\",this.a.keyboardCollector,v),window.removeEventListener(\"devicemotion\",this.a.accelerometerCollector,v),window.removeEventListener(\"touchmove\",this.a.touchCollector,v)):document.detachEvent&&(document.detachEvent(\"onload\",this.a.loadTimeCollector),document.detachEvent(\"onmousemove\",this.a.mouseCollector),document.detachEvent(\"keypress\",this.a.keyboardCollector)),this.r=v)},addEventListener:function(t,e){this.A[t][this.R++]=e},removeEventListener:function(t,e){var r,n,i=this.A[t],s=[];for(n in i)i.hasOwnProperty(n)&&i[n]===e&&s.push(n);for(r=0;r<s.length;r++)delete i[n=s[r]]},U:function(){Q(1)},X:function(t){var e,r;try{e=t.x||t.clientX||t.offsetX||0,r=t.y||t.clientY||t.offsetY||0}catch(t){r=e=0}0!=e&&0!=r&&sjcl.random.addEntropy([e,r],2,\"mouse\"),Q(0)},Y:function(t){t=t.touches[0]||t.changedTouches[0],sjcl.random.addEntropy([t.pageX||t.clientX,t.pageY||t.clientY],1,\"touch\"),Q(0)},W:function(){Q(2)},Q:function(t){if(t=t.accelerationIncludingGravity.x||t.accelerationIncludingGravity.y||t.accelerationIncludingGravity.z,window.orientation){var e=window.orientation;\"number\"==typeof e&&sjcl.random.addEntropy(e,1,\"accelerometer\")}t&&sjcl.random.addEntropy(t,2,\"accelerometer\"),Q(0)}},sjcl.random=new sjcl.prng(6);t:try{var V,ea,W,fa;if(fa=\"undefined\"!=typeof module){var ka;if(ka=module.exports){var la;try{la=require(\"crypto\")}catch(t){la=null}ka=(ea=la)&&ea.randomBytes}fa=ka}if(fa)V=ea.randomBytes(128),V=new Uint32Array(new Uint8Array(V).buffer),sjcl.random.addEntropy(V,1024,\"crypto['randomBytes']\");else if(\"undefined\"!=typeof window&&\"undefined\"!=typeof Uint32Array){if(W=new Uint32Array(32),window.crypto&&window.crypto.getRandomValues)window.crypto.getRandomValues(W);else{if(!window.msCrypto||!window.msCrypto.getRandomValues)break t;window.msCrypto.getRandomValues(W)}sjcl.random.addEntropy(W,1024,\"crypto['getRandomValues']\")}}catch(t){\"undefined\"!=typeof window&&window.console&&(console.log(\"There was an error collecting entropy from the browser:\"),console.log(t))}sjcl.arrayBuffer=sjcl.arrayBuffer||{},\"undefined\"==typeof ArrayBuffer&&((a=this).ArrayBuffer=function(){},a.DataView=function(){}),sjcl.arrayBuffer.ccm={mode:\"ccm\",defaults:{tlen:128},compat_encrypt:function(t,e,r,n,i){var s=sjcl.codec.arrayBuffer.fromBits(e,!0,16);return e=sjcl.bitArray.bitLength(e)/8,n=n||[],t=sjcl.arrayBuffer.ccm.encrypt(t,s,r,n,i||64,e),r=sjcl.codec.arrayBuffer.toBits(t.ciphertext_buffer),r=sjcl.bitArray.clamp(r,8*e),sjcl.bitArray.concat(r,t.tag)},compat_decrypt:function(t,e,r,n,i){i=i||64,n=n||[];var s=sjcl.bitArray,c=s.bitLength(e),o=s.clamp(e,c-i);return e=s.bitSlice(e,c-i),o=sjcl.codec.arrayBuffer.fromBits(o,!0,16),t=sjcl.arrayBuffer.ccm.decrypt(t,o,r,e,n,i,(c-i)/8),sjcl.bitArray.clamp(sjcl.codec.arrayBuffer.toBits(t),c-i)},encrypt:function(t,e,r,n,i,s){var c,o=sjcl.bitArray,a=o.bitLength(r)/8;for(n=n||[],i=i||sjcl.arrayBuffer.ccm.defaults.tlen,s=s||e.byteLength,i=Math.ceil(i/8),c=2;4>c&&s>>>8*c;c++);return c<15-a&&(c=15-a),r=o.clamp(r,8*(15-c)),n=sjcl.arrayBuffer.ccm.o(t,e,r,n,i,s,c),{ciphertext_buffer:e,tag:n=sjcl.arrayBuffer.ccm.p(t,e,r,n,i,c)}},decrypt:function(t,e,n,i,s,c,o){var a,h=sjcl.bitArray,l=h.bitLength(n)/8;for(s=s||[],c=c||sjcl.arrayBuffer.ccm.defaults.tlen,o=o||e.byteLength,c=Math.ceil(c/8),a=2;4>a&&o>>>8*a;a++);return a<15-l&&(a=15-l),n=h.clamp(n,8*(15-a)),i=sjcl.arrayBuffer.ccm.p(t,e,n,i,c,a),t=sjcl.arrayBuffer.ccm.o(t,e,n,s,c,o,a),sjcl.bitArray.equal(i,t)||r(new sjcl.exception.corrupt(\"ccm: tag doesn't match\")),e},o:function(t,e,r,n,i,s,c){if(r=sjcl.mode.ccm.K(t,n,r,i,s,c),0!==e.byteLength){for(n=new DataView(e);s<e.byteLength;s++)n.setUint8(s,0);for(s=0;s<n.byteLength;s+=16)r[0]^=n.getUint32(s),r[1]^=n.getUint32(s+4),r[2]^=n.getUint32(s+8),r[3]^=n.getUint32(s+12),r=t.encrypt(r)}return sjcl.bitArray.clamp(r,8*i)},p:function(t,e,r,n,i,s){var c,o,a,h,l;o=(c=sjcl.bitArray).u;var u=e.byteLength/50,f=u;if(new DataView(new ArrayBuffer(16)),r=c.concat([c.partial(8,s-1)],r).concat([0,0,0]).slice(0,4),n=c.bitSlice(o(n,t.encrypt(r)),0,8*i),r[3]++,0===r[3]&&r[2]++,0!==e.byteLength)for(i=new DataView(e),l=0;l<i.byteLength;l+=16)l>u&&(sjcl.mode.ccm.H(l/e.byteLength),u+=f),h=t.encrypt(r),c=i.getUint32(l),o=i.getUint32(l+4),s=i.getUint32(l+8),a=i.getUint32(l+12),i.setUint32(l,c^h[0]),i.setUint32(l+4,o^h[1]),i.setUint32(l+8,s^h[2]),i.setUint32(l+12,a^h[3]),r[3]++,0===r[3]&&r[2]++;return n}},\"undefined\"==typeof ArrayBuffer&&function(t){t.ArrayBuffer=function(){},t.DataView=function(){}}(this),sjcl.codec.arrayBuffer={fromBits:function(t,e,n){var i;if(e=e==s||e,n=n||8,0===t.length)return new ArrayBuffer(0);for(i=sjcl.bitArray.bitLength(t)/8,0!=sjcl.bitArray.bitLength(t)%8&&r(new sjcl.exception.invalid(\"Invalid bit size, must be divisble by 8 to fit in an arraybuffer correctly\")),e&&0!=i%n&&(i+=n-i%n),n=new DataView(new ArrayBuffer(4*t.length)),e=0;e<t.length;e++)n.setUint32(4*e,t[e]<<32);if((t=new DataView(new ArrayBuffer(i))).byteLength===n.byteLength)return n.buffer;for(i=n.byteLength<t.byteLength?n.byteLength:t.byteLength,e=0;e<i;e++)t.setUint8(e,n.getUint8(e));return t.buffer},toBits:function(t){var e=[],r,n,i;if(0===t.byteLength)return[];for(r=(n=new DataView(t)).byteLength-n.byteLength%4,t=0;t<r;t+=4)e.push(n.getUint32(t));if(0!=n.byteLength%4){i=new DataView(new ArrayBuffer(4)),t=0;for(var s=n.byteLength%4;t<s;t++)i.setUint8(t+4-s,n.getUint8(r+t));e.push(sjcl.bitArray.partial(n.byteLength%4*8,i.getUint32(0)))}return e},Z:function(t){function e(t){return 4<=(t+=\"\").length?t:Array(4-t.length+1).join(\"0\")+t}t=new DataView(t);for(var r=\"\",n=0;n<t.byteLength;n+=2)0==n%16&&(r+=\"\\n\"+n.toString(16)+\"\\t\"),r+=e(t.getUint16(n).toString(16))+\" \";typeof console===s&&(console=console||{log:function(){}}),console.log(r.toUpperCase())}};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIjAiXSwibmFtZXMiOlsiciIsImEiLCJzIiwidiIsIkgiLCJzamNsIiwiY2lwaGVyIiwiaGFzaCIsImtleWV4Y2hhbmdlIiwibW9kZSIsIm1pc2MiLCJjb2RlYyIsImV4Y2VwdGlvbiIsImNvcnJ1cHQiLCJ0aGlzIiwidG9TdHJpbmciLCJtZXNzYWdlIiwiaW52YWxpZCIsImJ1ZyIsIm5vdFJlYWR5IiwiYWEiLCJiIiwiYyIsImxlbmd0aCIsImQiLCJlIiwiZyIsImYiLCJoIiwiayIsIm4iLCJsIiwibSIsInAiLCJ3IiwiRCIsIkIiLCJFIiwiQyIsImRhIiwicmFuZG9tIiwiQSIsImhhc093blByb3BlcnR5IiwicHVzaCIsIlEiLCJ3aW5kb3ciLCJwZXJmb3JtYW5jZSIsIm5vdyIsImFkZEVudHJvcHkiLCJEYXRlIiwidmFsdWVPZiIsImJhIiwiY2EiLCJjb25jYXQiLCJhZXMiLCJlbmNyeXB0IiwiUCIsImFwcGx5IiwiYXJndW1lbnRzIiwibW9kdWxlIiwiZXhwb3J0cyIsImRlZmluZSIsInEiLCJzbGljZSIsInByb3RvdHlwZSIsImRlY3J5cHQiLCJiaXRBcnJheSIsImJpdFNsaWNlIiwiTSIsImNsYW1wIiwiZXh0cmFjdCIsIk1hdGgiLCJmbG9vciIsImdldFBhcnRpYWwiLCJiaXRMZW5ndGgiLCJjZWlsIiwicGFydGlhbCIsInJvdW5kIiwiZXF1YWwiLCJwb3AiLCJ1IiwiYnl0ZXN3YXBNIiwidXRmOFN0cmluZyIsImZyb21CaXRzIiwiU3RyaW5nIiwiZnJvbUNoYXJDb2RlIiwiZGVjb2RlVVJJQ29tcG9uZW50IiwiZXNjYXBlIiwidG9CaXRzIiwidW5lc2NhcGUiLCJlbmNvZGVVUklDb21wb25lbnQiLCJjaGFyQ29kZUF0IiwiYmFzZTY0IiwiSSIsInN1YnN0ciIsImNoYXJBdCIsInJlcGxhY2UiLCJpbmRleE9mIiwiYmFzZTY0dXJsIiwiYnl0ZXMiLCJzaGEyNTYiLCJyZXNldCIsInVwZGF0ZSIsImZpbmFsaXplIiwiYmxvY2tTaXplIiwiaSIsInNwbGljZSIsInBvdyIsInNoYTUxMiIsIlQiLCJWIiwiZ2EiLCJSIiwiaGEiLCJTIiwieCIsInQiLCJGIiwiSiIsIkciLCJYIiwiSyIsInkiLCJMIiwiVSIsIlkiLCJOIiwieiIsIloiLCIkIiwiTyIsImlhIiwibWEiLCJuYSIsImphIiwiY2NtIiwibmFtZSIsImxpc3RlblByb2dyZXNzIiwidW5MaXN0ZW5Qcm9ncmVzcyIsIm8iLCJkYXRhIiwidGFnIiwicHJuZyIsImoiLCJwcm9ncmVzcyIsInNlZWRlZCIsInJhbmRvbVdvcmRzIiwiaXNSZWFkeSIsInNldERlZmF1bHRQYXJhbm9pYSIsIk9iamVjdCIsImNhbGwiLCJtYXgiLCJnZXRQcm9ncmVzcyIsInN0YXJ0Q29sbGVjdG9ycyIsImxvYWRUaW1lQ29sbGVjdG9yIiwiVyIsIm1vdXNlQ29sbGVjdG9yIiwia2V5Ym9hcmRDb2xsZWN0b3IiLCJhY2NlbGVyb21ldGVyQ29sbGVjdG9yIiwidG91Y2hDb2xsZWN0b3IiLCJhZGRFdmVudExpc3RlbmVyIiwiZG9jdW1lbnQiLCJhdHRhY2hFdmVudCIsInN0b3BDb2xsZWN0b3JzIiwicmVtb3ZlRXZlbnRMaXN0ZW5lciIsImRldGFjaEV2ZW50IiwiY2xpZW50WCIsIm9mZnNldFgiLCJjbGllbnRZIiwib2Zmc2V0WSIsInRvdWNoZXMiLCJjaGFuZ2VkVG91Y2hlcyIsInBhZ2VYIiwicGFnZVkiLCJhY2NlbGVyYXRpb25JbmNsdWRpbmdHcmF2aXR5Iiwib3JpZW50YXRpb24iLCJlYSIsImZhIiwia2EiLCJsYSIsInJlcXVpcmUiLCJvYSIsInJhbmRvbUJ5dGVzIiwiVWludDMyQXJyYXkiLCJVaW50OEFycmF5IiwiYnVmZmVyIiwiY3J5cHRvIiwiZ2V0UmFuZG9tVmFsdWVzIiwibXNDcnlwdG8iLCJwYSIsImNvbnNvbGUiLCJsb2ciLCJhcnJheUJ1ZmZlciIsIkFycmF5QnVmZmVyIiwiRGF0YVZpZXciLCJkZWZhdWx0cyIsInRsZW4iLCJjb21wYXRfZW5jcnlwdCIsImNpcGhlcnRleHRfYnVmZmVyIiwiY29tcGF0X2RlY3J5cHQiLCJieXRlTGVuZ3RoIiwic2V0VWludDgiLCJnZXRVaW50MzIiLCJzZXRVaW50MzIiLCJnZXRVaW50OCIsIkFycmF5Iiwiam9pbiIsImdldFVpbnQxNiIsInRvVXBwZXJDYXNlIl0sIm1hcHBpbmdzIjoiQUFFQSxhQUFhLFNBQVNBLEVBQUVDLEdBQUcsTUFBTUEsRUFBRyxJQUFJQyxPQUFFLEVBQU9DLEdBQUUsRUFBRyxTQUFTQyxJQUFJLE9BQU8sYUFBYyxJQUFJQyxNQUFNQyxVQUFVQyxRQUFRQyxlQUFlQyxRQUFRQyxRQUFRQyxTQUFTQyxXQUFXQyxRQUFRLFNBQVNaLEdBQUdhLEtBQUtDLFNBQVMsV0FBVyxNQUFNLFlBQVlELEtBQUtFLFNBQVNGLEtBQUtFLFFBQVFmLEdBQUdnQixRQUFRLFNBQVNoQixHQUFHYSxLQUFLQyxTQUFTLFdBQVcsTUFBTSxZQUFZRCxLQUFLRSxTQUFTRixLQUFLRSxRQUFRZixHQUFHaUIsSUFBSSxTQUFTakIsR0FBR2EsS0FBS0MsU0FBUyxXQUFXLE1BQU0sUUFBUUQsS0FBS0UsU0FBU0YsS0FBS0UsUUFBUWYsR0FBR2tCLFNBQVMsU0FBU2xCLEdBQUdhLEtBQUtDLFNBQVMsV0FBVyxNQUFNLGNBQWNELEtBQUtFLFNBQVNGLEtBQUtFLFFBQVFmLEtBQTI0akJBLEVBQXRzaEIsU0FBU21CLEdBQUduQixFQUFFb0IsRUFBRUMsR0FBRyxJQUFJRCxFQUFFRSxRQUFRdkIsRUFBRSxJQUFJSyxLQUFLTyxVQUFVSyxRQUFRLDJCQUEyQixJQUFJTyxFQUFFdkIsRUFBRW9CLEVBQUVDLEdBQUdHLEVBQUVKLEVBQUUsR0FBR0csRUFBRSxHQUFHRSxFQUFFTCxFQUFFQyxFQUFFLEVBQUUsR0FBR0UsRUFBRSxHQUFHRyxFQUFFTixFQUFFLEdBQUdHLEVBQUUsR0FBR0gsRUFBRUEsRUFBRUMsRUFBRSxFQUFFLEdBQUdFLEVBQUUsR0FBRyxJQUFJSSxFQUFFQyxFQUFFQyxFQUFFQyxFQUFFUCxFQUFFRCxPQUFPLEVBQUUsRUFBRVMsRUFBRUMsRUFBRSxFQUFFQyxHQUFH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",
+            'smalltalk.js': "\"use strict\";$(\"head\").append(\"<style>.smalltalk{display:flex;align-items:center;flex-direction:column;justify-content:center;transition:200ms opacity;bottom:0;left:0;overflow:auto;padding:20px;position:fixed;right:0;top:0;z-index:100}.smalltalk + .smalltalk{transition:ease 1s;display:none}.smalltalk .page{border-radius:3px;background:white;box-shadow:0 4px 23px 5px rgba(0, 0, 0, .2), 0 2px 6px rgba(0, 0, 0, .15);color:#333;min-width:400px;padding:0;position:relative;z-index:0}@media only screen and (max-width: 500px){.smalltalk .page{min-width:0}}.smalltalk .page > .close-button{background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAQAAAC1QeVaAAAAUklEQVR4XqXPYQrAIAhAYW/gXd8NJxTopVqsGEhtf+L9/ERU2k/HSMFQpKcYJeNFI9Be0LCMij8cYyjj5EHIivGBkwLfrbX3IF8PqumVmnDpEG+eDsKibPG2JwAAAABJRU5ErkJggg==') no-repeat center;height:14px;position:absolute;right:7px;top:7px;width:14px;z-index:1}.smalltalk .page > .close-button:hover{background-image:url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAQAAAC1QeVaAAAAnUlEQVR4XoWQQQ6CQAxFewjkJkMCyXgJPMk7AiYczyBeZEAX6AKctGIaN+bt+trk9wtGQc/IkhnoKGxqqiWxOSZalapWFZ6VrIUDExsN0a5JRBq9LoVOR0eEQMoEhKizXhhsn0p1sCWVo7CwOf1RytPL8CPvwuBUoHL6ugeK30CVD1TqK7V/hdpe+VNChhOzV8xWny/+xosHF8578W/Hmc1OOC3wmwAAAABJRU5ErkJggg==')}.smalltalk .page header{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:500px;user-select:none;color:#333;font-size:120%;font-weight:bold;margin:0;padding:14px 17px;text-shadow:white 0 1px 2px}.smalltalk .page .content-area{overflow:hidden;text-overflow:ellipsis;padding:6px 17px;position:relative}.smalltalk .page .action-area{padding:14px 17px}button{font-family:Ubuntu, Arial, sans-serif}.smalltalk .smalltalk,.smalltalk button{min-height:2em;min-width:4em}.smalltalk button{appearance:none;user-select:none;background-image:linear-gradient(#ededed, #ededed 38%, #dedede);border:1px solid rgba(0, 0, 0, 0.25);border-radius:2px;box-shadow:0 1px 0 rgba(0, 0, 0, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.75);color:#444;font:inherit;margin:0 1px 0 0;text-shadow:0 1px 0 rgb(240, 240, 240)}.smalltalk button::-moz-focus-inner{border:0}.smalltalk button:enabled:active{background-image:linear-gradient(#e7e7e7, #e7e7e7 38%, #d7d7d7);box-shadow:none;text-shadow:none}.smalltalk .page .button-strip{display:flex;flex-direction:row;justify-content:flex-end}.smalltalk .page .button-strip > button{margin-left:10px}.smalltalk input{width:100%;border:1px solid #bfbfbf;border-radius:2px;box-sizing:border-box;color:#444;font:inherit;margin:0;min-height:2em;padding:3px;outline:none}.smalltalk button:enabled:focus,.smalltalk input:enabled:focus{transition:border-color 200ms;border-color:rgb(77, 144, 254);outline:none}\");const BUTTON_OK=[\"OK\"],BUTTON_OK_CANCEL=[\"OK\",\"Cancel\"],__smalltalk_remove=__smalltalk_bind(__smalltalk_removeEl,\".smalltalk\"),__smalltalk_store=t=>{const a={value:t};return function(t){return arguments.length?(a.value=t,t):a.value}};function _alert(t,a){return __smalltalk_showDialog(t,a,\"\",BUTTON_OK,{cancel:!1})}function _prompt(t,a,e=\"\",l){const n=__smalltalk_getType(l),o=String(e).replace(/\"/g,\"&quot;\"),s=`<input type=\"${n}\" value=\"${o}\" data-name=\"js-input\">`;return __smalltalk_showDialog(t,a,s,BUTTON_OK_CANCEL,l)}function _confirm(t,a,e){return __smalltalk_showDialog(t,a,\"\",BUTTON_OK_CANCEL,e)}function __smalltalk_getType(t={}){const{type:a}=t;return\"password\"===a?\"password\":\"text\"}function __smalltalk_getTemplate(t,a,e,l){const n=a.replace(/\\n/g,\"<br>\");return`<div class=\"page\">\\n        <div data-name=\"js-close\" class=\"close-button\"></div>\\n        <header>${t}</header>\\n        <div class=\"content-area\">${n}${e}</div>\\n        <div class=\"action-area\">\\n            <div class=\"button-strip\"> ${l.map((t,a)=>`<button tabindex=${a} data-name=\"js-${t.toLowerCase()}\">${t}</button>`).join(\"\")}\\n            </div>\\n        </div>\\n    </div>`}function __smalltalk_showDialog(t,a,e,l,n){const o=__smalltalk_store(),s=__smalltalk_store(),i=document.createElement(\"div\"),r=[\"cancel\",\"close\",\"ok\"],_=new Promise((t,a)=>{const e=n&&!n.cancel,l=()=>{};o(t),s(e?l:a)});return i.innerHTML=__smalltalk_getTemplate(t,a,e,l),i.className=\"smalltalk\",document.body.appendChild(i),__smalltalk_find(i,[\"ok\",\"input\"]).forEach(t=>t.focus()),__smalltalk_find(i,[\"input\"]).forEach(t=>{t.setSelectionRange(0,e.length)}),__smalltalk_addListenerAll(\"click\",i,r,t=>__smalltalk_closeDialog(t.target,i,o(),s())),[\"click\",\"contextmenu\"].forEach(t=>i.addEventListener(t,()=>__smalltalk_find(i,[\"ok\",\"input\"]).forEach(t=>t.focus()))),i.addEventListener(\"keydown\",currify(__smalltalk_keyDownEvent)(i,o(),s())),_}function __smalltalk_keyDownEvent(t,a,e,l){const n={ENTER:13,ESC:27,TAB:9,LEFT:37,UP:38,RIGHT:39,DOWN:40},o=l.keyCode,s=l.target,i=[\"ok\",\"cancel\",\"input\"],r=__smalltalk_find(t,i).map(__smalltalk_getDataName);switch(o){case n.ENTER:__smalltalk_closeDialog(s,t,a,e),l.preventDefault();break;case n.ESC:__smalltalk_remove(),e();break;case n.TAB:l.shiftKey&&__smalltalk_tab(t,r),__smalltalk_tab(t,r),l.preventDefault();break;default:[\"left\",\"right\",\"up\",\"down\"].filter(t=>o===n[t.toUpperCase()]).forEach(()=>{__smalltalk_changeButtonFocus(t,r)})}l.stopPropagation()}function __smalltalk_getDataName(t){return t.getAttribute(\"data-name\").replace(\"js-\",\"\")}function __smalltalk_changeButtonFocus(t,a){const e=document.activeElement,l=__smalltalk_getDataName(e),n=/ok|cancel/.test(l),o=a.length-1,s=t=>\"cancel\"===t?\"ok\":\"cancel\";if(\"input\"===l||!o||!n)return;const i=s(l);__smalltalk_find(t,[i]).forEach(t=>{t.focus()})}const __smalltalk_getIndex=(t,a)=>a===t?0:a+1;function __smalltalk_tab(t,a){const e=document.activeElement,l=__smalltalk_getDataName(e),n=a.length-1,o=a.indexOf(l),s=__smalltalk_getIndex(n,o),i=a[s];__smalltalk_find(t,[i]).forEach(t=>t.focus())}function __smalltalk_closeDialog(t,a,e,l){const n=t.getAttribute(\"data-name\").replace(\"js-\",\"\");if(/close|cancel/.test(n))return l(),void __smalltalk_remove();const o=__smalltalk_find(a,[\"input\"]).reduce((t,a)=>a.value,null);e(o),__smalltalk_remove()}function __smalltalk_find(t,a){const e=t=>t,l=a.map(a=>t.querySelector(`[data-name=\"js-${a}\"]`)).filter(e);return l}function __smalltalk_addListenerAll(t,a,e,l){__smalltalk_find(a,e).forEach(a=>a.addEventListener(t,l))}function __smalltalk_removeEl(t){const a=document.querySelector(t);a.parentElement.removeChild(a)}function __smalltalk_bind(t,...a){return()=>t(...a)}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIjAiXSwibmFtZXMiOlsiJCIsImFwcGVuZCIsIkJVVFRPTl9PSyIsIkJVVFRPTl9PS19DQU5DRUwiLCJfX3NtYWxsdGFsa19yZW1vdmUiLCJfX3NtYWxsdGFsa19iaW5kIiwiX19zbWFsbHRhbGtfcmVtb3ZlRWwiLCJfX3NtYWxsdGFsa19zdG9yZSIsInZhbHVlIiwiZGF0YSIsImFyZ3VtZW50cyIsImxlbmd0aCIsIl9hbGVydCIsInRpdGxlIiwibXNnIiwiX19zbWFsbHRhbGtfc2hvd0RpYWxvZyIsImNhbmNlbCIsIl9wcm9tcHQiLCJvcHRpb25zIiwidHlwZSIsIl9fc21hbGx0YWxrX2dldFR5cGUiLCJ2YWwiLCJTdHJpbmciLCJyZXBsYWNlIiwidmFsdWVTdHIiLCJfY29uZmlybSIsIl9fc21hbGx0YWxrX2dldFRlbXBsYXRlIiwiYnV0dG9ucyIsImVuY29kZWRNc2ciLCJtYXAiLCJuYW1lIiwiaSIsInRvTG93ZXJDYXNlIiwiam9pbiIsIm9rIiwiZGlhbG9nIiwiZG9jdW1lbnQiLCJjcmVhdGVFbGVtZW50IiwiY2xvc2VCdXR0b25zIiwicHJvbWlzZSIsIlByb21pc2UiLCJyZXNvbHZlIiwicmVqZWN0Iiwibm9DYW5jZWwiLCJlbXB0eSIsImlubmVySFRNTCIsImNsYXNzTmFtZSIsImJvZHkiLCJhcHBlbmRDaGlsZCIsIl9fc21hbGx0YWxrX2ZpbmQiLCJmb3JFYWNoIiwiZWwiLCJmb2N1cyIsInNldFNlbGVjdGlvblJhbmdlIiwiX19zbWFsbHRhbGtfYWRkTGlzdGVuZXJBbGwiLCJldmVudCIsIl9fc21hbGx0YWxrX2Nsb3NlRGlhbG9nIiwidGFyZ2V0IiwiYWRkRXZlbnRMaXN0ZW5lciIsImN1cnJpZnkiLCJfX3NtYWxsdGFsa19rZXlEb3duRXZlbnQiLCJLRVkiLCJFTlRFUiIsIkVTQyIsIlRBQiIsIkxFRlQiLCJVUCIsIlJJR0hUIiwiRE9XTiIsImtleUNvZGUiLCJuYW1lc0FsbCIsIm5hbWVzIiwiX19zbWFsbHRhbGtfZ2V0RGF0YU5hbWUiLCJwcmV2ZW50RGVmYXVsdCIsInNoaWZ0S2V5IiwiX19zbWFsbHRhbGtfdGFiIiwiZmlsdGVyIiwidG9VcHBlckNhc2UiLCJfX3NtYWxsdGFsa19jaGFuZ2VCdXR0b25Gb2N1cyIsInN0b3BQcm9wYWdhdGlvbiIsImdldEF0dHJpYnV0ZSIsImFjdGl2ZSIsImFjdGl2ZUVsZW1lbnQiLCJhY3RpdmVOYW1lIiwiaXNCdXR0b24iLCJ0ZXN0IiwiY291bnQiLCJnZXROYW1lIiwiX19zbWFsbHRhbGtfZ2V0SW5kZXgiLCJpbmRleCIsImFjdGl2ZUluZGV4IiwiaW5kZXhPZiIsInJlZHVjZSIsImVsZW1lbnQiLCJub3RFbXB0eSIsImEiLCJlbGVtZW50cyIsInF1ZXJ5U2VsZWN0b3IiLCJwYXJlbnQiLCJmbiIsInBhcmVudEVsZW1lbnQiLCJyZW1vdmVDaGlsZCIsImFyZ3MiXSwibWFwcGluZ3MiOiJBQUFBLGFBRUFBLEVBQUUsUUFBUUMsT0FBTyw2bkZBRWpCLE1BQU1DLFdBQWEsTUFDYkMsa0JBQW9CLEtBQU0sVUFFMUJDLG1CQUFxQkMsaUJBQWtCQyxxQkFBc0IsY0FHN0RDLGtCQUFzQkMsSUFDeEIsTUFBTUMsR0FDRkQsTUFBQUEsR0FHSixPQUFPLFNBQVdBLEdBQ2QsT0FBTUUsVUFBVUMsUUFHaEJGLEVBQUtELE1BQVFBLEVBRU5BLEdBSklDLEVBQUtELFFBUXhCLFNBQVNJLE9BQVFDLEVBQU9DLEdBQ3BCLE9BQU9DLHVCQUF3QkYsRUFBT0MsRUFBSyxHQUFJWixXQUFhYyxRQUFRLElBR3hFLFNBQVNDLFFBQVNKLEVBQU9DLEVBQUtOLEVBQVEsR0FBSVUsR0FDdEMsTUFBTUMsRUFBT0Msb0JBQXFCRixHQUU1QkcsRUFBTUMsT0FBUWQsR0FDZmUsUUFBUyxLQUFNLFVBRWRDLGtCQUE0QkwsYUFBa0JFLDJCQUVwRCxPQUFPTix1QkFBd0JGLEVBQU9DLEVBQUtVLEVBQVVyQixpQkFBa0JlLEdBRzNFLFNBQVNPLFNBQVVaLEVBQU9DLEVBQUtJLEdBQzNCLE9BQU9ILHVCQUF3QkYsRUFBT0MsRUFBSyxHQUFJWCxpQkFBa0JlLEdBR3JFLFNBQVNFLG9CQUFxQkYsTUFDMUIsTUFBTUMsS0FBRUEsR0FBU0QsRUFFakIsTUFBYyxhQUFUQyxFQUNNLFdBRUosT0FHWCxTQUFTTyx3QkFBeUJiLEVBQU9DLEVBQUtOLEVBQU9tQixHQUNqRCxNQUFNQyxFQUFhZCxFQUFJUyxRQUFTLE1BQU8sUUFFdkMsNEdBRWVWLGlEQUNrQmUsSUFBZXBCLHNGQUc1Q21CLEVBQVFFLElBQUssQ0FBRUMsRUFBTUMsd0JBQ0lBLG1CQUFxQkQsRUFBS0Usa0JBQW9CRixjQUNyRUcsS0FBTSxzREFPaEIsU0FBU2xCLHVCQUF3QkYsRUFBT0MsRUFBS04sRUFBT21CLEVBQVNULEdBQ3pELE1BQU1nQixFQUFLM0Isb0JBQ0xTLEVBQVNULG9CQUVUNEIsRUFBU0MsU0FBU0MsY0FBZSxPQUNqQ0MsR0FDRixTQUNBLFFBQ0EsTUFHRUMsRUFBVSxJQUFJQyxRQUFTLENBQUVDLEVBQVNDLEtBQ3BDLE1BQU1DLEVBQVd6QixJQUFZQSxFQUFRRixPQUMvQjRCLEVBQVEsT0FHZFYsRUFBSU8sR0FDSnpCLEVBQVEyQixFQUFXQyxFQUFRRixLQThCL0IsT0EzQkFQLEVBQU9VLFVBQVluQix3QkFBeUJiLEVBQU9DLEVBQUtOLEVBQU9tQixHQUMvRFEsRUFBT1csVUFBWSxZQUVuQlYsU0FBU1csS0FBS0MsWUFBYWIsR0FFM0JjLGlCQUFrQmQsR0FBVSxLQUFNLFVBQVllLFFBQVdDLEdBQ3JEQSxFQUFHQyxTQUdQSCxpQkFBa0JkLEdBQVUsVUFBWWUsUUFBV0MsSUFDL0NBLEVBQUdFLGtCQUFtQixFQUFHN0MsRUFBTUcsVUFHbkMyQywyQkFBNEIsUUFBU25CLEVBQVFHLEVBQWdCaUIsR0FDekRDLHdCQUF5QkQsRUFBTUUsT0FBUXRCLEVBQVFELElBQU1sQixPQUd2RCxRQUFTLGVBQWdCa0MsUUFBV0ssR0FDbENwQixFQUFPdUIsaUJBQWtCSCxFQUFPLElBQzVCTixpQkFBa0JkLEdBQVUsS0FBTSxVQUFZZSxRQUFXQyxHQUNyREEsRUFBR0MsV0FLZmpCLEVBQU91QixpQkFBa0IsVUFBV0MsUUFBU0MseUJBQVRELENBQXFDeEIsRUFBUUQsSUFBTWxCLE1BRWhGdUIsRUFHWCxTQUFTcUIseUJBQTBCekIsRUFBUUQsRUFBSWxCLEVBQVF1QyxHQUNuRCxNQUFNTSxHQUNGQyxNQUFPLEdBQ1BDLElBQUssR0FDTEMsSUFBSyxFQUNMQyxLQUFNLEdBQ05DLEdBQUksR0FDSkMsTUFBTyxHQUNQQyxLQUFNLElBR0pDLEVBQVVkLEVBQU1jLFFBQ2hCbEIsRUFBS0ksRUFBTUUsT0FFWGEsR0FBYSxLQUFNLFNBQVUsU0FDN0JDLEVBQVF0QixpQkFBa0JkLEVBQVFtQyxHQUNuQ3pDLElBQUsyQyx5QkFFVixPQUFTSCxHQUNMLEtBQUtSLEVBQUlDLE1BQ0xOLHdCQUF5QkwsRUFBSWhCLEVBQVFELEVBQUlsQixHQUN6Q3VDLEVBQU1rQixpQkFDTixNQUVKLEtBQUtaLEVBQUlFLElBQ0wzRCxxQkFDQVksSUFDQSxNQUVKLEtBQUs2QyxFQUFJRyxJQUNBVCxFQUFNbUIsVUFDUEMsZ0JBQWlCeEMsRUFBUW9DLEdBRTdCSSxnQkFBaUJ4QyxFQUFRb0MsR0FDekJoQixFQUFNa0IsaUJBQ04sTUFFSixTQUNNLE9BQVEsUUFBUyxLQUFNLFFBQVNHLE9BQVU5QyxHQUNqQ3VDLElBQVlSLEVBQUsvQixFQUFLK0MsZ0JBQzdCM0IsUUFBUyxLQUNUNEIsOEJBQStCM0MsRUFBUW9DLEtBTW5EaEIsRUFBTXdCLGtCQUdWLFNBQVNQLHdCQUF5QnJCLEdBQzlCLE9BQU9BLEVBQ0Y2QixhQUFjLGFBQ2R6RCxRQUFTLE1BQU8sSUFHekIsU0FBU3VELDhCQUErQjNDLEVBQVFvQyxHQUM1QyxNQUFNVSxFQUFTN0MsU0FBUzhDLGNBQ2xCQyxFQUFhWCx3QkFBeUJTLEdBQ3RDRyxFQUFXLFlBQVlDLEtBQU1GLEdBQzdCRyxFQUFRZixFQUFNNUQsT0FBUyxFQUN2QjRFLEVBQVlKLEdBQ00sV0FBZkEsRUFDTSxLQUVKLFNBR1gsR0FBb0IsVUFBZkEsSUFBMkJHLElBQVVGLEVBQ3RDLE9BRUosTUFBTXRELEVBQU95RCxFQUFTSixHQUV0QmxDLGlCQUFrQmQsR0FBVUwsSUFBU29CLFFBQVdDLElBQzVDQSxFQUFHQyxVQUlYLE1BQU1vQyxxQkFBdUIsQ0FBRUYsRUFBT0csSUFDN0JBLElBQVVILEVBQ0osRUFFSkcsRUFBUSxFQUduQixTQUFTZCxnQkFBaUJ4QyxFQUFRb0MsR0FDOUIsTUFBTVUsRUFBUzdDLFNBQVM4QyxjQUNsQkMsRUFBYVgsd0JBQXlCUyxHQUN0Q0ssRUFBUWYsRUFBTTVELE9BQVMsRUFFdkIrRSxFQUFjbkIsRUFBTW9CLFFBQVNSLEdBQzdCTSxFQUFRRCxxQkFBc0JGLEVBQU9JLEdBRXJDNUQsRUFBT3lDLEVBQU9rQixHQUVwQnhDLGlCQUFrQmQsR0FBVUwsSUFBU29CLFFBQVdDLEdBQzVDQSxFQUFHQyxTQUlYLFNBQVNJLHdCQUF5QkwsRUFBSWhCLEVBQVFELEVBQUlsQixHQUM5QyxNQUFNYyxFQUFPcUIsRUFDUjZCLGFBQWMsYUFDZHpELFFBQVMsTUFBTyxJQUVyQixHQUFLLGVBQWU4RCxLQUFNdkQsR0FHdEIsT0FGQWQsU0FDQVoscUJBSUosTUFBTUksRUFBUXlDLGlCQUFrQmQsR0FBVSxVQUNyQ3lELE9BQVEsQ0FBRXBGLEVBQU8yQyxJQUFRQSxFQUFHM0MsTUFBTyxNQUV4QzBCLEVBQUkxQixHQUNKSixxQkFHSixTQUFTNkMsaUJBQWtCNEMsRUFBU3RCLEdBQ2hDLE1BQU11QixFQUFhQyxHQUFPQSxFQUNwQkMsRUFBV3pCLEVBQU0xQyxJQUFPQyxHQUMxQitELEVBQVFJLGdDQUFrQ25FLFFBQzVDOEMsT0FBUWtCLEdBRVYsT0FBT0UsRUFHWCxTQUFTMUMsMkJBQTRCQyxFQUFPMkMsRUFBUUYsRUFBVUcsR0FDMURsRCxpQkFBa0JpRCxFQUFRRixHQUNyQjlDLFFBQVdDLEdBQ1JBLEVBQUdPLGlCQUFrQkgsRUFBTzRDLElBSXhDLFNBQVM3RixxQkFBc0J3QixHQUMzQixNQUFNcUIsRUFBS2YsU0FBUzZELGNBQWVuRSxHQUVuQ3FCLEVBQUdpRCxjQUFjQyxZQUFhbEQsR0FHbEMsU0FBUzlDLGlCQUFrQjhGLEtBQVFHLEdBQy9CLE1BQU8sSUFBTUgsS0FBUUcifQ=="
+        };
+    }
+
+    /* ============================================================== */
+
+    /* ===================== STANDARD CALLBACKS ===================== */
+
+    /**
+     * @public
+     * @desc Starts the script execution. This is called by BetterDiscord if the plugin is enabled.
+     */
+    start() {
+        /* Backup class instance. */
+        const self = this;
+
+        /* Perform idiot-proof check to make sure the user named the plugin `discordCrypt.plugin.js` */
+        if ( !discordCrypt.validPluginName() ) {
+            _alert(
+                'Hi There! - DiscordCrypt',
+                "Oops!\r\n\r\n" +
+                "It seems you didn't read discordCrypt's usage guide. :(\r\n" +
+                "You need to name this plugin exactly as follows to allow it to function correctly.\r\n\r\n" +
+                `\t${discordCrypt.getPluginName()}\r\n\r\n\r\n` +
+                "You should probably check the usage guide again just in case you missed anything else. :)"
+            );
+            return;
+        }
+
+        /* Perform startup and load the config file if not already loaded. */
+        if ( !this.configFile ) {
+            /* Load the master password. */
+            this.loadMasterPassword();
+
+            /* Don't do anything further till we have a configuration file. */
+            return;
+        }
+
+        /* Don't check for updates if running a debug version. */
+        if ( !discordCrypt.__shouldIgnoreUpdates( this.getVersion() ) ) {
+            /* Check for any new updates. */
+            this.checkForUpdates();
+
+            /* Add an update handler to check for updates every 60 minutes. */
+            this.updateHandlerInterval = setInterval( () => {
+                self.checkForUpdates();
+            }, 3600000 );
+        }
+
+        /* Hook switch events as the main event processor or fallback to timed event handlers. */
+        if ( !this.hookMessageCallbacks() ) {
+
+            /* Process any blocks on an interval since Discord loves to throttle messages. */
+            this.scanInterval = setInterval( () => {
+                self.decodeMessages();
+            }, self.configFile.encryptScanDelay );
+
+            /* The toolbar fails to properly load on switches to the friends list. Create an interval to do this. */
+            this.toolbarReloadInterval = setInterval( () => {
+                self.loadToolbar();
+                self.attachHandler();
+            }, 5000 );
+        }
+        else {
+            /* Add the toolbar. */
+            this.loadToolbar();
+
+            /* Attach the message handler. */
+            this.attachHandler();
+        }
+
+        /* Decode all messages immediately. */
+        this.decodeMessages();
+    }
+
+    /**
+     * @public
+     * @desc Stops the script execution. This is called by BetterDiscord if the plugin is disabled or during shutdown.
+     */
+    stop() {
+        /* Nothing needs to be done since start() wouldn't have triggered. */
+        if ( !discordCrypt.validPluginName() )
+            return;
+
+        /* Remove onMessage event handler hook. */
+        $( this.channelTextAreaClass ).off( "keydown.dcrypt" );
+
+        /* Unhook switch events if available or fallback to clearing timed handlers. */
+        if( !this.unhookMessageCallbacks() ){
+            /* Unload the decryption interval. */
+            clearInterval( this.scanInterval );
+
+            /* Unload the toolbar reload interval. */
+            clearInterval( this.toolbarReloadInterval );
+        }
+
+        /* Unload the update handler. */
+        clearInterval( this.updateHandlerInterval );
+
+        /* Unload elements. */
+        $( "#dc-overlay" ).remove();
+        $( '#dc-lock-btn' ).remove();
+        $( '#dc-passwd-btn' ).remove();
+        $( '#dc-exchange-btn' ).remove();
+        $( '#dc-settings-btn' ).remove();
+        $( '#dc-toolbar-line' ).remove();
+
+        /* Clear the configuration file. */
+        this.configFile = null;
+    }
+
+    /**
+     * @public
+     * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
+     */
+    load() {
+        const vm = require( 'vm' );
+
+        /* Inject application CSS. */
+        discordCrypt.injectCSS( 'dc-css', this.appCss );
+
+        /* Inject all compiled libraries. */
+        for ( let name in this.libraries ) {
+            vm.runInThisContext( this.libraries[ name ], {
+                filename: name,
+                displayErrors: false
+            } );
+        }
+    }
+
+    /**
+     * @public
+     * @desc Triggered when the script needs to unload its resources. This is called during Discord shutdown.
+     */
+    unload() {
+        /* Clear the injected CSS. */
+        discordCrypt.clearCSS( 'dc-css' );
+    }
+
+    /* =================== END STANDARD CALLBACKS =================== */
+
+    /* =================== CONFIGURATION DATA CBS =================== */
+
+    /**
+     * @private
+     * @desc Performed when updating a configuration file across versions.
+     */
+    onUpdate() {
+        /* Placeholder for future use. */
+    }
+
+    /**
+     * @private
+     * @desc Returns the default settings for the plugin.
+     * @returns {
+     *  {
+     *      version: string,
+     *      defaultPassword: string,
+     *      encodeMessageTrigger: string,
+     *      encryptScanDelay: number,
+     *      encryptMode: number,
+     *      encryptBlockMode: string,
+     *      encodeAll: boolean,
+     *      paddingMode: string,
+     *      passList: {},
+     *      up1Host: string,
+     *      up1ApiKey: string
+     *  }
+     * }
+     */
+    getDefaultConfig() {
+        return {
+            /* Current Version. */
+            version: this.getVersion(),
+            /* Default password for servers not set. */
+            defaultPassword: "秘一密比无为有秘习个界一万定为界人是的要人每的但了又你上着密定已",
+            /* Defines what needs to be typed at the end of a message to encrypt it. */
+            encodeMessageTrigger: "ENC",
+            /* How often to scan for encrypted messages during timed events if applicable. */
+            encryptScanDelay: 1000,
+            /* Default encryption mode. */
+            encryptMode: 7, /* AES(Camellia) */
+            /* Default block operation mode for ciphers. */
+            encryptBlockMode: 'CBC',
+            /* Encode all messages automatically when a password has been set. */
+            encodeAll: true,
+            /* Default padding mode for blocks. */
+            paddingMode: 'PKC7',
+            /* Password array of objects for users or channels. */
+            passList: {},
+            /* Contains the URL of the Up1 client. */
+            up1Host: 'https://share.riseup.net',
+            /* Contains the API key used for transactions with the Up1 host. */
+            up1ApiKey: '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs'
+        };
+    }
+
+    /**
+     * @private
+     * @desc Checks if the configuration file exists.
+     * @returns {boolean} Returns true if the configuration file exists.
+     */
+    configExists() {
+        /* Attempt to parse the configuration file. */
+        let data = bdPluginStorage.get( this.getName(), 'config' );
+
+        /* The returned data must be defined and non-empty. */
+        return data && data !== null && data !== '';
+    }
+
+    /**
+     * @private
+     * @desc Loads the configuration file from `discordCrypt.config.json`
+     * @returns {boolean}
+     */
+    loadConfig() {
+        discordCrypt.log( 'Loading configuration file ...' );
+
+        /* Attempt to parse the configuration file. */
+        let data = bdPluginStorage.get( this.getName(), 'config' );
+
+        /* Check if the config file exists. */
+        if ( !data || data === null || data === '' ) {
+            /* File doesn't exist, create a new one. */
+            this.configFile = this.getDefaultConfig();
+
+            /* Save the config. */
+            this.saveConfig();
+
+            /* Nothing further to do. */
+            return true;
+        }
+
+        /* Try parsing the decrypted data. */
+        try {
+            this.configFile = JSON.parse(
+                discordCrypt.aes256_decrypt_gcm( data.data, this.masterPassword, 'PKC7', 'utf8', false )
+            );
+        }
+        catch ( err ) {
+            discordCrypt.log( `Decryption of configuration file failed - ${err}`, 'error' );
+            return false;
+        }
+
+        /* If it fails, return an error. */
+        if ( !this.configFile || !this.configFile.version ) {
+            discordCrypt.log( 'Decryption of configuration file failed.', 'error' );
+            return false;
+        }
+
+        /* Check for version mismatch. */
+        if ( this.configFile.version !== this.getVersion() ) {
+            /* Perform whatever needs to be done before updating. */
+            this.onUpdate();
+
+            /* Preserve the old version for logging. */
+            let oldVersion = this.configFile.version;
+
+            /* Preserve the old password list before updating. */
+            let oldCache = this.configFile.passList;
+
+            /* Get the most recent default configuration. */
+            this.configFile = this.getDefaultConfig();
+
+            /* Now restore the password list. */
+            this.configFile.passList = oldCache;
+
+            /* Save the new configuration. */
+            this.saveConfig();
+
+            /* Alert. */
+            discordCrypt.log( `Updated plugin version from v${oldVersion} to v${this.getVersion()}.` );
+            return true;
+        }
+
+        discordCrypt.log( `Loaded configuration file! - v${this.configFile.version}` );
+        return true;
+    }
+
+    /**
+     * @private
+     * @desc Saves the configuration file with the current password using AES-256 in GCM mode.
+     */
+    saveConfig() {
+        discordCrypt.log( 'Saving configuration file ...' );
+
+        /* Encrypt the message using the master password and save the encrypted data. */
+        bdPluginStorage.set( this.getName(), 'config', {
+            data:
+                discordCrypt.aes256_encrypt_gcm(
+                    JSON.stringify( this.configFile ),
+                    this.masterPassword,
+                    'PKC7',
+                    false
+                )
+        } );
+    }
+
+    /**
+     * @private
+     * @desc Updates and saves the configuration data used and updates a given button's text.
+     * @param {Object} btn The jQuery button to set the update text for.
+     */
+    saveSettings( btn ) {
+        /* Save the configuration file. */
+        this.saveConfig();
+
+        /* Tell the user that their settings were applied. */
+        btn.innerHTML = "Saved & Applied!";
+
+        /* Reset the original text after a second. */
+        setTimeout( ( function () {
+            btn.innerHTML = "Save & Apply";
+        } ), 1000 );
+
+        /* Force decode messages. */
+        this.decodeMessages( true );
+    }
+
+    /**
+     * @private
+     * @desc Resets the default configuration data used and updates a given button's text.
+     * @param {Object} btn The jQuery button to set the update text for.
+     */
+    resetSettings( btn ) {
+        /* Retrieve the default configuration. */
+        this.configFile = this.getDefaultConfig();
+
+        /* Save the configuration file to update any settings. */
+        this.saveConfig();
+
+        /* Tell the user that their settings were reset. */
+        btn.innerHTML = "Restored Default Settings!";
+
+        /* Reset the original text after a second. */
+        setTimeout( ( function () {
+            btn.innerHTML = "Reset Settings";
+        } ), 1000 );
+
+        /* Force decode messages. */
+        this.decodeMessages( true );
+    }
+
+    /**
+     * @private
+     * @desc Update the current password field and save the config file.
+     */
+    updatePasswords() {
+        /* Don't save if the password overlay is not open. */
+        if ( $( '#dc-overlay-password' )[ 0 ].style.display !== 'block' )
+            return;
+
+        let prim = $( "#dc-password-primary" );
+        let sec = $( "#dc-password-secondary" );
+
+        /* Check if a primary password has actually been entered. */
+        if ( !( prim[ 0 ].value !== '' && prim[ 0 ].value.length > 1 ) )
+            delete this.configFile.passList[ discordCrypt.getChannelId() ];
+        else {
+            /* Update the password field for this id. */
+            this.configFile.passList[ discordCrypt.getChannelId() ] =
+                discordCrypt.createPassword( prim[ 0 ].value, '' );
+
+            /* Only check for a secondary password if the primary password has been entered. */
+            if ( sec[ 0 ].value !== '' && sec[ 0 ].value.length > 1 )
+                this.configFile.passList[ discordCrypt.getChannelId() ].secondary = sec[ 0 ].value;
+
+            /* Update the password toolbar. */
+            prim[ 0 ].value = "";
+            sec[ 0 ].value = "";
+        }
+
+        /* Save the configuration file and decode any messages. */
+        this.saveConfig();
+
+        /* Decode any messages with the new password(s). */
+        this.decodeMessages( true );
+    }
+
+    /* ================= END CONFIGURATION CBS ================= */
+
+    /* =================== PROJECT UTILITIES =================== */
+
+    /**
+     * @public
+     * @desc Returns the name of the plugin file expected on the disk.
+     * @returns {string}
+     */
+    static getPluginName() {
+        return 'discordCrypt.plugin.js';
+    }
+
+    /**
+     * @public
+     * @desc Check if the plugin is named correctly by attempting to open the plugin file in the BetterDiscord
+     *      plugin path.
+     * @returns {boolean}
+     */
+    static validPluginName() {
+        return require( 'fs' )
+            .existsSync( require( 'path' )
+                .join( discordCrypt.getPluginsPath(), discordCrypt.getPluginName() ) );
+    }
+
+    /**
+     * @public
+     * @desc Returns the platform-specific path to BetterDiscord's plugin directory.
+     * @returns {string} The expected path ( which may not exist ) to BetterDiscord's plugin directory.
+     */
+    static getPluginsPath() {
+        const process = require( 'process' );
+        return `${process.platform === 'win32' ?
+            process.env.APPDATA :
+            process.platform === 'darwin' ?
+                process.env.HOME + '/Library/Preferences' :
+                process.env.HOME + '/.config'}/BetterDiscord/plugins/`;
+    }
+
+    /**
+     * @typedef {Object} updateCallback
+     * @desc The function to execute after an update has been retrieved.
+     * @property {string} file_data The update file's data.
+     * @property {string} short_hash A 64-bit SHA-256 checksum of the new update.
+     * @property {string} new_version The new version of the update.
+     * @property {string} full_changelog The full changelog.
+     */
+
+    /**
+     * @public
+     * @desc Checks the update server for an encrypted update.
+     * @param {updateCallback} onUpdateCallback
+     * @returns {boolean}
+     * @example
+     * checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) =>
+     *      console.log( `New Update Available: #${short_hash} - v${new_version}` );
+     *      console.log( `Changelog:\n${full_changelog}` );
+     * } );
+     */
+    static checkForUpdate( onUpdateCallback ) {
+        /* Update URL and request method. */
+        const update_url = `https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/${discordCrypt.getPluginName()}`;
+        const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
+
+        /* Make sure the callback is a function. */
+        if ( typeof onUpdateCallback !== 'function' )
+            return false;
+
+        /* Perform the request. */
+        try {
+            /* Download the update. */
+            discordCrypt.__getRequest( update_url, ( statusCode, errorString, data ) => {
+                /* Make sure no error occurred. */
+                if ( statusCode !== 200 ) {
+                    /* Log the error accordingly. */
+                    switch ( statusCode ) {
+                        case 404:
+                            discordCrypt.log( 'Update URL is broken.', 'error' );
+                            break;
+                        case 403:
+                            discordCrypt.log( 'Forbidden request when checking for updates.', 'error' );
+                            break;
+                        default:
+                            discordCrypt.log( `Error while fetching update: ${errorString}`, 'error' );
+                            break;
+                    }
+
+                    return;
+                }
+
+                /* Format properly. */
+                data = data.replace( '\r', '' );
+
+                /* Get the local file. */
+                let localFile = '//META{"name":"discordCrypt"}*//\n';
+                try {
+                    localFile = require( 'fs' ).readFileSync(
+                        require( 'path' ).join(
+                            discordCrypt.getPluginsPath(),
+                            discordCrypt.getPluginName()
+                        )
+                    ).toString().replace( '\r', '' );
+                }
+                catch ( e ) {
+                    discordCrypt.log( 'Plugin file could not be locally read. Assuming testing version ...', 'warn' );
+                }
+
+                /* Check the first line which contains the metadata to make sure that they're equal. */
+                if ( data.split( '\n' )[ 0 ] !== localFile.split( '\n' )[ 0 ] ) {
+                    discordCrypt.log( 'Plugin metadata is missing from either the local or update file.', 'error' );
+                    return;
+                }
+
+                /* Read the current hash of the plugin and compare them.. */
+                let currentHash = discordCrypt.sha256( localFile );
+                let hash = discordCrypt.sha256( data );
+                let shortHash = Buffer.from( hash, 'base64' )
+                    .toString( 'hex' )
+                    .slice( 0, 8 );
+
+                /* If the hash equals the retrieved one, no update is needed. */
+                if ( hash === currentHash ) {
+                    discordCrypt.log( `No Update Needed - #${shortHash}` );
+                    return true;
+                }
+
+                /* Try parsing a version number. */
+                let version_number = '';
+                try {
+                    version_number = data.match( /('[0-9]+\.[0-9]+\.[0-9]+')/gi ).toString().replace( /('*')/g, '' );
+                }
+                catch ( e ) {
+                    discordCrypt.log( 'Failed to locate the version number in the update ...', 'warn' );
+                }
+
+                /* Now get the changelog. */
+                try {
+                    /* Fetch the changelog from the URL. */
+                    discordCrypt.__getRequest( changelog_url, ( statusCode, errorString, changelog ) => {
+                        /* Perform the callback. */
+                        onUpdateCallback( data, shortHash, version_number, statusCode == 200 ? changelog : '' );
+                    } );
+                }
+                catch ( e ) {
+                    discordCrypt.log( 'Error fetching the changelog.', 'warn' );
+
+                    /* Perform the callback without a changelog. */
+                    onUpdateCallback( data, shortHash, version_number, '' );
+                }
+            } );
+        }
+        catch ( ex ) {
+            /* Handle failure. */
+            discordCrypt.log( `Error while retrieving update: ${ex.toString()}`, 'warn' );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @private
+     * @description Returns the current message ID used by Discord.
+     * @returns {string | undefined}
+     */
+    static getChannelId() {
+        return window.location.pathname.split( '/' ).pop();
+    }
+
+    /**
+     * @public
+     * @desc Creates a password object using a primary and secondary password.
+     * @param {string} primary_password The primary password.
+     * @param {string} secondary_password The secondary password.
+     * @returns {{primary: string, secondary: string}} Object containing the two passwords.
+     */
+    static createPassword( primary_password, secondary_password ) {
+        return { primary: primary_password, secondary: secondary_password };
+    }
+
+    /**
+     * @public
+     * @desc Returns functions to locate exported webpack modules.
+     * @returns {{find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames}}
+     */
+    static getWebpackModuleSearcher() {
+        /* [ Credits to the creator. ] */
+        const req = typeof( webpackJsonp ) === "function" ?
+            webpackJsonp(
+                [],
+                { '__extra_id__': ( module, _export_, req ) => _export_.default = req },
+                [ '__extra_id__' ]
+            ).default :
+            webpackJsonp.push( [
+                [],
+                { '__extra_id__': ( _module_, exports, req ) => _module_.exports = req },
+                [ [ '__extra_id__' ] ] ]
+            );
+
+        delete req.m[ '__extra_id__' ];
+        delete req.c[ '__extra_id__' ];
+
+        /**
+         * @desc Predicate for searching module.
+         * @typedef {Object} modulePredicate
+         * @property {*} module Module to test.
+         * @return {boolean} Returns `true` if `module` matches predicate.
+         */
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first one that matches filter
+         *      predicate. At first this function will look through already loaded modules cache.
+         *      If no loaded modules match, then this function tries to load all modules and match for them.
+         *      Loading any module may have unexpected side effects, like changing current locale of moment.js,
+         *      so in that case there will be a warning the console.
+         *      If no module matches, this function returns `null`.
+         *      ou should always try to provide a predicate that will match something,
+         *      but your code should be ready to receive `null` in case of changes in Discord's codebase.
+         *      If module is ES6 module and has default property, consider default first;
+         *      otherwise, consider the full module object.
+         * @param {modulePredicate} filter Predicate to match module
+         * @param {boolean} force_load Whether to force load all modules if cached modules don't work.
+         * @return {*} First module that matches `filter` or `null` if none match.
+         */
+        const find = ( filter, force_load ) => {
+            for ( let i in req.c ) {
+                if ( req.c.hasOwnProperty( i ) ) {
+                    let m = req.c[ i ].exports;
+
+                    if ( m && m.__esModule && m.default )
+                        m = m.default;
+
+                    if ( m && filter( m ) )
+                        return m;
+                }
+            }
+
+            if ( force_load ) {
+                discordCrypt.log( "Couldn't find module in existing cache. Loading all modules.", 'warn' );
+
+                for ( let i = 0; i < req.m.length; ++i ) {
+                    try {
+                        let m = req( i );
+                        if ( m && m.__esModule && m.default && filter( m.default ) )
+                            return m.default;
+                        if ( m && filter( m ) )
+                            return m;
+                    }
+                    catch ( e ) {
+                        discordCrypt.log( `Could not load module index ${i} ...`, 'warn' );
+                    }
+                }
+
+                discordCrypt.log( 'Cannot find React module.', 'warn' );
+            }
+
+            return null;
+        };
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first object that has all of
+         *      following properties. You should be ready that in any moment, after Discord update,
+         *      this function may start returning `null` (if no such object exists anymore) or even some
+         *      different object with the same properties. So you should provide all property names that
+         *      you use, and often even some extra properties to make sure you'll get exactly what you want.
+         * @param {string[]} propNames Array of property names to look for.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @returns {object} First module that matches `propNames` or `null` if none match.
+         */
+        const findByUniqueProperties = ( propNames, force_load = true ) =>
+            find( module => propNames.every( prop => module[ prop ] !== undefined ), force_load );
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first object that has
+         *      `displayName` property with following value. This is useful for searching for React components by
+         *      name. Take into account that not all components are exported as modules. Also, there might be
+         *      several components with the same name.
+         * @param {string} displayName Display name property value to look for.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @return {object} First module that matches `displayName` or `null` if none match.
+         */
+        const findByDisplayName = ( displayName, force_load = true ) =>
+            find( module => module.displayName === displayName, force_load );
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return the first object that matches
+         *      a dispatch token's ID. These usually contain a bundle of `_actionHandlers` used to handle events
+         *      internally.
+         * @param {int} token The internal token ID number.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @return {object} First module that matches the dispatch ID or `null` if none match.
+         */
+        const findByDispatchToken = ( token, force_load = false ) =>
+            find( module =>
+                module[ '_dispatchToken' ] !== undefined &&
+                module[ '_dispatchToken' ] === `ID_${token}` &&
+                module[ '_actionHandlers' ] !== undefined,
+                force_load
+            );
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return the first object that matches
+         *      every dispatcher name provided.
+         * @param {string[]} dispatchNames Names of events to search for.
+         * @return {object} First module that matches every dispatch name provided or null if no full matches.
+         */
+        const findByDispatchNames = dispatchNames => {
+            for ( let i = 0; i < 500; i++ ) {
+                let dispatcher = findByDispatchToken( i );
+
+                if ( !dispatcher )
+                    continue;
+
+                if ( dispatchNames.every( prop => dispatcher._actionHandlers.hasOwnProperty( prop ) ) )
+                    return dispatcher;
+            }
+            return null;
+        };
+
+        return { find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames };
+    }
+
+    /**
+     * @private
+     * @experimental
+     * @desc Dumps all function callback handlers with their names, IDs and function prototypes. [ Debug Function ]
+     * @returns {Array} Returns an array of all IDs and identifier callbacks.
+     */
+    static dumpWebpackModuleCallbacks() {
+        /* Resolve the finder function. */
+        let finder = discordCrypt.getWebpackModuleSearcher().findByDispatchToken;
+
+        /* Create the dumping array. */
+        let dump = [];
+
+        /* Iterate over let's say 500 possible modules ? In reality, there's < 100. */
+        for ( let i = 0; i < 500; i++ ) {
+            /* Locate the module. */
+            let module = finder( i );
+
+            /* Skip if it's invalid. */
+            if ( !module )
+                continue;
+
+            /* Create an entry in the array. */
+            dump[ i ] = {};
+
+            /* Loop over every property name in the action handler. */
+            for ( let prop in module._actionHandlers ) {
+
+                /* Quick sanity check. */
+                if ( !module._actionHandlers.hasOwnProperty( prop ) )
+                    continue;
+
+                /* Assign the module property name and it's basic prototype. */
+                dump[ i ][ prop ] = module._actionHandlers[ prop ].prototype.constructor.toString().split( '{' )[ 0 ];
+            }
+        }
+
+        /* Return any found module handlers. */
+        return dump;
+    }
+
+    /**
+     * @private
+     * @desc Returns the React modules loaded natively in Discord.
+     * @returns {{
+     *      ChannelProps: Object|null,
+     *      MessageParser: Object|null,
+     *      MessageController: Object|null,
+     *      MessageActionTypes: Object|null,
+     *      MessageDispatcher: Object|null,
+     *      MessageQueue: Object|null,
+     *      HighlightJS: Object|null
+     *  }}
+     */
+    static getReactModules() {
+        const WebpackModules = discordCrypt.getWebpackModuleSearcher();
+
+        return {
+            ChannelProps:
+                discordCrypt.getChannelId() === '@me' ?
+                    null :
+                    discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
+            MessageParser: WebpackModules
+                .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
+            MessageController: WebpackModules
+                .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
+            MessageActionTypes: WebpackModules
+                .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
+            MessageDispatcher: WebpackModules
+                .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
+            MessageQueue: WebpackModules
+                .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
+            HighlightJS: WebpackModules
+                .findByUniqueProperties( [ 'initHighlighting', 'highlightBlock', 'highlightAuto' ] ),
+        };
+    }
+
+    /**
+     * @private
+     * @desc Sends an embedded message to Discord.
+     * @param {string} embedded_text The message body of the embed.
+     * @param {string} embedded_header The text to display at the top of the embed.
+     * @param {string} embedded_footer The text to display at the bottom of the embed.
+     * @param {string|int} embedded_color A hex color used to outline the left side of the embed.
+     * @param {string} message_content Message content to be attached above the embed.
+     * @param {int|undefined} channel_id If specified, sends the embedded message to this channel instead of the
+     *      current channel.
+     */
+    static sendEmbeddedMessage(
+        /* string */ embedded_text,
+        /* string */ embedded_header,
+        /* string */ embedded_footer,
+        /* int */    embedded_color = 0x551A8B,
+        /* string */ message_content = '',
+        /* int */    channel_id = undefined
+    ) {
+        let mention_everyone = false;
+
+        /* Finds appropriate React modules. */
+        const React = discordCrypt.getReactModules();
+
+        /* Parse the message content to the required format if applicable.. */
+        if ( typeof message_content === 'string' && message_content.length ) {
+            /* Sanity check. */
+            if ( React.MessageParser === null ) {
+                discordCrypt.log( 'Could not locate the MessageParser module!', 'error' );
+                return;
+            }
+
+            try {
+                message_content = React.MessageParser.parse( React.ChannelProps, message_content ).content;
+
+                /* Check for @everyone or @here mentions. */
+                if ( message_content.includes( '@everyone' ) || message_content.includes( '@here' ) )
+                    mention_everyone = true;
+            }
+            catch ( e ) {
+                message_content = '';
+            }
+        }
+        else
+            message_content = '';
+
+        /* Generate a unique nonce for this message. */
+        let _nonce = parseInt( require( 'crypto' ).randomBytes( 6 ).toString( 'hex' ), 16 );
+
+        /* Save the Channel ID. */
+        let _channel = channel_id !== undefined ? channel_id : discordCrypt.getChannelId();
+
+        /* Sanity check. */
+        if ( React.MessageQueue === null ) {
+            discordCrypt.log( 'Could not locate the MessageQueue module!', 'error' );
+            return;
+        }
+
+        /* Create the message object and add it to the queue. */
+        React.MessageQueue.enqueue( {
+            type: 'send',
+            message: {
+                channelId: _channel,
+                nonce: _nonce,
+                content: message_content,
+                mention_everyone: mention_everyone,
+                tts: false,
+                embed: {
+                    type: "rich",
+                    url: "https://gitlab.com/leogx9r/DiscordCrypt",
+                    color: embedded_color || 0x551A8B,
+                    timestamp: ( new Date() ).toISOString(),
+                    output_mime_type: "text/x-html",
+                    encoding: "utf-16",
+                    author: {
+                        name: embedded_header || '-----MESSAGE-----',
+                        icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png',
+                        url: 'https://discord.me/discordCrypt'
+                    },
+                    footer: {
+                        text: embedded_footer || 'DiscordCrypt',
+                        icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/app-logo.png',
+                    },
+                    description: embedded_text,
+                }
+            }
+        }, ( r ) => {
+            /* Sanity check. */
+            if ( React.MessageController === null ) {
+                discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
+                return;
+            }
+
+            /* Check if an error occurred and inform Clyde bot about it. */
+            if ( !r.ok ) {
+                /* Perform Clyde dispatch if necessary. */
+                if (
+                    r.status >= 400 &&
+                    r.status < 500 &&
+                    r.body &&
+                    !React.MessageController.sendClydeError( _channel, r.body.code )
+                ) {
+                    /* Log the error in case we can't manually dispatch the error. */
+                    discordCrypt.log( `Error sending message: ${r.status}`, 'error' );
+
+                    /* Sanity check. */
+                    if ( React.MessageDispatcher === null || React.MessageActionTypes === null ) {
+                        discordCrypt.log( 'Could not locate the MessageDispatcher module!', 'error' );
+                        return;
+                    }
+
+                    React.MessageDispatcher.dispatch( {
+                        type: React.MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
+                        messageId: _nonce,
+                        channelId: _channel
+                    } );
+                }
+            }
+            else {
+                /* Receive the message normally. */
+                React.MessageController.receiveMessage( _channel, r.body );
+            }
+        } );
+    }
+
+    /**
+     * @public
+     * @desc Logs a message to the console in HTML coloring. ( For Electron clients. )
+     * @param {string} message The message to log to the console.
+     * @param {string} method The indication level of the message.
+     *      This can be either ['info', 'warn', 'error', 'success']
+     *
+     * @example
+     * log( 'Hello World!' );
+     *
+     * @example
+     * log( 'This is printed in yellow.', 'warn' );
+     *
+     * @example
+     * log( 'This is printed in red.', 'error' );
+     *
+     * @example
+     * log( 'This is printed green.', 'success' );
+     *
+     */
+    static log( message, method = "info" ) {
+        try {
+            console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
+        }
+        catch ( ex ) {
+            console.error( '[DiscordCrypt] - Error logging message ...' );
+        }
+    }
+
+    /**
+     * @private
+     * @desc Injects a CSS style element into the header tag.
+     * @param {string} id The HTML ID string used to identify this CSS style segment.
+     * @param {string} css The actual CSS style excluding the <style> tags.
+     * @example
+     * injectCSS( 'my-css', 'p { font-size: 32px; }' );
+     */
+    static injectCSS( id, css ) {
+        /* Inject into the header tag. */
+        $( "head" )
+            .append( $( "<style>", { id: id.replace( /^[^a-z]+|[^\w-]+/gi, "" ), html: css } ) )
+    }
+
+    /**
+     * @private
+     * @desc Clears an injected element via its ID tag.
+     * @param {string} id The HTML ID string used to identify this CSS style segment.
+     * @example
+     * clearCSS( 'my-css' );
+     */
+    static clearCSS( id = undefined ) {
+        /* Make sure the ID is a valid string. */
+        if ( !id || typeof id !== 'string' || !id.length )
+            return;
+
+        /* Remove the element. */
+        $( `#${id.replace( /^[^a-z]+|[^\w-]+/gi, "" )}` ).remove();
+    }
+
+    /* ================= END PROJECT UTILITIES ================= */
+
+    /* ================= BEGIN MAIN CALLBACKS ================== */
+
+    /**
+     * @desc Hooks a dispatcher from Discord's internals.
+     * @author samogot & Leonardo Gates
+     * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
+     * @param {string} methodName The name of the method to hook.
+     * @param {string} options The type of hook to apply. [ 'before', 'after', 'instead', 'revert' ]
+     * @param {boolean} [options.once=false] Set to `true` if you want to automatically unhook method after first call.
+     * @param {boolean} [options.silent=false] Set to `true` if you want to suppress log messages about patching and
+     *      unhooking. Useful to avoid clogging the console in case of frequent conditional hooking/unhooking, for
+     *      example from another monkeyPatch callback.
+     * @return {function} Returns the function used to cancel the hook.
+     */
+    static hookDispatcher( dispatcher, methodName, options ) {
+        const { before, after, instead, once = false, silent = false } = options;
+        const origMethod = dispatcher._actionHandlers[ methodName ];
+
+        const cancel = () => {
+            if ( !silent )
+                discordCrypt.log( `Unhooking "${methodName}" ...` );
+            dispatcher[ methodName ] = origMethod;
+        };
+
+        const suppressErrors = ( method, description ) => ( ... params ) => {
+            try {
+                return method( ... params );
+            }
+            catch ( e ) {
+                discordCrypt.log( `Error occurred in ${description}`, 'error' )
+            }
+        };
+
+        if ( !dispatcher._actionHandlers[ methodName ].__hooked ) {
+            if ( !silent )
+                discordCrypt.log( `Hooking "${methodName}" ...` );
+
+            dispatcher._actionHandlers[ methodName ] = function () {
+                /**
+                 * @interface
+                 * @name PatchData
+                 * @property {object} thisObject Original `this` value in current call of patched method.
+                 * @property {Arguments} methodArguments Original `arguments` object in current call of patched method.
+                 *      Please, never change function signatures, as it may cause a lot of problems in future.
+                 * @property {cancelPatch} cancelPatch Function with no arguments and no return value that may be called
+                 *      to reverse patching of current method. Calling this function prevents running of this callback
+                 *      on further original method calls.
+                 * @property {function} originalMethod Reference to the original method that is patched. You can use it
+                 *      if you need some special usage. You should explicitly provide a value for `this` and any method
+                 *      arguments when you call this function.
+                 * @property {function} callOriginalMethod This is a shortcut for calling original method using `this`
+                 *      and `arguments` from original call.
+                 * @property {*} returnValue This is a value returned from original function call. This property is
+                 *      available only in `after` callback or in `instead` callback after calling `callOriginalMethod`
+                 *      function.
+                 */
+                const data = {
+                    thisObject: this,
+                    methodArguments: arguments,
+                    cancelPatch: cancel,
+                    originalMethod: origMethod,
+                    callOriginalMethod: () => data.returnValue =
+                        data.originalMethod.apply( data.thisObject, data.methodArguments )
+                };
+                if ( instead ) {
+                    const tempRet =
+                        suppressErrors( instead, `${methodName} called hook via 'instead'.` )( data );
+
+                    if ( tempRet !== undefined )
+                        data.returnValue = tempRet;
+                }
+                else {
+
+                    if ( before )
+                        suppressErrors( before, `${methodName} called hook via 'before'.` )( data );
+
+                    data.callOriginalMethod();
+
+                    if ( after )
+                        suppressErrors( after, `${methodName} called hook via 'after'.` )( data );
+                }
+                if ( once )
+                    cancel();
+
+                return data.returnValue;
+            };
+
+            dispatcher._actionHandlers[ methodName ].__hooked = true;
+            dispatcher._actionHandlers[ methodName ].__cancel = cancel;
+        }
+        return dispatcher._actionHandlers[ methodName ].__cancel;
+    }
+
+    /**
+     * @private
+     * @desc Debug function that attempts to hook Discord's internal event handlers for message creation.
+     * @return {boolean} Returns true if handler events have been hooked.
+     */
+    hookMessageCallbacks() {
+        /* Find the main switch event dispatcher if not already found. */
+        if ( !this.messageUpdateDispatcher ) {
+            /* Usually ID_78. */
+            this.messageUpdateDispatcher = discordCrypt.getWebpackModuleSearcher().findByDispatchNames( [
+                'LOAD_MESSAGES',
+                'LOAD_MESSAGES_SUCCESS',
+                'LOAD_MESSAGES_FAILURE',
+                'TRUNCATE_MESSAGES',
+                'MESSAGE_CREATE',
+                'MESSAGE_UPDATE',
+                'MESSAGE_DELETE',
+                'MESSAGE_DELETE_BULK',
+                'MESSAGE_REVEAL',
+                'CHANNEL_SELECT',
+                'CHANNEL_CREATE',
+                'CHANNEL_PRELOAD',
+                'GUILD_CREATE',
+                'GUILD_SELECT',
+                'GUILD_DELETE'
+            ] );
+        }
+
+        /* Don't proceed if it failed. */
+        if ( !this.messageUpdateDispatcher ) {
+            discordCrypt.log( `Failed to locate the switch event dispatcher!`, 'error' );
+            return false;
+        }
+
+        /* Hook the switch event dispatcher. */
+        discordCrypt.hookDispatcher(
+            this.messageUpdateDispatcher,
+            'CHANNEL_SELECT',
+            {
+                after: ( e ) => {
+                    /* Skip channels not currently selected. */
+                    if ( discordCrypt.getChannelId() !== e.methodArguments[ 0 ].channelId )
+                        return;
+
+                    /* Delays are required due to windows being loaded async. */
+                    setTimeout(
+                        () => {
+
+                            discordCrypt.log( 'Detected chat switch.', 'debug' );
+
+                            /* Add the toolbar. */
+                            this.loadToolbar();
+
+                            /* Attach the message handler. */
+                            this.attachHandler();
+
+                            /* Decrypt any messages. */
+                            this.decodeMessages();
+
+                        },
+                        1
+                    );
+                }
+            }
+        );
+        /* Hook incoming message creation dispatcher. */
+        discordCrypt.hookDispatcher(
+            this.messageUpdateDispatcher,
+            'MESSAGE_CREATE',
+            {
+                after: ( e ) => {
+                    /* Skip channels not currently selected. */
+                    if ( discordCrypt.getChannelId() !== e.methodArguments[ 0 ].channelId )
+                        return;
+
+                    /* Delays are required due to windows being loaded async. */
+                    setTimeout(
+                        () => {
+                            discordCrypt.log( 'Detected new message.', 'debug' );
+
+                            /* Decrypt any messages. */
+                            this.decodeMessages();
+                        },
+                        1
+                    );
+                }
+            }
+        );
+
+        return true;
+    }
+
+    /**
+     * @private
+     * @desc Removes all hooks on modules hooked by the hookMessageCallbacks() function.
+     * @return {boolean} Returns true if all methods have been unhooked.
+     */
+    unhookMessageCallbacks() {
+        /* Skip if no dispatcher was called. */
+        if ( !this.messageUpdateDispatcher )
+            return false;
+
+        /* Iterate over every dispatcher. */
+        for ( let prop in this.messageUpdateDispatcher._actionHandlers ) {
+            /* Search for the hooked property and call it. */
+            if ( prop.hasOwnProperty( '__cancel' ) )
+                prop.__cancel();
+        }
+
+        return true;
+    }
+
+    /**
+     * @private
+     * @desc Loads the master-password unlocking prompt.
+     */
+    loadMasterPassword() {
+        const self = this;
+
+        if ( $( '#dc-master-overlay' ).length !== 0 )
+            return;
+
+        /* Check if the database exists. */
+        const cfg_exists = self.configExists();
+
+        const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
+
+        /* Construct the password updating field. */
+        $( document.body ).prepend( this.masterPasswordHtml );
+
+        const pwd_field = $( '#dc-db-password' );
+        const cancel_btn = $( '#dc-cancel-btn' );
+        const unlock_btn = $( '#dc-unlock-database-btn' );
+        const master_status = $( '#dc-master-status' );
+        const master_header_message = $( '#dc-header-master-msg' );
+        const master_prompt_message = $( '#dc-prompt-master-msg' );
+
+        /* Use these messages based on whether we're creating a database or unlocking it. */
+        master_header_message.text(
+            cfg_exists ?
+                '---------- Database Is Locked ----------' :
+                '---------- Database Not Found ----------'
+        );
+        master_prompt_message.text(
+            cfg_exists ?
+                'Enter Password:' :
+                'Enter New Password:'
+        );
+        unlock_btn.text( action_msg );
+
+        /* Force the database element to load. */
+        document.getElementById( 'dc-master-overlay' ).style.display = 'block';
+
+        /* Check for ENTER key press to execute unlocks. */
+        pwd_field.on( "keydown", ( function ( e ) {
+            let code = e.keyCode || e.which;
+
+            /* Execute on ENTER/RETURN only. */
+            if ( code !== 13 )
+                return;
+
+            unlock_btn.click();
+        } ) );
+
+        /* Handle unlock button clicks. */
+        unlock_btn.click( ( function () {
+
+            /* Disable the button before clicking. */
+            unlock_btn.attr( 'disabled', true );
+
+            /* Update the text. */
+            if ( cfg_exists )
+                unlock_btn.text( 'Unlocking Database ...' );
+            else
+                unlock_btn.text( 'Creating Database ...' );
+
+            /* Get the password entered. */
+            let password = pwd_field[ 0 ].value;
+
+            /* Validate the field entered contains some value. */
+            if ( password === null || password === '' ) {
+                unlock_btn.text( action_msg );
+                unlock_btn.attr( 'disabled', false );
+                return;
+            }
+
+            /* Hash the password. */
+            discordCrypt.scrypt
+            (
+                Buffer.from( password ),
+                Buffer.from( discordCrypt.whirlpool( password, true ), 'hex' ),
+                32,
+                4096,
+                8,
+                1,
+                ( error, progress, pwd ) => {
+                    if ( error ) {
+                        /* Update the button's text. */
+                        if ( cfg_exists )
+                            unlock_btn.text( 'Invalid Password!' );
+                        else
+                            unlock_btn.text( `Error: ${error}` );
+
+                        /* Clear the text field. */
+                        pwd_field[ 0 ].value = '';
+
+                        /* Reset the progress bar. */
+                        master_status.css( 'width', '0%' );
+
+                        /* Reset the text of the button after 1 second. */
+                        setTimeout( ( function () {
+                            unlock_btn.text( action_msg );
+                        } ), 1000 );
+
+                        discordCrypt.log( error.toString(), 'error' );
+                        return true;
+                    }
+
+                    if ( progress )
+                        master_status.css( 'width', `${parseInt( progress * 100 )}%` );
+
+                    if ( pwd ) {
+                        /* To test whether this is the correct password or not, we have to attempt to use it. */
+                        self.masterPassword = Buffer.from( pwd, 'hex' );
+
+                        /* Attempt to load the database with this password. */
+                        if ( !self.loadConfig() ) {
+                            self.configFile = null;
+
+                            /* Update the button's text. */
+                            if ( cfg_exists )
+                                unlock_btn.text( 'Invalid Password!' );
+                            else
+                                unlock_btn.text( 'Failed to create the database!' );
+
+                            /* Clear the text field. */
+                            pwd_field[ 0 ].value = '';
+
+                            /* Reset the progress bar. */
+                            master_status.css( 'width', '0%' );
+
+                            /* Reset the text of the button after 1 second. */
+                            setTimeout( ( function () {
+                                unlock_btn.text( action_msg );
+                            } ), 1000 );
+
+                            /* Proceed no further. */
+                            unlock_btn.attr( 'disabled', false );
+                            return false;
+                        }
+
+                        /* We may now call the start() function. */
+                        self.start();
+
+                        /* And update the button text. */
+                        if ( cfg_exists )
+                            unlock_btn.text( 'Unlocked Successfully!' );
+                        else
+                            unlock_btn.text( 'Created Successfully!' );
+
+                        /* Close the overlay after 1 second. */
+                        setTimeout( ( function () {
+                            $( '#dc-master-overlay' ).remove();
+                        } ), 1000 );
+                    }
+
+                    return false;
+                }
+            );
+        } ) );
+
+        /* Handle cancel button presses. */
+        cancel_btn.click( ( function () {
+            /* Use a 300 millisecond delay. */
+            setTimeout(
+                ( function () {
+                    /* Remove the prompt overlay. */
+                    $( '#dc-master-overlay' ).remove();
+
+                    /* Do some quick cleanup. */
+                    self.masterPassword = null;
+                    self.configFile = null;
+                } ), 300
+            );
+        } ) );
+    }
+
+    /**
+     * @private
+     * @desc Performs an async update checking and handles actually updating the current version if necessary.
+     */
+    checkForUpdates() {
+        const self = this;
+
+        setTimeout( () => {
+            /* Proxy call. */
+            try {
+                discordCrypt.checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) => {
+                    const replacePath = require( 'path' )
+                        .join( discordCrypt.getPluginsPath(), discordCrypt.getPluginName() );
+                    const fs = require( 'fs' );
+
+                    /* Alert the user of the update and changelog. */
+                    $( '#dc-overlay' )[ 0 ].style.display = 'block';
+                    $( '#dc-update-overlay' )[ 0 ].style.display = 'block';
+
+                    /* Update the version info. */
+                    $( '#dc-new-version' )
+                        .text( `New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} )` );
+                    $( '#dc-old-version' ).text( `Old Version: ${self.getVersion()}` );
+
+                    /* Update the changelog. */
+                    let dc_changelog = $( '#dc-changelog' );
+                    dc_changelog.val(
+                        typeof full_changelog === "string" && full_changelog.length > 0 ?
+                            full_changelog :
+                            'N/A'
+                    );
+
+                    /* Scroll to the top of the changelog. */
+                    dc_changelog.scrollTop( 0 );
+
+                    /* Replace the file. */
+                    fs.writeFile( replacePath, file_data, ( err ) => {
+                        if ( err ) {
+                            discordCrypt.log(
+                                `Unable to replace the target plugin. ( ${err} )\nDestination: ${replacePath}`, 'error'
+                            );
+                            _alert( 'Error During Update', 'Failed to apply the update!' );
+                        }
+                    } );
+                } );
+            }
+            catch ( ex ) {
+                discordCrypt.log( ex, 'warn' );
+            }
+        }, 1000 );
+    }
+
+    /**
+     * @private
+     * @desc Sets the active tab index in the exchange key menu.
+     * @param {int} index The index ( 0-2 ) of the page to activate.
+     * @example
+     * setActiveTab( 1 );
+     */
+    static setActiveTab( index ) {
+        let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
+        let tabs = $( '.dc-tab-link' );
+
+        /* Hide all tabs. */
+        for ( let i = 0; i < tab_names.length; i++ )
+            $( `#${tab_names[ i ]}` )[ 0 ].style.display = 'none';
+
+        /* Deactivate all links. */
+        for ( let i = 0; i < tabs.length; i++ )
+            tabs[ i ].className = tabs[ i ].className.split( ' active' ).join( '' );
+
+        switch ( index ) {
+            case 0:
+                $( '#dc-tab-info-btn' )[ 0 ].className += ' active';
+                $( '#dc-about-tab' )[ 0 ].style.display = 'block';
+                break;
+            case 1:
+                $( '#dc-tab-keygen-btn' )[ 0 ].className += ' active';
+                $( '#dc-keygen-tab' )[ 0 ].style.display = 'block';
+                break;
+            case 2:
+                $( '#dc-tab-handshake-btn' )[ 0 ].className += ' active';
+                $( '#dc-handshake-tab' )[ 0 ].style.display = 'block';
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * @private
+     * @desc Inserts the plugin's option toolbar to the current toolbar and handles all triggers.
+     */
+    loadToolbar() {
+
+        /* Skip if the configuration hasn't been loaded. */
+        if ( !this.configFile )
+            return;
+
+        /* Skip if we're not in an active channel. */
+        if ( discordCrypt.getChannelId() === '@me' )
+            return;
+
+        /* Add toolbar buttons and their icons if it doesn't exist. */
+        if ( $( '#dc-passwd-btn' ).length !== 0 )
+            return;
+
+        /* Inject the toolbar. */
+        $( this.searchUiClass ).parent().parent().parent().prepend( this.toolbarHtml );
+
+        /* Cache jQuery results. */
+        let dc_passwd_btn = $( '#dc-passwd-btn' ),
+            dc_lock_btn = $( '#dc-lock-btn' ),
+            dc_svg = $( '.dc-svg' );
+
+        /* Set the SVG button class. */
+        dc_svg.attr( 'class', 'dc-svg' );
+
+        /* Set the initial status icon. */
+        if ( dc_lock_btn.length > 0 ) {
+            if ( this.configFile.encodeAll ) {
+                dc_lock_btn.attr( 'title', 'Disable Message Encryption' );
+                dc_lock_btn[ 0 ].innerHTML = Buffer.from( this.lockIcon, 'base64' ).toString( 'utf8' );
+            }
+            else {
+                dc_lock_btn.attr( 'title', 'Enable Message Encryption' );
+                dc_lock_btn[ 0 ].innerHTML = Buffer.from( this.unlockIcon, 'base64' ).toString( 'utf8' );
+            }
+
+            /* Set the button class. */
+            dc_svg.attr( 'class', 'dc-svg' );
+        }
+
+        /* Inject the settings. */
+        $( document.body ).prepend( this.settingsMenuHtml );
+
+        /* Also by default, set the about tab to be shown. */
+        discordCrypt.setActiveTab( 0 );
+
+        /* Update all settings from the settings panel. */
+        $( '#dc-settings-encrypt-trigger' )[ 0 ].value = this.configFile.encodeMessageTrigger;
+        $( '#dc-settings-default-pwd' )[ 0 ].value = this.configFile.defaultPassword;
+        $( '#dc-settings-scan-delay' )[ 0 ].value = this.configFile.encryptScanDelay;
+        $( '#dc-settings-padding-mode' )[ 0 ].value = this.configFile.paddingMode.toLowerCase();
+        $( '#dc-settings-cipher-mode' )[ 0 ].value = this.configFile.encryptBlockMode.toLowerCase();
+        $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, false );
+        $( '#dc-secondary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, true );
+
+        /* Handle clipboard upload button. */
+        $( '#dc-clipboard-upload-btn' ).click( discordCrypt.on_upload_encrypted_clipboard_button_clicked( this ) );
+
+        /* Handle file button clicked. */
+        $( '#dc-file-btn' ).click( discordCrypt.on_file_button_clicked );
+
+        /* Handle alter file path button. */
+        $( '#dc-select-file-path-btn' ).click( discordCrypt.on_alter_file_button_clicked );
+
+        /* Handle file upload button. */
+        $( '#dc-file-upload-btn' ).click( discordCrypt.on_upload_file_button_clicked( this ) );
+
+        /* Handle file button cancelled. */
+        $( '#dc-file-cancel-btn' ).click( discordCrypt.on_cancel_file_upload_button_clicked );
+
+        /* Handle Settings tab opening. */
+        $( '#dc-settings-btn' ).click( discordCrypt.on_settings_button_clicked );
+
+        /* Handle Settings tab closing. */
+        $( '#dc-exit-settings-btn' ).click( discordCrypt.on_settings_close_button_clicked );
+
+        /* Handle Save settings. */
+        $( '#dc-settings-save-btn' ).click( discordCrypt.on_save_settings_button_clicked( this ) );
+
+        /* Handle Reset settings. */
+        $( '#dc-settings-reset-btn' ).click( discordCrypt.on_reset_settings_button_clicked( this ) );
+
+        /* Handle Restart-Now button clicking. */
+        $( '#dc-restart-now-btn' ).click( discordCrypt.on_restart_now_button_clicked );
+
+        /* Handle Restart-Later button clicking. */
+        $( '#dc-restart-later-btn' ).click( discordCrypt.on_restart_later_button_clicked );
+
+        /* Handle Info tab switch. */
+        $( '#dc-tab-info-btn' ).click( discordCrypt.on_info_tab_button_clicked );
+
+        /* Handle Keygen tab switch. */
+        $( '#dc-tab-keygen-btn' ).click( discordCrypt.on_exchange_tab_button_clicked );
+
+        /* Handle Handshake tab switch. */
+        $( '#dc-tab-handshake-btn' ).click( discordCrypt.on_handshake_tab_button_clicked );
+
+        /* Handle exit tab button. */
+        $( '#dc-exit-exchange-btn' ).click( discordCrypt.on_close_exchange_button_clicked );
+
+        /* Open exchange menu. */
+        $( '#dc-exchange-btn' ).click( discordCrypt.on_open_exchange_button_clicked );
+
+        /* Quickly generate and send a public key. */
+        $( '#dc-quick-exchange-btn' ).click( discordCrypt.on_quick_send_public_key_button_clicked );
+
+        /* Repopulate the bit length options for the generator when switching handshake algorithms. */
+        $( '#dc-keygen-method' ).change( discordCrypt.on_exchange_algorithm_changed );
+
+        /* Generate a new key-pair on clicking. */
+        $( '#dc-keygen-gen-btn' ).click( discordCrypt.on_generate_new_key_pair_button_clicked );
+
+        /* Clear the public & private key fields. */
+        $( '#dc-keygen-clear-btn' ).click( discordCrypt.on_keygen_clear_button_clicked );
+
+        /* Send the public key to the current channel. */
+        $( '#dc-keygen-send-pub-btn' ).click( discordCrypt.on_keygen_send_public_key_button_clicked( this ) );
+
+        /* Paste the data from the clipboard to the public key field. */
+        $( '#dc-handshake-paste-btn' ).click( discordCrypt.on_handshake_paste_public_key_button_clicked );
+
+        /* Compute the primary and secondary keys. */
+        $( '#dc-handshake-compute-btn' ).click( discordCrypt.on_handshake_compute_button_clicked( this ) );
+
+        /* Copy the primary and secondary key to the clipboard. */
+        $( '#dc-handshake-cpy-keys-btn' ).click( discordCrypt.on_handshake_copy_keys_button_clicked );
+
+        /* Apply generated keys to the current channel. */
+        $( '#dc-handshake-apply-keys-btn' ).click( discordCrypt.on_handshake_apply_keys_button_clicked( this ) );
+
+        /* Show the overlay when clicking the password button. */
+        dc_passwd_btn.click( discordCrypt.on_passwd_button_clicked );
+
+        /* Update the password for the user once clicked. */
+        $( '#dc-save-pwd' ).click( discordCrypt.on_save_passwords_button_clicked( this ) );
+
+        /* Reset the password for the user to the default. */
+        $( '#dc-reset-pwd' ).click( discordCrypt.on_reset_passwords_button_clicked( this ) );
+
+        /* Hide the overlay when clicking cancel. */
+        $( '#dc-cancel-btn' ).click( discordCrypt.on_cancel_password_button_clicked );
+
+        /* Copy the current passwords to the clipboard. */
+        $( '#dc-cpy-pwds-btn' ).click( discordCrypt.on_copy_current_passwords_button_clicked( this ) );
+
+        /* Set whether auto-encryption is enabled or disabled. */
+        dc_lock_btn.click( discordCrypt.on_lock_button_clicked( this ) );
+    }
+
+    /**
+     * @private
+     * @desc Attached a handler to the message area and dispatches encrypted messages if necessary.
+     */
+    attachHandler() {
+        const self = this;
+
+        /* Get the text area. */
+        let textarea = $( this.channelTextAreaClass );
+
+        /* Make sure we got one element. */
+        if ( textarea.length !== 1 )
+            return;
+
+        /* Replace any old handlers before adding the new one. */
+        textarea.off( "keydown.dcrypt" ).on( "keydown.dcrypt", ( function ( e ) {
+            let code = e.keyCode || e.which;
+
+            /* Skip if we don't have a valid configuration. */
+            if ( !self.configFile )
+                return;
+
+            /* Execute on ENTER/RETURN only. */
+            if ( code !== 13 )
+                return;
+
+            /* Skip if shift key is down indicating going to a new line. */
+            if ( e.shiftKey )
+                return;
+
+            /* Skip if autocomplete dialog is opened. */
+            if ( !!$( self.autoCompleteClass )[ 0 ] )
+                return;
+
+            /* Send the encrypted message. */
+            if ( self.sendEncryptedMessage( $( this ).val() ) != 0 )
+                return;
+
+            /* Clear text field. */
+            discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).setState( { textValue: '' } );
+
+            /* Cancel the default sending action. */
+            e.preventDefault();
+            e.stopPropagation();
+        } ) );
+    }
+
+    /**
+     * @private
+     * @desc Parses a public key message and adds the exchange button to it if necessary.
+     * @param {Object} obj The jQuery object of the current message being examined.
+     * @returns {boolean} Returns true.
+     */
+    parseKeyMessage( obj ) {
+        /* Extract the algorithm info from the message's metadata. */
+        let metadata = discordCrypt.__extractKeyInfo( obj.text().replace( /\r?\n|\r/g, '' ), true );
+
+        /* Sanity check for invalid key messages. */
+        if( metadata === null )
+            return true;
+
+        /* Compute the fingerprint of our currently known public key if any to determine if to proceed. */
+        let local_fingerprint = discordCrypt.sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
+
+        /* Skip if this is our current public key. */
+        if ( metadata[ 'fingerprint' ] === local_fingerprint ) {
+            obj.css( 'display', 'none' );
+            return true;
+        }
+
+        /* Create a button allowing the user to perform a key exchange with this public key. */
+        let button = $( "<button>Perform Key Exchange</button>" )
+            .addClass( 'dc-button' )
+            .addClass( 'dc-button-inverse' );
+
+        /* Remove margins. */
+        button.css( 'margin-left', '0' );
+        button.css( 'margin-right', '0' );
+
+        /* Move the button a bit down from the key's text. */
+        button.css( 'margin-top', '2%' );
+
+        /* Allow full width. */
+        button.css( 'width', '100%' );
+
+        /* Handle clicks. */
+        button.click( ( function () {
+
+            /* Cache jQuery results. */
+            let dc_keygen_method = $( '#dc-keygen-method' ),
+                dc_keygen_algorithm = $( '#dc-keygen-algorithm' );
+
+            /* Simulate pressing the exchange key button. */
+            $( '#dc-exchange-btn' ).click();
+
+            /* If the current algorithm differs, change it and generate then send a new key. */
+            if (
+                dc_keygen_method[ 0 ].value !== metadata[ 'algorithm' ] ||
+                parseInt( dc_keygen_algorithm[ 0 ].value ) !== metadata[ 'bit_length' ]
+            ) {
+                /* Switch. */
+                dc_keygen_method[ 0 ].value = metadata[ 'algorithm' ];
+
+                /* Fire the change event so the second list updates. */
+                dc_keygen_method.change();
+
+                /* Update the key size. */
+                dc_keygen_algorithm[ 0 ].value = metadata[ 'bit_length' ];
+
+                /* Generate a new key pair. */
+                $( '#dc-keygen-gen-btn' ).click();
+
+                /* Send the public key. */
+                $( '#dc-keygen-send-pub-btn' ).click();
+            }
+            /* If we don't have a key yet, generate and send one. */
+            else if ( $( '#dc-pub-key-ta' )[ 0 ].value === '' ) {
+                /* Generate a new key pair. */
+                $( '#dc-keygen-gen-btn' ).click();
+
+                /* Send the public key. */
+                $( '#dc-keygen-send-pub-btn' ).click();
+            }
+
+            /* Open the handshake menu. */
+            $( '#dc-tab-handshake-btn' ).click();
+
+            /* Apply the key to the field. */
+            $( '#dc-handshake-ppk' )[ 0 ].value = obj.text();
+
+            /* Click compute. */
+            $( '#dc-handshake-compute-btn' ).click();
+        } ) );
+
+        /* Add the button. */
+        obj.parent().append( button );
+
+        /* Set the text to an identifiable color. */
+        obj.css( 'color', 'blue' );
+
+        return true;
+    }
+
+    /**
+     * @private
+     * @desc Parses a message object and attempts to decrypt it..
+     * @param {Object} obj The jQuery object of the current message being examined.
+     * @param {string} primaryKey The primary key used to decrypt the message.
+     * @param {string} secondaryKey The secondary key used to decrypt the message.
+     * @param {Object} ReactModules The modules retrieved by calling getReactModules()
+     * @returns {boolean} Returns true if the message has been decrypted.
+     */
+    parseSymmetric( obj, primaryKey, secondaryKey, ReactModules ) {
+        let message = $( obj );
+        let dataMsg;
+
+        /**************************************************************************************************************
+         *  MESSAGE FORMAT:
+         *
+         *  + 0x0000 [ 4        Chars ] - Message Magic | Key Magic
+         *  + 0x0004 [ 4 ( #4 ) Chars ] - Message Metadata ( #1 ) | Key Data ( #3 )
+         *  + 0x000C [ ?        Chars ] - Cipher Text
+         *
+         *  * 0x0004 - Options - Substituted Base64 encoding of a single word stored in Little Endian.
+         *      [ 31 ... 24 ] - Algorithm ( 0-24 = Dual )
+         *      [ 23 ... 16 ] - Block Mode ( 0 = CBC | 1 = CFB | 2 = OFB )
+         *      [ 15 ... 08 ] - Padding Mode ( #2 )
+         *      [ 07 ... 00 ] - Random Padding Byte
+         *
+         *  #1 - Substitute( Base64( Encryption Algorithm << 24 | Padding Mode << 16 | Block Mode << 8 | RandomByte ) )
+         *  #2 - ( 0 - PKCS #7 | 1 = ANSI X9.23 | 2 = ISO 10126 | 3 = ISO97971 )
+         *  #3 - Substitute( Base64( ( Key Algorithm Type & 0xff ) + Public Key ) )
+         *  #4 - 8 Byte Metadata For Messages Only
+         *
+         **************************************************************************************************************/
+
+        /* Skip if the message is <= size of the total header. */
+        if ( message.text().length <= 12 )
+            return false;
+
+        /* Split off the magic. */
+        let magic = message.text().slice( 0, 4 );
+
+        /* If this is a public key, just add a button and continue. */
+        if ( magic === this.encodedKeyHeader )
+            return this.parseKeyMessage( message );
+
+        /* Make sure it has the correct header. */
+        if ( magic !== this.encodedMessageHeader )
+            return false;
+
+        /* Try to deserialize the metadata. */
+        let metadata = discordCrypt.metaDataDecode( message.text().slice( 4, 8 ) );
+
+        /* Try looking for an algorithm, mode and padding type. */
+        /* Algorithm first. */
+        if ( metadata[ 0 ] >= this.encryptModes.length )
+            return false;
+
+        /* Cipher mode next. */
+        if ( metadata[ 1 ] >= this.encryptBlockModes.length )
+            return false;
+
+        /* Padding after. */
+        if ( metadata[ 2 ] >= this.paddingModes.length )
+            return false;
+
+        /* Decrypt the message. */
+        dataMsg = discordCrypt.symmetricDecrypt( message.text().replace( /\r?\n|\r/g, '' )
+            .substr( 8 ), primaryKey, secondaryKey, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
+
+        /* If decryption didn't fail, set the decoded text along with a green foreground. */
+        if ( ( typeof dataMsg === 'string' || dataMsg instanceof String ) && dataMsg !== "" ) {
+            /* Expand the message to the maximum width. */
+            message.parent().parent().parent().parent().css( 'max-width', '100%' );
+
+            /* Process the message and apply all necessary element modifications. */
+            dataMsg = discordCrypt.postProcessMessage( dataMsg, this.configFile.up1Host );
+
+            /* Set the new HTML. */
+            message[ 0 ].innerHTML = dataMsg.html;
+
+            /* If this contains code blocks, highlight them. */
+            if ( dataMsg.code ) {
+                /* Sanity check. */
+                if ( ReactModules.HighlightJS !== null ) {
+
+                    /* The inner element contains a <span></span> class, get all children beneath that. */
+                    let elements = $( message.children()[ 0 ] ).children();
+
+                    /* Loop over each element to get the markup division list. */
+                    for ( let i = 0; i < elements.length; i++ ) {
+                        /* Highlight the element's <pre><code></code></code> block. */
+                        ReactModules.HighlightJS.highlightBlock( $( elements[ i ] ).children()[ 0 ] );
+
+                        /* Reset the class name. */
+                        $( elements[ i ] ).children()[ 0 ].className = 'hljs';
+                    }
+                }
+                else
+                    discordCrypt.log( 'Could not locate HighlightJS module!', 'error' );
+            }
+
+            /* Decrypted messages get set to green. */
+            message.css( 'color', 'green' );
+        }
+        else {
+            /* If it failed, set a red foreground and set a decryption failure message to prevent further retries. */
+            if ( dataMsg === 1 )
+                message.text( '[ ERROR ] AUTHENTICATION OF CIPHER TEXT FAILED !!!' );
+            else if ( dataMsg === 2 )
+                message.text( '[ ERROR ] FAILED TO DECRYPT CIPHER TEXT !!!' );
+            else
+                message.text( '[ ERROR ] DECRYPTION FAILURE. INVALID KEY OR MALFORMED MESSAGE !!!' );
+            message.css( 'color', 'red' );
+        }
+
+        /* Message has been parsed. */
+        return true;
+    }
+
+    /**
+     * @private
+     * @desc Processes a decrypted message and formats any elements needed in HTML.
+     * @param message The message to process.
+     * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
+     * @returns {{url: boolean, code: boolean, html: (string|*)}}
+     */
+    static postProcessMessage( message, embed_link_prefix ) {
+        /* HTML escape characters. */
+        const html_escape_characters = { '&': '&amp;', '<': '&lt', '>': '&gt;' };
+
+        /* Remove any injected HTML. */
+        message = message.replace( /[&<>]/g, x => html_escape_characters[ x ] );
+
+        /* Extract any code blocks from the message. */
+        let processed = discordCrypt.__buildCodeBlockMessage( message );
+        let hasCode = processed.code;
+
+        /* Extract any URLs. */
+        processed = discordCrypt.__buildUrlMessage( processed.html, embed_link_prefix );
+        let hasUrl = processed.url;
+
+        /* Return the raw HTML. */
+        return {
+            url: hasUrl,
+            code: hasCode,
+            html: processed.html,
+        };
+    }
+
+    /**
+     * @private
+     * @desc Iterates all messages in the current channel and tries to decrypt each, skipping cached results.
+     */
+    decodeMessages() {
+        /* Skip if a valid configuration file has not been loaded. */
+        if ( !this.configFile || !this.configFile.version )
+            return;
+
+        /* Save self. */
+        const self = this;
+
+        /* Get the current channel ID. */
+        let id = discordCrypt.getChannelId();
+
+        /* Use the default password for decryption if one hasn't been defined for this channel. */
+        let password = Buffer.from(
+            this.configFile.passList[ id ] && this.configFile.passList[ id ].primary ?
+                this.configFile.passList[ id ].primary :
+                this.configFile.defaultPassword
+        );
+        let secondary = Buffer.from(
+            this.configFile.passList[ id ] && this.configFile.passList[ id ].secondary ?
+                this.configFile.passList[ id ].secondary :
+                this.configFile.defaultPassword
+        );
+
+        /* Look through each markup element to find an embedDescription. */
+        let React = discordCrypt.getReactModules();
+        $( this.messageMarkupClass ).each( ( function () {
+            /* Skip classes with no embeds. */
+            if ( !this.className.includes( 'embedDescription' ) )
+                return;
+
+            /* Skip parsed messages. */
+            if ( $( this ).data( 'dc-parsed' ) !== undefined )
+                return;
+
+            /* Try parsing a symmetric message. */
+            self.parseSymmetric( this, password, secondary, React );
+
+            /* Set the flag. */
+            $( this ).data( 'dc-parsed', true );
+        } ) );
+    }
+
+    /**
+     * @private
+     * @desc Sends an encrypted message to the current channel.
+     * @param {string} message The unencrypted message to send.
+     * @param {boolean} force_send Whether to ignore checking for the encryption trigger and always encrypt and send.
+     * @returns {number} Returns 1 if the message failed to be parsed correctly and 0 on success.
+     * @param {int|undefined} channel_id If specified, sends the embedded message to this channel instead of the
+     *      current channel.
+     */
+    sendEncryptedMessage( message, force_send = false, channel_id = undefined ) {
+        /* Let's use a maximum message size of 1820 instead of 2000 to account for encoding, new line feeds & packet
+         header. */
+        const maximum_encoded_data = 1820;
+
+        /* Add the message signal handler. */
+        const escapeCharacters = [ "#", "/", ":" ];
+        const crypto = require( 'crypto' );
+
+        let cleaned;
+
+        /* Skip messages starting with pre-defined escape characters. */
+        if ( escapeCharacters.indexOf( message[ 0 ] ) !== -1 )
+            return 1;
+
+        /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
+        if ( force_send === false &&
+            ( !this.configFile.passList[ discordCrypt.getChannelId() ] ||
+                !this.configFile.passList[ discordCrypt.getChannelId() ].primary ||
+                !this.configFile.encodeAll )
+        ) {
+            /* Try splitting via the defined split-arg. */
+            message = message.split( '|' );
+
+            /* Check if the message actually has the split arg. */
+            if ( message.length <= 0 )
+                return 1;
+
+            /* Check if it has the trigger. */
+            if ( message[ message.length - 1 ] !== this.configFile.encodeMessageTrigger )
+                return 1;
+
+            /* Use the first part of the message. */
+            cleaned = message[ 0 ];
+        }
+        /* Make sure we have a valid password. */
+        else {
+            /* Use the whole message. */
+            cleaned = message;
+        }
+
+        /* Check if we actually have a message ... */
+        if ( cleaned.length === 0 )
+            return 1;
+
+        /* Try parsing any user-tags. */
+        let parsed = discordCrypt.__extractTags( cleaned );
+
+        /* Sanity check for messages with just spaces or new line feeds in it. */
+        if ( parsed[ 0 ].length !== 0 ) {
+            /* Extract the message to be encrypted. */
+            cleaned = parsed[ 0 ];
+        }
+
+        /* Add content tags. */
+        let user_tags = parsed[ 1 ].length > 0 ? parsed[ 1 ] : '';
+
+        /* Get the passwords. */
+        let primaryPassword = Buffer.from(
+            this.configFile.passList[ discordCrypt.getChannelId() ] ?
+                this.configFile.passList[ discordCrypt.getChannelId() ].primary :
+                this.configFile.defaultPassword
+        );
+
+        let secondaryPassword = Buffer.from(
+            this.configFile.passList[ discordCrypt.getChannelId() ] ?
+                this.configFile.passList[ discordCrypt.getChannelId() ].secondary :
+                this.configFile.defaultPassword
+        );
+
+        /* If the message length is less than the threshold, we can send it without splitting. */
+        if ( ( cleaned.length + 16 ) < maximum_encoded_data ) {
+            /* Encrypt the message. */
+            let msg = discordCrypt.symmetricEncrypt(
+                cleaned,
+                primaryPassword,
+                secondaryPassword,
+                this.configFile.encryptMode,
+                this.configFile.encryptBlockMode,
+                this.configFile.paddingMode,
+                true
+            );
+
+            /* Append the header to the message normally. */
+            msg = this.encodedMessageHeader + discordCrypt.metaDataEncode
+            (
+                this.configFile.encryptMode,
+                this.configFile.encryptBlockMode,
+                this.configFile.paddingMode,
+                parseInt( crypto.randomBytes( 1 )[ 0 ] )
+            ) + msg;
+
+            /* Break up the message into lines. */
+            msg = msg.replace( /(.{32})/g, ( e ) => {
+                return `${e}\n`
+            } );
+
+            /* Send the message. */
+            discordCrypt.sendEmbeddedMessage(
+                msg,
+                this.messageHeader,
+                `v${this.getVersion().replace( '-debug', '' )}`,
+                0x551A8B,
+                user_tags,
+                channel_id
+            );
+        }
+        else {
+            /* Determine how many packets we need to split this into. */
+            let packets = discordCrypt.__splitStringChunks( cleaned, maximum_encoded_data );
+            for ( let i = 0; i < packets.length; i++ ) {
+                /* Encrypt the message. */
+                let msg = discordCrypt.symmetricEncrypt(
+                    packets[ i ],
+                    primaryPassword,
+                    secondaryPassword,
+                    this.configFile.encryptMode,
+                    this.configFile.encryptBlockMode,
+                    this.configFile.paddingMode,
+                    true
+                );
+
+                /* Append the header to the message normally. */
+                msg = this.encodedMessageHeader + discordCrypt.metaDataEncode
+                (
+                    this.configFile.encryptMode,
+                    this.configFile.encryptBlockMode,
+                    this.configFile.paddingMode,
+                    parseInt( crypto.randomBytes( 1 )[ 0 ] )
+                ) + msg;
+
+                /* Break up the message into lines. */
+                msg = msg.replace( /(.{32})/g, ( e ) => {
+                    return `${e}\n`
+                } );
+
+                /* Send the message. */
+                discordCrypt.sendEmbeddedMessage(
+                    msg,
+                    this.messageHeader,
+                    `v${this.getVersion().replace( '-debug', '' )}`,
+                    0x551A8B,
+                    i === 0 ? user_tags : '',
+                    channel_id
+                );
+            }
+        }
+
+        return 0;
+    }
+
+    /* =============== BEGIN UI HANDLE CALLBACKS =============== */
+
+    /**
+     * @private
+     * @desc Opens the file uploading menu.
+     */
+    static on_file_button_clicked() {
+        /* Show main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'block';
+
+        /* Show the upload overlay. */
+        $( '#dc-overlay-upload' )[ 0 ].style.display = 'block';
+    }
+
+    /**
+     * @private
+     * @desc Opens the file menu selection.
+     */
+    static on_alter_file_button_clicked() {
+        /* Create an input element. */
+        let file = require( 'electron' ).remote.dialog.showOpenDialog( {
+            title: 'Select a file to encrypt and upload',
+            label: 'Select',
+            message: 'Maximum file size is 50 MB',
+            properties: [ 'openFile', 'showHiddenFiles', 'treatPackageAsDirectory' ]
+        } );
+
+        /* Ignore if no file was selected. */
+        if ( !file.length || !file[ 0 ].length )
+            return;
+
+        /* Set the file path to the selected path. */
+        $( '#dc-file-path' ).val( file[ 0 ] );
+    }
+
+    /**
+     * @private
+     * @desc Uploads the clipboard's current contents and sends the encrypted link.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_upload_encrypted_clipboard_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+            /* Since this is an async operation, we need to backup the channel ID before doing this. */
+            let channel_id = discordCrypt.getChannelId();
+
+            /* Upload the clipboard. */
+            discordCrypt.__up1UploadClipboard(
+                self.configFile.up1Host,
+                self.configFile.up1ApiKey,
+                sjcl,
+                ( error_string, file_url, deletion_link ) => {
+                    /* Do some sanity checking. */
+                    if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
+                        _alert( 'Failed to upload the clipboard!', error_string );
+                        return;
+                    }
+
+                    /* Format and send the message. */
+                    self.sendEncryptedMessage( `${file_url}`, true, channel_id );
+
+                    /* Copy the deletion link to the clipboard. */
+                    require( 'electron' ).clipboard.writeText( `Delete URL: ${deletion_link}` );
+                }
+            );
+        };
+    }
+
+    /**
+     * @private
+     * @desc  Uploads the selected file and sends the encrypted link.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_upload_file_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+            const fs = require( 'original-fs' );
+
+            let file_path_field = $( '#dc-file-path' );
+            let file_upload_btn = $( '#dc-file-upload-btn' );
+            let message_textarea = $( '#dc-file-message-textarea' );
+            let send_deletion_link = $( '#dc-file-deletion-checkbox' ).is( ':checked' );
+            let randomize_file_name = $( '#dc-file-name-random-checkbox' ).is( ':checked' );
+
+            /* Send the additional text first if it's valid. */
+            if ( message_textarea.val().length > 0 )
+                self.sendEncryptedMessage( message_textarea.val(), true );
+
+            /* Since this is an async operation, we need to backup the channel ID before doing this. */
+            let channel_id = discordCrypt.getChannelId();
+
+            /* Clear the message field. */
+            message_textarea.val( '' );
+
+            /* Sanity check the file. */
+            if ( !fs.existsSync( file_path_field.val() ) ) {
+                file_path_field.val( '' );
+                return;
+            }
+
+            /* Set the status text. */
+            file_upload_btn.text( 'Uploading ...' );
+            file_upload_btn[ 0 ].className = 'dc-button dc-button-inverse';
+
+            /* Upload the file. */
+            discordCrypt.__up1UploadFile(
+                file_path_field.val(),
+                self.configFile.up1Host,
+                self.configFile.up1ApiKey,
+                sjcl,
+                ( error_string, file_url, deletion_link ) => {
+                    /* Do some sanity checking. */
+                    if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
+                        /* Set the status text. */
+                        file_upload_btn.text( 'Failed to upload the file!' );
+                        discordCrypt.log( error_string, 'error' );
+
+                        /* Clear the file path. */
+                        file_path_field.val( '' );
+
+                        /* Reset the status text after 1 second. */
+                        setTimeout( () => {
+                            file_upload_btn.text( 'Upload' );
+                            file_upload_btn[ 0 ].className = 'dc-button';
+                        }, 1000 );
+
+                        return;
+                    }
+
+                    /* Format and send the message. */
+                    self.sendEncryptedMessage(
+                        `${file_url}${send_deletion_link ? '\n\nDelete URL: ' + deletion_link : ''}`,
+                        true,
+                        channel_id
+                    );
+
+                    /* Clear the file path. */
+                    file_path_field.val( '' );
+
+                    /* Indicate success. */
+                    file_upload_btn.text( 'Upload Successful!' );
+
+                    /* Reset the status text after 1 second and close the dialog. */
+                    setTimeout( () => {
+                        file_upload_btn.text( 'Upload' );
+                        file_upload_btn[ 0 ].className = 'dc-button';
+
+                        /* Close. */
+                        $( '#dc-file-cancel-btn' ).click();
+                    }, 1000 );
+                },
+                randomize_file_name
+            );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Closes the file upload dialog.
+     */
+    static on_cancel_file_upload_button_clicked() {
+        /* Clear old file name. */
+        $( '#dc-file-path' ).val( '' );
+
+        /* Show main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'none';
+
+        /* Show the upload overlay. */
+        $( '#dc-overlay-upload' )[ 0 ].style.display = 'none';
+    }
+
+    /**
+     * @private
+     * @desc Opens the settings menu.
+     */
+    static on_settings_button_clicked() {
+        /* Show main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'block';
+
+        /* Show the main settings menu. */
+        $( '#dc-overlay-settings' )[ 0 ].style.display = 'block';
+    }
+
+    /**
+     * @private
+     * @desc Closes the settings menu.
+     */
+    static on_settings_close_button_clicked() {
+        /* Hide main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'none';
+
+        /* Hide the main settings menu. */
+        $( '#dc-overlay-settings' )[ 0 ].style.display = 'none';
+    }
+
+    /**
+     * @private
+     * @desc Saves all settings.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_save_settings_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+
+            /* Cache jQuery results. */
+            let dc_primary_cipher = $( '#dc-primary-cipher' ),
+                dc_secondary_cipher = $( '#dc-secondary-cipher' ),
+                dc_master_password = $( '#dc-master-password' );
+
+            /* Update all settings from the settings panel. */
+            self.configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' )[ 0 ].value;
+            self.configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' )[ 0 ].value;
+            self.configFile.defaultPassword = $( '#dc-settings-default-pwd' )[ 0 ].value;
+            self.configFile.encryptScanDelay = $( '#dc-settings-scan-delay' )[ 0 ].value;
+            self.configFile.paddingMode = $( '#dc-settings-padding-mode' )[ 0 ].value;
+            self.configFile.encryptMode = discordCrypt
+                .cipherStringToIndex( dc_primary_cipher[ 0 ].value, dc_secondary_cipher[ 0 ].value );
+
+            dc_primary_cipher[ 0 ].value = discordCrypt
+                .cipherIndexToString( self.configFile.encryptMode, false );
+            dc_secondary_cipher[ 0 ].value = discordCrypt
+                .cipherIndexToString( self.configFile.encryptMode, true );
+
+            /* Handle master password updates if necessary. */
+            if ( dc_master_password[ 0 ].value !== '' ) {
+                let password = dc_master_password[ 0 ].value;
+
+                /* Reset the password field. */
+                dc_master_password[ 0 ].value = '';
+
+                /* Hash the password. */
+                discordCrypt.scrypt
+                (
+                    Buffer.from( password ),
+                    Buffer.from( discordCrypt.whirlpool( password, true ), 'hex' ),
+                    32,
+                    4096,
+                    8,
+                    1,
+                    ( error, progress, pwd ) => {
+                        if ( error ) {
+                            /* Alert the user. */
+                            _alert(
+                                'DiscordCrypt Error',
+                                'Error setting the new database password. Check the console for more info.'
+                            );
+
+                            discordCrypt.log( error.toString(), 'error' );
+                            return true;
+                        }
+
+                        if ( pwd ) {
+                            /* Now update the password. */
+                            self.masterPassword = Buffer.from( pwd, 'hex' );
+
+                            /* Save the configuration file and update the button text. */
+                            self.saveSettings( $( '#dc-settings-save-btn' )[ 0 ] );
+                        }
+
+                        return false;
+                    }
+                );
+            }
+            else {
+                /* Save the configuration file and update the button text. */
+                self.saveSettings( $( '#dc-settings-save-btn' )[ 0 ] );
+            }
+        };
+    }
+
+    /**
+     * @private
+     * @desc Resets the user settings to their default values.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_reset_settings_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+            /* Resets the configuration file and update the button text. */
+            self.resetSettings( $( '#dc-settings-reset-btn' )[ 0 ] );
+
+            /* Update all settings from the settings panel. */
+            $( '#dc-master-password' )[ 0 ].value = '';
+            $( '#dc-settings-default-pwd' )[ 0 ].value = self.configFile.defaultPassword;
+            $( '#dc-settings-scan-delay' )[ 0 ].value = self.configFile.encryptScanDelay;
+            $( '#dc-settings-encrypt-trigger' )[ 0 ].value = self.configFile.encodeMessageTrigger;
+            $( '#dc-settings-padding-mode' )[ 0 ].value = self.configFile.paddingMode.toLowerCase();
+            $( '#dc-settings-cipher-mode' )[ 0 ].value = self.configFile.encryptBlockMode.toLowerCase();
+            $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt
+                .cipherIndexToString( self.configFile.encryptMode, false );
+            $( '#dc-secondary-cipher' )[ 0 ].value = discordCrypt
+                .cipherIndexToString( self.configFile.encryptMode, true );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Restarts the app by performing a window.location.reload()
+     */
+    static on_restart_now_button_clicked() {
+        /* Window reload is simple enough. */
+        location.reload();
+    }
+
+    /**
+     * @private
+     * @desc Closes the upload available panel.
+     */
+    static on_restart_later_button_clicked() {
+        /* Hide the update and changelog. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'none';
+        $( '#dc-update-overlay' )[ 0 ].style.display = 'none';
+    }
+
+    /**
+     * @private
+     * @desc Switches view to the Info tab.
+     */
+    static on_info_tab_button_clicked() {
+        /* Switch to tab 0. */
+        discordCrypt.setActiveTab( 0 );
+    }
+
+    /**
+     * @private
+     * @desc Switches view to the Key Exchange tab.
+     */
+    static on_exchange_tab_button_clicked() {
+        /* Switch to tab 1. */
+        discordCrypt.setActiveTab( 1 );
+    }
+
+    /**
+     * @private
+     * @desc Switches view to the Handshake tab.
+     */
+    static on_handshake_tab_button_clicked() {
+        /* Switch to tab 2. */
+        discordCrypt.setActiveTab( 2 );
+    }
+
+    /**
+     * @private
+     * @desc Closes the key exchange menu.
+     */
+    static on_close_exchange_button_clicked() {
+        /* Hide main background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'none';
+
+        /* Hide the entire exchange key menu. */
+        $( '#dc-overlay-exchange' )[ 0 ].style.display = 'none';
+    }
+
+    /**
+     * @private
+     * @desc Opens the key exchange menu.
+     */
+    static on_open_exchange_button_clicked() {
+        /* Show background. */
+        $( '#dc-overlay' )[ 0 ].style.display = 'block';
+
+        /* Show main menu. */
+        $( '#dc-overlay-exchange' )[ 0 ].style.display = 'block';
+    }
+
+    /**
+     * @private
+     * @desc Generates and sends a new public key.
+     */
+    static on_quick_send_public_key_button_clicked() {
+        /* Don't bother opening a menu. Just generate the key. */
+        $( '#dc-keygen-gen-btn' ).click();
+
+        /* Now send it. */
+        $( '#dc-keygen-send-pub-btn' ).click();
+    }
+
+    /**
+     * @private
+     * @desc Switches the key lengths to their correct values.
+     */
+    static on_exchange_algorithm_changed() {
+        /* Variable bit lengths. */
+        let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
+
+        /* Clear the old select list. */
+        $( '#dc-keygen-algorithm option' ).each( ( function () {
+            $( this ).remove();
+        } ) );
+
+        /* Repopulate the entries. */
+        switch ( dc_keygen_method[ 0 ].value ) {
+            case 'dh':
+                for ( let i = 0; i < dh_bl.length; i++ ) {
+                    let v = dh_bl[ i ];
+                    dc_keygen_algorithm[ 0 ].append( new Option( v, v, i === ( dh_bl.length - 1 ) ) );
+                }
+                break;
+            case 'ecdh':
+                for ( let i = 0; i < ecdh_bl.length; i++ ) {
+                    let v = ecdh_bl[ i ];
+                    $( '#dc-keygen-algorithm' )[ 0 ].append( new Option( v, v, i === ( ecdh_bl.length - 1 ) ) );
+                }
+                break;
+            default:
+                return;
+        }
+    }
+
+    /**
+     * @private
+     * @desc Generates a new key pair using the selected algorithm.
+     */
+    static on_generate_new_key_pair_button_clicked() {
+        let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
+        let max_salt_len = 32, min_salt_len = 16, salt_len;
+        let index, raw_buffer, pub_buffer;
+        let key, crypto = require( 'crypto' );
+
+        let dc_keygen_method = $( '#dc-keygen-method' ),
+            dc_keygen_algorithm = $( '#dc-keygen-algorithm' );
+
+        /* Get the current algorithm. */
+        switch ( dc_keygen_method[ 0 ].value ) {
+            case 'dh':
+                /* Generate a new Diffie-Hellman RSA key from the bit size specified. */
+                key = discordCrypt.generateDH( parseInt( dc_keygen_algorithm[ 0 ].value ) );
+
+                /* Calculate the index number starting from 0. */
+                index = dh_bl.indexOf( parseInt( dc_keygen_algorithm[ 0 ].value ) );
+                break;
+            case 'ecdh':
+                /* Generate a new Elliptic-Curve Diffie-Hellman key from the bit size specified. */
+                key = discordCrypt.generateECDH( parseInt( dc_keygen_algorithm[ 0 ].value ) );
+
+                /* Calculate the index number starting from dh_bl.length. */
+                index = ( ecdh_bl.indexOf( parseInt( dc_keygen_algorithm[ 0 ].value ) ) + dh_bl.length );
+                break;
+            default:
+                /* Should never happen. */
+                return;
+        }
+
+        /* Sanity check. */
+        if (
+            !key ||
+            key === undefined ||
+            typeof key.getPrivateKey === 'undefined' ||
+            typeof key.getPublicKey === 'undefined'
+        )
+            return;
+
+        /* Copy the private key to this instance. */
+        discordCrypt.privateExchangeKey = key;
+
+        /*****************************************************************************************
+         *   [ PUBLIC PAYLOAD STRUCTURE ]
+         *   +0x00 - Algorithm + Bit size [ 0-6 = DH ( 768, 1024, 1536, 2048, 3072, 4096, 8192 ) |
+         *                                  7-12 = ECDH ( 224, 256, 384, 409, 521, 571 ) ]
+         *   +0x01 - Salt length
+         *   +0x02 - Salt[ Salt.length ]
+         *   +0x02 + Salt.length - Public key
+         ****************************************************************************************/
+
+        /* Calculate a random salt length. */
+        salt_len = ( parseInt( crypto.randomBytes( 1 ).toString( 'hex' ), 16 ) % ( max_salt_len - min_salt_len ) ) +
+            min_salt_len;
+
+        /* Copy the buffer. */
+        pub_buffer = Buffer.from(
+            key.getPublicKey( 'hex', dc_keygen_method[ 0 ].value === 'ecdh' ?
+                'compressed' :
+                undefined
+            ),
+            'hex'
+        );
+
+        /* Create a blank payload. */
+        raw_buffer = Buffer.alloc( 2 + salt_len + pub_buffer.length );
+
+        /* Write the algorithm index. */
+        raw_buffer.writeInt8( index, 0 );
+
+        /* Write the salt length. */
+        raw_buffer.writeInt8( salt_len, 1 );
+
+        /* Generate a random salt and copy it to the buffer. */
+        crypto.randomBytes( salt_len ).copy( raw_buffer, 2 );
+
+        /* Copy the public key to the buffer. */
+        pub_buffer.copy( raw_buffer, 2 + salt_len );
+
+        /* Get the public key then display it. */
+        $( '#dc-pub-key-ta' )[ 0 ].value = raw_buffer.toString( 'hex' );
+
+        /* Get the private key then display it. */
+        $( '#dc-priv-key-ta' )[ 0 ].value = key.getPrivateKey( 'hex' );
+    }
+
+    /**
+     * @private
+     * @desc Clears any public and private keys generated.
+     */
+    static on_keygen_clear_button_clicked() {
+        /* Clear the key textareas. */
+        $( '#dc-pub-key-ta' )[ 0 ].value = $( '#dc-priv-key-ta' )[ 0 ].value = '';
+    }
+
+    /**
+     * @private
+     * @desc Sends the currently generate public key in the correct format.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_keygen_send_public_key_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+
+            /* Cache jQuery results. */
+            let dc_pub_key_ta = $( '#dc-pub-key-ta' );
+
+            /* Don't bother if it's empty. */
+            if ( dc_pub_key_ta[ 0 ].value === '' )
+                return;
+
+            /* The text area stores a hex encoded binary. Convert it to a buffer prior to encoding. */
+            let message = Buffer.from( dc_pub_key_ta[ 0 ].value, 'hex' );
+
+            /* Add the header to the message and encode it. */
+            message = self.encodedKeyHeader + discordCrypt.substituteMessage( message, true );
+
+            /* Split the message by adding a new line every 32 characters like a standard PGP message. */
+            let formatted_message = message.replace( /(.{32})/g, ( e ) => {
+                return `${e}\n`
+            } );
+
+            /* Calculate the algorithm string. */
+            let algo_str = `${$( '#dc-keygen-method' )[ 0 ].value !== 'ecdh' ? 'DH-' : 'ECDH-'}` +
+                `${$( '#dc-keygen-algorithm' )[ 0 ].value}`;
+
+            /* Send the message. */
+            let header = `-----BEGIN ${algo_str} PUBLIC KEY-----`,
+                footer = `-----END ${algo_str} PUBLIC KEY----- | v${self.getVersion().replace( '-debug', '' )}`;
+
+            discordCrypt.sendEmbeddedMessage( formatted_message, header, footer, 0x720000 );
+
+            /* Update the button text & reset after 1 second.. */
+            $( '#dc-keygen-send-pub-btn' )[ 0 ].innerText = 'Sent The Public Key!';
+
+            setTimeout( ( function () {
+                $( '#dc-keygen-send-pub-btn' )[ 0 ].innerText = 'Send Public Key';
+            } ), 1000 );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Pastes what is stored in the clipboard to the handshake public key field.
+     */
+    static on_handshake_paste_public_key_button_clicked() {
+        $( '#dc-handshake-ppk' )[ 0 ].value = require( 'electron' ).clipboard.readText();
+    }
+
+    /**
+     * @private
+     * @desc Computes a shared secret and generates passwords based on a DH/ECDH key exchange.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_handshake_compute_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+            let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
+            let isUserSaltPrimary;
+
+            /* Cache jQuery results. */
+            let dc_pub_key_ta = $( '#dc-pub-key-ta' ),
+                dc_priv_key_ta = $( '#dc-priv-key-ta' ),
+                dc_handshake_ppk = $( '#dc-handshake-ppk' ),
+                dc_handshake_compute_btn = $( '#dc-handshake-compute-btn' );
+
+            /* Provide some way of showing the user the result without actually giving it away. */
+            function displaySecret( input_hex ) {
+                const charset = "!@#$%^&*()_-+=[{]}\\|'\";:/?.>,<";
+                let output = '';
+
+                for ( let i = 0; i < parseInt( input_hex.length / 2 ); i++ )
+                    output += charset[ parseInt( input_hex.substr( i * 2, 2 ) ) & ( charset.length - 1 ) ];
+
+                return output;
+            }
+
+            /* Skip if no public key was entered. */
+            if ( !dc_handshake_ppk[ 0 ].value || !dc_handshake_ppk[ 0 ].value.length )
+                return;
+
+            /* Skip if the user hasn't generated a key of their own. */
+            if ( !dc_pub_key_ta[ 0 ].value || !dc_pub_key_ta[ 0 ].value.length ) {
+                /* Update the text. */
+                dc_handshake_compute_btn[ 0 ].innerText = 'You Didn\'t Generate A Key!';
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                } ), 1000 );
+                return;
+            }
+
+            /* Check if the message header is valid. */
+            if (
+                dc_handshake_ppk[ 0 ].value.replace( /\r?\n|\r/g, "" )
+                    .slice( 0, 4 ) !== self.encodedKeyHeader
+            )
+                return;
+
+            /* Snip off the header. */
+            let blob = dc_handshake_ppk[ 0 ].value.replace( /\r?\n|\r/g, "" ).slice( 4 );
+
+            /* Skip if invalid braille encoded message. */
+            if ( !discordCrypt.isValidBraille( blob ) )
+                return;
+
+            try {
+                /* Decode the message. */
+                value = Buffer.from( discordCrypt.substituteMessage( blob ), 'hex' );
+            }
+            catch ( e ) {
+                /* Update the text. */
+                dc_handshake_compute_btn[ 0 ].innerText = 'Invalid Public Key!';
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                } ), 1000 );
+                return;
+            }
+
+            /* Check the algorithm they're using is the same as ours. */
+            algorithm = value.readInt8( 0 );
+
+            /* Check the algorithm is valid. */
+            if ( !discordCrypt.isValidExchangeAlgorithm( algorithm ) ) {
+                /* Update the text. */
+                dc_handshake_compute_btn[ 0 ].innerText = 'Invalid Algorithm!';
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                } ), 1000 );
+                return;
+            }
+
+            /* Read the user's generated public key. */
+            let user_pub_key = Buffer.from( dc_pub_key_ta[ 0 ].value, 'hex' );
+
+            /* Check the algorithm used is the same as ours. */
+            if ( user_pub_key.readInt8( 0 ) !== algorithm ) {
+                /* Update the text. */
+                dc_handshake_compute_btn[ 0 ].innerText = 'Mismatched Algorithm!';
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                } ), 1000 );
+                return;
+            }
+
+            /* Update the algorithm text. */
+            $( '#dc-handshake-algorithm' )[ 0 ].innerText =
+                `Exchange Algorithm: ${discordCrypt.indexToExchangeAlgorithmString( algorithm )}`;
+
+            /* Get the salt length. */
+            salt_len = value.readInt8( 1 );
+
+            /* Make sure the salt length is valid. */
+            if ( salt_len < 16 || salt_len > 32 ) {
+                /* Update the text. */
+                dc_handshake_compute_btn[ 0 ].innerText = 'Invalid Salt Length!';
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                } ), 1000 );
+                return;
+            }
+
+            /* Read the public salt. */
+            salt = Buffer.from( value.subarray( 2, 2 + salt_len ) );
+
+            /* Read the user's salt length. */
+            user_salt_len = user_pub_key.readInt8( 1 );
+
+            /* Read the user salt. */
+            user_salt = Buffer.from( user_pub_key.subarray( 2, 2 + user_salt_len ) );
+
+            /* Update the salt text. */
+            $( '#dc-handshake-salts' )[ 0 ].innerText =
+                `Salts: [ ${displaySecret( salt.toString( 'hex' ) )}, ` +
+                `${displaySecret( user_salt.toString( 'hex' ) )} ]`;
+
+            /* Read the public key and convert it to a hex string. */
+            payload = Buffer.from( value.subarray( 2 + salt_len ) ).toString( 'hex' );
+
+            /* Return if invalid. */
+            if ( !discordCrypt.privateExchangeKey || discordCrypt.privateExchangeKey === undefined ||
+                typeof discordCrypt.privateExchangeKey.computeSecret === 'undefined' ) {
+                /* Update the text. */
+                dc_handshake_compute_btn[ 0 ].innerText = 'Failed To Calculate Private Key!';
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                } ), 1000 );
+                return;
+            }
+
+            /* Compute the local secret as a hex string. */
+            let derived_secret =
+                discordCrypt.computeExchangeSharedSecret( discordCrypt.privateExchangeKey, payload, false, false );
+
+            /* Show error and quit if derivation fails. */
+            if ( !derived_secret || !derived_secret.length ) {
+                /* Update the text. */
+                dc_handshake_compute_btn[ 0 ].innerText = 'Failed To Derive Key!';
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                } ), 1000 );
+                return;
+            }
+
+            /* Display the first 64 characters of it. */
+            $( '#dc-handshake-secret' )[ 0 ].innerText =
+                `Derived Secret: [ ${displaySecret( derived_secret.length > 64 ?
+                    derived_secret.substring( 0, 64 ) :
+                    derived_secret )
+                    } ]`;
+
+            /* We have two salts. We can't know which one is our primary salt so just do a simple check on which
+             Salt32 is bigger. */
+            if ( user_salt_len === salt_len ) {
+                for ( let i = 2; i < parseInt( user_salt_len / 4 ); i += 4 ) {
+                    let usl = user_salt.readUInt32BE( i ), sl = salt.readUInt32BE( i );
+
+                    if ( usl === sl )
+                        continue;
+
+                    isUserSaltPrimary = usl > sl;
+                    break;
+                }
+
+                /* Salts are equal, should never happen. */
+                if ( isUserSaltPrimary === undefined ) {
+                    /* Update the text. */
+                    dc_handshake_compute_btn[ 0 ].innerText = 'Both Salts Are Equal ?!';
+                    setTimeout(
+                        ( function () {
+                            dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                        } ),
+                        1000
+                    );
+                    return;
+                }
+            }
+            else
+                isUserSaltPrimary = user_salt_len > salt_len;
+
+            /* Create hashed salt from the two user-generated salts. */
+            let primary_hash = Buffer.from(
+                discordCrypt.sha512( isUserSaltPrimary ? user_salt : salt, true ),
+                'hex'
+            );
+            let secondary_hash = Buffer.from(
+                discordCrypt.whirlpool( isUserSaltPrimary ? salt : user_salt, true ),
+                'hex'
+            );
+
+            /* Global progress for async callbacks. */
+            let primary_progress = 0, secondary_progress = 0;
+
+            /* Calculate the primary key. */
+            discordCrypt.scrypt(
+                Buffer.from( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
+                primary_hash,
+                256,
+                3072,
+                16,
+                2,
+                ( error, progress, key ) => {
+                    if ( error ) {
+                        /* Update the text. */
+                        dc_handshake_compute_btn[ 0 ].innerText = 'Failed Generating Primary Key!';
+                        setTimeout(
+                            ( function () {
+                                dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                            } ),
+                            1000
+                        );
+                        return true;
+                    }
+
+                    /* Update progress. */
+                    if ( progress ) {
+                        primary_progress = progress * 50;
+
+                        $( '#dc-exchange-status' )
+                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
+                    }
+
+                    if ( key ) {
+                        /* Generate a quality report and apply the password. */
+                        $( '#dc-handshake-prim-lbl' ).text( `Primary Key: ( Quality - ${
+                            discordCrypt.entropicBitLength( key.toString( 'base64' ) )
+                            } Bits )` );
+                        $( '#dc-handshake-primary-key' )[ 0 ].value = key.toString( 'base64' );
+
+                        /* Since more iterations are done for the primary key, this takes 4x as long thus will
+                           always finish second. We can thus restore the original Generate text for the button once
+                           this is done. */
+                        dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+
+                        /* Now we clear the additional information. */
+                        $( '#dc-handshake-algorithm' )[ 0 ].innerText = '...';
+                        $( '#dc-handshake-secret' )[ 0 ].innerText = '...';
+                        $( '#dc-handshake-salts' )[ 0 ].innerText = '...';
+                        $( '#dc-exchange-status' ).css( 'width', '0%' );
+                    }
+
+                    return false;
+                }
+            );
+
+            /* Calculate all salts needed. */
+            let primary_salt = isUserSaltPrimary ? user_salt : salt;
+            let secondary_salt = isUserSaltPrimary ? salt : user_salt;
+            let secondary_password = Buffer.from(
+                primary_salt.toString( 'hex' ) + derived_secret + secondary_salt.toString( 'hex' ),
+                'hex'
+            );
+
+            /* Calculate the secondary key. */
+            discordCrypt.scrypt( secondary_password, secondary_hash, 256, 3072, 8, 1, ( error, progress, key ) => {
+                if ( error ) {
+                    /* Update the text. */
+                    dc_handshake_compute_btn[ 0 ].innerText = 'Failed Generating Secondary Key!';
+                    setTimeout(
+                        ( function () {
+                            dc_handshake_compute_btn[ 0 ].innerText = 'Compute Secret Keys';
+                        } ),
+                        1000
+                    );
+                    return true;
+                }
+
+                if ( progress ) {
+                    secondary_progress = progress * 50;
+                    $( '#dc-exchange-status' ).css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
+                }
+
+                if ( key ) {
+                    /* Generate a quality report and apply the password. */
+                    $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
+                        discordCrypt.entropicBitLength( key.toString( 'base64' ) )
+                        } Bits )` );
+                    $( '#dc-handshake-secondary-key' )[ 0 ].value = key.toString( 'base64' );
+                }
+
+                return false;
+            } );
+
+            /* Update the text. */
+            dc_handshake_compute_btn[ 0 ].innerText = 'Generating Keys ...';
+
+            /* Finally clear all volatile information. */
+            discordCrypt.privateExchangeKey = undefined;
+            dc_handshake_ppk[ 0 ].value = '';
+            dc_priv_key_ta[ 0 ].value = '';
+            dc_pub_key_ta[ 0 ].value = '';
+        };
+    }
+
+    /**
+     * @private
+     * @desc Copies the currently generated passwords from a key exchange to the clipboard then erases them.
+     */
+    static on_handshake_copy_keys_button_clicked() {
+        /* Cache jQuery results. */
+        let dc_handshake_primary_key = $( '#dc-handshake-primary-key' ),
+            dc_handshake_secondary_key = $( '#dc-handshake-secondary-key' );
+
+        /* Don't bother if it's empty. */
+        if ( dc_handshake_primary_key[ 0 ].value === '' ||
+            dc_handshake_secondary_key[ 0 ].value === '' )
+            return;
+
+        /* Format the text and copy it to the clipboard. */
+        require( 'electron' ).clipboard.writeText(
+            `Primary Key: ${dc_handshake_primary_key[ 0 ].value}\r\n\r\n` +
+            `Secondary Key: ${dc_handshake_secondary_key[ 0 ].value}`
+        );
+
+        /* Nuke. */
+        dc_handshake_primary_key[ 0 ].value = dc_handshake_secondary_key[ 0 ].value = '';
+
+        /* Update the button text & reset after 1 second. */
+        $( '#dc-handshake-cpy-keys-btn' )[ 0 ].innerText = 'Coped Keys To Clipboard!';
+
+        setTimeout( ( function () {
+            $( '#dc-handshake-cpy-keys-btn' )[ 0 ].innerText = 'Copy Keys & Nuke';
+            $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
+            $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
+        } ), 1000 );
+    }
+
+    /**
+     * @private
+     * @desc Applies the generate passwords to the current channel or DM.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_handshake_apply_keys_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+
+            /* Cache jQuery results. */
+            let dc_handshake_primary_key = $( '#dc-handshake-primary-key' ),
+                dc_handshake_secondary_key = $( '#dc-handshake-secondary-key' );
+
+            /* Skip if no primary key was generated. */
+            if ( !dc_handshake_primary_key[ 0 ].value || !dc_handshake_primary_key[ 0 ].value.length )
+                return;
+
+            /* Skip if no secondary key was generated. */
+            if ( !dc_handshake_secondary_key[ 0 ].value ||
+                !dc_handshake_secondary_key[ 0 ].value.length )
+                return;
+
+            /* Create the password object and nuke. */
+            let pwd = discordCrypt.createPassword(
+                dc_handshake_primary_key[ 0 ].value,
+                dc_handshake_secondary_key[ 0 ].value
+            );
+            dc_handshake_primary_key[ 0 ].value = dc_handshake_secondary_key[ 0 ].value = '';
+
+            /* Apply the passwords and save the config. */
+            self.configFile.passList[ discordCrypt.getChannelId() ] = pwd;
+            self.saveConfig();
+
+            /* Update the text and reset it after 1 second. */
+            $( '#dc-handshake-apply-keys-btn' )[ 0 ].innerText = 'Applied & Saved!';
+            setTimeout( ( function () {
+                $( '#dc-handshake-apply-keys-btn' )[ 0 ].innerText = 'Apply Generated Passwords';
+
+                /* Reset quality bit length fields. */
+                $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
+                $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
+
+                /* Hide main background. */
+                $( '#dc-overlay' )[ 0 ].style.display = 'none';
+
+                /* Hide the entire exchange key menu. */
+                $( '#dc-overlay-exchange' )[ 0 ].style.display = 'none';
+
+                /* Reset the index to the info tab. */
+                discordCrypt.setActiveTab( 0 );
+            } ), 1000 );
+        }
+    }
+
+    /**
+     * @private
+     * @desc Opens the password editor menu.
+     */
+    static on_passwd_button_clicked() {
+        $( '#dc-overlay' )[ 0 ].style.display = 'block';
+        $( '#dc-overlay-password' )[ 0 ].style.display = 'block';
+    }
+
+    /**
+     * @private
+     * @desc Saves the entered passwords for the current channel or DM.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_save_passwords_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+            let btn = $( '#dc-save-pwd' );
+
+            /* Update the password and save it. */
+            self.updatePasswords();
+
+            /* Update the text for the button. */
+            btn.text( "Saved!" );
+
+            /* Reset the text for the password button after a 1 second delay. */
+            setTimeout( ( function () {
+                /* Reset text. */
+                btn.text( "Save Password" );
+
+                /* Clear the fields. */
+                $( "#dc-password-primary" )[ 0 ].value = '';
+                $( "#dc-password-secondary" )[ 0 ].value = '';
+
+                /* Close. */
+                $( '#dc-overlay' )[ 0 ].style.display = 'none';
+                $( '#dc-overlay-password' )[ 0 ].style.display = 'none';
+            } ), 1000 );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Resets passwords for the current channel or DM to their defaults.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_reset_passwords_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+            let btn = $( '#dc-reset-pwd' );
+
+            /* Reset the configuration for this user and save the file. */
+            delete self.configFile.passList[ discordCrypt.getChannelId() ];
+            self.saveConfig();
+
+            /* Update the text for the button. */
+            btn.text( "Password Reset!" );
+
+            setTimeout( ( function () {
+                /* Reset text. */
+                btn.text( "Reset Password" );
+
+                /* Clear the fields. */
+                $( "#dc-password-primary" )[ 0 ].value = '';
+                $( "#dc-password-secondary" )[ 0 ].value = '';
+
+                /* Close. */
+                $( '#dc-overlay' )[ 0 ].style.display = 'none';
+                $( '#dc-overlay-password' )[ 0 ].style.display = 'none';
+            } ), 1000 );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Closes the password editor menu.
+     */
+    static on_cancel_password_button_clicked() {
+        /* Clear the fields. */
+        $( "#dc-password-primary" )[ 0 ].value = '';
+        $( "#dc-password-secondary" )[ 0 ].value = '';
+
+        /* Close after a .25 second delay. */
+        setTimeout( ( function () {
+            /* Close. */
+            $( '#dc-overlay' )[ 0 ].style.display = 'none';
+            $( '#dc-overlay-password' )[ 0 ].style.display = 'none';
+        } ), 250 );
+    }
+
+    /**
+     * @private
+     * @desc Copies the passwords from the current channel or DM to the clipboard.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_copy_current_passwords_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+            let currentKeys = self.configFile.passList[ discordCrypt.getChannelId() ];
+
+            /* If no password is currently generated, write the default key. */
+            if ( !currentKeys ) {
+                require( 'electron' ).clipboard.writeText( `Default Password: ${self.configFile.defaultPassword}` );
+                return;
+            }
+
+            /* Write to the clipboard. */
+            require( 'electron' ).clipboard.writeText(
+                `Primary Key: ${currentKeys.primary}\r\n\r\nSecondary Key: ${currentKeys.secondary}`
+            );
+
+            /* Alter the button text. */
+            $( '#dc-cpy-pwds-btn' ).text( 'Copied Keys To Clipboard!' );
+
+            /* Reset the button after 1 second close the prompt. */
+            setTimeout( ( function () {
+                /* Reset. */
+                $( '#dc-cpy-pwds-btn' ).text( 'Copy Current Passwords!' );
+
+                /* Close. */
+                $( '#dc-cancel-btn' ).click();
+            } ), 1000 );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Enables or disables automatic message encryption.
+     * @param {discordCrypt} self
+     * @returns {Function}
+     */
+    static on_lock_button_clicked( /* discordCrypt */ self ) {
+        return () => {
+
+            /* Cache jQuery results. */
+            let dc_lock_btn = $( '#dc-lock-btn' );
+
+            /* Update the icon and toggle. */
+            if ( !self.configFile.encodeAll ) {
+                dc_lock_btn.attr( 'title', 'Disable Message Encryption' );
+                dc_lock_btn[ 0 ].innerHTML = Buffer.from( self.lockIcon, 'base64' ).toString( 'utf8' );
+                self.configFile.encodeAll = true;
+            }
+            else {
+                dc_lock_btn.attr( 'title', 'Enable Message Encryption' );
+                dc_lock_btn[ 0 ].innerHTML = Buffer.from( self.unlockIcon, 'base64' ).toString( 'utf8' );
+                self.configFile.encodeAll = false;
+            }
+
+            /* Set the button class. */
+            $( '.dc-svg' ).attr( 'class', 'dc-svg' );
+
+            /* Save config. */
+            self.saveConfig();
+        };
+    }
+
+    /* ================ END UI HANDLE CALLBACKS ================ */
+
+    /* =================== END MAIN CALLBACKS ================== */
+
+    /* =============== BEGIN CRYPTO CALLBACKS ================== */
+
+    /* ======================= UTILITIES ======================= */
+
+    /**
+     * @typedef {Object} getResultCallback
+     * @desc The function to execute at the end of a GET request containing the result or error that occurred.
+     * @property {int} statusCode The HTTP static code of the operation.
+     * @property {string|null} The HTTP error string if an error occurred.
+     * @property {string} data The returned data from the request.
+     */
+
+    /**
+     * @private
+     * @desc Checks if the plugin should ignore auto-updates.
+     *      Usually in a developer environment, a simple symlink is ( or should be ) used to link the current build
+     *      file to the plugin path allowing faster deployment.
+     * @param {string} version Version string of the plugin to include in the check.
+     * @return {boolean} Returns false if the plugin should auto-update.
+     */
+    static __shouldIgnoreUpdates( version ) {
+        const fs = require( 'fs' );
+        const path = require( 'path' );
+        const plugin_file = path.join( discordCrypt.getPluginsPath(), discordCrypt.getPluginName() );
+
+        return fs.existsSync( plugin_file ) &&
+            ( fs.lstatSync( plugin_file ).isSymbolicLink() || version.indexOf( '-debug' ) !== -1 );
+    }
+
+    /**
+     * @public
+     * @desc Performs an HTTP request returns the result to the callback.
+     * @param {string} url The URL of the request.
+     * @param {getResultCallback} callback The callback triggered when the request is complete or an error occurs.
+     * @private
+     */
+    static __getRequest( url, callback ) {
+        try {
+            require( 'request' )( url, ( error, response, result ) => {
+                callback( response.statusCode, response.statusMessage, result );
+            } );
+        }
+        catch ( ex ) {
+            callback( -1, ex.toString() );
+        }
+    }
+
+    /**
+     * @private
+     * @desc Get React component instance of closest owner of DOM element matched by filter.
+     * @author noodlebox
+     * @param {Element} element DOM element to start react component searching.
+     * @param {object} options Filter to match React component by display name.
+     *      If `include` if provided, `exclude` value is ignored.
+     * @param {string[]} options.include Array of names to allow.
+     * @param {string[]} options.exclude Array of names to ignore.
+     * @return {object|null} Closest matched React component instance or null if none is matched.
+     */
+    static __getElementReactOwner(
+        element,
+        {
+            include,
+            exclude = [ "Popout", "Tooltip", "Scroller", "BackgroundFlash" ]
+        } = {}
+    ) {
+        if ( element === undefined )
+            return undefined;
+
+        /**
+         * Get React Internal Instance mounted to DOM element
+         * @author noodlebox
+         * @param {Element} e DOM element to get React Internal Instance from
+         * @return {object|null} Returns React Internal Instance mounted to this element if exists
+         */
+        const getOwnerReactInstance = e => e[ Object.keys( e ).find( k => k.startsWith( "__reactInternalInstance" ) ) ];
+        const excluding = include === undefined;
+        const filter = excluding ? exclude : include;
+
+        function classFilter( owner ) {
+            const name = owner.type.displayName || owner.type.name || null;
+            return ( name !== null && !!( filter.includes( name ) ^ excluding ) );
+        }
+
+        for ( let c = getOwnerReactInstance( element ).return; !_.isNil( c ); c = c.return ) {
+            if ( _.isNil( c ) )
+                continue;
+
+            if ( !_.isNil( c.stateNode ) && !( c.stateNode instanceof HTMLElement ) && classFilter( c ) )
+                return c.stateNode;
+        }
+
+        return undefined;
+    }
+
+    /**
+     * @public
+     * @desc Returns the exchange algorithm and bit size for the given metadata as well as a fingerprint.
+     * @param {string} key_message The encoded metadata to extract the information from.
+     * @param {boolean} header_present Whether the message's magic string is attached to the input.
+     * @returns {{bit_length: int, algorithm: string, fingerprint: string}|null} Returns the algorithm's bit length and
+     *      name or null.
+     * @example
+     * __extractKeyInfo( '㑼㑷㑵㑳㐁㑢', true );
+     * @example
+     * __extractKeyInfo( '㐁㑢', false );
+     */
+    static __extractKeyInfo( key_message, header_present = false ) {
+        try {
+            let output = [];
+            let msg = key_message;
+
+            /* Strip the header if necessary. */
+            if ( header_present )
+                msg = msg.slice( 4 );
+
+            /* Decode the message to hex. */
+            msg = discordCrypt.substituteMessage( msg );
+
+            /* Decode the message to raw bytes. */
+            msg = Buffer.from( msg, 'hex' );
+
+            /* Sanity check. */
+            if ( !discordCrypt.isValidExchangeAlgorithm( msg[ 0 ] ) )
+                return null;
+
+            /* Create a fingerprint for the blob. */
+            output[ 'fingerprint' ] = discordCrypt.sha256( msg, true );
+
+            /* Buffer[0] contains the algorithm type. Reverse it. */
+            output[ 'bit_length' ] = discordCrypt.indexToAlgorithmBitLength( msg[ 0 ] );
+            output[ 'algorithm' ] = discordCrypt.indexToExchangeAlgorithmString( msg[ 0 ] )
+                .split( '-' )[ 0 ].toLowerCase();
+
+            return output;
+        }
+        catch ( e ) {
+            return null;
+        }
+    }
+
+    /**
+     * @public
+     * @desc Splits the input text into chunks according to the specified length.
+     * @param {string} input_string The input string.
+     * @param {int} max_length The maximum length of the string before splitting.
+     * @returns {Array} An array of split strings.
+     * @private
+     */
+    static __splitStringChunks( input_string, max_length ) {
+        /* Sanity check. */
+        if ( !max_length || max_length < 0 )
+            return input_string;
+
+        /* Calculate the maximum number of chunks this can be split into. */
+        const num_chunks = Math.ceil( input_string.length / max_length );
+        const ret = new Array( num_chunks );
+
+        /* Split each chunk and add it to the output array. */
+        for ( let i = 0, offset = 0; i < num_chunks; ++i, offset += max_length )
+            ret[ i ] = input_string.substr( offset, max_length );
+
+        return ret;
+    }
+
+    /**
+     * @public
+     * @desc Determines if the given string is a valid username according to Discord's standards.
+     * @param {string} name The name of the user and their discriminator.
+     * @returns {boolean} Returns true if the username is valid.
+     * @example
+     * console.log( __isValidUserName( 'Person#1234' ) ); // true
+     * @example
+     * console.log( __isValidUserName( 'Person#123' ) ); // false
+     * @example
+     * console.log( __isValidUserName( 'Person#' ) ); // false
+     * @example
+     * console.log( __isValidUserName( 'Person1234' ) ); // false
+     */
+    static __isValidUserName( name ) {
+        /* Make sure this is actually a string. */
+        if ( typeof name !== 'string' )
+            return false;
+
+        /* The name must start with the '@' symbol. */
+        if ( name[ 0 ] !== '@' )
+            return false;
+
+        /* Iterate through the rest of the name and check for the correct format. */
+        for ( let i = 1; i < name.length; i++ ) {
+            /* Names can't have spaces or '@' symbols. */
+            if ( name[ i ] === ' ' || name[ i ] === '@' )
+                return false;
+
+            /* Make sure the discriminator is present. */
+            if ( i !== 1 && name[ i ] === '#' ) {
+                /* The discriminator is 4 characters long. */
+                if ( name.length - i - 1 === 4 ) {
+                    try {
+                        /* Slice off the discriminator. */
+                        let n = name.slice( i + 1, i + 5 );
+                        /* Do a weak check to ensure that the Base-10 parsed integer is the same as the string. */
+                        return !isNaN( n ) && parseInt( n, 10 ) == n;
+                    }
+                        /* If parsing or slicing somehow fails, this isn't valid. */
+                    catch ( e ) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        /* No discriminator found means it's invalid. */
+        return false;
+    }
+
+    /**
+     * @public
+     * @desc Extracts all tags from the given message and removes any tagged discriminators.
+     * @param {string} message The input message to extract all tags from.
+     * @returns {{ processed_message: string, user_tags: Array }}
+     */
+    static __extractTags( message ) {
+        let split_msg = message.split( ' ' );
+        let cleaned_tags = '', cleaned_msg = '';
+        let user_tags = [];
+
+        /* Iterate over each segment and check for usernames. */
+        for ( let i = 0, k = 0; i < split_msg.length; i++ ) {
+            if ( this.__isValidUserName( split_msg[ i ] ) ) {
+                user_tags[ k++ ] = split_msg[ i ];
+                cleaned_msg += `${split_msg[ i ].split( '#' )[ 0 ]} `;
+            }
+            /* Check for @here or @everyone. */
+            else if ( split_msg[ i ] === '@everyone' || split_msg[ i ] === '@here' ) {
+                user_tags[ k++ ] = split_msg[ i ];
+                cleaned_msg += `${split_msg[ i ]} `;
+            }
+            else
+                cleaned_msg += `${split_msg[ i ]} `;
+        }
+
+        /* Join all tags to a single string. */
+        for ( let i = 0; i < user_tags.length; i++ )
+            cleaned_tags += `${user_tags[ i ]} `;
+
+        /* Return the parsed message and user tags. */
+        return [ cleaned_msg.trim(), cleaned_tags.trim() ];
+    }
+
+    /**
+     * @typedef {Object} codeBlockDescriptor
+     * @desc Indicates the values present in a markdown-styled code block.
+     * @property {int} start_pos The starting position of the code block.
+     * @property {int} end_pos The ending position of the code block.
+     * @property {string} language The language identifier of the code within this block.
+     * @property {string} raw_code The raw code within the code block.
+     * @property {string} captured_block The entire markdown formatted code block.
+     */
+
+    /**
+     * @public
+     * @desc Extracts raw code blocks from a message and returns a descriptive array.
+     *      N.B. This does not remove the code blocks from the message.
+     * @param {string} message The message to extract all code blocks from.
+     * @returns {Array<codeBlockDescriptor>} Returns an array of codeBlockDescriptor() objects.
+     */
+    static __extractCodeBlocks( message ) {
+        /* This regex only extracts code blocks. */
+        let code_block_expr = new RegExp( /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm ),
+            inline_block_expr = new RegExp( /(`([^`].*?)`)/g ),
+            _matched;
+
+        /* Array to store all the extracted blocks in. */
+        let _code_blocks = [];
+
+        /* Loop through each tested RegExp result. */
+        while ( ( _matched = code_block_expr.exec( message ) ) ) {
+            /* Insert the captured data. */
+            _code_blocks.push( {
+                start_pos: _matched.index,
+                end_pos: _matched.index + _matched[ 1 ].length,
+                language: _matched[ 3 ].trim().length === 0 ? 'text' : _matched[ 3 ].trim(),
+                raw_code: _matched[ 4 ],
+                captured_block: _matched[ 1 ]
+            } );
+        }
+
+        /* Match inline code blocks. */
+        while ( ( _matched = inline_block_expr.exec( message ) ) ) {
+            /* Insert the captured data. */
+            _code_blocks.push( {
+                start_pos: _matched.index,
+                end_pos: _matched.index + _matched[ 0 ].length,
+                language: 'inline',
+                raw_code: message
+                    .substr( _matched.index, _matched.index + _matched[ 0 ].length )
+                    .split( '`' )[ 1 ],
+                captured_block: _matched[ 0 ]
+            } );
+        }
+
+        return _code_blocks;
+    }
+
+    /**
+     * @public
+     * @desc Extracts raw URLs from a message.
+     *      N.B. This does not remove the URLs from the message.
+     * @param {string} message The message to extract the URLs from.
+     * @returns {Array} Returns an array of URLs detected int the message.
+     * @example
+     * __extractUrls( 'Hello https://google.com' );
+     * //
+     * [ 'https://google.com' ]
+     */
+    static __extractUrls( message ) {
+        /* This regex only extracts HTTP/HTTPS/FTP and FILE URLs. */
+        let url_expr = new RegExp( /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig ),
+            matched;
+
+        /* Array to store all the extracted URLs in. */
+        let urls = [];
+
+        /* Loop through each tested RegExp result. */
+        while ( ( matched = url_expr.exec( message ) ) ) {
+            /* Insert the captured data. */
+            urls.push( matched[ 0 ] );
+        }
+
+        return urls;
+    }
+
+    /**
+     * @public
+     * @desc Extracts code blocks from a message and formats them in HTML to the proper format.
+     * @param {string} message The message to format code blocks from.
+     * @returns {{code: boolean, html: string}} Returns whether the message contains code blocks and the formatted HTML.
+     * @example
+     * __buildCodeBlockMessage('```\nHello World!\n```');
+     * //
+     * {
+     *      "code": true,
+     *      "html": "<div class=\"markup line-scanned\" data-colour=\"true\" style=\"color: rgb(111, 0, 0);\">
+     *                  <pre class=\"hljs\">
+     *                      <code class=\"dc-code-block hljs\" style=\"position: relative;\">
+     *                          <ol><li>Hello World!</li></ol>
+     *                      </code>
+     *                  </pre>
+     *              </div>"
+     * }
+     */
+    static __buildCodeBlockMessage( message ) {
+        try {
+            /* Extract code blocks. */
+            let _extracted = discordCrypt.__extractCodeBlocks( message );
+
+            /* Wrap the message normally. */
+            if ( !_extracted.length )
+                return {
+                    code: false,
+                    html: message
+                };
+
+            /* Loop over each expanded code block. */
+            for ( let i = 0; i < _extracted.length; i++ ) {
+                /* Inline code blocks get styled differently. */
+                if ( _extracted[ i ].language !== 'inline' ) {
+                    let _lines = '';
+
+                    /* Remove any line-reset characters and split the message into lines. */
+                    let _code = _extracted[ i ].raw_code.replace( "\r", '' ).split( "\n" );
+
+                    /* Wrap each line in list elements. */
+                    /* We start from position 1 since the regex leaves us with 2 blank lines. */
+                    for ( let j = 1; j < _code.length - 1; j++ )
+                        _lines += `<li>${_code[ j ]}</li>`;
+
+                    /* Split the HTML message according to the full markdown code block. */
+                    message = message.split( _extracted[ i ].captured_block );
+
+                    /* Replace the code with an HTML formatted code block. */
+                    message = message.join(
+                        '<div class="markup line-scanned" data-colour="true" style="color: rgb(111, 0, 0);">' +
+                        `<pre class="hljs"><code class="dc-code-block hljs 
+                        ${_extracted[ i ].language === 'text' ? '' : _extracted[ i ].language}"
+                         style="position: relative;">` +
+                        `<ol>${_lines}</ol></code></pre></div>`
+                    );
+                }
+                else {
+                    /* Split the HTML message according to the inline markdown code block. */
+                    message = message.split( _extracted[ i ].captured_block );
+
+                    /* Replace the data with a inline code class. */
+                    message = message.join( `<code class="inline">${_extracted[ i ].raw_code}</code>` );
+                }
+            }
+
+            /* Return the parsed message. */
+            return {
+                code: true,
+                html: message
+            };
+        }
+        catch ( e ) {
+            /* Wrap the message normally. */
+            return {
+                code: false,
+                html: message
+            };
+        }
+    }
+
+    /**
+     * @public
+     * @desc Extracts URLs from a message and formats them accordingly.
+     * @param {string} message The input message to format URLs from.
+     * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
+     * @returns {{url: boolean, html: string}} Returns whether the message contains URLs and the formatted HTML.
+     */
+    static __buildUrlMessage( message, embed_link_prefix ) {
+        try {
+            /* Extract the URLs. */
+            let _extracted = discordCrypt.__extractUrls( message );
+
+            /* Wrap the message normally. */
+            if ( !_extracted.length )
+                return {
+                    url: false,
+                    html: message
+                };
+
+            /* Loop over each URL and format it. */
+            for ( let i = 0; i < _extracted.length; i++ ) {
+                let join = '';
+
+                /* Split the message according to the URL and replace it. */
+                message = message.split( _extracted[ i ] );
+
+                /* If this is an Up1 host, we can directly embed it. Obviously don't embed deletion links.*/
+                if (
+                    embed_link_prefix !== undefined &&
+                    _extracted[ i ].startsWith( `${embed_link_prefix}/#` ) &&
+                    _extracted[ i ].indexOf( 'del?ident=' ) === -1
+                )
+                    join = `<iframe src=${_extracted[ i ]} width="400px" height="400px"></iframe><br/><br/>`;
+
+                /* Join the message together. */
+                message = message.join( `${join}<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
+            }
+
+            /* Wrap the message in span tags. */
+            return {
+                url: true,
+                html: `<span>${message}</span>`
+            };
+        }
+        catch ( e ) {
+            /* Wrap the message normally. */
+            return {
+                url: false,
+                html: message
+            };
+        }
+    }
+
+    /**
+     * @public
+     * @desc Returns a string, Buffer() or Array() as a buffered object.
+     * @param {string|Buffer|Array} input The input variable.
+     * @param {boolean|undefined} [is_input_hex] If set to true, the input is parsed as a hex string. If false, it is
+     *      parsed as a Base64 string. If this value is undefined, it is parsed as a UTF-8 string.
+     * @returns {Buffer} Returns a Buffer object.
+     * @throws {string} Thrown an unsupported type error if the input is neither a string, Buffer or Array.
+     */
+    static __toBuffer( input, is_input_hex = undefined ) {
+
+        /* No conversion needed, return it as-is. */
+        if ( Buffer.isBuffer( input ) )
+            return input;
+
+        /* If the message is either a Hex, Base64 or UTF-8 encoded string, convert it to a buffer. */
+        if ( typeof input === 'string' )
+            return Buffer.from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
+
+        /* Convert the Array to a Buffer object first. */
+        if ( Array.isArray( input ) )
+            return Buffer.from( input );
+
+        /* Throw if an invalid type was passed. */
+        throw 'Input is neither an Array(), Buffer() or a string.';
+    }
+
+    /**
+     * @public
+     * @desc Creates a hash of the specified algorithm and returns either a hex-encoded or base64-encoded digest.
+     * @param {string|Buffer|Array} message The message to perform the hash on.
+     * @param {string} algorithm The specified hash algorithm to use.
+     * @param {boolean} [to_hex] If true, converts the output to hex else it converts it to Base64.
+     * @param {boolean} hmac If this is true, an HMAC hash is created using a secret.
+     * @param {string|Buffer|Array} secret The input secret used for the creation of an HMAC object.
+     * @returns {string} Returns either a Base64 or hex string on success and an empty string on failure.
+     * @example
+     * console.log( __createHash( 'Hello World!', 'sha256', true ) );
+     * // "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
+     * @example
+     * console.log( __createHash( 'Hello World', 'sha256', true, true, 'My Secret' ) );
+     * // "852f78f917c4408000a8a94be61687865000bec5b2b77c0704dc5ad73ea06368"
+     */
+    static __createHash( message, algorithm, to_hex, hmac, secret ) {
+        try {
+            const crypto = require( 'crypto' );
+
+            /* Create the hash algorithm. */
+            const hash = hmac ? crypto.createHmac( algorithm, secret ) :
+                crypto.createHash( algorithm );
+
+            /* Hash the data. */
+            hash.update( message );
+
+            /* Return the digest. */
+            return hash.digest( to_hex ? 'hex' : 'base64' );
+        }
+        catch ( e ) {
+            return '';
+        }
+    }
+
+    /**
+     * @typedef {Object} pbkdf2Callback
+     * @desc The function to execute after an async request for PBKDF2 is completed containing the result or error.
+     * @property {string} error The error that occurred during processing or null on success.
+     * @property {string} hash The hash either as a hex or Base64 encoded string ( or null on failure ).
+     */
+
+    /**
+     * @public
+     * @desc Computes a key-derivation based on the PBKDF2 standard and returns a hex or base64 encoded digest.
+     * @param {string|Buffer|Array} input The input value to hash.
+     * @param {string|Buffer|Array} salt The secret value used to derive the hash.
+     * @param {boolean} [to_hex] Whether to conver the result to a hex string or a Base64 string.
+     * @param {boolean} [is_input_hex] Whether to treat the input as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [is_salt_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {pbkdf2Callback} [callback] The callback function if performing an async request.
+     * @param {string} algorithm The name of the hash algorithm to use.
+     * @param {int} key_length The length of the desired key in bytes.
+     * @param {int} iterations The number of recursive iterations to use to produce the resulting hash.
+     * @returns {string} If a callback is not specified, this returns the hex or Base64 result or an empty string on
+     *      failure.
+     * @example
+     * __pbkdf2( 'Hello World!', 'Super Secret', true, undefined, undefined, undefined, 'sha256', 32, 10000 );
+     * // "89205432badb5b1e53c7bb930d428afd0f98e5702c4e549ea2da4cfefe8af254"
+     * @example
+     * __pbkdf2( 'ABC', 'Salty!', true, undefined, undefined, ( e, h ) => { console.log( `Hash: ${h}` ); },
+     *      'sha256', 32, 1000 );
+     * // Hash: f0e110b17b02006bbbcecb8eb295421c69081a6ecda75c94d55d20759dc295b1
+     */
+    static __pbkdf2( input, salt, to_hex, is_input_hex, is_salt_hex, callback, algorithm, key_length, iterations ) {
+        const crypto = require( 'crypto' );
+        let _input, _salt;
+
+        /* Convert necessary data to Buffer objects. */
+        if ( typeof input === 'object' ) {
+            if ( Buffer.isBuffer( input ) )
+                _input = input;
+            else if ( Array.isArray )
+                _input = Buffer.from( input );
+            else
+                _input = Buffer.from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
+        }
+        else if ( typeof input === 'string' )
+            _input = Buffer.from( input, 'utf8' );
+
+        if ( typeof salt === 'object' ) {
+            if ( Buffer.isBuffer( salt ) )
+                _salt = salt;
+            else if ( Array.isArray )
+                _salt = Buffer.from( salt );
+            else
+                _salt = Buffer.from( salt, is_salt_hex === undefined ? 'utf8' : is_salt_hex ? 'hex' : 'base64' );
+        }
+        else if ( typeof salt === 'string' )
+            _salt = Buffer.from( salt, 'utf8' );
+
+        /* For function callbacks, use the async method else use the synchronous method. */
+        if ( typeof callback === 'function' )
+            crypto.pbkdf2( _input, _salt, iterations, key_length, algorithm, ( e, key ) => {
+                callback( e, !e ? key.toString( to_hex ? 'hex' : 'base64' ) : '' );
+            } );
+        else
+            try {
+                return crypto.pbkdf2Sync( _input, _salt, iterations, key_length, algorithm )
+                    .toString( to_hex ? 'hex' : 'base64' );
+            }
+            catch ( e ) {
+                throw e;
+            }
+    }
+
+    /**
+     * @public
+     * @desc Pads or un-pads the input message using the specified encoding format and block size.
+     * @param {string|Buffer|Array} message The input message to either pad or unpad.
+     * @param {string} padding_scheme The padding scheme used. This can be either: [ ISO1, ISO9, PKC7, ANS2 ]
+     * @param {int} block_size The block size that the padding scheme must align the message to.
+     * @param {boolean} [is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [remove_padding] Whether to remove the padding applied to the message. If undefined, it is
+     *      treated as false.
+     * @returns {Buffer} Returns the padded or unpadded message as a Buffer object.
+     */
+    static __padMessage( message, padding_scheme, block_size, is_hex = undefined, remove_padding = undefined ) {
+        let _message, _padBytes;
+
+        /* Returns the number of bytes required to pad a message based on the block size. */
+        function __getPaddingLength( totalLength, blockSize ) {
+            return totalLength % blockSize === blockSize ? blockSize : blockSize - ( totalLength % blockSize );
+        }
+
+        /* Pads a message according to the PKCS #7 / PKCS #5 format. */
+        function __PKCS7( message, paddingBytes, remove ) {
+            if ( remove === undefined ) {
+                /* Allocate required padding length + message length. */
+                let padded = Buffer.alloc( message.length + paddingBytes );
+
+                /* Copy the message. */
+                message.copy( padded );
+
+                /* Append the number of padding bytes according to PKCS #7 / PKCS #5 format. */
+                Buffer.alloc( paddingBytes ).fill( paddingBytes ).copy( padded, message.length );
+
+                /* Return the result. */
+                return padded;
+            }
+            else {
+                /* Remove the padding indicated by the last byte. */
+                return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
+            }
+        }
+
+        /* Pads a message according to the ANSI X9.23 format. */
+        function __ANSIX923( message, paddingBytes, remove ) {
+            if ( remove === undefined ) {
+                /* Allocate required padding length + message length. */
+                let padded = Buffer.alloc( message.length + paddingBytes );
+
+                /* Copy the message. */
+                message.copy( padded );
+
+                /* Append null-bytes till the end of the message. */
+                Buffer.alloc( paddingBytes - 1 ).fill( 0x00 ).copy( padded, message.length );
+
+                /* Append the padding length as the final byte of the message. */
+                Buffer.alloc( 1 ).fill( paddingBytes ).copy( padded, message.length + paddingBytes - 1 );
+
+                /* Return the result. */
+                return padded;
+            }
+            else {
+                /* Remove the padding indicated by the last byte. */
+                return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
+            }
+        }
+
+        /* Pads a message according to the ISO 10126 format. */
+        function __ISO10126( message, paddingBytes, remove ) {
+            const crypto = require( 'crypto' );
+
+            if ( remove === undefined ) {
+                /* Allocate required padding length + message length. */
+                let padded = Buffer.alloc( message.length + paddingBytes );
+
+                /* Copy the message. */
+                message.copy( padded );
+
+                /* Copy random data to the end of the message. */
+                crypto.randomBytes( paddingBytes - 1 ).copy( padded, message.length );
+
+                /* Write the padding length at the last byte. */
+                padded.writeUInt8( paddingBytes, message.length + paddingBytes - 1 );
+
+                /* Return the result. */
+                return padded;
+            }
+            else {
+                /* Remove the padding indicated by the last byte. */
+                return message.slice( 0, message.length - message.readUInt8( message.length - 1 ) );
+            }
+        }
+
+        /* Pads a message according to the ISO 97971 format. */
+        function __ISO97971( message, paddingBytes, remove ) {
+            if ( remove === undefined ) {
+                /* Allocate required padding length + message length. */
+                let padded = Buffer.alloc( message.length + paddingBytes );
+
+                /* Copy the message. */
+                message.copy( padded );
+
+                /* Append the first byte as 0x80 */
+                Buffer.alloc( 1 ).fill( 0x80 ).copy( padded, message.length );
+
+                /* Fill the rest of the padding with zeros. */
+                Buffer.alloc( paddingBytes - 1 ).fill( 0x00 ).copy( message, message.length + 1 );
+
+                /* Return the result. */
+                return padded;
+            }
+            else {
+
+                /* Scan backwards. */
+                let lastIndex = message.length - 1;
+
+                /* Find the amount of null padding bytes. */
+                for ( ; lastIndex > 0; lastIndex-- )
+                    /* If a null byte is encountered, split at this index. */
+                    if ( message[ lastIndex ] !== 0x00 )
+                        break;
+
+                /* Remove the null-padding. */
+                let cleaned = message.slice( 0, lastIndex + 1 );
+
+                /* Remove the final byte which is 0x80. */
+                return cleaned.slice( 0, cleaned.length - 1 );
+            }
+        }
+
+        /* Convert the message to a Buffer object. */
+        _message = discordCrypt.__toBuffer( message, is_hex );
+
+        /* Get the number of bytes required to pad this message. */
+        _padBytes = remove_padding ? 0 : __getPaddingLength( _message.length, block_size / 8 );
+
+        /* Apply the message padding based on the format specified. */
+        switch ( padding_scheme.toUpperCase() ) {
+            case 'PKC7':
+                return __PKCS7( _message, _padBytes, remove_padding );
+            case 'ANS2':
+                return __ANSIX923( _message, _padBytes, remove_padding );
+            case 'ISO1':
+                return __ISO10126( _message, _padBytes, remove_padding );
+            case 'ISO9':
+                return __ISO97971( _message, _padBytes, remove_padding );
+            default:
+                return '';
+        }
+    }
+
+    /**
+     * @public
+     * @desc Determines whether the passed cipher name is valid.
+     * @param {string} cipher The name of the cipher to check.
+     * @returns {boolean} Returns true if the cipher name is valid.
+     * @example
+     * console.log( __isValidCipher( 'aes-256-cbc' ) ); // True
+     * @example
+     * console.log( __isValidCipher( 'aes-256-gcm' ) ); // True
+     * @example
+     * console.log( __isValidCipher( 'camellia-256-gcm' ) ); // False
+     */
+    static __isValidCipher( cipher ) {
+        const crypto = require( 'crypto' );
+        let isValid = false;
+
+        /* Iterate all valid Crypto ciphers and compare the name. */
+        let cipher_name = cipher.toLowerCase();
+        crypto.getCiphers().every( ( s ) => {
+            /* If the cipher matches, stop iterating. */
+            if ( s === cipher_name ) {
+                isValid = true;
+                return false;
+            }
+
+            /* Continue iterating. */
+            return true;
+        } );
+
+        /* Return the result. */
+        return isValid;
+    }
+
+    /**
+     * @public
+     * @desc Converts a given key or iv into a buffer object. Performs a hash of the key it doesn't match the blockSize.
+     * @param {string|Buffer|Array} key The key to perform validation on.
+     * @param {int} key_size_bits The bit length of the desired key.
+     * @param {boolean} [use_whirlpool] If the key length is 512-bits, use Whirlpool or SHA-512 hashing.
+     * @returns {Buffer} Returns a Buffer() object containing the key of the desired length.
+     */
+    static __validateKeyIV( key, key_size_bits = 256, use_whirlpool = undefined ) {
+        /* Get the designed hashing algorithm. */
+        let keyBytes = key_size_bits / 8;
+
+        /* If the length of the key isn't of the desired size, hash it. */
+        if ( key.length !== keyBytes ) {
+            let hash;
+
+            /* Get the appropriate hasher for the key size. */
+            switch ( keyBytes ) {
+                case 8:
+                    hash = discordCrypt.whirlpool64;
+                    break;
+                case 16:
+                    hash = discordCrypt.sha512_128;
+                    break;
+                case 20:
+                    hash = discordCrypt.sha160;
+                    break;
+                case 24:
+                    hash = discordCrypt.whirlpool192;
+                    break;
+                case 32:
+                    hash = discordCrypt.sha256;
+                    break;
+                case 64:
+                    hash = use_whirlpool !== undefined ? discordCrypt.sha512 : discordCrypt.whirlpool;
+                    break;
+                default:
+                    throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys' +
+                    ' are supported.';
+            }
+            /* Hash the key and return it as a buffer. */
+            return Buffer.from( hash( key, true ), 'hex' );
+        }
+        else
+            return Buffer.from( key );
+    }
+
+    /**
+     * @public
+     * @desc Convert the message to a buffer object.
+     * @param {string|Buffer|Array} message The input message.
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @returns {Buffer} Returns a Buffer() object containing the message.
+     * @throws An exception indicating the input message type is neither an Array(), Buffer() or string.
+     */
+    static __validateMessage( message, is_message_hex = undefined ) {
+        /* Convert the message to a buffer. */
+        try {
+            return discordCrypt.__toBuffer( message, is_message_hex );
+        }
+        catch ( e ) {
+            throw 'exception - Invalid message type.';
+        }
+    }
+
+    /**
+     * @public
+     * @desc Returns the string encoded mime type of a file based on the file extension.
+     * @param {string} file_path The path to the file in question.
+     * @returns {string} Returns the known file extension's MIME type or "application/octet-stream".
+     */
+    static __getFileMimeType( file_path ) {
+        /* Look up the Mime type from the file extension. */
+        let type = require( 'mime-types' ).lookup( require( 'path' ).extname( file_path ) );
+
+        /* Default to an octet stream if it fails. */
+        return type === false ? 'application/octet-stream' : type;
+    }
+
+    /**
+     * @private
+     * @desc Attempts to read the clipboard and converts either Images or text to raw Buffer() objects.
+     * @returns {{ mime_type: string, name: string|null, data: Buffer|null }} Contains clipboard data. May be null.
+     */
+    static __clipboardToBuffer() {
+        /* Request the clipboard object. */
+        let clipboard = require( 'electron' ).clipboard;
+
+        /* Sanity check. */
+        if ( !clipboard )
+            return { mime_type: '', name: '', data: null };
+
+        /* We use original-fs to bypass any file-restrictions ( Eg. ASAR ) for reading. */
+        let fs = require( 'original-fs' ),
+            path = require( 'path' );
+
+        /* The clipboard must have at least one type available. */
+        if ( clipboard.availableFormats().length === 0 )
+            return { mime_type: '', name: '', data: null };
+
+        /* Get all available formats. */
+        let mime_type = clipboard.availableFormats();
+        let data, tmp = '', name = '', is_file = false;
+
+        /* Loop over each format and try getting the data. */
+        for ( let i = 0; i < mime_type.length; i++ ) {
+            let format = mime_type[ i ].split( '/' );
+
+            /* For types, prioritize images. */
+            switch ( format[ 0 ] ) {
+                case 'image':
+                    /* Convert the image type. */
+                    switch ( format[ 1 ].toLowerCase() ) {
+                        case 'png':
+                            data = clipboard.readImage().toPNG();
+                            break;
+                        case 'bmp':
+                        case 'bitmap':
+                            data = clipboard.readImage().toBitmap();
+                            break;
+                        case 'jpg':
+                        case 'jpeg':
+                            data = clipboard.readImage().toJPEG( 100 );
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case 'text':
+                    tmp = clipboard.readText();
+
+                    /* For text, see if this is a file path. */
+                    if ( fs.existsSync( tmp ) ) {
+                        /* Read the file and store the file name. */
+                        data = fs.readFileSync( tmp );
+                        name = path.basename( tmp );
+                        is_file = true;
+                    }
+                    else {
+                        /* Convert the text to a buffer. */
+                        data = Buffer.from( tmp, 'utf8' );
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            /* Keep trying till it has at least a byte of data to return. */
+            if ( data && data.length > 0 ) {
+                /* If this is a file, try getting the file's MIME type. */
+                if ( is_file )
+                    mime_type[ i ] = discordCrypt.__getFileMimeType( tmp );
+
+                /* Return the data. */
+                return {
+                    mime_type: mime_type[ i ],
+                    name: name,
+                    data: data
+                }
+            }
+        }
+
+        return { mime_type: '', name: '', data: null };
+    }
+
+    /**
+     * @typedef {Object} encryptedFileCallback
+     * @desc The function to execute when a file has finished being encrypted.
+     * @property {string} error_string The error that occurred during operation or null if no error occurred.
+     * @property {Buffer} encrypted_data The resulting encrypted buffer as a Buffer() object.
+     * @property {string} identity The encoded identity of the encrypted file.
+     * @property {string} seed The initial seed used to decrypt the encryption keys of the file.
+     */
+
+    /**
+     * @public
+     * @desc Uploads the specified buffer to Up1's format specifications and returns this data to the callback.
+     * @param {Buffer} data The input buffer to encrypt.
+     * @param {string} mime_type The MIME type of this file.
+     * @param {string} file_name The name of this file.
+     * @param {Object} sjcl The loaded Stanford Javascript Crypto Library.
+     * @param {encryptedFileCallback} callback The callback function that will be called on error or completion.
+     */
+    static __up1EncryptBuffer( data, mime_type, file_name, sjcl, callback ) {
+        const crypto = require( 'crypto' );
+
+        /* Returns a parameter object from the input seed. */
+        function getParams( /* string|Buffer|Array|Uint8Array */ seed ) {
+            /* Convert the seed either from a string to Base64 or read it via raw bytes. */
+            if ( typeof seed === 'string' )
+                seed = sjcl.codec.base64url.toBits( seed );
+            else
+                seed = sjcl.codec.bytes.toBits( seed );
+
+            /* Compute an SHA-512 hash. */
+            let out = sjcl.hash.sha512.hash( seed );
+
+            /* Calculate the output values based on Up1's specs. */
+            return {
+                seed: seed,
+                key: sjcl.bitArray.bitSlice( out, 0, 256 ),
+                iv: sjcl.bitArray.bitSlice( out, 256, 384 ),
+                ident: sjcl.bitArray.bitSlice( out, 384, 512 )
+            }
+        }
+
+        /* Converts a string to its UTF-16 equivalent in network byte order. */
+        function str2ab( /* string */ str ) {
+            /* UTF-16 requires 2 bytes per UTF-8 byte. */
+            let buf = Buffer.alloc( str.length * 2 );
+
+            /* Loop over each byte. */
+            for ( let i = 0, strLen = str.length; i < strLen; i++ ) {
+                /* Write the UTF-16 equivalent in Big Endian. */
+                buf.writeUInt16BE( str.charCodeAt( i ), i * 2 );
+            }
+
+            return buf;
+        }
+
+        try {
+            /* Make sure the file size is less than 50 MB. */
+            if ( data.length > 50000000 ) {
+                callback( 'Input size must be < 50 MB.' );
+                return;
+            }
+
+            /* Calculate the upload header and append the file data to it prior to encryption. */
+            data = Buffer.concat( [
+                str2ab( JSON.stringify( { 'mime': mime_type, 'name': file_name } ) ),
+                Buffer.from( [ 0, 0 ] ),
+                data
+            ] );
+
+            /* Convert the file to a Uint8Array() then to SJCL's bit buffer. */
+            data = sjcl.codec.bytes.toBits( new Uint8Array( data ) );
+
+            /* Generate a random 128 bit seed and calculate the key and IV from this. */
+            let params = getParams( crypto.randomBytes( 16 ) );
+
+            /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
+            data = sjcl.arrayBuffer.ccm.compat_encrypt( new sjcl.cipher.aes( params.key ), data, params.iv );
+
+            /* Execute the callback. */
+            callback(
+                null,
+                Buffer.from( sjcl.codec.bytes.fromBits( data ) ),
+                sjcl.codec.base64url.fromBits( params.ident ),
+                sjcl.codec.base64url.fromBits( params.seed )
+            );
+        }
+        catch ( ex ) {
+            callback( ex.toString() );
+        }
+    }
+
+    /**
+     * @private
+     * @desc Performs AES-256 CCM encryption of the given file and converts it to the expected Up1 format.
+     * @param {string} file_path The path to the file to encrypt.
+     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+     * @param {encryptedFileCallback} callback The callback function for when the file has been encrypted.
+     * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+     */
+    static __up1EncryptFile( file_path, sjcl, callback, randomize_file_name = false ) {
+        const crypto = require( 'crypto' );
+        const path = require( 'path' );
+        const fs = require( 'original-fs' );
+
+        try {
+            /* Make sure the file size is less than 50 MB. */
+            if ( fs.statSync( file_path ).size > 50000000 ) {
+                callback( 'File size must be < 50 MB.' );
+                return;
+            }
+
+            /* Read the file in an async callback. */
+            fs.readFile( file_path, ( error, file_data ) => {
+                /* Check for any errors. */
+                if ( error !== null ) {
+                    callback( error.toString() );
+                    return;
+                }
+
+                /* Encrypt the file data. */
+                discordCrypt.__up1EncryptBuffer(
+                    file_data,
+                    discordCrypt.__getFileMimeType( file_path ),
+                    randomize_file_name ?
+                        crypto.pseudoRandomBytes( 8 ).toString( 'hex' ) + path.extname( file_path ) :
+                        path.basename( file_path ),
+                    sjcl,
+                    callback
+                )
+            } );
+        }
+        catch ( ex ) {
+            callback( ex.toString() );
+        }
+    }
+
+    /**
+     * @typedef {Object} uploadedFileCallback
+     * @desc The function to execute after a file has been uploaded to an Up1 service.
+     * @property {string} error_string The error that occurred or null if no error occurred.
+     * @property {string} file_url The URL of the uploaded file/
+     * @property {string} deletion_link The link used to delete the file.
+     * @property {string} encoded_seed The encoded encryption key used to decrypt the file.
+     */
+
+    /**
+     * @public
+     * @desc Uploads raw data to an Up1 service and returns the file URL and deletion key.
+     * @param {string} up1_host The host URL for the Up1 service.
+     * @param {string} [up1_api_key] The optional API key used for the service.
+     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+     * @param {uploadedFileCallback} callback The callback function called on success or failure.
+     * @param {{ mime_type: string, name: string|null, data: Buffer|null }} [clipboard_data] Optional clipboard data.
+     */
+    static __up1UploadClipboard( up1_host, up1_api_key, sjcl, callback, clipboard_data = undefined ) {
+        /* Get the current clipboard data. */
+        let clipboard = clipboard_data === undefined ? discordCrypt.__clipboardToBuffer() : clipboard_data;
+
+        /* Perform sanity checks on the clipboard data. */
+        if ( !clipboard.mime_type.length || clipboard.data === null ) {
+            callback( 'Invalid clipboard data.' );
+            return;
+        }
+
+        /* Get a real file name, whether it be random or actual. */
+        let file_name = clipboard.name.length === 0 ?
+            require( 'crypto' ).pseudoRandomBytes( 16 ).toString( 'hex' ) :
+            clipboard.name;
+
+        /* Encrypt the buffer. */
+        this.__up1EncryptBuffer(
+            clipboard.data,
+            clipboard.mime_type,
+            file_name,
+            sjcl,
+            ( error_string, encrypted_data, identity, encoded_seed ) => {
+                /* Return if there's an error. */
+                if ( error_string !== null ) {
+                    callback( error_string );
+                    return;
+                }
+
+                /* Create a new FormData() object. */
+                let form = new ( require( 'form-data' ) )();
+
+                /* Append the ID and the file data to it. */
+                form.append( 'ident', identity );
+                form.append( 'file', encrypted_data, { filename: 'file', contentType: 'text/plain' } );
+
+                /* Append the API key if necessary. */
+                if ( up1_api_key !== undefined && typeof up1_api_key === 'string' )
+                    form.append( 'api_key', up1_api_key );
+
+                /* Perform the post request. */
+                require( 'request' ).post( {
+                        headers: form.getHeaders(),
+                        uri: `${up1_host}/up`,
+                        body: form
+                    },
+                    ( err, res, body ) => {
+                        try {
+                            /* Execute the callback if no error has occurred. */
+                            if ( err !== null )
+                                callback( err );
+                            else {
+                                callback(
+                                    null,
+                                    `${up1_host}/#${encoded_seed}`,
+                                    `${up1_host}/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
+                                    encoded_seed
+                                );
+                            }
+                        }
+                        catch ( ex ) {
+                            callback( ex.toString() );
+                        }
+                    }
+                );
+            }
+        );
+    }
+
+    /**
+     * @public
+     * @desc Uploads the given file path to an Up1 service and returns the file URL and deletion key.
+     * @param {string} file_path The path to the file to encrypt.
+     * @param {string} up1_host The host URL for the Up1 service.
+     * @param {string} [up1_api_key] The optional API key used for the service.
+     * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+     * @param {uploadedFileCallback} callback The callback function called on success or failure.
+     * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+     */
+    static __up1UploadFile( file_path, up1_host, up1_api_key, sjcl, callback, randomize_file_name = false ) {
+        /* Encrypt the file data first. */
+        this.__up1EncryptFile(
+            file_path,
+            sjcl,
+            ( error_string, encrypted_data, identity, encoded_seed ) => {
+                /* Return if there's an error. */
+                if ( error_string !== null ) {
+                    callback( error_string );
+                    return;
+                }
+
+                /* Create a new FormData() object. */
+                let form = new ( require( 'form-data' ) )();
+
+                /* Append the ID and the file data to it. */
+                form.append( 'ident', identity );
+                form.append( 'file', encrypted_data, { filename: 'file', contentType: 'text/plain' } );
+
+                /* Append the API key if necessary. */
+                if ( up1_api_key !== undefined && typeof up1_api_key === 'string' )
+                    form.append( 'api_key', up1_api_key );
+
+                /* Perform the post request. */
+                require( 'request' ).post( {
+                        headers: form.getHeaders(),
+                        uri: `${up1_host}/up`,
+                        body: form
+                    },
+                    ( err, res, body ) => {
+                        try {
+                            /* Execute the callback if no error has occurred. */
+                            if ( err !== null )
+                                callback( err );
+                            else {
+                                callback(
+                                    null,
+                                    `${up1_host}/#${encoded_seed}`,
+                                    `${up1_host}/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
+                                    encoded_seed
+                                );
+                            }
+                        }
+                        catch ( ex ) {
+                            callback( ex.toString() );
+                        }
+                    }
+                );
+            },
+            randomize_file_name
+        );
+    }
+
+    /* ========================================================= */
+
+    /* ============== NODE CRYPTO HASH PRIMITIVES ============== */
+
+    /**
+     * @typedef {Object} scryptCallback
+     * @desc The function to execute for Scrypt based status updates.
+     *      The function must return false repeatedly upon each call to have Scrypt continue running.
+     *      Once [progress] === 1.f AND [key] is defined, no further calls will be made.
+     * @property {string} error The error message encountered or null.
+     * @property {real} progress The percentage of the operation completed. This ranges from [ 0.00 - 1.00 ].
+     * @property {Buffer} result The output result when completed or null if not completed.
+     * @returns {boolean} Returns false if the operation is to continue running or true if the cancel the running
+     *      operation.
+     */
+
+    /**
+     * @public
+     * @see https://github.com/ricmoo/scrypt-js
+     * @desc Performs the Scrypt hash function on the given input.
+     * @param {string|Buffer|Array} input The input data to hash.
+     * @param {string|Buffer|Array} salt The unique salt used for hashing.
+     * @param {int} dkLen The desired length of the output in bytes.
+     * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
+     * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
+     * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
+     * @param {scryptCallback} cb Callback function for progress updates.
+     * @returns {boolean} Returns true if successful.
+     */
+    static scrypt( input, salt, dkLen, N = 16384, r = 8, p = 1, cb = null ) {
+        let _in, _salt;
+
+        /* PBKDF2-HMAC-SHA256 Helper. */
+        function PBKDF2_SHA256( input, salt, size, iterations ) {
+            try {
+                return Buffer.from(
+                    discordCrypt.pbkdf2_sha256( input, salt, true, undefined, undefined, size, iterations ),
+                    'hex'
+                );
+            }
+            catch ( e ) {
+                discordCrypt.log( e.toString(), 'error' );
+                return Buffer.alloc( 1 );
+            }
+        }
+
+        /**
+         * @private
+         * @desc Mixes a block and performs SALSA20 on it.
+         * @param {Uint32Array} BY
+         * @param {int} Yi
+         * @param {int} r
+         * @param {Uint32Array} x
+         * @param {Uint32Array} _X
+         */
+        function Salsa20_BlockMix( BY, Yi, r, x, _X ) {
+            let i, j, k, l;
+
+            for ( i = 0, j = ( 2 * r - 1 ) * 16; i < 16; i++ )
+                _X[ i ] = BY[ j + i ];
+
+            for ( i = 0; i < 2 * r; i++ ) {
+                for ( j = 0, k = i * 16; j < 16; j++ )
+                    _X[ j ] ^= BY[ k + j ];
+
+                for ( j = 0; j < 16; j++ )
+                    x[ j ] = _X[ j ];
+
+                /**
+                 * @desc Rotates [a] by [b] bits to the left.
+                 * @param {int} a The base value.
+                 * @param {int} b The number of bits to rotate [a] to the left by.
+                 * @return {number}
+                 */
+                let R = ( a, b ) => {
+                    return ( a << b ) | ( a >>> ( 32 - b ) );
+                };
+
+                for ( j = 8; j > 0; j -= 2 ) {
+                    x[ 0x04 ] ^= R( x[ 0x00 ] + x[ 0x0C ], 0x07 );
+                    x[ 0x08 ] ^= R( x[ 0x04 ] + x[ 0x00 ], 0x09 );
+                    x[ 0x0C ] ^= R( x[ 0x08 ] + x[ 0x04 ], 0x0D );
+                    x[ 0x00 ] ^= R( x[ 0x0C ] + x[ 0x08 ], 0x12 );
+                    x[ 0x09 ] ^= R( x[ 0x05 ] + x[ 0x01 ], 0x07 );
+                    x[ 0x0D ] ^= R( x[ 0x09 ] + x[ 0x05 ], 0x09 );
+                    x[ 0x01 ] ^= R( x[ 0x0D ] + x[ 0x09 ], 0x0D );
+                    x[ 0x05 ] ^= R( x[ 0x01 ] + x[ 0x0D ], 0x12 );
+                    x[ 0x0E ] ^= R( x[ 0x0A ] + x[ 0x06 ], 0x07 );
+                    x[ 0x02 ] ^= R( x[ 0x0E ] + x[ 0x0A ], 0x09 );
+                    x[ 0x06 ] ^= R( x[ 0x02 ] + x[ 0x0E ], 0x0D );
+                    x[ 0x0A ] ^= R( x[ 0x06 ] + x[ 0x02 ], 0x12 );
+                    x[ 0x03 ] ^= R( x[ 0x0F ] + x[ 0x0B ], 0x07 );
+                    x[ 0x07 ] ^= R( x[ 0x03 ] + x[ 0x0F ], 0x09 );
+                    x[ 0x0B ] ^= R( x[ 0x07 ] + x[ 0x03 ], 0x0D );
+                    x[ 0x0F ] ^= R( x[ 0x0B ] + x[ 0x07 ], 0x12 );
+                    x[ 0x01 ] ^= R( x[ 0x00 ] + x[ 0x03 ], 0x07 );
+                    x[ 0x02 ] ^= R( x[ 0x01 ] + x[ 0x00 ], 0x09 );
+                    x[ 0x03 ] ^= R( x[ 0x02 ] + x[ 0x01 ], 0x0D );
+                    x[ 0x00 ] ^= R( x[ 0x03 ] + x[ 0x02 ], 0x12 );
+                    x[ 0x06 ] ^= R( x[ 0x05 ] + x[ 0x04 ], 0x07 );
+                    x[ 0x07 ] ^= R( x[ 0x06 ] + x[ 0x05 ], 0x09 );
+                    x[ 0x04 ] ^= R( x[ 0x07 ] + x[ 0x06 ], 0x0D );
+                    x[ 0x05 ] ^= R( x[ 0x04 ] + x[ 0x07 ], 0x12 );
+                    x[ 0x0B ] ^= R( x[ 0x0A ] + x[ 0x09 ], 0x07 );
+                    x[ 0x08 ] ^= R( x[ 0x0B ] + x[ 0x0A ], 0x09 );
+                    x[ 0x09 ] ^= R( x[ 0x08 ] + x[ 0x0B ], 0x0D );
+                    x[ 0x0A ] ^= R( x[ 0x09 ] + x[ 0x08 ], 0x12 );
+                    x[ 0x0C ] ^= R( x[ 0x0F ] + x[ 0x0E ], 0x07 );
+                    x[ 0x0D ] ^= R( x[ 0x0C ] + x[ 0x0F ], 0x09 );
+                    x[ 0x0E ] ^= R( x[ 0x0D ] + x[ 0x0C ], 0x0D );
+                    x[ 0x0F ] ^= R( x[ 0x0E ] + x[ 0x0D ], 0x12 );
+                }
+
+                for ( j = 0; j < 16; ++j )
+                    _X[ j ] += x[ j ];
+
+                /* Copy back the result. */
+                for ( j = 0, k = Yi + ( i * 16 ); j < 16; j++ )
+                    BY[ j + k ] = _X[ j ];
+            }
+
+            for ( i = 0; i < r; i++ ) {
+                for ( j = 0, k = Yi + ( i * 2 ) * 16, l = ( i * 16 ); j < 16; j++ )
+                    BY[ l + j ] = BY[ k + j ];
+            }
+
+            for ( i = 0; i < r; i++ ) {
+                for ( j = 0, k = Yi + ( i * 2 + 1 ) * 16, l = ( i + r ) * 16; j < 16; j++ )
+                    BY[ l + j ] = BY[ k + j ];
+            }
+        }
+
+        /**
+         * @desc Perform the scrypt process in steps and call the callback on intervals.
+         * @param {string|Buffer|Array} input The input data to hash.
+         * @param {string|Buffer|Array} salt The unique salt used for hashing.
+         * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
+         * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
+         * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
+         * @param {scryptCallback} cb Callback function for progress updates.
+         * @private
+         */
+        function __perform( input, salt, N, r, p, cb ) {
+            let totalOps, currentOps, lastPercentage;
+            let b = PBKDF2_SHA256( input, salt, p * 128 * r, 1 );
+            let B = new Uint32Array( p * 32 * r );
+
+            /* Initialize the input. */
+            for ( let i = 0; i < B.length; i++ ) {
+                let j = i * 4;
+                B[ i ] =
+                    ( ( b[ j + 3 ] & 0xff ) << 24 ) |
+                    ( ( b[ j + 2 ] & 0xff ) << 16 ) |
+                    ( ( b[ j + 1 ] & 0xff ) << 8 ) |
+                    ( ( b[ j ] & 0xff ) << 0 );
+            }
+
+            let XY = new Uint32Array( 64 * r );
+            let V = new Uint32Array( 32 * r * N );
+
+            let Yi = 32 * r;
+
+            /* Salsa20 Scratchpad. */
+            let x = new Uint32Array( 16 );
+            /* Block-mix Salsa20 Scratchpad. */
+            let _X = new Uint32Array( 16 );
+
+            totalOps = p * N * 2;
+            currentOps = 0;
+            lastPercentage = null;
+
+            /* Set this to true to abandon the scrypt on the next step. */
+            let stop = false;
+
+            /* State information. */
+            let state = 0, stateCount = 0, i1;
+            let Bi;
+
+            /* How many block-mix salsa8 operations can we do per step? */
+            let limit = parseInt( 1000 / r );
+
+            /* Trick from scrypt-async; if there is a setImmediate shim in place, use it. */
+            let nextTick = ( typeof( setImmediate ) !== 'undefined' ) ? setImmediate : setTimeout;
+
+            const incrementalSMix = function () {
+                if ( stop )
+                    return cb( new Error( 'cancelled' ), currentOps / totalOps );
+
+                let steps, i, y, z, currentPercentage;
+                switch ( state ) {
+                    case 0:
+                        Bi = stateCount * 32 * r;
+                        /* Row mix #1 */
+                        for ( let z = 0; z < Yi; z++ )
+                            XY[ z ] = B[ Bi + z ]
+
+                        /* Move to second row mix. */
+                        state = 1;
+                        i1 = 0;
+                    /* Fall through purposely. */
+                    case 1:
+                        /* Run up to 1000 steps of the first inner S-Mix loop. */
+                        steps = N - i1;
+
+                        if ( steps > limit )
+                            steps = limit;
+
+                        /* Row mix #2 */
+                        for ( i = 0; i < steps; i++ ) {
+                            /* Row mix #3 */
+                            y = ( i1 + i ) * Yi;
+                            z = Yi;
+                            while ( z-- ) V[ z + y ] = XY[ z ];
+
+                            /* Row mix #4 */
+                            Salsa20_BlockMix( XY, Yi, r, x, _X );
+                        }
+
+                        i1 += steps;
+                        currentOps += steps;
+
+                        /* Call the callback with the progress. ( Optionally stopping us. ) */
+                        currentPercentage = parseInt( 1000 * currentOps / totalOps );
+                        if ( currentPercentage !== lastPercentage ) {
+                            stop = cb( null, currentOps / totalOps );
+
+                            if ( stop )
+                                break;
+
+                            lastPercentage = currentPercentage;
+                        }
+
+                        if ( i1 < N )
+                            break;
+
+                        /* Row mix #6 */
+                        i1 = 0;
+                        state = 2;
+                    /* Fall through purposely. */
+                    case 2:
+
+                        /* Run up to 1000 steps of the second inner S-Mix loop. */
+                        steps = N - i1;
+
+                        if ( steps > limit )
+                            steps = limit;
+
+                        for ( i = 0; i < steps; i++ ) {
+                            /* Row mix #8 ( inner ) */
+                            for ( z = 0, y = ( XY[ ( 2 * r - 1 ) * 16 ] & ( N - 1 ) ) * Yi; z < Yi; z++ )
+                                XY[ z ] ^= V[ y + z ];
+                            /* Row mix #9 ( outer ) */
+                            Salsa20_BlockMix( XY, Yi, r, x, _X );
+                        }
+
+                        i1 += steps;
+                        currentOps += steps;
+
+                        /* Call the callback with the progress. ( Optionally stopping us. ) */
+                        currentPercentage = parseInt( 1000 * currentOps / totalOps );
+                        if ( currentPercentage !== lastPercentage ) {
+                            stop = cb( null, currentOps / totalOps );
+
+                            if ( stop )
+                                break;
+
+                            lastPercentage = currentPercentage;
+                        }
+
+                        if ( i1 < N )
+                            break;
+
+                        /* Row mix #10 */
+                        for ( z = 0; z < Yi; z++ )
+                            B[ Bi + z ] = XY[ z ];
+
+                        stateCount++;
+                        if ( stateCount < p ) {
+                            state = 0;
+                            break;
+                        }
+
+                        b = [];
+                        for ( i = 0; i < B.length; i++ ) {
+                            b.push( ( B[ i ] >> 0 ) & 0xff );
+                            b.push( ( B[ i ] >> 8 ) & 0xff );
+                            b.push( ( B[ i ] >> 16 ) & 0xff );
+                            b.push( ( B[ i ] >> 24 ) & 0xff );
+                        }
+
+                        /* Done. Don't break to avoid rescheduling. */
+                        return cb( null, 1.0, Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), dkLen, 1 ) ) );
+                    default:
+                        return cb( new Error( 'invalid state' ), 0 );
+                }
+
+                /* Schedule the next steps. */
+                nextTick( incrementalSMix );
+            };
+
+            incrementalSMix();
+        }
+
+        /* Validate input. */
+        if ( typeof input === 'object' || typeof input === 'string' ) {
+            if ( Array.isArray( input ) )
+                _in = Buffer.from( input );
+            else if ( Buffer.isBuffer( input ) )
+                _in = input;
+            else if ( typeof input === 'string' )
+                _in = Buffer.from( input, 'utf8' );
+            else {
+                discordCrypt.log( 'Invalid input parameter type specified!', 'error' );
+                return false;
+            }
+        }
+
+        /* Validate salt. */
+        if ( typeof salt === 'object' || typeof salt === 'string' ) {
+            if ( Array.isArray( salt ) )
+                _salt = Buffer.from( salt );
+            else if ( Buffer.isBuffer( salt ) )
+                _salt = salt;
+            else if ( typeof salt === 'string' )
+                _salt = Buffer.from( salt, 'utf8' );
+            else {
+                discordCrypt.log( 'Invalid salt parameter type specified!', 'error' );
+                return false;
+            }
+        }
+
+        /* Validate derived key length. */
+        if ( typeof dkLen !== 'number' ) {
+            discordCrypt.log( 'Invalid dkLen parameter specified. Must be a numeric value.', 'error' );
+            return false;
+        }
+        else if ( dkLen <= 0 || dkLen >= 65536 ) {
+            discordCrypt.log( 'Invalid dkLen parameter specified. Must be a numeric value.', 'error' );
+            return false;
+        }
+
+        /* Validate N is a power of 2. */
+        if ( !N || N & ( N - 1 ) !== 0 ) {
+            discordCrypt.log( 'Parameter N must be a power of 2.', 'error' );
+            return false;
+        }
+
+        /* Perform a non-blocking . */
+        if ( cb !== undefined && cb !== null ) {
+            setTimeout( () => {
+                __perform( _in, _salt, N, r, p, cb );
+            }, 1 );
+            return true;
+        }
+
+        /* Signal an error. */
+        discordCrypt.log( 'No callback specified.', 'error' );
+        return false;
+    }
+
+    /**
+     * @public
+     * @desc Returns the first 64 bits of a Whirlpool digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static whirlpool64( message, to_hex ) {
+        return Buffer.from( discordCrypt.whirlpool( message, true ), 'hex' )
+            .slice( 0, 8 ).toString( to_hex ? 'hex' : 'base64' );
+    }
+
+    /**
+     * @public
+     * @desc Returns the first 128 bits of an SHA-512 digest of a message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha512_128( message, to_hex ) {
+        return Buffer.from( discordCrypt.sha512( message, true ), 'hex' )
+            .slice( 0, 16 ).toString( to_hex ? 'hex' : 'base64' );
+    }
+
+    /**
+     * @public
+     * @desc Returns the first 192 bits of a Whirlpool digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static whirlpool192( message, to_hex ) {
+        return Buffer.from( discordCrypt.sha512( message, true ), 'hex' )
+            .slice( 0, 24 ).toString( to_hex ? 'hex' : 'base64' );
+    }
+
+    /**
+     * @public
+     * @desc Returns an SHA-160 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha160( message, to_hex ) {
+        return discordCrypt.__createHash( message, 'sha1', to_hex );
+    }
+
+    /**
+     * @public
+     * @desc Returns an SHA-256 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha256( message, to_hex ) {
+        return discordCrypt.__createHash( message, 'sha256', to_hex );
+    }
+
+    /**
+     * @public
+     * @desc Returns an SHA-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static sha512( message, to_hex ) {
+        return discordCrypt.__createHash( message, 'sha512', to_hex );
+    }
+
+    /**
+     * @public
+     * @desc Returns a Whirlpool-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static whirlpool( message, to_hex ) {
+        return discordCrypt.__createHash( message, 'whirlpool', to_hex );
+    }
+
+    /**
+     * @public
+     * @desc Returns a HMAC-SHA-256 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} secret The secret input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static hmac_sha256( message, secret, to_hex ) {
+        return discordCrypt.__createHash( message, 'sha256', to_hex, true, secret );
+    }
+
+    /*  */
+    /**
+     * @public
+     * @desc Returns an HMAC-SHA-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} secret The secret input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static hmac_sha512( message, secret, to_hex ) {
+        return discordCrypt.__createHash( message, 'sha512', to_hex, true, secret );
+    }
+
+    /**
+     * @public
+     * @desc Returns an HMAC-Whirlpool-512 digest of the message.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} secret The secret input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @returns {string} Returns the hex or Base64 encoded result.
+     */
+    static hmac_whirlpool( message, secret, to_hex ) {
+        return discordCrypt.__createHash( message, 'whirlpool', to_hex, true, secret );
+    }
+
+    /**
+     * @typedef {Object} hashCallback
+     * @desc The function to execute once the hash is calculated or an error has occurred.
+     * @property {string} error The error that occurred or null.
+     * @property {string} hash The hex or Base64 encoded result.
+     */
+
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-160 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
+    static pbkdf2_sha160(
+        message,
+        salt,
+        to_hex,
+        message_is_hex = undefined,
+        salt_is_hex = undefined,
+        key_length = 32,
+        iterations = 5000,
+        callback = undefined
+    ) {
+        return discordCrypt.__pbkdf2(
+            message,
+            salt,
+            to_hex,
+            message_is_hex,
+            salt_is_hex,
+            callback,
+            'sha1',
+            key_length,
+            iterations
+        );
+    }
+
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-256 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
+    static pbkdf2_sha256(
+        message,
+        salt,
+        to_hex,
+        message_is_hex = undefined,
+        salt_is_hex = undefined,
+        key_length = 32,
+        iterations = 5000,
+        callback = undefined
+    ) {
+        return discordCrypt.__pbkdf2(
+            message,
+            salt,
+            to_hex,
+            message_is_hex,
+            salt_is_hex,
+            callback,
+            'sha256',
+            key_length,
+            iterations
+        );
+    }
+
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-512 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
+    static pbkdf2_sha512(
+        /* Buffer|Array|string */   message,
+        /* Buffer|Array|string */   salt,
+        /* boolean */               to_hex,
+        /* boolean */               message_is_hex = undefined,
+        /* boolean */               salt_is_hex = undefined,
+        /* int */                   key_length = 32,
+        /* int */                   iterations = 5000,
+        /* function(err, hash) */   callback = undefined
+    ) {
+        return discordCrypt.__pbkdf2(
+            message,
+            salt,
+            to_hex,
+            message_is_hex,
+            salt_is_hex,
+            callback,
+            'sha512',
+            key_length,
+            iterations
+        );
+    }
+
+    /**
+     * @public
+     * @desc Computes a derived digest using the PBKDF2 algorithm and Whirlpool-512 as primitives.
+     * @param {Buffer|Array|string} message The input message to hash.
+     * @param {Buffer|Array|string} salt The random salting input used with the message.
+     * @param {boolean} to_hex Whether to convert the result to hex or Base64.
+     * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {int} [key_length] The desired key length size in bytes. Default: 32.
+     * @param {int} [iterations] The number of iterations to perform. Default: 5000.
+     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     *      completed. If undefined, a sync call is made instead.
+     * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
+     *      encoded result.
+     */
+    static pbkdf2_whirlpool(
+        message,
+        salt,
+        to_hex,
+        message_is_hex = undefined,
+        salt_is_hex = undefined,
+        key_length = 32,
+        iterations = 5000,
+        callback = undefined
+    ) {
+        return discordCrypt.__pbkdf2(
+            message,
+            salt,
+            to_hex,
+            message_is_hex,
+            salt_is_hex,
+            callback,
+            'whirlpool',
+            key_length,
+            iterations
+        );
+    }
+
+    /* ============ END NODE CRYPTO HASH PRIMITIVES ============ */
+
+    /* ================ CRYPTO CIPHER FUNCTIONS ================ */
+
+    /**
+     * @public
+     * @desc Encrypts the given plain-text message using the algorithm specified.
+     * @param {string} symmetric_cipher The name of the symmetric cipher used to encrypt the message.
+     *      This must be supported by NodeJS's crypto module.
+     * @param {string} block_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_scheme The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {boolean} convert_to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
+     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {Buffer|null} Returns a Buffer() object containing the ciphertext or null if the chosen options are
+     *      invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static __encrypt(
+        symmetric_cipher,
+        block_mode,
+        padding_scheme,
+        message,
+        key,
+        convert_to_hex,
+        is_message_hex,
+        key_size_bits = 256,
+        block_cipher_size = 128,
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        const cipher_name = `${symmetric_cipher}${block_mode === undefined ? '' : '-' + block_mode}`;
+        const crypto = require( 'crypto' );
+
+        /* Buffered parameters. */
+        let _message, _key, _iv, _salt, _derived, _encrypt;
+
+        /* Make sure the cipher name and mode is valid first. */
+        if (
+            !discordCrypt.__isValidCipher( cipher_name ) || [ 'cbc', 'cfb', 'ofb' ]
+                .indexOf( block_mode.toLowerCase() ) === -1
+        )
+            return null;
+
+        /* Pad the message to the nearest block boundary. */
+        _message = discordCrypt.__padMessage( message, padding_scheme, key_size_bits, is_message_hex );
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV( key, key_size_bits );
+
+        /* Check if using a predefined salt. */
+        if ( one_time_salt !== undefined ) {
+            /* Convert the salt to a Buffer. */
+            _salt = discordCrypt.__toBuffer( one_time_salt );
+
+            /* Don't bother continuing if conversions have failed. */
+            if ( !_salt || _salt.length === 0 )
+                return null;
+
+            /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
+            if ( _salt.length !== 8 )
+                _salt = Buffer.from( discordCrypt.whirlpool64( _salt, true ), 'hex' );
+        }
+        else
+        /* Generate a random salt to derive the key and IV. */
+            _salt = crypto.randomBytes( 8 );
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+
+        /* Slice off the IV. */
+        _iv = _derived.slice( 0, block_cipher_size / 8 );
+
+        /* Slice off the key. */
+        _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
+
+        /* Create the cipher with derived IV and key. */
+        _encrypt = crypto.createCipheriv( cipher_name, _key, _iv );
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _encrypt.setAutoPadding( false );
+
+        /* Get the cipher text. */
+        let _ct = _encrypt.update( _message, undefined, 'hex' );
+        _ct += _encrypt.final( 'hex' );
+
+        /* Return the result with the prepended salt. */
+        return Buffer.from( _salt.toString( 'hex' ) + _ct, 'hex' ).toString( convert_to_hex ? 'hex' : 'base64' );
+    }
+
+    /**
+     * @public
+     * @desc Decrypts the given cipher-text message using the algorithm specified.
+     * @param {string} symmetric_cipher The name of the symmetric cipher used to decrypt the message.
+     *      This must be supported by NodeJS's crypto module.
+     * @param {string} block_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_scheme The padding scheme used to unpad the message from the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {string|Buffer|Array} message The input ciphertext message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {boolean} output_format The output format of the plaintext.
+     *      Can be either [ 'utf8', 'latin1', 'hex', 'base64' ]
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
+     * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     * options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static __decrypt(
+        symmetric_cipher,
+        block_mode,
+        padding_scheme,
+        message,
+        key,
+        output_format,
+        is_message_hex,
+        key_size_bits = 256,
+        block_cipher_size = 128,
+        kdf_iteration_rounds = 1000
+    ) {
+        const cipher_name = `${symmetric_cipher}${block_mode === undefined ? '' : '-' + block_mode}`;
+        const crypto = require( 'crypto' );
+
+        /* Buffered parameters. */
+        let _message, _key, _iv, _salt, _derived, _decrypt;
+
+        /* Make sure the cipher name and mode is valid first. */
+        if ( !discordCrypt.__isValidCipher( cipher_name ) || [ 'cbc', 'ofb', 'cfb' ]
+            .indexOf( block_mode.toLowerCase() ) === -1 )
+            return null;
+
+        /* Get the message as a buffer. */
+        _message = discordCrypt.__validateMessage( message, is_message_hex );
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV( key, key_size_bits );
+
+        /* Retrieve the 64-bit salt. */
+        _salt = _message.slice( 0, 8 );
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+
+        /* Slice off the IV. */
+        _iv = _derived.slice( 0, block_cipher_size / 8 );
+
+        /* Slice off the key. */
+        _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
+
+        /* Splice the message. */
+        _message = _message.slice( 8 );
+
+        /* Create the cipher with IV. */
+        _decrypt = crypto.createDecipheriv( cipher_name, _key, _iv );
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _decrypt.setAutoPadding( false );
+
+        /* Decrypt the cipher text. */
+        let _pt = _decrypt.update( _message, undefined, 'hex' );
+        _pt += _decrypt.final( 'hex' );
+
+        /* Unpad the message. */
+        _pt = discordCrypt.__padMessage( _pt, padding_scheme, key_size_bits, true, true );
+
+        /* Return the buffer. */
+        return _pt.toString( output_format );
+    }
+
+
+    /**
+     * @public
+     * @desc Blowfish encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
+    static blowfish512_encrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for Blowfish. */
+        const keySize = 512, blockSize = 64;
+
+        /* Perform the encryption. */
+        return discordCrypt.__encrypt(
+            'bf',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            keySize,
+            blockSize,
+            one_time_salt,
+            kdf_iteration_rounds
+        );
+    }
+
+    /**
+     * @public
+     * @desc Blowfish decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static blowfish512_decrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for Blowfish. */
+        const keySize = 512, blockSize = 64;
+
+        /* Return the unpadded message. */
+        return discordCrypt.__decrypt(
+            'bf',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            keySize,
+            blockSize,
+            kdf_iteration_rounds
+        );
+    }
+
+    /**
+     * @public
+     * @desc AES-256 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
+    static aes256_encrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for AES-256. */
+        const keySize = 256, blockSize = 128;
+
+        /* Perform the encryption. */
+        return discordCrypt.__encrypt(
+            'aes-256',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            keySize,
+            blockSize,
+            one_time_salt,
+            kdf_iteration_rounds
+        );
+    }
+
+    /**
+     * @public
+     * @desc AES-256 decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static aes256_decrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for AES-256. */
+        const keySize = 256, blockSize = 128;
+
+        /* Return the unpadded message. */
+        return discordCrypt.__decrypt(
+            'aes-256',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            keySize,
+            blockSize,
+            kdf_iteration_rounds
+        );
+    }
+
+    /*  */
+    /**
+     * @public
+     * @desc AES-256 decrypts a message in GCM mode.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [additional_data] If specified, this additional data is used during GCM
+     *      authentication.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
+    static aes256_encrypt_gcm(
+        message,
+        key,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        additional_data = undefined,
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        const block_cipher_size = 128, key_size_bits = 256;
+        const cipher_name = 'aes-256-gcm';
+        const crypto = require( 'crypto' );
+
+        let _message, _key, _iv, _salt, _derived, _encrypt;
+
+        /* Pad the message to the nearest block boundary. */
+        _message = discordCrypt.__padMessage( message, padding_mode, key_size_bits, is_message_hex );
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV( key, key_size_bits );
+
+        /* Check if using a predefined salt. */
+        if ( one_time_salt !== undefined ) {
+            /* Convert the salt to a Buffer. */
+            _salt = discordCrypt.__toBuffer( one_time_salt );
+
+            /* Don't bother continuing if conversions have failed. */
+            if ( !_salt || _salt.length === 0 )
+                return null;
+
+            /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
+            if ( _salt.length !== 8 )
+                _salt = Buffer.from( discordCrypt.whirlpool64( _salt, true ), 'hex' );
+        }
+        else
+        /* Generate a random salt to derive the key and IV. */
+            _salt = crypto.randomBytes( 8 );
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+
+        /* Slice off the IV. */
+        _iv = _derived.slice( 0, block_cipher_size / 8 );
+
+        /* Slice off the key. */
+        _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
+
+        /* Create the cipher with derived IV and key. */
+        _encrypt = crypto.createCipheriv( cipher_name, _key, _iv );
+
+        /* Add the additional data if necessary. */
+        if ( additional_data !== undefined )
+            _encrypt.setAAD( discordCrypt.__toBuffer( additional_data ) );
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _encrypt.setAutoPadding( false );
+
+        /* Get the cipher text. */
+        let _ct = _encrypt.update( _message, undefined, 'hex' );
+        _ct += _encrypt.final( 'hex' );
+
+        /* Return the auth tag prepended with the salt to the message. */
+        return Buffer.from(
+            _encrypt.getAuthTag().toString( 'hex' ) + _salt.toString( 'hex' ) + _ct,
+            'hex'
+        ).toString( to_hex ? 'hex' : 'base64' );
+    }
+
+    /**
+     * @public
+     * @desc AES-256 decrypts a message in GCM mode.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [additional_data] If specified, this additional data is used during GCM
+     *      authentication.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static aes256_decrypt_gcm(
+        message,
+        key,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined,
+        additional_data = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        const block_cipher_size = 128, key_size_bits = 256;
+        const cipher_name = 'aes-256-gcm';
+        const crypto = require( 'crypto' );
+
+        /* Buffered parameters. */
+        let _message, _key, _iv, _salt, _authTag, _derived, _decrypt;
+
+        /* Get the message as a buffer. */
+        _message = discordCrypt.__validateMessage( message, is_message_hex );
+
+        /* Get the key as a buffer. */
+        _key = discordCrypt.__validateKeyIV( key, key_size_bits );
+
+        /* Retrieve the auth tag. */
+        _authTag = _message.slice( 0, block_cipher_size / 8 );
+
+        /* Splice the message. */
+        _message = _message.slice( block_cipher_size / 8 );
+
+        /* Retrieve the 64-bit salt. */
+        _salt = _message.slice( 0, 8 );
+
+        /* Splice the message. */
+        _message = _message.slice( 8 );
+
+        /* Derive the key length and IV length. */
+        _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+
+        /* Slice off the IV. */
+        _iv = _derived.slice( 0, block_cipher_size / 8 );
+
+        /* Slice off the key. */
+        _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
+
+        /* Create the cipher with IV. */
+        _decrypt = crypto.createDecipheriv( cipher_name, _key, _iv );
+
+        /* Set the authentication tag. */
+        _decrypt.setAuthTag( _authTag );
+
+        /* Set the additional data for verification if necessary. */
+        if ( additional_data !== undefined )
+            _decrypt.setAAD( discordCrypt.__toBuffer( additional_data ) );
+
+        /* Disable automatic PKCS #7 padding. We do this in-house. */
+        _decrypt.setAutoPadding( false );
+
+        /* Decrypt the cipher text. */
+        let _pt = _decrypt.update( _message, undefined, 'hex' );
+        _pt += _decrypt.final( 'hex' );
+
+        /* Unpad the message. */
+        _pt = discordCrypt.__padMessage( _pt, padding_mode, key_size_bits, true, true );
+
+        /* Return the buffer. */
+        return _pt.toString( output_format );
+    }
+
+    /**
+     * @public
+     * @desc Camellia-256 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
+    static camellia256_encrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for Camellia-256. */
+        const keySize = 256, blockSize = 128;
+
+        /* Perform the encryption. */
+        return discordCrypt.__encrypt(
+            'camellia-256',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            keySize,
+            blockSize,
+            one_time_salt,
+            kdf_iteration_rounds
+        );
+    }
+
+    /**
+     * @public
+     * @desc Camellia-256 decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static camellia256_decrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for Camellia-256. */
+        const keySize = 256, blockSize = 128;
+
+        /* Return the unpadded message. */
+        return discordCrypt.__decrypt(
+            'camellia-256',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            keySize,
+            blockSize,
+            kdf_iteration_rounds
+        );
+    }
+
+    /**
+     * @public
+     * @desc TripleDES-192 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
+    static tripledes192_encrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for TripleDES-192. */
+        const keySize = 192, blockSize = 64;
+
+        /* Perform the encryption. */
+        return discordCrypt.__encrypt(
+            'des-ede3',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            keySize,
+            blockSize,
+            one_time_salt,
+            kdf_iteration_rounds
+        );
+    }
+
+    /**
+     * @public
+     * @desc TripleDES-192 decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static tripledes192_decrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for TripleDES-192. */
+        const keySize = 192, blockSize = 64;
+
+        /* Return the unpadded message. */
+        return discordCrypt.__decrypt(
+            'des-ede3',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            keySize,
+            blockSize,
+            kdf_iteration_rounds
+        );
+    }
+
+    /**
+     * @public
+     * @desc IDEA-128 encrypts a message.
+     * @param {string|Buffer|Array} message The input message to encrypt.
+     * @param {string|Buffer|Array} key The key used with the encryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {boolean} to_hex If true, the ciphertext is converted to a hex string, if false, it is
+     *      converted to a Base64 string.
+     * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
+     *      Key used to encrypt the message.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+     * @throws An exception indicating the error that occurred.
+     */
+    static idea128_encrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        to_hex = false,
+        is_message_hex = undefined,
+        one_time_salt = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for IDEA-128. */
+        const keySize = 128, blockSize = 64;
+
+        /* Perform the encryption. */
+        return discordCrypt.__encrypt(
+            'idea',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            to_hex,
+            is_message_hex,
+            keySize,
+            blockSize,
+            one_time_salt,
+            kdf_iteration_rounds
+        );
+    }
+
+    /**
+     * @public
+     * @desc IDEA-128 decrypts a message.
+     * @param {string|Buffer|Array} message The input message to decrypt.
+     * @param {string|Buffer|Array} key The key used with the decryption cipher.
+     * @param {string} cipher_mode The block operation mode of the cipher.
+     *      This can be either [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     * @param {string} output_format The output format of the decrypted message.
+     *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
+     * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
+     *      options are invalid.
+     * @throws Exception indicating the error that occurred.
+     */
+    static idea128_decrypt(
+        message,
+        key,
+        cipher_mode,
+        padding_mode,
+        output_format = 'utf8',
+        is_message_hex = undefined,
+        kdf_iteration_rounds = 1000
+    ) {
+        /* Size constants for IDEA-128. */
+        const keySize = 128, blockSize = 64;
+
+        /* Return the unpadded message. */
+        return discordCrypt.__decrypt(
+            'idea',
+            cipher_mode,
+            padding_mode,
+            message,
+            key,
+            output_format,
+            is_message_hex,
+            keySize,
+            blockSize,
+            kdf_iteration_rounds
+        );
+    }
+
+    /* ============== END CRYPTO CIPHER FUNCTIONS ============== */
+
+    /**
+     * @public
+     * @desc Converts a cipher string to its appropriate index number.
+     * @param {string} primary_cipher The primary cipher.
+     *      This can be either [ 'bf', 'aes', 'camel', 'idea', 'tdes' ].
+     * @param {string} [secondary_cipher] The secondary cipher.
+     *      This can be either [ 'bf', 'aes', 'camel', 'idea', 'tdes' ].
+     * @returns {int} Returns the index value of the algorithm.
+     */
+    static cipherStringToIndex( primary_cipher, secondary_cipher = undefined ) {
+        let value = 0;
+
+        /* Return if already a number. */
+        if ( typeof primary_cipher === 'number' )
+            return primary_cipher;
+
+        /* Check if it's a joined string. */
+        if ( typeof primary_cipher === 'string' && primary_cipher.search( '-' ) !== -1 &&
+            secondary_cipher === undefined ) {
+            primary_cipher = primary_cipher.split( '-' )[ 0 ];
+            secondary_cipher = primary_cipher.split( '-' )[ 1 ];
+        }
+
+        /* Resolve the primary index. */
+        switch ( primary_cipher ) {
+            case 'bf':
+                /* value = 0; */
+                break;
+            case 'aes':
+                value = 1;
+                break;
+            case 'camel':
+                value = 2;
+                break;
+            case 'idea':
+                value = 3;
+                break;
+            case 'tdes':
+                value = 4;
+                break;
+            default:
+                return 0;
+        }
+
+        /* Make sure the secondary is valid. */
+        if ( secondary_cipher !== undefined ) {
+            switch ( secondary_cipher ) {
+                case 'bf':
+                    /* value = 0; */
+                    break;
+                case 'aes':
+                    value += 5;
+                    break;
+                case 'camel':
+                    value += 10;
+                    break;
+                case 'idea':
+                    value += 15;
+                    break;
+                case 'tdes':
+                    value += 20;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        /* Return the index. */
+        return value;
+    }
+
+    /**
+     * @public
+     * @desc Converts an algorithm index to its appropriate string value.
+     * @param {int} index The index of the cipher(s) used.
+     * @param {boolean} get_secondary Whether to retrieve the secondary algorithm name.
+     * @returns {string} Returns a shorthand representation of either the primary or secondary cipher.
+     *      This can be either [ 'bf', 'aes', 'camel', 'idea', 'tdes' ].
+     */
+    static cipherIndexToString( index, get_secondary = undefined ) {
+
+        /* Strip off the secondary. */
+        if ( get_secondary !== undefined && get_secondary ) {
+            if ( index >= 20 )
+                return 'tdes';
+            else if ( index >= 15 )
+                return 'idea';
+            else if ( index >= 10 )
+                return 'camel';
+            else if ( index >= 5 )
+                return 'aes';
+            else
+                return 'bf';
+        }
+        /* Remove the secondary. */
+        else if ( index >= 20 )
+            index -= 20;
+        else if ( index >= 15 && index <= 19 )
+            index -= 15;
+        else if ( index >= 10 && index <= 14 )
+            index -= 10;
+        else if ( index >= 5 && index <= 9 )
+            index -= 5;
+
+        /* Calculate the primary. */
+        if ( index === 1 )
+            return 'aes';
+        else if ( index === 2 )
+            return 'camel';
+        else if ( index === 3 )
+            return 'idea';
+        else if ( index === 4 )
+            return 'tdes';
+        else
+            return 'bf';
+    }
+
+    /**
+     * @public
+     * @desc Converts an input string to the approximate entropic bits using Shannon's algorithm.
+     * @param {string} key The input key to check.
+     * @returns {int} Returns the approximate number of bits of entropy contained in the key.
+     */
+    static entropicBitLength( key ) {
+        let h = Object.create( null ), k;
+        let sum = 0, len = key.length;
+
+        key.split( '' ).forEach( c => {
+            h[ c ] ? h[ c ]++ : h[ c ] = 1;
+        } );
+
+        for ( k in h ) {
+            let p = h[ k ] / len;
+            sum -= p * Math.log( p ) / Math.log( 2 );
+        }
+
+        return parseInt( sum * len );
+    }
+
+    /**
+     * @desc Returns 256-characters of Braille.
+     * @return {string}
+     */
+    static getBraille() {
+        return Array.from(
+            "⠀⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟⠠⠡⠢⠣⠤⠥⠦⠧⠨⠩⠪⠫⠬⠭⠮⠯⠰⠱⠲⠳⠴⠵⠶⠷⠸⠹⠺⠻⠼⠽⠾⠿⡀⡁⡂⡃⡄⡅⡆⡇⡈⡉⡊⡋⡌⡍⡎⡏⡐⡑⡒⡓⡔⡕⡖" +
+            "⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭" +
+            "⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿"
+        );
+    }
+
+    /**
+     * @public
+     * @desc Determines if a string has all valid Braille characters according to the result from getBraille()
+     * @param {string} message The message to validate.
+     * @returns {boolean} Returns true if the message contains only the required character set.
+     */
+    static isValidBraille( message ) {
+        let c = discordCrypt.getBraille();
+
+        for ( let i = 0; i < message.length; i++ )
+            if ( c.indexOf( message[ i ] ) === -1 )
+                return false;
+
+        return true;
+    }
+
+    /**
+     * @public
+     * @desc Retrieves Base64 charset as an Array Object.
+     * @returns {Array} Returns an array of all 64 characters used in Base64 + encoding characters.
+     */
+    static getBase64() {
+        return Array.from( "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" );
+    }
+
+    /**
+     * @public
+     * @desc Returns an array of valid Diffie-Hellman exchange key bit-sizes.
+     * @returns {number[]} Returns the bit lengths of all supported DH keys.
+     */
+    static getDHBitSizes() {
+        return [ 768, 1024, 1536, 2048, 3072, 4096, 6144, 8192 ];
+    }
+
+    /**
+     * @public
+     * @desc Returns an array of Elliptic-Curve Diffie-Hellman key bit-sizes.
+     * @returns {number[]} Returns the bit lengths of all supported ECDH keys.
+     */
+    static getECDHBitSizes() {
+        return [ 224, 256, 384, 409, 521, 571 ];
+    }
+
+    /**
+     * @public
+     * @desc Determines if a key exchange algorithm's index is valid.
+     * @param {int} index The index to determine if valid.
+     * @returns {boolean} Returns true if the desired index meets one of the ECDH or DH key sizes.
+     */
+    static isValidExchangeAlgorithm( index ) {
+        return index >= 0 &&
+            index <= ( discordCrypt.getDHBitSizes().length + discordCrypt.getECDHBitSizes().length - 1 );
+    }
+
+    /**
+     * @public
+     * @desc Converts an algorithm index to a string.
+     * @param {int} index The input index of the exchange algorithm.
+     * @returns {string} Returns a string containing the algorithm or "Invalid Algorithm".
+     */
+    static indexToExchangeAlgorithmString( index ) {
+        let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
+        let base = [ 'DH-', 'ECDH-' ];
+
+        if ( !discordCrypt.isValidExchangeAlgorithm( index ) )
+            return 'Invalid Algorithm';
+
+        return ( index <= ( dh_bl.length - 1 ) ?
+            base[ 0 ] + dh_bl[ index ] :
+            base[ 1 ] + ecdh_bl[ index - dh_bl.length ] );
+    }
+
+    /**
+     * @public
+     * @desc Converts an algorithm index to a bit size.
+     * @param {int} index The index to convert to the bit length.
+     * @returns {int} Returns 0 if the index is invalid or the bit length of the index.
+     */
+    static indexToAlgorithmBitLength( index ) {
+        let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
+
+        if ( !discordCrypt.isValidExchangeAlgorithm( index ) )
+            return 0;
+
+        return ( index <= ( dh_bl.length - 1 ) ? dh_bl[ index ] : ecdh_bl[ index - dh_bl.length ] );
+    }
+
+    /**
+     * @public
+     * @desc Computes a secret key from two ECDH or DH keys. One private and one public.
+     * @param {Object} private_key A private key DH or ECDH object from NodeJS's crypto module.
+     * @param {string} public_key The public key as a string in Base64 or hex format.
+     * @param {boolean} is_base_64 Whether the public key is a Base64 string. If false, it is assumed to be hex.
+     * @param {boolean} to_base_64 Whether to convert the output secret to Base64.
+     *      If false, it is converted to hex.
+     * @returns {string|null} Returns a string encoded secret on success or null on failure.
+     */
+    static computeExchangeSharedSecret( private_key, public_key, is_base_64, to_base_64 ) {
+        let in_form, out_form;
+
+        /* Compute the formats. */
+        in_form = is_base_64 ? 'base64' : 'hex';
+        out_form = to_base_64 ? 'base64' : 'hex';
+
+        /* Compute the derived key and return. */
+        try {
+            return private_key.computeSecret( public_key, in_form, out_form );
+        }
+        catch ( e ) {
+            return null;
+        }
+    }
+
+    /**
+     * @public
+     * @desc Generates a Diffie-Hellman key pair.
+     * @param {int} size The bit length of the desired key pair.
+     *      This must be one of the supported lengths retrieved from getDHBitSizes().
+     * @param {Buffer} private_key The optional private key used to initialize the object.
+     * @returns {Object|null} Returns a DiffieHellman object on success or null on failure.
+     */
+    static generateDH( size, private_key = undefined ) {
+        let groupName, key;
+
+        /* Calculate the appropriate group. */
+        switch ( size ) {
+            case 768:
+                groupName = 'modp1';
+                break;
+            case 1024:
+                groupName = 'modp2';
+                break;
+            case 1536:
+                groupName = 'modp5';
+                break;
+            case 2048:
+                groupName = 'modp14';
+                break;
+            case 3072:
+                groupName = 'modp15';
+                break;
+            case 4096:
+                groupName = 'modp16';
+                break;
+            case 6144:
+                groupName = 'modp17';
+                break;
+            case 8192:
+                groupName = 'modp18';
+                break;
+            default:
+                return null;
+        }
+
+        /* Create the key object. */
+        try {
+            key = require( 'crypto' ).getDiffieHellman( groupName );
+        }
+        catch ( err ) {
+            return null;
+        }
+
+        /* Generate the key if it's valid. */
+        if ( key !== undefined && key !== null && typeof key.generateKeys !== 'undefined' ) {
+            if ( private_key === undefined )
+                key.generateKeys();
+            else if ( typeof key.setPrivateKey !== 'undefined' )
+                key.setPrivateKey( private_key );
+        }
+
+        /* Return the result. */
+        return key;
+    }
+
+    /**
+     * @public
+     * @see http://www.secg.org/sec2-v2.pdf
+     * @desc Generates a Elliptic-Curve Diffie-Hellman key pair.
+     * @param {int} size The bit length of the desired key pair.
+     *      This must be one of the supported lengths retrieved from getECDHBitSizes().
+     * @param {Buffer} private_key The optional private key used to initialize the object.
+     * @returns {Object|null} Returns a ECDH object on success or null on failure.
+     */
+    static generateECDH( size, private_key = undefined ) {
+        let groupName, key;
+
+        /* Calculate the appropriate group. */
+        switch ( size ) {
+            case 224:
+                groupName = 'secp224k1';
+                break;
+            case 256:
+                groupName = 'secp256k1';
+                break;
+            case 384:
+                groupName = 'secp384r1';
+                break;
+            case 409:
+                groupName = 'sect409k1';
+                break;
+            case 521:
+                groupName = 'secp521r1';
+                break;
+            case 571:
+                groupName = 'sect571k1';
+                break;
+            default:
+                return null;
+        }
+
+        /* Create the key object. */
+        try {
+            key = require( 'crypto' ).createECDH( groupName );
+        }
+        catch ( err ) {
+            return null;
+        }
+
+        /* Generate the key if it's valid. */
+        if ( key !== undefined && key !== null && typeof key.generateKeys !== 'undefined' ) {
+            /* Generate a new key if the private key is undefined else set the private key. */
+            if ( private_key === undefined )
+                key.generateKeys( 'hex', 'compressed' );
+            else if ( typeof key.setPrivateKey !== 'undefined' )
+                key.setPrivateKey( private_key );
+        }
+
+        /* Return the result. */
+        return key;
+    }
+
+    /**
+     * @public
+     * @desc Substitutes an input Buffer() object to the Braille equivalent from getBraille().
+     * @param {string} message The input message to perform substitution on.
+     * @param {boolean} convert Whether the message is to be converted from hex to Braille or from Braille to hex.
+     * @returns {string} Returns the substituted string encoded message.
+     * @throws An exception indicating the message contains characters not in the character set.
+     */
+    static substituteMessage( message, convert ) {
+        /* Target character set. */
+        let subset = discordCrypt.getBraille();
+
+        let result = "", index = 0;
+
+        if ( convert !== undefined ) {
+            /* Sanity check. */
+            if ( !Buffer.isBuffer( message ) )
+                throw 'Message input is not a buffer.';
+
+            /* Calculate the target character. */
+            for ( let i = 0; i < message.length; i++ )
+                result += subset[ message[ i ] ];
+        }
+        else {
+            /* Calculate the target character. */
+            for ( let i = 0; i < message.length; i++ ) {
+                index = subset.indexOf( message[ i ] );
+
+                /* Sanity check. */
+                if ( index === -1 )
+                    throw 'Message contains invalid characters.';
+
+                result += `0${index.toString( 16 )}`.slice( -2 );
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * @public
+     * @desc Encodes the given values as a braille encoded 32-bit word.
+     * @param {int} cipherIndex The index of the cipher(s) used to encrypt the message
+     * @param {int} cipherModeIndex The index of the cipher block mode used for the message.
+     * @param {int} paddingIndex The index of the padding scheme for the message.
+     * @param {int} pad The padding byte to use.
+     * @returns {string} Returns a substituted UTF-16 string of a braille encoded 32-bit word containing these options.
+     */
+    static metaDataEncode( cipherIndex, cipherModeIndex, paddingIndex, pad ) {
+
+        /* Parse the first 8 bits. */
+        if ( typeof cipherIndex === 'string' )
+            cipherIndex = discordCrypt.cipherStringToIndex( cipherIndex );
+
+        /* Parse the next 8 bits. */
+        if ( typeof cipherModeIndex === 'string' )
+            cipherModeIndex = [ 'cbc', 'cfb', 'ofb' ].indexOf( cipherModeIndex.toLowerCase() );
+
+        /* Parse the next 8 bits. */
+        if ( typeof paddingIndex === 'string' )
+            paddingIndex = [ 'pkc7', 'ans2', 'iso1', 'iso9' ].indexOf( paddingIndex.toLowerCase() );
+
+        /* Buffered word. */
+        let buf = Buffer.from( [ cipherIndex, cipherModeIndex, paddingIndex, parseInt( pad ) ] );
+
+        /* Convert it and return. */
+        return discordCrypt.substituteMessage( buf, true );
+    }
+
+    /**
+     * @public
+     * @desc Decodes an input string and returns a byte array containing index number of options.
+     * @param {string} message The substituted UTF-16 encoded metadata containing the metadata options.
+     * @returns {int[]} Returns 4 integer indexes of each metadata value.
+     */
+    static metaDataDecode( message ) {
+        /* Decode the result and convert the hex to a Buffer. */
+        return Buffer.from( discordCrypt.substituteMessage( message ), 'hex' );
+    }
+
+    /**
+     * @public
+     * @desc Dual-encrypts a message using symmetric keys and returns the substituted encoded equivalent.
+     * @param {string|Buffer} message The input message to encrypt.
+     * @param {Buffer} primary_key The primary key used for the first level of encryption.
+     * @param {Buffer} secondary_key The secondary key used for the second level of encryption.
+     * @param {int} cipher_index The cipher index containing the primary and secondary ciphers used for encryption.
+     * @param {string} block_mode The block operation mode of the ciphers.
+     *      These can be: [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
+     * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
+     * @throws An exception indicating the error that occurred.
+     */
+    static symmetricEncrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode ) {
+
+        /* Performs one of the 5 standard encryption algorithms on the plain text. */
+        function handleEncodeSegment( message, key, cipher, mode, pad ) {
+            switch ( cipher ) {
+                case 0:
+                    return discordCrypt.blowfish512_encrypt( message, key, mode, pad );
+                case 1:
+                    return discordCrypt.aes256_encrypt( message, key, mode, pad );
+                case 2:
+                    return discordCrypt.camellia256_encrypt( message, key, mode, pad );
+                case 3:
+                    return discordCrypt.idea128_encrypt( message, key, mode, pad );
+                case 4:
+                    return discordCrypt.tripledes192_encrypt( message, key, mode, pad );
+                default:
+                    return null;
+            }
+        }
+
+        /* Convert the block mode. */
+        let mode = block_mode.toLowerCase();
+
+        /* Convert the padding. */
+        let pad = padding_mode;
+
+        /* Encode using the user-specified symmetric algorithm. */
+        let msg = '';
+
+        /* Dual-encrypt the segment. */
+        if ( cipher_index >= 0 && cipher_index <= 4 )
+            msg = discordCrypt.blowfish512_encrypt(
+                handleEncodeSegment( message, primary_key, cipher_index, mode, pad ),
+                secondary_key,
+                mode,
+                pad,
+                true,
+                false
+            );
+        else if ( cipher_index >= 5 && cipher_index <= 9 )
+            msg = discordCrypt.aes256_encrypt(
+                handleEncodeSegment( message, primary_key, cipher_index - 5, mode, pad ),
+                secondary_key,
+                mode,
+                pad,
+                true,
+                false
+            );
+        else if ( cipher_index >= 10 && cipher_index <= 14 )
+            msg = discordCrypt.camellia256_encrypt(
+                handleEncodeSegment( message, primary_key, cipher_index - 10, mode, pad ),
+                secondary_key,
+                mode,
+                pad,
+                true,
+                false
+            );
+        else if ( cipher_index >= 15 && cipher_index <= 19 )
+            msg = discordCrypt.idea128_encrypt(
+                handleEncodeSegment( message, primary_key, cipher_index - 15, mode, pad ),
+                secondary_key,
+                mode,
+                pad,
+                true,
+                false
+            );
+        else if ( cipher_index >= 20 && cipher_index <= 24 )
+            msg = discordCrypt.tripledes192_encrypt(
+                handleEncodeSegment( message, primary_key, cipher_index - 20, mode, pad ),
+                secondary_key,
+                mode,
+                pad,
+                true,
+                false
+            );
+        else
+            throw `Unknown cipher selected: ${cipher_index}`;
+
+        /* Get MAC tag as a hex string. */
+        let tag = discordCrypt.hmac_sha256( Buffer.from( msg, 'hex' ), primary_key, true );
+
+        /* Prepend the authentication tag hex string & convert it to Base64. */
+        msg = Buffer.from( tag + msg, 'hex' );
+
+        /* Return the message. */
+        return discordCrypt.substituteMessage( msg, true );
+    }
+
+    /**
+     * @public
+     * @desc Dual-decrypts a message using symmetric keys and returns the substituted encoded equivalent.
+     * @param {string|Buffer|Array} message The substituted and encoded input message to decrypt.
+     * @param {Buffer} primary_key The primary key used for the **second** level of decryption.
+     * @param {Buffer} secondary_key The secondary key used for the **first** level of decryption.
+     * @param {int} cipher_index The cipher index containing the primary and secondary ciphers used for decryption.
+     * @param {string} block_mode The block operation mode of the ciphers.
+     *      These can be: [ 'CBC', 'CFB', 'OFB' ].
+     * @param {string} padding_mode The padding scheme used to unpad the message to the block length of the cipher.
+     *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
+     *      If this is enabled and authentication fails, null is returned.
+     *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
+     * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
+     * @throws An exception indicating the error that occurred.
+     */
+    static symmetricDecrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode ) {
+        const crypto = require( 'crypto' );
+
+        /* Performs one of the 5 standard decryption algorithms on the plain text. */
+        function handleDecodeSegment(
+            message,
+            key,
+            cipher,
+            mode,
+            pad,
+            output_format = 'utf8',
+            is_message_hex = undefined
+        ) {
+            switch ( cipher ) {
+                case 0:
+                    return discordCrypt.blowfish512_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                case 1:
+                    return discordCrypt.aes256_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                case 2:
+                    return discordCrypt.camellia256_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                case 3:
+                    return discordCrypt.idea128_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                case 4:
+                    return discordCrypt.tripledes192_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                default:
+                    return null;
+            }
+        }
+
+        let mode, pad;
+
+        /* Convert the block mode. */
+        if ( typeof block_mode !== 'string' ) {
+            if ( block_mode === 0 )
+                mode = 'cbc';
+            else if ( block_mode === 1 )
+                mode = 'cfb';
+            else if ( block_mode === 2 )
+                mode = 'ofb';
+            else return '';
+        }
+
+        /* Convert the padding. */
+        if ( typeof padding_mode !== 'string' ) {
+            if ( padding_mode === 0 )
+                pad = 'pkc7';
+            else if ( padding_mode === 1 )
+                pad = 'ans2';
+            else if ( padding_mode === 2 )
+                pad = 'iso1';
+            else if ( padding_mode === 3 )
+                pad = 'iso9';
+            else return '';
+        }
+
+        try {
+            /* Decode level-1 message to a buffer. */
+            message = Buffer.from( discordCrypt.substituteMessage( message ), 'hex' );
+
+            /* Pull off the first 32 bytes as a buffer. */
+            let tag = Buffer.from( message.subarray( 0, 32 ) );
+
+            /* Strip off the authentication tag. */
+            message = Buffer.from( message.subarray( 32 ) );
+
+            /* Compute the HMAC-SHA-256 of the cipher text as hex. */
+            let computed_tag = Buffer.from( discordCrypt.hmac_sha256( message, primary_key, true ), 'hex' );
+
+            /* Compare the tag for validity. */
+            if ( !crypto.timingSafeEqual( computed_tag, tag ) )
+                return 1;
+
+            /* Dual decrypt the segment. */
+            if ( cipher_index >= 0 && cipher_index <= 4 )
+                return handleDecodeSegment(
+                    discordCrypt.blowfish512_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                    primary_key,
+                    cipher_index,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
+            else if ( cipher_index >= 5 && cipher_index <= 9 )
+                return handleDecodeSegment(
+                    discordCrypt.aes256_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                    primary_key,
+                    cipher_index - 5,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
+            else if ( cipher_index >= 10 && cipher_index <= 14 )
+                return handleDecodeSegment(
+                    discordCrypt.camellia256_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                    primary_key,
+                    cipher_index - 10,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
+            else if ( cipher_index >= 15 && cipher_index <= 19 )
+                return handleDecodeSegment(
+                    discordCrypt.idea128_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                    primary_key,
+                    cipher_index - 15,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
+            else if ( cipher_index >= 20 && cipher_index <= 24 )
+                return handleDecodeSegment(
+                    discordCrypt.tripledes192_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                    primary_key,
+                    cipher_index - 20,
+                    mode,
+                    pad,
+                    'utf8',
+                    false
+                );
+            return -3;
+        }
+        catch ( e ) {
+            return 2;
+        }
+    }
+
+    /* ================ END CRYPTO CALLBACKS =================== */
+}
+
+/* Required for code coverage reports. */
+module.exports = { discordCrypt };

@@ -1470,6 +1470,7 @@ class discordCrypt {
                     ).toString().replace( '\r', '' );
                 }
                 catch ( e ) {
+                    discordCrypt.log( 'Plugin file could not be locally read. Assuming testing version ...', 'warn' );
                 }
 
                 /* Check the first line which contains the metadata to make sure that they're equal. */
@@ -1497,6 +1498,7 @@ class discordCrypt {
                     version_number = data.match( /('[0-9]+\.[0-9]+\.[0-9]+')/gi ).toString().replace( /('*')/g, '' );
                 }
                 catch ( e ) {
+                    discordCrypt.log( 'Failed to locate the version number in the update ...', 'warn' );
                 }
 
                 /* Now get the changelog. */
@@ -1613,6 +1615,7 @@ class discordCrypt {
                             return m;
                     }
                     catch ( e ) {
+                        discordCrypt.log( `Could not load module index ${i} ...`, 'warn' );
                     }
                 }
 
@@ -1912,6 +1915,7 @@ class discordCrypt {
             console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
         }
         catch ( ex ) {
+            console.error( '[DiscordCrypt] - Error logging message ...' );
         }
     }
 
@@ -4536,9 +4540,12 @@ class discordCrypt {
             /* Extract code blocks. */
             let _extracted = discordCrypt.__extractCodeBlocks( message );
 
-            /* Throw an exception which will be caught to wrap the message normally. */
+            /* Wrap the message normally. */
             if ( !_extracted.length )
-                throw 'No code blocks available.';
+                return {
+                    code: false,
+                    html: message
+                };
 
             /* Loop over each expanded code block. */
             for ( let i = 0; i < _extracted.length; i++ ) {
@@ -4602,9 +4609,12 @@ class discordCrypt {
             /* Extract the URLs. */
             let _extracted = discordCrypt.__extractUrls( message );
 
-            /* Throw an exception which will be caught to wrap the message normally. */
+            /* Wrap the message normally. */
             if ( !_extracted.length )
-                throw 'No URLs available.';
+                return {
+                    url: false,
+                    html: message
+                };
 
             /* Loop over each URL and format it. */
             for ( let i = 0; i < _extracted.length; i++ ) {
