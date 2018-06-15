@@ -58,6 +58,31 @@ class Compiler {
     }
 
     /**
+     * @desc Attempts to compress the specified data via uglify-es.
+     * @param {string} data The data to compress.
+     * @param {boolean} use_options Whether to use the default mangling options defined in the constructor.
+     * @return {string} Returns either the original data on error or the compressed data.
+     */
+    tryMinify( data, use_options = true ) {
+        try {
+            let _data = this.uglifyjs.minify( data.toString(), use_options ? this.defaultBuilderOptions : undefined );
+
+            /* Skip on error. */
+            if ( _data.error !== undefined )
+                throw `${_data.error}`;
+            else
+                data = _data.code;
+
+            if ( _data.warnings )
+                console.warn( _data.warnings );
+        }
+        catch( e ) {
+            console.warn( `Warning: ${e.toString()} ...\nSkipping compression ...` );
+        }
+        return data;
+    }
+
+    /**
      * @private
      * @desc Reads all library files in the path specified and constructs an array string containing the data.
      * @param {string} library_path Relative path to look for all library files.
@@ -91,31 +116,14 @@ class Compiler {
             }
 
             /* Try compressing the library. */
-            try {
-                let _data = this.uglifyjs.minify( data.toString(), this.defaultBuilderOptions );
-
-                /* Skip on error. */
-                if ( _data.error !== undefined )
-                    throw `${_data.error}`;
-                else
-                    data = _data.code;
-
-                if ( _data.warnings )
-                    console.warn( _data.warnings );
-            }
-            catch ( e ) {
-                console.warn( `Warning: ${e.toString()} ...\nSkipping compression ...` );
-
-                /* We still need to convert the Buffer() to a string. */
-                data = data.toString();
-            }
+            data = this.tryMinify( data );
 
             /* Add it to the array. */
             libs[ file ] = data;
             count++;
         }
 
-        console.info( `Read ${count} files from the library directory ...` );
+        console.info( `Added ${count} files from the library directory ...` );
 
         /* Construct a sanitized array string. */
         for ( let id in libs )
@@ -128,6 +136,40 @@ class Compiler {
         return str;
     }
 
+    /**
+     * @private
+     * @desc Reads all asset files in the path specified and replaces them in the base file.
+     * @param {string} asset_path The path to the assets directory.
+     * @param {string} original_data The original base file data.
+     * @param {Object} constants Object containing the tags for each file to replace.
+     */
+    compileAssets( asset_path = './assets', original_data, constants ) {
+        /* Read all files in the specified directory. */
+        let files = this.fs.readdirSync( asset_path );
+
+        /* Loop over every file index. */
+        for( let i in files ) {
+            /* Get the file path and name. */
+            let file = files[ i ], file_name = this.path.basename( files[ i ] );
+
+            /* Make sure the tag exists for this file. */
+            if( !constants[ file_name ] ){
+                console.warn( `Unhandled asset file: [ ${file_name} ] ...` );
+                continue;
+            }
+
+            /* Read the file into a buffer. */
+            let data = this.fs.readFileSync( this.path.join( asset_path, file ) ).toString();
+
+            data = data.split("\r").join("").split("\n").join('');
+
+            /* Replace the data. */
+            original_data = original_data.split( constants[ file_name ] ).join( data );
+        }
+
+        return original_data;
+    }
+
 
     /**
      * @private
@@ -136,10 +178,12 @@ class Compiler {
      * @param {string} tag_name The tag name to scan the [plugin] for to insert all libraries.
      * @param {string} library_path The path to the libraries used to add to the base file.
      * @param {string} output_dir The output directory to store the plugin.
+     * @param {string} assets_path The path to the assets directory.
      * @param {boolean} compress Whether to compress the plugin itself.
+     * @param {Object} assets_data The asset tags for each file within the assets directory.
      * @return {boolean} Returns true on success and false on failure.
      */
-    compilePlugin( plugin_path, tag_name, library_path, output_dir, compress ) {
+    compilePlugin( plugin_path, tag_name, library_path, output_dir, assets_path, compress, assets_data ) {
         const header =
             `//META{"name":"discordCrypt"}*//
 
@@ -194,22 +238,19 @@ class Compiler {
         try {
             this.fs.mkdirSync( output_dir );
         } catch ( e ) {
+            console.info( 'Directory already exists. Skipping creation ...' );
         }
 
+        /* Add all assets. */
+        data = this.compileAssets( assets_path, data, assets_data );
+
+        /* Only do this if we're compressing the plugin. */
+        if ( compress )
+            data = header + this.tryMinify( data, true );
+        else
+            data = header + data;
+
         try {
-            /* Only do this if we're compressing the plugin. */
-            if ( compress ) {
-                /* Compress the code. */
-                data = this.uglifyjs.minify( data, this.defaultBuilderOptions );
-
-                /* Check if an error occurred. */
-                if ( data.error !== undefined )
-                    throw `${error}`;
-
-                /* Update the variable. */
-                data = header + data.code;
-            }
-
             /* Write the file to the output. */
             this.fs.writeFileSync( output_path, data );
         }
@@ -231,9 +272,21 @@ class Compiler {
     run() {
         /* Construct the default arguments. */
         const defaults = {
-            tag: '/* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
+            library_tag:
+                '/* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
+            assets_tag: {
+                'app.css':
+                    '/* ----- APPLICATION CSS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
+                'settings.html':
+                    '/* ----- SETTINGS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
+                'toolbar.html':
+                    '/* ----- APPLICATION TOOLBAR GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
+                'unlocker.html':
+                    '/* ----- APPLICATION UNLOCKING GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
+            },
             plugin: './src/discordCrypt.plugin.js',
             compression: false,
+            assets: './src/assets',
             output: './build',
             lib: './lib',
         };
@@ -247,12 +300,14 @@ class Compiler {
                 "   --plugin-path|-p         -  Path to the base plugin file to use.\n" +
                 "   --tag-name|-t            -  The \"tag\" to use find and insert libraries in the plugin file.\n" +
                 "   --library-path|-l        -  The path to the library folder containing all needed files.\n" +
+                "   --assets-directory|-a    -  The path to the assets folder containing add-in assets.\n" +
                 "   --output-directory|-o    -  The output directory to store the compiled file in.\n" +
                 "   --enable-compression|-c  -  If used, the plugin file will be compressed.\n" +
                 "\n" +
                 "Example:\n" +
                 `   ${this.process.argv[ 0 ]} ${this.process.argv[ 1 ]} ` +
-                `-c -p "${defaults.plugin}" -l "${defaults.lib}" -o "${defaults.output}" -t "${defaults.tag}"`
+                `-c -p "${defaults.plugin}" -l "${defaults.lib}" -o "${defaults.output}" -t "${defaults.library_tag}"` +
+                `-a "${defaults.assets}"`
             );
             return;
         }
@@ -260,10 +315,12 @@ class Compiler {
         /* Compile with the arguments provided or defaults. */
         this.compilePlugin(
             args[ 'plugin-path' ] || args[ 'p' ] || defaults.plugin,
-            args[ 'tag-name' ] || args[ 't' ] || defaults.tag,
+            args[ 'tag-name' ] || args[ 't' ] || defaults.library_tag,
             args[ 'library-path' ] || args[ 'l' ] || defaults.lib,
             args[ 'output-directory' ] || args[ 'o' ] || defaults.output,
-            args[ 'enable-compression' ] || args[ 'c' ] || defaults.compression
+            args[ 'assets-directory' ] || args[ 'a' ] || defaults.assets,
+            args[ 'enable-compression' ] || args[ 'c' ] || defaults.compression,
+            defaults.assets_tag
         );
     }
 }
