@@ -2225,126 +2225,19 @@ class discordCrypt {
         } ) );
 
         /* Handle unlock button clicks. */
-        unlock_btn.click( ( function () {
-
-            /* Disable the button before clicking. */
-            unlock_btn.attr( 'disabled', true );
-
-            /* Update the text. */
-            if ( cfg_exists )
-                unlock_btn.text( 'Unlocking Database ...' );
-            else
-                unlock_btn.text( 'Creating Database ...' );
-
-            /* Get the password entered. */
-            let password = pwd_field[ 0 ].value;
-
-            /* Validate the field entered contains some value. */
-            if ( password === null || password === '' ) {
-                unlock_btn.text( action_msg );
-                unlock_btn.attr( 'disabled', false );
-                return;
-            }
-
-            /* Hash the password. */
-            discordCrypt.scrypt
-            (
-                Buffer.from( password ),
-                Buffer.from( discordCrypt.whirlpool( password, true ), 'hex' ),
-                32,
-                4096,
-                8,
-                1,
-                ( error, progress, pwd ) => {
-                    if ( error ) {
-                        /* Update the button's text. */
-                        if ( cfg_exists )
-                            unlock_btn.text( 'Invalid Password!' );
-                        else
-                            unlock_btn.text( `Error: ${error}` );
-
-                        /* Clear the text field. */
-                        pwd_field[ 0 ].value = '';
-
-                        /* Reset the progress bar. */
-                        master_status.css( 'width', '0%' );
-
-                        /* Reset the text of the button after 1 second. */
-                        setTimeout( ( function () {
-                            unlock_btn.text( action_msg );
-                        } ), 1000 );
-
-                        discordCrypt.log( error.toString(), 'error' );
-                        return true;
-                    }
-
-                    if ( progress )
-                        master_status.css( 'width', `${parseInt( progress * 100 )}%` );
-
-                    if ( pwd ) {
-                        /* To test whether this is the correct password or not, we have to attempt to use it. */
-                        self.masterPassword = Buffer.from( pwd, 'hex' );
-
-                        /* Attempt to load the database with this password. */
-                        if ( !self.loadConfig() ) {
-                            self.configFile = null;
-
-                            /* Update the button's text. */
-                            if ( cfg_exists )
-                                unlock_btn.text( 'Invalid Password!' );
-                            else
-                                unlock_btn.text( 'Failed to create the database!' );
-
-                            /* Clear the text field. */
-                            pwd_field[ 0 ].value = '';
-
-                            /* Reset the progress bar. */
-                            master_status.css( 'width', '0%' );
-
-                            /* Reset the text of the button after 1 second. */
-                            setTimeout( ( function () {
-                                unlock_btn.text( action_msg );
-                            } ), 1000 );
-
-                            /* Proceed no further. */
-                            unlock_btn.attr( 'disabled', false );
-                            return false;
-                        }
-
-                        /* We may now call the start() function. */
-                        self.start();
-
-                        /* And update the button text. */
-                        if ( cfg_exists )
-                            unlock_btn.text( 'Unlocked Successfully!' );
-                        else
-                            unlock_btn.text( 'Created Successfully!' );
-
-                        /* Close the overlay after 1 second. */
-                        setTimeout( ( function () {
-                            $( '#dc-master-overlay' ).remove();
-                        } ), 1000 );
-                    }
-
-                    return false;
-                }
-            );
-        } ) );
+        unlock_btn.click(
+            discordCrypt.on_master_unlock_button_clicked(
+                self,
+                unlock_btn,
+                cfg_exists,
+                pwd_field,
+                action_msg,
+                master_status
+            )
+        );
 
         /* Handle cancel button presses. */
-        cancel_btn.click( ( function () {
-            /* Use a 300 millisecond delay. */
-            setTimeout(
-                ( function () {
-                    /* Remove the prompt overlay. */
-                    $( '#dc-master-overlay' ).remove();
-
-                    /* Do some quick cleanup. */
-                    self.masterPassword = null;
-                    self.configFile = null;
-                } ), 300
-            );
-        } ) );
+        cancel_btn.click( discordCrypt.on_master_cancel_button_clicked( self ) );
     }
 
     /**
@@ -3089,6 +2982,144 @@ class discordCrypt {
     /* =============== BEGIN UI HANDLE CALLBACKS =============== */
 
     /**
+     * @desc Attempts to unlock the database upon startup.
+     * @param {discordCrypt} self
+     * @param {Object} unlock_btn
+     * @param {boolean} cfg_exists
+     * @param {Object} pwd_field
+     * @param {string} action_msg
+     * @param {Object} master_status
+     * @return {Function}
+     */
+    static on_master_unlock_button_clicked( self, unlock_btn, cfg_exists, pwd_field, action_msg, master_status ) {
+        return () => {
+            /* Disable the button before clicking. */
+            unlock_btn.attr( 'disabled', true );
+
+            /* Update the text. */
+            if ( cfg_exists )
+                unlock_btn.text( 'Unlocking Database ...' );
+            else
+                unlock_btn.text( 'Creating Database ...' );
+
+            /* Get the password entered. */
+            let password = pwd_field[ 0 ].value;
+
+            /* Validate the field entered contains some value. */
+            if ( password === null || password === '' ) {
+                unlock_btn.text( action_msg );
+                unlock_btn.attr( 'disabled', false );
+                return;
+            }
+
+            /* Hash the password. */
+            discordCrypt.scrypt
+            (
+                Buffer.from( password ),
+                Buffer.from( discordCrypt.whirlpool( password, true ), 'hex' ),
+                32,
+                4096,
+                8,
+                1,
+                ( error, progress, pwd ) => {
+                    if ( error ) {
+                        /* Update the button's text. */
+                        if ( cfg_exists )
+                            unlock_btn.text( 'Invalid Password!' );
+                        else
+                            unlock_btn.text( `Error: ${error}` );
+
+                        /* Clear the text field. */
+                        pwd_field[ 0 ].value = '';
+
+                        /* Reset the progress bar. */
+                        master_status.css( 'width', '0%' );
+
+                        /* Reset the text of the button after 1 second. */
+                        setTimeout( ( function () {
+                            unlock_btn.text( action_msg );
+                        } ), 1000 );
+
+                        discordCrypt.log( error.toString(), 'error' );
+                        return true;
+                    }
+
+                    if ( progress )
+                        master_status.css( 'width', `${parseInt( progress * 100 )}%` );
+
+                    if ( pwd ) {
+                        /* To test whether this is the correct password or not, we have to attempt to use it. */
+                        self.masterPassword = Buffer.from( pwd, 'hex' );
+
+                        /* Attempt to load the database with this password. */
+                        if ( !self.loadConfig() ) {
+                            self.configFile = null;
+
+                            /* Update the button's text. */
+                            if ( cfg_exists )
+                                unlock_btn.text( 'Invalid Password!' );
+                            else
+                                unlock_btn.text( 'Failed to create the database!' );
+
+                            /* Clear the text field. */
+                            pwd_field[ 0 ].value = '';
+
+                            /* Reset the progress bar. */
+                            master_status.css( 'width', '0%' );
+
+                            /* Reset the text of the button after 1 second. */
+                            setTimeout( ( function () {
+                                unlock_btn.text( action_msg );
+                            } ), 1000 );
+
+                            /* Proceed no further. */
+                            unlock_btn.attr( 'disabled', false );
+                            return false;
+                        }
+
+                        /* We may now call the start() function. */
+                        self.start();
+
+                        /* And update the button text. */
+                        if ( cfg_exists )
+                            unlock_btn.text( 'Unlocked Successfully!' );
+                        else
+                            unlock_btn.text( 'Created Successfully!' );
+
+                        /* Close the overlay after 1 second. */
+                        setTimeout( ( function () {
+                            $( '#dc-master-overlay' ).remove();
+                        } ), 1000 );
+                    }
+
+                    return false;
+                }
+            );
+        }
+    }
+
+    /**
+     * @desc Cancels loading the plugin when the unlocking cancel button is pressed.
+     * @param {discordCrypt} self
+     * @return {Function}
+     */
+    static on_master_cancel_button_clicked( self ) {
+        return () => {
+            /* Use a 300 millisecond delay. */
+            setTimeout(
+                ( function () {
+                    /* Remove the prompt overlay. */
+                    $( '#dc-master-overlay' ).remove();
+
+                    /* Do some quick cleanup. */
+                    self.masterPassword = null;
+                    self.configFile = null;
+                } ), 300
+            );
+        }
+    }
+
+    /**
      * @private
      * @desc Opens the file uploading menu.
      */
@@ -3667,7 +3698,7 @@ class discordCrypt {
 
             /* Provide some way of showing the user the result without actually giving it away. */
             function displaySecret( input_hex ) {
-                const charset = "!@#$%^&*()_-+=[{]}\\|'\";:/?.>,<";
+                const charset = discordCrypt.getBraille().subarray( 16, 64 );
                 let output = '';
 
                 for ( let i = 0; i < parseInt( input_hex.length / 2 ); i++ )
@@ -5579,7 +5610,16 @@ class discordCrypt {
         function __perform( input, salt, N, r, p, cb ) {
             let totalOps, currentOps, lastPercentage;
             let b = PBKDF2_SHA256( input, salt, p * 128 * r, 1 );
+
             let B = new Uint32Array( p * 32 * r );
+
+            let XY = new Uint32Array( 64 * r );
+            let V = new Uint32Array( 32 * r * N );
+
+            /* Salsa20 Scratchpad. */
+            let x = new Uint32Array( 16 );
+            /* Block-mix Salsa20 Scratchpad. */
+            let _X = new Uint32Array( 16 );
 
             /* Initialize the input. */
             for ( let i = 0; i < B.length; i++ ) {
@@ -5591,15 +5631,7 @@ class discordCrypt {
                     ( ( b[ j ] & 0xff ) << 0 );
             }
 
-            let XY = new Uint32Array( 64 * r );
-            let V = new Uint32Array( 32 * r * N );
-
             let Yi = 32 * r;
-
-            /* Salsa20 Scratchpad. */
-            let x = new Uint32Array( 16 );
-            /* Block-mix Salsa20 Scratchpad. */
-            let _X = new Uint32Array( 16 );
 
             totalOps = p * N * 2;
             currentOps = 0;
