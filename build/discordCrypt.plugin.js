@@ -1360,7 +1360,7 @@ class discordCrypt {
         channel_id = undefined,
         cached_modules = undefined,
         timed_messages = undefined,
-        expire_time_minutes = 30
+        expire_time_minutes = 0
     ) {
         let mention_everyone = false;
 
@@ -1467,7 +1467,7 @@ class discordCrypt {
                 React.MessageController.receiveMessage( _channel, r.body );
 
                 /* Add the message to the TimedMessage array. */
-                if ( timed_messages ) {
+                if ( timed_messages && expire_time_minutes ) {
                     timed_messages.push( {
                         messageId: r.body.id,
                         channelId: _channel,
