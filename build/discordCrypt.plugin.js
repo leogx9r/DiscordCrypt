@@ -659,7 +659,7 @@ class discordCrypt {
             /* Current Version. */
             version: this.getVersion(),
             /* Default password for servers not set. */
-            defaultPassword: "秘一密比无为有秘习个界一万定为界人是的要人每的但了又你上着密定已",
+            defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
             /* Defines what needs to be typed at the end of a message to encrypt it. */
             encodeMessageTrigger: "ENC",
             /* How often to scan for encrypted messages during timed events if applicable. */
@@ -772,7 +772,6 @@ class discordCrypt {
         /* Save the configuration file if necessary. */
         if( needs_save )
             this.saveConfig();
-
 
         /* Check for version mismatch. */
         if ( this.configFile.version !== this.getVersion() ) {
