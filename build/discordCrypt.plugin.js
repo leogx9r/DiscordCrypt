@@ -1080,6 +1080,19 @@ class discordCrypt {
     }
 
     /**
+     * @desc Delete the message from the channel indicated.
+     * @param {string} channel_id The channel's identifier that the message is located in.
+     * @param {string} message_id The message's identifier to delete.
+     */
+    static deleteMessage( channel_id, message_id ) {
+        /* Finds appropriate React modules. */
+        const MessageController = discordCrypt.getReactModules().MessageController;
+
+        /* Delete the message internally. */
+        MessageController.deleteMessage( channel_id, message_id );
+    }
+
+    /**
      * @private
      * @desc Sends an embedded message to Discord.
      * @param {string} embedded_text The message body of the embed.
