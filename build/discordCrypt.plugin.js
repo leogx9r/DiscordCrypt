@@ -98,6 +98,17 @@ class discordCrypt {
     /* ============================================================== */
 
     /**
+     * @typedef {Object} CachedModules
+     * @desc Cached React and Discord modules for internal access.
+     * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
+     * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
+     * @property {Object} MessageActionTypes Internal message action types and constants for events.
+     * @property {Object} MessageDispatcher Internal message dispatcher for pending queued messages.
+     * @property {Object} MessageQueue Internal message Queue store for pending parsing.
+     * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
+     */
+
+    /**
      * @public
      * @desc Initializes an instance of DiscordCrypt.
      * @example
@@ -190,6 +201,12 @@ class discordCrypt {
          * @type {Object|null}
          */
         this.configFile = null;
+
+        /**
+         * @desc Used to cache webpack modules.
+         * @type {CachedModules} Object containing cached modules
+         */
+        this.cachedModules = {};
 
         /**
          * @desc Indexes of each dual-symmetric encryption mode.
@@ -335,6 +352,25 @@ class discordCrypt {
                 self.checkForUpdates();
             }, 3600000 );
         }
+
+        /* Get module searcher for caching. */
+        const WebpackModules = discordCrypt.getWebpackModuleSearcher();
+
+        /* Resolve and cache all modules needed. */
+        this.cachedModules = {
+            MessageParser: WebpackModules
+                .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
+            MessageController: WebpackModules
+                .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
+            MessageActionTypes: WebpackModules
+                .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
+            MessageDispatcher: WebpackModules
+                .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
+            MessageQueue: WebpackModules
+                .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
+            HighlightJS: WebpackModules
+                .findByUniqueProperties( [ 'initHighlighting', 'highlightBlock', 'highlightAuto' ] ),
+        };
 
         /* Hook switch events as the main event processor or fallback to timed event handlers. */
         if ( !this.hookMessageCallbacks() ) {
@@ -1046,6 +1082,7 @@ class discordCrypt {
     /**
      * @private
      * @desc Returns the React modules loaded natively in Discord.
+     * @param {CachedModules} cachedModules Cached module parameter for locating standard modules.
      * @returns {{
      *      ChannelProps: Object|null,
      *      MessageParser: Object|null,
@@ -1056,40 +1093,35 @@ class discordCrypt {
      *      HighlightJS: Object|null
      *  }}
      */
-    static getReactModules() {
-        const WebpackModules = discordCrypt.getWebpackModuleSearcher();
+    static getReactModules( cachedModules ) {
 
-        return {
-            ChannelProps:
-                discordCrypt.getChannelId() === '@me' ?
-                    null :
-                    discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
-            MessageParser: WebpackModules
-                .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
-            MessageController: WebpackModules
-                .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
-            MessageActionTypes: WebpackModules
-                .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
-            MessageDispatcher: WebpackModules
-                .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
-            MessageQueue: WebpackModules
-                .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
-            HighlightJS: WebpackModules
-                .findByUniqueProperties( [ 'initHighlighting', 'highlightBlock', 'highlightAuto' ] ),
-        };
+        if( cachedModules ) {
+            return {
+                ChannelProps:
+                    discordCrypt.getChannelId() === '@me' ?
+                        null :
+                        discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
+                MessageParser: cachedModules.MessageParser,
+                MessageController: cachedModules.MessageController,
+                MessageActionTypes: cachedModules.MessageActionTypes,
+                MessageDispatcher: cachedModules.MessageDispatcher,
+                MessageQueue: cachedModules.MessageQueue,
+                HighlightJS: cachedModules.HighlightJS,
+            };
+        }
+
+        return null;
     }
 
     /**
      * @desc Delete the message from the channel indicated.
      * @param {string} channel_id The channel's identifier that the message is located in.
      * @param {string} message_id The message's identifier to delete.
+     * @param {CachedModules} cachedModules The internally cached module objects.
      */
-    static deleteMessage( channel_id, message_id ) {
-        /* Finds appropriate React modules. */
-        const MessageController = discordCrypt.getReactModules().MessageController;
-
+    static deleteMessage( channel_id, message_id, cachedModules ) {
         /* Delete the message internally. */
-        MessageController.deleteMessage( channel_id, message_id );
+        cachedModules.MessageController.deleteMessage( channel_id, message_id );
     }
 
     /**
@@ -1102,19 +1134,21 @@ class discordCrypt {
      * @param {string} message_content Message content to be attached above the embed.
      * @param {int|undefined} channel_id If specified, sends the embedded message to this channel instead of the
      *      current channel.
+     * @param {CachedModules} cached_modules Internally cached modules.
      */
     static sendEmbeddedMessage(
-        /* string */ embedded_text,
-        /* string */ embedded_header,
-        /* string */ embedded_footer,
-        /* int */    embedded_color = 0x551A8B,
-        /* string */ message_content = '',
-        /* int */    channel_id = undefined
+        embedded_text,
+        embedded_header,
+        embedded_footer,
+        embedded_color = 0x551A8B,
+        message_content = '',
+        channel_id = undefined,
+        cached_modules = undefined
     ) {
         let mention_everyone = false;
 
         /* Finds appropriate React modules. */
-        const React = discordCrypt.getReactModules();
+        const React = discordCrypt.getReactModules( cached_modules );
 
         /* Parse the message content to the required format if applicable.. */
         if ( typeof message_content === 'string' && message_content.length ) {
@@ -2112,7 +2146,7 @@ class discordCrypt {
         );
 
         /* Look through each markup element to find an embedDescription. */
-        let React = discordCrypt.getReactModules();
+        let React = discordCrypt.getReactModules( this.cachedModules );
         $( this.messageMarkupClass ).each( ( function () {
             /* Skip classes with no embeds. */
             if ( !this.className.includes( 'embedDescription' ) )
@@ -2243,7 +2277,8 @@ class discordCrypt {
                 `v${this.getVersion().replace( '-debug', '' )}`,
                 0x551A8B,
                 user_tags,
-                channel_id
+                channel_id,
+                this.cachedModules
             );
         }
         else {
@@ -2282,7 +2317,8 @@ class discordCrypt {
                     `v${this.getVersion().replace( '-debug', '' )}`,
                     0x551A8B,
                     i === 0 ? user_tags : '',
-                    channel_id
+                    channel_id,
+                    this.cachedModules
                 );
             }
         }
@@ -2967,11 +3003,20 @@ class discordCrypt {
             let algo_str = `${$( '#dc-keygen-method' )[ 0 ].value !== 'ecdh' ? 'DH-' : 'ECDH-'}` +
                 `${$( '#dc-keygen-algorithm' )[ 0 ].value}`;
 
-            /* Send the message. */
+            /* Construct header & footer elements. */
             let header = `-----BEGIN ${algo_str} PUBLIC KEY-----`,
                 footer = `-----END ${algo_str} PUBLIC KEY----- | v${self.getVersion().replace( '-debug', '' )}`;
 
-            discordCrypt.sendEmbeddedMessage( formatted_message, header, footer, 0x720000 );
+            /* Send the message. */
+            discordCrypt.sendEmbeddedMessage(
+                formatted_message,
+                header,
+                footer,
+                0x720000,
+                '',
+                undefined,
+                this.cachedModules
+            );
 
             /* Update the button text & reset after 1 second.. */
             $( '#dc-keygen-send-pub-btn' )[ 0 ].innerText = 'Sent The Public Key!';
