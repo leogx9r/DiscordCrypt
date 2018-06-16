@@ -104,7 +104,7 @@ class discordCrypt {
      */
 
     /**
-     * @typedef {Object} updateCallback
+     * @typedef {Object} UpdateCallback
      * @desc The function to execute after an update has been retrieved.
      * @property {string} file_data The update file's data.
      * @property {string} short_hash A 64-bit SHA-256 checksum of the new update.
@@ -113,14 +113,14 @@ class discordCrypt {
      */
 
     /**
-     * @typedef {Object} modulePredicate
+     * @typedef {Object} ModulePredicate
      * @desc Predicate for searching module.
      * @property {*} module Module to test.
      * @return {boolean} Returns `true` if `module` matches predicate.
      */
 
     /**
-     * @typedef {Object} getResultCallback
+     * @typedef {Object} GetResultCallback
      * @desc The function to execute at the end of a GET request containing the result or error that occurred.
      * @property {int} statusCode The HTTP static code of the operation.
      * @property {string|null} The HTTP error string if an error occurred.
@@ -128,7 +128,7 @@ class discordCrypt {
      */
 
     /**
-     * @typedef {Object} codeBlockDescriptor
+     * @typedef {Object} CodeBlockDescriptor
      * @desc Indicates the values present in a markdown-styled code block.
      * @property {int} start_pos The starting position of the code block.
      * @property {int} end_pos The ending position of the code block.
@@ -138,14 +138,14 @@ class discordCrypt {
      */
 
     /**
-     * @typedef {Object} pbkdf2Callback
+     * @typedef {Object} PBKDF2Callback
      * @desc The function to execute after an async request for PBKDF2 is completed containing the result or error.
      * @property {string} error The error that occurred during processing or null on success.
      * @property {string} hash The hash either as a hex or Base64 encoded string ( or null on failure ).
      */
 
     /**
-     * @typedef {Object} encryptedFileCallback
+     * @typedef {Object} EncryptedFileCallback
      * @desc The function to execute when a file has finished being encrypted.
      * @property {string} error_string The error that occurred during operation or null if no error occurred.
      * @property {Buffer} encrypted_data The resulting encrypted buffer as a Buffer() object.
@@ -154,7 +154,7 @@ class discordCrypt {
      */
 
     /**
-     * @typedef {Object} uploadedFileCallback
+     * @typedef {Object} UploadedFileCallback
      * @desc The function to execute after a file has been uploaded to an Up1 service.
      * @property {string} error_string The error that occurred or null if no error occurred.
      * @property {string} file_url The URL of the uploaded file/
@@ -163,7 +163,7 @@ class discordCrypt {
      */
 
     /**
-     * @typedef {Object} scryptCallback
+     * @typedef {Object} ScryptCallback
      * @desc The function to execute for Scrypt based status updates.
      *      The function must return false repeatedly upon each call to have Scrypt continue running.
      *      Once [progress] === 1.f AND [key] is defined, no further calls will be made.
@@ -175,7 +175,7 @@ class discordCrypt {
      */
 
     /**
-     * @typedef {Object} hashCallback
+     * @typedef {Object} HashCallback
      * @desc The function to execute once the hash is calculated or an error has occurred.
      * @property {string} error The error that occurred or null.
      * @property {string} hash The hex or Base64 encoded result.
@@ -896,7 +896,7 @@ class discordCrypt {
     /**
      * @public
      * @desc Checks the update server for an encrypted update.
-     * @param {updateCallback} onUpdateCallback
+     * @param {UpdateCallback} onUpdateCallback
      * @returns {boolean}
      * @example
      * checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) =>
@@ -1063,7 +1063,7 @@ class discordCrypt {
          *      but your code should be ready to receive `null` in case of changes in Discord's codebase.
          *      If module is ES6 module and has default property, consider default first;
          *      otherwise, consider the full module object.
-         * @param {modulePredicate} filter Predicate to match module
+         * @param {ModulePredicate} filter Predicate to match module
          * @param {boolean} force_load Whether to force load all modules if cached modules don't work.
          * @return {*} First module that matches `filter` or `null` if none match.
          */
@@ -3731,7 +3731,7 @@ class discordCrypt {
      * @public
      * @desc Performs an HTTP request returns the result to the callback.
      * @param {string} url The URL of the request.
-     * @param {getResultCallback} callback The callback triggered when the request is complete or an error occurs.
+     * @param {GetResultCallback} callback The callback triggered when the request is complete or an error occurs.
      * @private
      */
     static __getRequest( url, callback ) {
@@ -3951,7 +3951,7 @@ class discordCrypt {
      * @desc Extracts raw code blocks from a message and returns a descriptive array.
      *      N.B. This does not remove the code blocks from the message.
      * @param {string} message The message to extract all code blocks from.
-     * @returns {Array<codeBlockDescriptor>} Returns an array of codeBlockDescriptor() objects.
+     * @returns {Array<CodeBlockDescriptor>} Returns an array of CodeBlockDescriptor objects.
      */
     static __extractCodeBlocks( message ) {
         /* This regex only extracts code blocks. */
@@ -4225,7 +4225,7 @@ class discordCrypt {
      *      If undefined, it is interpreted as a UTF-8 string.
      * @param {boolean} [is_salt_hex] Whether to treat the salt as a hex or Base64 string.
      *      If undefined, it is interpreted as a UTF-8 string.
-     * @param {pbkdf2Callback} [callback] The callback function if performing an async request.
+     * @param {PBKDF2Callback} [callback] The callback function if performing an async request.
      * @param {string} algorithm The name of the hash algorithm to use.
      * @param {int} key_length The length of the desired key in bytes.
      * @param {int} iterations The number of recursive iterations to use to produce the resulting hash.
@@ -4636,7 +4636,7 @@ class discordCrypt {
      * @param {string} mime_type The MIME type of this file.
      * @param {string} file_name The name of this file.
      * @param {Object} sjcl The loaded Stanford Javascript Crypto Library.
-     * @param {encryptedFileCallback} callback The callback function that will be called on error or completion.
+     * @param {EncryptedFileCallback} callback The callback function that will be called on error or completion.
      */
     static __up1EncryptBuffer( data, mime_type, file_name, sjcl, callback ) {
         const crypto = require( 'crypto' );
@@ -4716,7 +4716,7 @@ class discordCrypt {
      * @desc Performs AES-256 CCM encryption of the given file and converts it to the expected Up1 format.
      * @param {string} file_path The path to the file to encrypt.
      * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
-     * @param {encryptedFileCallback} callback The callback function for when the file has been encrypted.
+     * @param {EncryptedFileCallback} callback The callback function for when the file has been encrypted.
      * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
      */
     static __up1EncryptFile( file_path, sjcl, callback, randomize_file_name = false ) {
@@ -4762,7 +4762,7 @@ class discordCrypt {
      * @param {string} up1_host The host URL for the Up1 service.
      * @param {string} [up1_api_key] The optional API key used for the service.
      * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
-     * @param {uploadedFileCallback} callback The callback function called on success or failure.
+     * @param {UploadedFileCallback} callback The callback function called on success or failure.
      * @param {ClipboardInfo} [clipboard_data] Optional clipboard data.
      */
     static __up1UploadClipboard( up1_host, up1_api_key, sjcl, callback, clipboard_data = undefined ) {
@@ -4840,7 +4840,7 @@ class discordCrypt {
      * @param {string} up1_host The host URL for the Up1 service.
      * @param {string} [up1_api_key] The optional API key used for the service.
      * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
-     * @param {uploadedFileCallback} callback The callback function called on success or failure.
+     * @param {UploadedFileCallback} callback The callback function called on success or failure.
      * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
      */
     static __up1UploadFile( file_path, up1_host, up1_api_key, sjcl, callback, randomize_file_name = false ) {
@@ -4910,7 +4910,7 @@ class discordCrypt {
      * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
      * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
      * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
-     * @param {scryptCallback} cb Callback function for progress updates.
+     * @param {ScryptCallback} cb Callback function for progress updates.
      * @returns {boolean} Returns true if successful.
      */
     static scrypt( input, salt, dkLen, N = 16384, r = 8, p = 1, cb = null ) {
@@ -5023,7 +5023,7 @@ class discordCrypt {
          * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
          * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
          * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
-         * @param {scryptCallback} cb Callback function for progress updates.
+         * @param {ScryptCallback} cb Callback function for progress updates.
          * @private
          */
         function __perform( input, salt, N, r, p, cb ) {
@@ -5374,7 +5374,7 @@ class discordCrypt {
      *      If undefined, it is interpreted as a UTF-8 string.
      * @param {int} [key_length] The desired key length size in bytes. Default: 32.
      * @param {int} [iterations] The number of iterations to perform. Default: 5000.
-     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     * @param {HashCallback} [callback] If defined, an async call is made that the result is passed to this when
      *      completed. If undefined, a sync call is made instead.
      * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
      *      encoded result.
@@ -5414,7 +5414,7 @@ class discordCrypt {
      *      If undefined, it is interpreted as a UTF-8 string.
      * @param {int} [key_length] The desired key length size in bytes. Default: 32.
      * @param {int} [iterations] The number of iterations to perform. Default: 5000.
-     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     * @param {HashCallback} [callback] If defined, an async call is made that the result is passed to this when
      *      completed. If undefined, a sync call is made instead.
      * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
      *      encoded result.
@@ -5454,7 +5454,7 @@ class discordCrypt {
      *      If undefined, it is interpreted as a UTF-8 string.
      * @param {int} [key_length] The desired key length size in bytes. Default: 32.
      * @param {int} [iterations] The number of iterations to perform. Default: 5000.
-     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     * @param {HashCallback} [callback] If defined, an async call is made that the result is passed to this when
      *      completed. If undefined, a sync call is made instead.
      * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
      *      encoded result.
@@ -5494,7 +5494,7 @@ class discordCrypt {
      *      If undefined, it is interpreted as a UTF-8 string.
      * @param {int} [key_length] The desired key length size in bytes. Default: 32.
      * @param {int} [iterations] The number of iterations to perform. Default: 5000.
-     * @param {hashCallback} [callback] If defined, an async call is made that the result is passed to this when
+     * @param {HashCallback} [callback] If defined, an async call is made that the result is passed to this when
      *      completed. If undefined, a sync call is made instead.
      * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
      *      encoded result.
