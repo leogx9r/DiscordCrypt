@@ -325,4 +325,6 @@ class Compiler {
     }
 }
 
+module.exports = { Compiler };
+
 (new Compiler()).run();
