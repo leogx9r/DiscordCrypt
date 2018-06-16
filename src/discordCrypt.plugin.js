@@ -348,6 +348,12 @@ class discordCrypt {
         this.updateHandlerInterval = undefined;
 
         /**
+         * @desc The index of the handler used for timed message deletion.
+         * @type {int}
+         */
+        this.timedMessageInterval = undefined;
+
+        /**
          * @desc The main message update event dispatcher used by Discord. Resolved upon startup.
          * @type {Object|null}
          */
@@ -549,6 +555,44 @@ class discordCrypt {
             this.attachHandler();
         }
 
+        this.timedMessageInterval = setInterval( () => {
+            let n = Date.now();
+
+            self.configFile.timedMessages.forEach( ( e, i ) => {
+                /* Skip invalid elements. */
+                if ( !e || !e.expireTime ) {
+                    /* Delete the index. */
+                    self.configFile.timedMessages.splice( i, 1 );
+
+                    /* Update the configuration to the disk. */
+                    self.saveConfig();
+                }
+
+                if ( e.expireTime < n ) {
+                    discordCrypt.log( `Deleting timed message "${self.configFile.timedMessages[ i ].messageId}"` );
+
+                    try {
+                        /* Delete the message. */
+                        discordCrypt.deleteMessage(
+                            self.configFile.timedMessages[ i ].channelId,
+                            self.configFile.timedMessages[ i ].messageId,
+                            self.cachedModules
+                        );
+                    }
+                    catch ( e ) {
+                        discordCrypt.log( e.toString(), 'error' );
+                    }
+
+                    /* Delete the index. */
+                    self.configFile.timedMessages.splice( i, 1 );
+
+                    /* Update the configuration to the disk. */
+                    self.saveConfig();
+                }
+            } );
+
+        }, 5000 );
+
         /* Decode all messages immediately. */
         this.decodeMessages();
     }
@@ -566,13 +610,16 @@ class discordCrypt {
         $( this.channelTextAreaClass ).off( "keydown.dcrypt" );
 
         /* Unhook switch events if available or fallback to clearing timed handlers. */
-        if( !this.unhookMessageCallbacks() ){
+        if ( !this.unhookMessageCallbacks() ) {
             /* Unload the decryption interval. */
             clearInterval( this.scanInterval );
 
             /* Unload the toolbar reload interval. */
             clearInterval( this.toolbarReloadInterval );
         }
+
+        /* Unload the timed message handler. */
+        clearInterval( this.timedMessageInterval );
 
         /* Unload the update handler. */
         clearInterval( this.updateHandlerInterval );
@@ -652,6 +699,8 @@ class discordCrypt {
             up1ApiKey: '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
             /* Internal message list for time expiration. */
             timedMessages: [],
+            /* How long after a message is sent to remove it. */
+            timedMessageExpires: 30
         };
     }
 
@@ -712,7 +761,7 @@ class discordCrypt {
         let defaultConfig = this.getDefaultConfig(), needs_save = false;
 
         /* Iterate all defined properties in the default configuration file. */
-        for( let prop in defaultConfig ) {
+        for ( let prop in defaultConfig ) {
             /* If the defined property doesn't exist in the current configuration file ... */
             if ( !this.configFile.hasOwnProperty( prop ) ) {
                 /* Use the default. */
@@ -727,9 +776,9 @@ class discordCrypt {
         }
 
         /* Iterate all defined properties in the current configuration file and remove any undefined ones. */
-        for( let prop in this.configFile ) {
+        for ( let prop in this.configFile ) {
             /* If the default configuration doesn't contain this property, delete it as it's unnecessary. */
-            if( !defaultConfig.hasOwnProperty( prop ) ) {
+            if ( !defaultConfig.hasOwnProperty( prop ) ) {
                 /* Delete the property. */
                 delete this.configFile[ prop ];
 
@@ -742,7 +791,7 @@ class discordCrypt {
         }
 
         /* Save the configuration file if necessary. */
-        if( needs_save )
+        if ( needs_save )
             this.saveConfig();
 
         /* Check for version mismatch. */
@@ -776,8 +825,6 @@ class discordCrypt {
      * @desc Saves the configuration file with the current password using AES-256 in GCM mode.
      */
     saveConfig() {
-        discordCrypt.log( 'Saving configuration file ...' );
-
         /* Encrypt the message using the master password and save the encrypted data. */
         bdPluginStorage.set( this.getName(), 'config', {
             data:
@@ -1246,7 +1293,7 @@ class discordCrypt {
      */
     static getReactModules( cachedModules ) {
 
-        if( cachedModules ) {
+        if ( cachedModules ) {
             return {
                 ChannelProps:
                     discordCrypt.getChannelId() === '@me' ?
@@ -1299,6 +1346,8 @@ class discordCrypt {
      * @param {int|undefined} channel_id If specified, sends the embedded message to this channel instead of the
      *      current channel.
      * @param {CachedModules} cached_modules Internally cached modules.
+     * @param {Array<TimedMessage>} timed_messages Array containing timed messages to add this sent message to.
+     * @param {int} expire_time_minutes The amount of minutes till this message is to be deleted.
      */
     static sendEmbeddedMessage(
         embedded_text,
@@ -1307,7 +1356,9 @@ class discordCrypt {
         embedded_color = 0x551A8B,
         message_content = '',
         channel_id = undefined,
-        cached_modules = undefined
+        cached_modules = undefined,
+        timed_messages = undefined,
+        expire_time_minutes = 30
     ) {
         let mention_everyone = false;
 
@@ -1323,6 +1374,7 @@ class discordCrypt {
             }
 
             try {
+                /* Parse the message. */
                 message_content = React.MessageParser.parse( React.ChannelProps, message_content ).content;
 
                 /* Check for @everyone or @here mentions. */
@@ -1411,6 +1463,15 @@ class discordCrypt {
             else {
                 /* Receive the message normally. */
                 React.MessageController.receiveMessage( _channel, r.body );
+
+                /* Add the message to the TimedMessage array. */
+                if ( timed_messages ) {
+                    timed_messages.push( {
+                        messageId: r.body.id,
+                        channelId: _channel,
+                        expireTime: Date.now() + ( expire_time_minutes * 60000 )
+                    } );
+                }
             }
         } );
     }
@@ -1616,7 +1677,6 @@ class discordCrypt {
                     /* Delays are required due to windows being loaded async. */
                     setTimeout(
                         () => {
-
                             discordCrypt.log( 'Detected chat switch.', 'debug' );
 
                             /* Add the toolbar. */
@@ -1634,29 +1694,28 @@ class discordCrypt {
                 }
             }
         );
-        /* Hook incoming message creation dispatcher. */
-        discordCrypt.hookDispatcher(
-            this.messageUpdateDispatcher,
-            'MESSAGE_CREATE',
-            {
-                after: ( e ) => {
-                    /* Skip channels not currently selected. */
-                    if ( discordCrypt.getChannelId() !== e.methodArguments[ 0 ].channelId )
-                        return;
 
-                    /* Delays are required due to windows being loaded async. */
-                    setTimeout(
-                        () => {
-                            discordCrypt.log( 'Detected new message.', 'debug' );
+        let messageUpdateEvent = {
+            after: ( e ) => {
+                /* Skip channels not currently selected. */
+                if ( discordCrypt.getChannelId() !== e.methodArguments[ 0 ].channelId )
+                    return;
 
-                            /* Decrypt any messages. */
-                            this.decodeMessages();
-                        },
-                        1
-                    );
-                }
+                /* Delays are required due to windows being loaded async. */
+                setTimeout(
+                    () => {
+                        /* Decrypt any messages. */
+                        this.decodeMessages();
+                    },
+                    1
+                );
             }
-        );
+        };
+
+        /* Hook incoming message creation dispatcher. */
+        discordCrypt.hookDispatcher( this.messageUpdateDispatcher, 'MESSAGE_CREATE', messageUpdateEvent );
+        discordCrypt.hookDispatcher( this.messageUpdateDispatcher, 'MESSAGE_UPDATE', messageUpdateEvent );
+        discordCrypt.hookDispatcher( this.messageUpdateDispatcher, 'MESSAGE_DELETE', messageUpdateEvent );
 
         return true;
     }
@@ -2049,7 +2108,7 @@ class discordCrypt {
         let metadata = discordCrypt.__extractKeyInfo( obj.text().replace( /\r?\n|\r/g, '' ), true );
 
         /* Sanity check for invalid key messages. */
-        if( metadata === null )
+        if ( metadata === null )
             return true;
 
         /* Compute the fingerprint of our currently known public key if any to determine if to proceed. */
@@ -2442,7 +2501,9 @@ class discordCrypt {
                 0x551A8B,
                 user_tags,
                 channel_id,
-                this.cachedModules
+                this.cachedModules,
+                this.configFile.timedMessages,
+                this.configFile.timedMessageExpires
             );
         }
         else {
@@ -2482,10 +2543,15 @@ class discordCrypt {
                     0x551A8B,
                     i === 0 ? user_tags : '',
                     channel_id,
-                    this.cachedModules
+                    this.cachedModules,
+                    this.configFile.timedMessages,
+                    this.configFile.timedMessageExpires
                 );
             }
         }
+
+        /* Save the configuration file and store the new message(s). */
+        this.saveConfig();
 
         return 0;
     }
@@ -3179,8 +3245,13 @@ class discordCrypt {
                 0x720000,
                 '',
                 undefined,
-                this.cachedModules
+                self.cachedModules,
+                self.configFile.timedMessages,
+                self.configFile.timedMessageExpires
             );
+
+            /* Save the configuration file and store the new message. */
+            self.saveConfig();
 
             /* Update the button text & reset after 1 second.. */
             $( '#dc-keygen-send-pub-btn' )[ 0 ].innerText = 'Sent The Public Key!';

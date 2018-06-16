@@ -76,7 +76,7 @@ class Compiler {
             if ( _data.warnings )
                 console.warn( _data.warnings );
         }
-        catch( e ) {
+        catch ( e ) {
             console.warn( `Warning: ${e.toString()} ...\nSkipping compression ...` );
         }
         return data;
@@ -148,12 +148,12 @@ class Compiler {
         let files = this.fs.readdirSync( asset_path );
 
         /* Loop over every file index. */
-        for( let i in files ) {
+        for ( let i in files ) {
             /* Get the file path and name. */
             let file = files[ i ], file_name = this.path.basename( files[ i ] );
 
             /* Make sure the tag exists for this file. */
-            if( !constants[ file_name ] ){
+            if ( !constants[ file_name ] ) {
                 console.warn( `Unhandled asset file: [ ${file_name} ] ...` );
                 continue;
             }
@@ -161,7 +161,7 @@ class Compiler {
             /* Read the file into a buffer. */
             let data = this.fs.readFileSync( this.path.join( asset_path, file ) ).toString();
 
-            data = data.split("\r").join("").split("\n").join('');
+            data = data.split( "\r" ).join( "" ).split( "\n" ).join( '' );
 
             /* Replace the data. */
             original_data = original_data.split( constants[ file_name ] ).join( data );
@@ -247,8 +247,6 @@ class Compiler {
         /* Only do this if we're compressing the plugin. */
         if ( compress )
             data = header + this.tryMinify( data, true );
-        else
-            data = header + data;
 
         try {
             /* Write the file to the output. */
