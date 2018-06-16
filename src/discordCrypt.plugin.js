@@ -100,7 +100,7 @@ class discordCrypt {
      *      passwords defined for encryption of new messages and decryption of currently encrypted messages.
      * @property {string} up1Host The full URI host of the Up1 service to use for encrypted file uploads.
      * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
-     * @property {Array<ChannelPassword>} timedMessages Contains all logged timed messages pending deletion.
+     * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
      */
 
     /**
