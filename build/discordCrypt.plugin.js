@@ -557,9 +557,12 @@ class discordCrypt {
             this.attachHandler();
         }
 
+        /* Setup the timed message handler to trigger every 5 seconds. */
         this.timedMessageInterval = setInterval( () => {
+            /* Get the current time. */
             let n = Date.now();
 
+            /* Loop over each message. */
             self.configFile.timedMessages.forEach( ( e, i ) => {
                 /* Skip invalid elements. */
                 if ( !e || !e.expireTime ) {
@@ -570,19 +573,18 @@ class discordCrypt {
                     self.saveConfig();
                 }
 
+                /* Only continue if the message has been expired. */
                 if ( e.expireTime < n ) {
+                    /* Quickly log. */
                     discordCrypt.log( `Deleting timed message "${self.configFile.timedMessages[ i ].messageId}"` );
 
                     try {
-                        /* Delete the message. */
-                        discordCrypt.deleteMessage(
-                            self.configFile.timedMessages[ i ].channelId,
-                            self.configFile.timedMessages[ i ].messageId,
-                            self.cachedModules
-                        );
+                        /* Delete the message. This will be queued if a rate limit is in effect. */
+                        discordCrypt.deleteMessage( e.channelId, e.messageId, self.cachedModules );
                     }
                     catch ( e ) {
-                        discordCrypt.log( e.toString(), 'error' );
+                        /* Log the error that occurred. */
+                        discordCrypt.log( e.messageId + ': ' + e.toString(), 'error' );
                     }
 
                     /* Delete the index. */
