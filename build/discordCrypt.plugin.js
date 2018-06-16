@@ -4328,7 +4328,7 @@ class discordCrypt {
         if ( key.length !== keyBytes ) {
             let hash;
 
-            /* Get the appropriate hasher for the key size. */
+            /* Get the appropriate hash algorithm for the key size. */
             switch ( keyBytes ) {
                 case 8:
                     hash = discordCrypt.whirlpool64;
@@ -4445,7 +4445,7 @@ class discordCrypt {
                     tmp = clipboard.readText();
 
                     /* For text, see if this is a file path. */
-                    if ( fs.existsSync( tmp ) ) {
+                    if ( fs.statSync( tmp ).isFile() ) {
                         /* Read the file and store the file name. */
                         data = fs.readFileSync( tmp );
                         name = path.basename( tmp );
@@ -4811,14 +4811,14 @@ class discordCrypt {
 
         /**
          * @private
-         * @desc Mixes a block and performs SALSA20 on it.
-         * @param {Uint32Array} BY
-         * @param {int} Yi
-         * @param {int} r
-         * @param {Uint32Array} x
-         * @param {Uint32Array} _X
+         * @desc Mixes rows and blocks via Salsa20/8..
+         * @param {Uint32Array} BY Input/output array.
+         * @param {int} Yi Size of r * 32.
+         * @param {int} r Block size parameter.
+         * @param {Uint32Array} x Salsa20 scratchpad for row mixing.
+         * @param {Uint32Array} _X Salsa20 scratchpad for block mixing.
          */
-        function Salsa20_BlockMix( BY, Yi, r, x, _X ) {
+        function Script_RowMix( BY, Yi, r, x, _X ) {
             let i, j, k, l;
 
             for ( i = 0, j = ( 2 * r - 1 ) * 16; i < 16; i++ )
@@ -4979,7 +4979,7 @@ class discordCrypt {
                             while ( z-- ) V[ z + y ] = XY[ z ];
 
                             /* Row mix #4 */
-                            Salsa20_BlockMix( XY, Yi, r, x, _X );
+                            Script_RowMix( XY, Yi, r, x, _X );
                         }
 
                         i1 += steps;
@@ -5016,7 +5016,7 @@ class discordCrypt {
                             for ( z = 0, y = ( XY[ ( 2 * r - 1 ) * 16 ] & ( N - 1 ) ) * Yi; z < Yi; z++ )
                                 XY[ z ] ^= V[ y + z ];
                             /* Row mix #9 ( outer ) */
-                            Salsa20_BlockMix( XY, Yi, r, x, _X );
+                            Script_RowMix( XY, Yi, r, x, _X );
                         }
 
                         i1 += steps;
