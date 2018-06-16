@@ -1233,6 +1233,19 @@ class discordCrypt {
     }
 
     /**
+     * @desc Edits the message's content from the channel indicated.
+     *      N.B. This does not edit embeds due to the internal code Discord uses.
+     * @param {string} channel_id The channel's identifier that the message is located in.
+     * @param {string} message_id The message's identifier to delete.
+     * @param {string} content The message's new content.
+     * @param {CachedModules} cachedModules The internally cached module objects.
+     */
+    static editMessage( channel_id, message_id, content, cachedModules ) {
+        /* Edit the message internally. */
+        cachedModules.MessageController.editMessage( channel_id, message_id, { content: content } );
+    }
+
+    /**
      * @desc Delete the message from the channel indicated.
      * @param {string} channel_id The channel's identifier that the message is located in.
      * @param {string} message_id The message's identifier to delete.
