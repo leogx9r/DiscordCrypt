@@ -83,6 +83,52 @@ class discordCrypt {
      */
 
     /**
+     * @typedef {Object} TimedMessage
+     * @desc Contains a timed message pending deletion.
+     * @property {string} messageId The identification tag of the timed message.
+     * @property {string} channelId The channel's identifier that this message was sent to.
+     * @property {Date} expireTime The time to purge the message from the channel.
+     */
+
+    /**
+     * @typedef {Object} ChannelPassword
+     * @desc Contains the primary and secondary keys used to encrypt or decrypt messages in a channel.
+     * @property {string} primary The primary key used for the inner cipher.
+     * @property {string} secondary The secondary key used for the outer cipher.
+     */
+
+    /**
+     * @typedef {Object} PublicKeyInfo
+     * @desc Contains information given an input public key.
+     * @property {string} fingerprint The SHA-256 sum of the public key.
+     * @property {string} algorithm The public key's type ( DH | ECDH ) extracted from the metadata.
+     * @property {int} bit_length The length, in bits, of the public key's security.
+     */
+
+    /**
+     * @typedef {Object} Config
+     * @desc Contains the configuration data used for the plugin.
+     * @property {string} version The version of the configuration.
+     * @property {string} defaultPassword The default key to encrypt or decrypt message with,
+     *      if not specifically defined.
+     * @property {string} encodeMessageTrigger The suffix trigger which, once appended to the message,
+     *      forces encryption even if a key is not specifically defined for this channel.
+     * @property {number} encryptScanDelay If using timed scanning events in case hooked events fail,
+     *      this denotes how often, in milliseconds, to scan the window for new messages and decrypt them.
+     * @property {number} encryptMode The index of the ciphers to use for message encryption.
+     * @property {string} encryptBlockMode The block operation mode of the ciphers used to encrypt message.
+     * @property {boolean} encodeAll If enabled, automatically forces all messages sent to be encrypted if a
+     *      ChannelPassword object is defined for the current channel..
+     * @property {string} paddingMode The short-hand padding scheme to used to align all messages to the cipher's
+     *      block length.
+     * @property {{channelId: string, password: ChannelPassword}} passList Storage containing all channels with
+     *      passwords defined for encryption of new messages and decryption of currently encrypted messages.
+     * @property {string} up1Host The full URI host of the Up1 service to use for encrypted file uploads.
+     * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
+     * @property {Array<ChannelPassword>} timedMessages Contains all logged timed messages pending deletion.
+     */
+
+    /**
      * @public
      * @desc Initializes an instance of DiscordCrypt.
      * @example
@@ -172,7 +218,7 @@ class discordCrypt {
 
         /**
          * @desc The configuration file currently in use. Only valid after decryption of the configuration database.
-         * @type {Object|null}
+         * @type {Config|null}
          */
         this.configFile = null;
 
@@ -449,21 +495,7 @@ class discordCrypt {
     /**
      * @private
      * @desc Returns the default settings for the plugin.
-     * @returns {
-     *  {
-     *      version: string,
-     *      defaultPassword: string,
-     *      encodeMessageTrigger: string,
-     *      encryptScanDelay: number,
-     *      encryptMode: number,
-     *      encryptBlockMode: string,
-     *      encodeAll: boolean,
-     *      paddingMode: string,
-     *      passList: {},
-     *      up1Host: string,
-     *      up1ApiKey: string
-     *  }
-     * }
+     * @returns {Config}
      */
     getDefaultConfig() {
         return {
@@ -488,7 +520,9 @@ class discordCrypt {
             /* Contains the URL of the Up1 client. */
             up1Host: 'https://share.riseup.net',
             /* Contains the API key used for transactions with the Up1 host. */
-            up1ApiKey: '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs'
+            up1ApiKey: '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
+            /* Internal message list for time expiration. */
+            timedMessages: [],
         };
     }
 
@@ -860,7 +894,7 @@ class discordCrypt {
      * @desc Creates a password object using a primary and secondary password.
      * @param {string} primary_password The primary password.
      * @param {string} secondary_password The secondary password.
-     * @returns {{primary: string, secondary: string}} Object containing the two passwords.
+     * @returns {ChannelPassword} Object containing the two passwords.
      * console.log( discordCrypt.createPassword( 'Hello', 'World' ) );
      * // Object {primary: "Hello", secondary: "World"}
      */
@@ -3658,12 +3692,11 @@ class discordCrypt {
      * @desc Returns the exchange algorithm and bit size for the given metadata as well as a fingerprint.
      * @param {string} key_message The encoded metadata to extract the information from.
      * @param {boolean} header_present Whether the message's magic string is attached to the input.
-     * @returns {{bit_length: int, algorithm: string, fingerprint: string}|null} Returns the algorithm's bit length and
-     *      name or null.
+     * @returns {PublicKeyInfo|null} Returns the algorithm's bit length and name or null.
      * @example
-     * __extractKeyInfo( '㑼㑷㑵㑳㐁㑢', true );
+     * __extractKeyInfo( public_key, true );
      * @example
-     * __extractKeyInfo( '㐁㑢', false );
+     * __extractKeyInfo( public_key, false );
      */
     static __extractKeyInfo( key_message, header_present = false ) {
         try {
