@@ -126,7 +126,7 @@ class discordCrypt {
      *      passwords defined for encryption of new messages and decryption of currently encrypted messages.
      * @property {string} up1Host The full URI host of the Up1 service to use for encrypted file uploads.
      * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
-     * @property {Array<ChannelPassword>} timedMessages Contains all logged timed messages pending deletion.
+     * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
      */
 
     /**
@@ -651,14 +651,6 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc Performed when updating a configuration file across versions.
-     */
-    onUpdate() {
-        /* Placeholder for future use. */
-    }
-
-    /**
-     * @private
      * @desc Returns the default settings for the plugin.
      * @returns {Config}
      */
@@ -706,7 +698,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc Loads the configuration file from `discordCrypt.config.json`
+     * @desc Loads the configuration file from `discordCrypt.config.json` and adds or removes any properties required.
      * @returns {boolean}
      */
     loadConfig() {
@@ -744,11 +736,46 @@ class discordCrypt {
             return false;
         }
 
+        /* Try checking for each property within the config file and make sure it exists. */
+        let defaultConfig = this.getDefaultConfig(), needs_save = false;
+
+        /* Iterate all defined properties in the default configuration file. */
+        for( let prop in defaultConfig ) {
+            /* If the defined property doesn't exist in the current configuration file ... */
+            if ( !this.configFile.hasOwnProperty( prop ) ) {
+                /* Use the default. */
+                this.configFile[ prop ] = defaultConfig[ prop ];
+
+                /* Show a simple log. */
+                discordCrypt.log( `Default value added for missing property '${prop}' in the configuration file.` );
+
+                /* Set the flag for saving. */
+                needs_save = true;
+            }
+        }
+
+        /* Iterate all defined properties in the current configuration file and remove any undefined ones. */
+        for( let prop in this.configFile ) {
+            /* If the default configuration doesn't contain this property, delete it as it's unnecessary. */
+            if( !defaultConfig.hasOwnProperty( prop ) ) {
+                /* Delete the property. */
+                delete this.configFile[ prop ];
+
+                /* Show a simple log. */
+                discordCrypt.log( `Removing unknown property '${prop}' in the configuration file.` );
+
+                /* Set the flag for saving. */
+                needs_save = true;
+            }
+        }
+
+        /* Save the configuration file if necessary. */
+        if( needs_save )
+            this.saveConfig();
+
+
         /* Check for version mismatch. */
         if ( this.configFile.version !== this.getVersion() ) {
-            /* Perform whatever needs to be done before updating. */
-            this.onUpdate();
-
             /* Preserve the old version for logging. */
             let oldVersion = this.configFile.version;
 
@@ -1258,6 +1285,19 @@ class discordCrypt {
         }
 
         return null;
+    }
+
+    /**
+     * @desc Edits the message's content from the channel indicated.
+     *      N.B. This does not edit embeds due to the internal code Discord uses.
+     * @param {string} channel_id The channel's identifier that the message is located in.
+     * @param {string} message_id The message's identifier to delete.
+     * @param {string} content The message's new content.
+     * @param {CachedModules} cachedModules The internally cached module objects.
+     */
+    static editMessage( channel_id, message_id, content, cachedModules ) {
+        /* Edit the message internally. */
+        cachedModules.MessageController.editMessage( channel_id, message_id, { content: content } );
     }
 
     /**

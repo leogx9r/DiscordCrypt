@@ -623,14 +623,6 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc Performed when updating a configuration file across versions.
-     */
-    onUpdate() {
-        /* Placeholder for future use. */
-    }
-
-    /**
-     * @private
      * @desc Returns the default settings for the plugin.
      * @returns {Config}
      */
@@ -678,7 +670,7 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc Loads the configuration file from `discordCrypt.config.json`
+     * @desc Loads the configuration file from `discordCrypt.config.json` and adds or removes any properties required.
      * @returns {boolean}
      */
     loadConfig() {
@@ -716,11 +708,46 @@ class discordCrypt {
             return false;
         }
 
+        /* Try checking for each property within the config file and make sure it exists. */
+        let defaultConfig = this.getDefaultConfig(), needs_save = false;
+
+        /* Iterate all defined properties in the default configuration file. */
+        for( let prop in defaultConfig ) {
+            /* If the defined property doesn't exist in the current configuration file ... */
+            if ( !this.configFile.hasOwnProperty( prop ) ) {
+                /* Use the default. */
+                this.configFile[ prop ] = defaultConfig[ prop ];
+
+                /* Show a simple log. */
+                discordCrypt.log( `Default value added for missing property '${prop}' in the configuration file.` );
+
+                /* Set the flag for saving. */
+                needs_save = true;
+            }
+        }
+
+        /* Iterate all defined properties in the current configuration file and remove any undefined ones. */
+        for( let prop in this.configFile ) {
+            /* If the default configuration doesn't contain this property, delete it as it's unnecessary. */
+            if( !defaultConfig.hasOwnProperty( prop ) ) {
+                /* Delete the property. */
+                delete this.configFile[ prop ];
+
+                /* Show a simple log. */
+                discordCrypt.log( `Removing unknown property '${prop}' in the configuration file.` );
+
+                /* Set the flag for saving. */
+                needs_save = true;
+            }
+        }
+
+        /* Save the configuration file if necessary. */
+        if( needs_save )
+            this.saveConfig();
+
+
         /* Check for version mismatch. */
         if ( this.configFile.version !== this.getVersion() ) {
-            /* Perform whatever needs to be done before updating. */
-            this.onUpdate();
-
             /* Preserve the old version for logging. */
             let oldVersion = this.configFile.version;
 
