@@ -818,8 +818,14 @@ class discordCrypt {
      * @param {Object} btn The jQuery button to set the update text for.
      */
     resetSettings( btn ) {
+        /* Preserve the old password list before resetting. */
+        let oldCache = this.configFile.passList;
+
         /* Retrieve the default configuration. */
         this.configFile = this.getDefaultConfig();
+
+        /* Restore the old passwords. */
+        this.configFile.passList = oldCache;
 
         /* Save the configuration file to update any settings. */
         this.saveConfig();
