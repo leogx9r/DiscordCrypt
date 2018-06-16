@@ -31,49 +31,24 @@
  * @desc Main plugin prototype.
  */
 class discordCrypt {
-    /* ============================================================== */
-
-    /**
-     * @public
-     * @desc Returns the name of the plugin.
-     * @returns {string}
-     */
-    getName() {
-        return 'DiscordCrypt';
-    }
-
-    /**
-     * @public
-     * @desc Returns the description of the plugin.
-     * @returns {string}
-     */
-    getDescription() {
-        return 'Provides secure messaging for Discord using various cryptography standards.';
-    }
-
-    /**
-     * @public
-     * @desc Returns the plugin's original author.
-     * @returns {string}
-     */
-    getAuthor() {
-        return 'Leonardo Gates';
-    }
-
-    /**
-     * @public
-     * @desc Returns the current version of the plugin.
-     * @returns {string}
-     */
-    getVersion() {
-        return '1.1.2';
-    }
 
     /* ============================================================== */
 
     /**
      * @typedef {Object} CachedModules
      * @desc Cached React and Discord modules for internal access.
+     * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
+     * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
+     * @property {Object} MessageActionTypes Internal message action types and constants for events.
+     * @property {Object} MessageDispatcher Internal message dispatcher for pending queued messages.
+     * @property {Object} MessageQueue Internal message Queue store for pending parsing.
+     * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
+     */
+
+    /**
+     * @typedef {Object} ReactModules
+     * @desc Contains all React and Discord modules including the channel's properties for internal access.
+     * @property {Object} ChannelProps Retrieved channel properties object for the current channel.
      * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
      * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
      * @property {Object} MessageActionTypes Internal message action types and constants for events.
@@ -127,6 +102,168 @@ class discordCrypt {
      * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
      * @property {Array<ChannelPassword>} timedMessages Contains all logged timed messages pending deletion.
      */
+
+    /**
+     * @typedef {Object} updateCallback
+     * @desc The function to execute after an update has been retrieved.
+     * @property {string} file_data The update file's data.
+     * @property {string} short_hash A 64-bit SHA-256 checksum of the new update.
+     * @property {string} new_version The new version of the update.
+     * @property {string} full_changelog The full changelog.
+     */
+
+    /**
+     * @typedef {Object} modulePredicate
+     * @desc Predicate for searching module.
+     * @property {*} module Module to test.
+     * @return {boolean} Returns `true` if `module` matches predicate.
+     */
+
+    /**
+     * @typedef {Object} getResultCallback
+     * @desc The function to execute at the end of a GET request containing the result or error that occurred.
+     * @property {int} statusCode The HTTP static code of the operation.
+     * @property {string|null} The HTTP error string if an error occurred.
+     * @property {string} data The returned data from the request.
+     */
+
+    /**
+     * @typedef {Object} codeBlockDescriptor
+     * @desc Indicates the values present in a markdown-styled code block.
+     * @property {int} start_pos The starting position of the code block.
+     * @property {int} end_pos The ending position of the code block.
+     * @property {string} language The language identifier of the code within this block.
+     * @property {string} raw_code The raw code within the code block.
+     * @property {string} captured_block The entire markdown formatted code block.
+     */
+
+    /**
+     * @typedef {Object} pbkdf2Callback
+     * @desc The function to execute after an async request for PBKDF2 is completed containing the result or error.
+     * @property {string} error The error that occurred during processing or null on success.
+     * @property {string} hash The hash either as a hex or Base64 encoded string ( or null on failure ).
+     */
+
+    /**
+     * @typedef {Object} encryptedFileCallback
+     * @desc The function to execute when a file has finished being encrypted.
+     * @property {string} error_string The error that occurred during operation or null if no error occurred.
+     * @property {Buffer} encrypted_data The resulting encrypted buffer as a Buffer() object.
+     * @property {string} identity The encoded identity of the encrypted file.
+     * @property {string} seed The initial seed used to decrypt the encryption keys of the file.
+     */
+
+    /**
+     * @typedef {Object} uploadedFileCallback
+     * @desc The function to execute after a file has been uploaded to an Up1 service.
+     * @property {string} error_string The error that occurred or null if no error occurred.
+     * @property {string} file_url The URL of the uploaded file/
+     * @property {string} deletion_link The link used to delete the file.
+     * @property {string} encoded_seed The encoded encryption key used to decrypt the file.
+     */
+
+    /**
+     * @typedef {Object} scryptCallback
+     * @desc The function to execute for Scrypt based status updates.
+     *      The function must return false repeatedly upon each call to have Scrypt continue running.
+     *      Once [progress] === 1.f AND [key] is defined, no further calls will be made.
+     * @property {string} error The error message encountered or null.
+     * @property {real} progress The percentage of the operation completed. This ranges from [ 0.00 - 1.00 ].
+     * @property {Buffer} result The output result when completed or null if not completed.
+     * @returns {boolean} Returns false if the operation is to continue running or true if the cancel the running
+     *      operation.
+     */
+
+    /**
+     * @typedef {Object} hashCallback
+     * @desc The function to execute once the hash is calculated or an error has occurred.
+     * @property {string} error The error that occurred or null.
+     * @property {string} hash The hex or Base64 encoded result.
+     */
+
+    /**
+     * @typedef {Object} ClipboardInfo
+     * @desc Contains extracted data from the current clipboard.
+     * @property {string} mime_type The MIME type of the extracted data.
+     * @property {string|null} name The name of the file, if a file was contained in the clipboard.
+     * @property {Buffer|null} data The raw data contained in the clipboard as a Buffer.
+     */
+
+    /**
+     * @typedef {Object} ProcessedMessage
+     * @desc Contains a processed message with additional data.
+     * @property {boolean} url Whether the message has any parsed URLs within it.
+     * @property {boolean} code Whether the message has any parsed code blocks within it.
+     * @property {string} html The raw message's HTML.
+     */
+
+    /**
+     * @typedef {Object} UserTags
+     * @desc Extracted user tagging information from an input message.
+     * @property {string} processed_message The processed message containing user tags with the discriminator removed.
+     * @property {Array<string>} user_tags All extracted user tags from the message.
+     */
+
+    /**
+     * @typedef {Object} URLInfo
+     * @desc Contains information of a message containing any URLs.
+     * @property {boolean} url Whether the input message contained any parsed URLs.
+     * @property {string} html The raw formatted HTML containing any parsed URLs.
+     */
+
+    /**
+     * @typedef {Object} CodeBlockInfo
+     * @desc Contains information of a message containing code blocks.
+     * @property {boolean} code Whether the input message contained any parsed code blocks.
+     * @property {string} html The raw formatted HTML containing any parsed code blocks.
+     */
+
+    /**
+     * @typedef {Object} LibraryDefinition
+     * @desc Contains a definition of a raw library executed upon plugin startup.
+     * @property {string} name The name of the library file.
+     * @property {string} code The raw code for execution defined in the library.
+     */
+
+    /* ============================================================== */
+
+    /**
+     * @public
+     * @desc Returns the name of the plugin.
+     * @returns {string}
+     */
+    getName() {
+        return 'DiscordCrypt';
+    }
+
+    /**
+     * @public
+     * @desc Returns the description of the plugin.
+     * @returns {string}
+     */
+    getDescription() {
+        return 'Provides secure messaging for Discord using various cryptography standards.';
+    }
+
+    /**
+     * @public
+     * @desc Returns the plugin's original author.
+     * @returns {string}
+     */
+    getAuthor() {
+        return 'Leonardo Gates';
+    }
+
+    /**
+     * @public
+     * @desc Returns the current version of the plugin.
+     * @returns {string}
+     */
+    getVersion() {
+        return '1.1.2';
+    }
+
+    /* ============================================================== */
 
     /**
      * @public
@@ -319,7 +456,7 @@ class discordCrypt {
 
         /**
          * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
-         * @type {{string, string}}
+         * @type {LibraryDefinition}
          */
         this.libraries = {
             /* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */
@@ -757,15 +894,6 @@ class discordCrypt {
     }
 
     /**
-     * @typedef {Object} updateCallback
-     * @desc The function to execute after an update has been retrieved.
-     * @property {string} file_data The update file's data.
-     * @property {string} short_hash A 64-bit SHA-256 checksum of the new update.
-     * @property {string} new_version The new version of the update.
-     * @property {string} full_changelog The full changelog.
-     */
-
-    /**
      * @public
      * @desc Checks the update server for an encrypted update.
      * @param {updateCallback} onUpdateCallback
@@ -925,13 +1053,6 @@ class discordCrypt {
         delete req.c[ '__extra_id__' ];
 
         /**
-         * @desc Predicate for searching module.
-         * @typedef {Object} modulePredicate
-         * @property {*} module Module to test.
-         * @return {boolean} Returns `true` if `module` matches predicate.
-         */
-
-        /**
          * @desc Look through all modules of internal Discord's Webpack and return first one that matches filter
          *      predicate. At first this function will look through already loaded modules cache.
          *      If no loaded modules match, then this function tries to load all modules and match for them.
@@ -1089,15 +1210,7 @@ class discordCrypt {
      * @private
      * @desc Returns the React modules loaded natively in Discord.
      * @param {CachedModules} cachedModules Cached module parameter for locating standard modules.
-     * @returns {{
-     *      ChannelProps: Object|null,
-     *      MessageParser: Object|null,
-     *      MessageController: Object|null,
-     *      MessageActionTypes: Object|null,
-     *      MessageDispatcher: Object|null,
-     *      MessageQueue: Object|null,
-     *      HighlightJS: Object|null
-     *  }}
+     * @returns {ReactModules}
      */
     static getReactModules( cachedModules ) {
 
@@ -2099,7 +2212,7 @@ class discordCrypt {
      * @desc Processes a decrypted message and formats any elements needed in HTML.
      * @param message The message to process.
      * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
-     * @returns {{url: boolean, code: boolean, html: (string|*)}}
+     * @returns {ProcessedMessage}
      */
     static postProcessMessage( message, embed_link_prefix ) {
         /* HTML escape characters. */
@@ -3598,14 +3711,6 @@ class discordCrypt {
     /* ======================= UTILITIES ======================= */
 
     /**
-     * @typedef {Object} getResultCallback
-     * @desc The function to execute at the end of a GET request containing the result or error that occurred.
-     * @property {int} statusCode The HTTP static code of the operation.
-     * @property {string|null} The HTTP error string if an error occurred.
-     * @property {string} data The returned data from the request.
-     */
-
-    /**
      * @private
      * @desc Checks if the plugin should ignore auto-updates.
      *      Usually in a developer environment, a simple symlink is ( or should be ) used to link the current build
@@ -3811,7 +3916,7 @@ class discordCrypt {
      * @public
      * @desc Extracts all tags from the given message and removes any tagged discriminators.
      * @param {string} message The input message to extract all tags from.
-     * @returns {{ processed_message: string, user_tags: Array }}
+     * @returns {UserTags}
      */
     static __extractTags( message ) {
         let split_msg = message.split( ' ' );
@@ -3840,16 +3945,6 @@ class discordCrypt {
         /* Return the parsed message and user tags. */
         return [ cleaned_msg.trim(), cleaned_tags.trim() ];
     }
-
-    /**
-     * @typedef {Object} codeBlockDescriptor
-     * @desc Indicates the values present in a markdown-styled code block.
-     * @property {int} start_pos The starting position of the code block.
-     * @property {int} end_pos The ending position of the code block.
-     * @property {string} language The language identifier of the code within this block.
-     * @property {string} raw_code The raw code within the code block.
-     * @property {string} captured_block The entire markdown formatted code block.
-     */
 
     /**
      * @public
@@ -3928,7 +4023,7 @@ class discordCrypt {
      * @public
      * @desc Extracts code blocks from a message and formats them in HTML to the proper format.
      * @param {string} message The message to format code blocks from.
-     * @returns {{code: boolean, html: string}} Returns whether the message contains code blocks and the formatted HTML.
+     * @returns {CodeBlockInfo} Returns whether the message contains code blocks and the formatted HTML.
      * @example
      * __buildCodeBlockMessage('```\nHello World!\n```');
      * //
@@ -4010,7 +4105,7 @@ class discordCrypt {
      * @desc Extracts URLs from a message and formats them accordingly.
      * @param {string} message The input message to format URLs from.
      * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
-     * @returns {{url: boolean, html: string}} Returns whether the message contains URLs and the formatted HTML.
+     * @returns {URLInfo} Returns whether the message contains URLs and the formatted HTML.
      */
     static __buildUrlMessage( message, embed_link_prefix ) {
         try {
@@ -4119,13 +4214,6 @@ class discordCrypt {
             return '';
         }
     }
-
-    /**
-     * @typedef {Object} pbkdf2Callback
-     * @desc The function to execute after an async request for PBKDF2 is completed containing the result or error.
-     * @property {string} error The error that occurred during processing or null on success.
-     * @property {string} hash The hash either as a hex or Base64 encoded string ( or null on failure ).
-     */
 
     /**
      * @public
@@ -4458,7 +4546,7 @@ class discordCrypt {
     /**
      * @private
      * @desc Attempts to read the clipboard and converts either Images or text to raw Buffer() objects.
-     * @returns {{ mime_type: string, name: string|null, data: Buffer|null }} Contains clipboard data. May be null.
+     * @returns {ClipboardInfo} Contains clipboard data. May be null.
      */
     static __clipboardToBuffer() {
         /* Request the clipboard object. */
@@ -4540,15 +4628,6 @@ class discordCrypt {
 
         return { mime_type: '', name: '', data: null };
     }
-
-    /**
-     * @typedef {Object} encryptedFileCallback
-     * @desc The function to execute when a file has finished being encrypted.
-     * @property {string} error_string The error that occurred during operation or null if no error occurred.
-     * @property {Buffer} encrypted_data The resulting encrypted buffer as a Buffer() object.
-     * @property {string} identity The encoded identity of the encrypted file.
-     * @property {string} seed The initial seed used to decrypt the encryption keys of the file.
-     */
 
     /**
      * @public
@@ -4678,22 +4757,13 @@ class discordCrypt {
     }
 
     /**
-     * @typedef {Object} uploadedFileCallback
-     * @desc The function to execute after a file has been uploaded to an Up1 service.
-     * @property {string} error_string The error that occurred or null if no error occurred.
-     * @property {string} file_url The URL of the uploaded file/
-     * @property {string} deletion_link The link used to delete the file.
-     * @property {string} encoded_seed The encoded encryption key used to decrypt the file.
-     */
-
-    /**
      * @public
      * @desc Uploads raw data to an Up1 service and returns the file URL and deletion key.
      * @param {string} up1_host The host URL for the Up1 service.
      * @param {string} [up1_api_key] The optional API key used for the service.
      * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
      * @param {uploadedFileCallback} callback The callback function called on success or failure.
-     * @param {{ mime_type: string, name: string|null, data: Buffer|null }} [clipboard_data] Optional clipboard data.
+     * @param {ClipboardInfo} [clipboard_data] Optional clipboard data.
      */
     static __up1UploadClipboard( up1_host, up1_api_key, sjcl, callback, clipboard_data = undefined ) {
         /* Get the current clipboard data. */
@@ -4829,18 +4899,6 @@ class discordCrypt {
     /* ========================================================= */
 
     /* ============== NODE CRYPTO HASH PRIMITIVES ============== */
-
-    /**
-     * @typedef {Object} scryptCallback
-     * @desc The function to execute for Scrypt based status updates.
-     *      The function must return false repeatedly upon each call to have Scrypt continue running.
-     *      Once [progress] === 1.f AND [key] is defined, no further calls will be made.
-     * @property {string} error The error message encountered or null.
-     * @property {real} progress The percentage of the operation completed. This ranges from [ 0.00 - 1.00 ].
-     * @property {Buffer} result The output result when completed or null if not completed.
-     * @returns {boolean} Returns false if the operation is to continue running or true if the cancel the running
-     *      operation.
-     */
 
     /**
      * @public
@@ -5303,13 +5361,6 @@ class discordCrypt {
     static hmac_whirlpool( message, secret, to_hex ) {
         return discordCrypt.__createHash( message, 'whirlpool', to_hex, true, secret );
     }
-
-    /**
-     * @typedef {Object} hashCallback
-     * @desc The function to execute once the hash is calculated or an error has occurred.
-     * @property {string} error The error that occurred or null.
-     * @property {string} hash The hex or Base64 encoded result.
-     */
 
     /**
      * @public
