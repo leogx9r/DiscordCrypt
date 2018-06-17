@@ -679,6 +679,8 @@ class discordCrypt {
         return {
             /* Current Version. */
             version: this.getVersion(),
+            /* Whether to send messages using embedded objects. */
+            useEmbeds: true,
             /* Default password for servers not set. */
             defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
             /* Defines what needs to be typed at the end of a message to encrypt it. */
@@ -1339,22 +1341,24 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc Sends an embedded message to Discord.
-     * @param {string} embedded_text The message body of the embed.
-     * @param {string} embedded_header The text to display at the top of the embed.
-     * @param {string} embedded_footer The text to display at the bottom of the embed.
-     * @param {string|int} embedded_color A hex color used to outline the left side of the embed.
-     * @param {string} message_content Message content to be attached above the embed.
-     * @param {int|undefined} channel_id If specified, sends the embedded message to this channel instead of the
+     * @desc Sends either an embedded message or an inline message to Discord.
+     * @param {boolean} as_embed Whether to dispatch this message as an embed or not.
+     * @param {string} main_message The main content to send.
+     * @param {string} [message_header] The text to display at the top of an embed.
+     * @param {string} [message_footer] The text to display at the bottom of an embed.
+     * @param {int} [embedded_color] A hex color used to outline the left side of the embed if applicable.
+     * @param {string} [message_content] Message content to be attached above the main message.
+     * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the
      *      current channel.
      * @param {CachedModules} cached_modules Internally cached modules.
      * @param {Array<TimedMessage>} timed_messages Array containing timed messages to add this sent message to.
      * @param {int} expire_time_minutes The amount of minutes till this message is to be deleted.
      */
-    static sendEmbeddedMessage(
-        embedded_text,
-        embedded_header,
-        embedded_footer,
+    static dispatchMessage(
+        as_embed,
+        main_message,
+        message_header,
+        message_footer,
         embedded_color = 0x551A8B,
         message_content = '',
         channel_id = undefined,
@@ -1390,9 +1394,6 @@ class discordCrypt {
         else
             message_content = '';
 
-        /* Generate a unique nonce for this message. */
-        let _nonce = parseInt( require( 'crypto' ).randomBytes( 6 ).toString( 'hex' ), 16 );
-
         /* Save the Channel ID. */
         let _channel = channel_id !== undefined ? channel_id : discordCrypt.getChannelId();
 
@@ -1402,41 +1403,14 @@ class discordCrypt {
             return;
         }
 
-        /* Create the message object and add it to the queue. */
-        React.MessageQueue.enqueue( {
-            type: 'send',
-            message: {
-                channelId: _channel,
-                nonce: _nonce,
-                content: message_content,
-                mention_everyone: mention_everyone,
-                tts: false,
-                embed: {
-                    type: "rich",
-                    url: "https://gitlab.com/leogx9r/DiscordCrypt",
-                    color: embedded_color || 0x551A8B,
-                    timestamp: ( new Date() ).toISOString(),
-                    output_mime_type: "text/x-html",
-                    encoding: "utf-16",
-                    author: {
-                        name: embedded_header || '-----MESSAGE-----',
-                        icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png',
-                        url: 'https://discord.me/discordCrypt'
-                    },
-                    footer: {
-                        text: embedded_footer || 'DiscordCrypt',
-                        icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/app-logo.png',
-                    },
-                    description: embedded_text,
-                }
-            }
-        }, ( r ) => {
-            /* Sanity check. */
-            if ( React.MessageController === null ) {
-                discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
-                return;
-            }
+        /* Sanity check. */
+        if ( React.MessageController === null ) {
+            discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
+            return;
+        }
 
+        /* Handles returns for messages. */
+        const onDispatchResponse = ( r ) => {
             /* Check if an error occurred and inform Clyde bot about it. */
             if ( !r.ok ) {
                 /* Perform Clyde dispatch if necessary. */
@@ -1475,7 +1449,78 @@ class discordCrypt {
                     } );
                 }
             }
-        } );
+        };
+
+        /* Send this message as an embed. */
+        if( as_embed ) {
+            /* Generate a unique nonce for this message. */
+            let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 6 ).toString( 'hex' ), 16 );
+
+            /* Create the message embed object and add it to the queue. */
+            React.MessageQueue.enqueue(
+                {
+                    type: 'send',
+                    message: {
+                        channelId: _channel,
+                        nonce: _nonce,
+                        content: message_content,
+                        mention_everyone: mention_everyone,
+                        tts: false,
+                        embed: {
+                            type: "rich",
+                            url: "https://gitlab.com/leogx9r/DiscordCrypt",
+                            color: embedded_color || 0x551A8B,
+                            output_mime_type: "text/x-html",
+                            timestamp: ( new Date() ).toISOString(),
+                            encoding: "utf-16",
+                            author: {
+                                name: message_header || '-----MESSAGE-----',
+                                icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png',
+                                url: 'https://discord.me/discordCrypt'
+                            },
+                            footer: {
+                                text: message_footer || 'DiscordCrypt',
+                                icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/app-logo.png',
+                            },
+                            description: main_message,
+                        }
+                    }
+                },
+                onDispatchResponse
+            );
+
+            return;
+        }
+
+        /* Dispatch the message as normal content. */
+        [
+            main_message,
+            message_content
+        ].forEach(
+            ( ( value ) => {
+                /* Skip empty values. */
+                if( !value.length )
+                    return;
+
+                /* Generate a unique nonce for this message. */
+                let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 6 ).toString( 'hex' ), 16 );
+
+                /* Create the message object and dispatch it to the queue. */
+                React.MessageQueue.enqueue(
+                    {
+                        type: 'send',
+                        message: {
+                            channelId: _channel,
+                            nonce: _nonce,
+                            content: value === message_content ? value : `\`${value}\``,
+                            mention_everyone: value === message_content ? mention_everyone : false,
+                            tts: false
+                        }
+                    },
+                    onDispatchResponse
+                );
+            } )
+        );
     }
 
     /**
@@ -1958,6 +2003,7 @@ class discordCrypt {
         $( '#dc-settings-timed-expire' )[ 0 ].value = this.configFile.timedMessageExpires;
         $( '#dc-settings-default-pwd' )[ 0 ].value = this.configFile.defaultPassword;
         $( '#dc-settings-scan-delay' )[ 0 ].value = this.configFile.encryptScanDelay;
+        $( '#dc-embed-enabled' )[ 0 ].checked = this.configFile.useEmbeds;
 
         /* Handle clipboard upload button. */
         $( '#dc-clipboard-upload-btn' ).click( discordCrypt.on_upload_encrypted_clipboard_button_clicked( this ) );
@@ -2510,7 +2556,8 @@ class discordCrypt {
             } );
 
             /* Send the message. */
-            discordCrypt.sendEmbeddedMessage(
+            discordCrypt.dispatchMessage(
+                this.configFile.useEmbeds,
                 msg,
                 this.messageHeader,
                 `v${this.getVersion().replace( '-debug', '' )}`,
@@ -2552,7 +2599,8 @@ class discordCrypt {
                 } );
 
                 /* Send the message. */
-                discordCrypt.sendEmbeddedMessage(
+                discordCrypt.dispatchMessage(
+                    this.configFile.useEmbeds,
                     msg,
                     this.messageHeader,
                     `v${this.getVersion().replace( '-debug', '' )}`,
@@ -2926,6 +2974,7 @@ class discordCrypt {
             self.configFile.defaultPassword = $( '#dc-settings-default-pwd' )[ 0 ].value;
             self.configFile.encryptScanDelay = $( '#dc-settings-scan-delay' )[ 0 ].value;
             self.configFile.paddingMode = $( '#dc-settings-padding-mode' )[ 0 ].value;
+            self.configFile.useEmbeds = $( '#dc-embed-enabled' )[ 0 ].checked;
             self.configFile.encryptMode = discordCrypt
                 .cipherStringToIndex( dc_primary_cipher[ 0 ].value, dc_secondary_cipher[ 0 ].value );
 
@@ -2999,6 +3048,7 @@ class discordCrypt {
             $( '#dc-settings-timed-expire' )[ 0 ].value = self.configFile.timedMessageExpires;
             $( '#dc-settings-default-pwd' )[ 0 ].value = self.configFile.defaultPassword;
             $( '#dc-settings-scan-delay' )[ 0 ].value = self.configFile.encryptScanDelay;
+            $( '#dc-embed-enabled' )[ 0 ].checked = self.configFile.useEmbeds;
             $( '#dc-master-password' )[ 0 ].value = '';
             $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt
                 .cipherIndexToString( self.configFile.encryptMode, false );
@@ -3256,7 +3306,8 @@ class discordCrypt {
                 footer = `-----END ${algo_str} PUBLIC KEY----- | v${self.getVersion().replace( '-debug', '' )}`;
 
             /* Send the message. */
-            discordCrypt.sendEmbeddedMessage(
+            discordCrypt.dispatchMessage(
+                self.configFile.useEmbeds,
                 formatted_message,
                 header,
                 footer,
