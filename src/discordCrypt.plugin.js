@@ -3358,7 +3358,7 @@ class discordCrypt {
 
             /* Provide some way of showing the user the result without actually giving it away. */
             function displaySecret( input_hex ) {
-                const charset = discordCrypt.getBraille().subarray( 16, 64 );
+                const charset = discordCrypt.getBraille().splice( 16, 64 );
                 let output = '';
 
                 for ( let i = 0; i < parseInt( input_hex.length / 2 ); i++ )
