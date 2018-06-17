@@ -2388,6 +2388,19 @@ class discordCrypt {
             /* Set the flag. */
             $( this ).data( 'dc-parsed', true );
         } ) );
+
+        /* Look through markup classes for inline code blocks. */
+        $( `${this.messageMarkupClass} .inline` ).each( ( function () {
+            /* Skip parsed messages. */
+            if ( $( this ).data( 'dc-parsed' ) !== undefined )
+                return;
+
+            /* Try parsing a symmetric message. */
+            self.parseSymmetric( this, password, secondary, React );
+
+            /* Set the flag. */
+            $( this ).data( 'dc-parsed', true );
+        } ) );
     }
 
     /**
