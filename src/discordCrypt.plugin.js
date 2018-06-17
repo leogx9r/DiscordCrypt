@@ -1950,13 +1950,14 @@ class discordCrypt {
         discordCrypt.setActiveTab( 0 );
 
         /* Update all settings from the settings panel. */
+        $( '#dc-secondary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, true );
+        $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, false );
+        $( '#dc-settings-cipher-mode' )[ 0 ].value = this.configFile.encryptBlockMode.toLowerCase();
+        $( '#dc-settings-padding-mode' )[ 0 ].value = this.configFile.paddingMode.toLowerCase();
         $( '#dc-settings-encrypt-trigger' )[ 0 ].value = this.configFile.encodeMessageTrigger;
+        $( '#dc-settings-timed-expire' )[ 0 ].value = this.configFile.timedMessageExpires;
         $( '#dc-settings-default-pwd' )[ 0 ].value = this.configFile.defaultPassword;
         $( '#dc-settings-scan-delay' )[ 0 ].value = this.configFile.encryptScanDelay;
-        $( '#dc-settings-padding-mode' )[ 0 ].value = this.configFile.paddingMode.toLowerCase();
-        $( '#dc-settings-cipher-mode' )[ 0 ].value = this.configFile.encryptBlockMode.toLowerCase();
-        $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, false );
-        $( '#dc-secondary-cipher' )[ 0 ].value = discordCrypt.cipherIndexToString( this.configFile.encryptMode, true );
 
         /* Handle clipboard upload button. */
         $( '#dc-clipboard-upload-btn' ).click( discordCrypt.on_upload_encrypted_clipboard_button_clicked( this ) );
@@ -2907,6 +2908,7 @@ class discordCrypt {
 
             /* Update all settings from the settings panel. */
             self.configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' )[ 0 ].value;
+            self.configFile.timedMessageExpires = $( '#dc-settings-timed-expire' )[ 0 ].value;
             self.configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' )[ 0 ].value;
             self.configFile.defaultPassword = $( '#dc-settings-default-pwd' )[ 0 ].value;
             self.configFile.encryptScanDelay = $( '#dc-settings-scan-delay' )[ 0 ].value;
@@ -2978,12 +2980,13 @@ class discordCrypt {
             self.resetSettings( $( '#dc-settings-reset-btn' )[ 0 ] );
 
             /* Update all settings from the settings panel. */
-            $( '#dc-master-password' )[ 0 ].value = '';
+            $( '#dc-settings-cipher-mode' )[ 0 ].value = self.configFile.encryptBlockMode.toLowerCase();
+            $( '#dc-settings-padding-mode' )[ 0 ].value = self.configFile.paddingMode.toLowerCase();
+            $( '#dc-settings-encrypt-trigger' )[ 0 ].value = self.configFile.encodeMessageTrigger;
+            $( '#dc-settings-timed-expire' )[ 0 ].value = self.configFile.timedMessageExpires;
             $( '#dc-settings-default-pwd' )[ 0 ].value = self.configFile.defaultPassword;
             $( '#dc-settings-scan-delay' )[ 0 ].value = self.configFile.encryptScanDelay;
-            $( '#dc-settings-encrypt-trigger' )[ 0 ].value = self.configFile.encodeMessageTrigger;
-            $( '#dc-settings-padding-mode' )[ 0 ].value = self.configFile.paddingMode.toLowerCase();
-            $( '#dc-settings-cipher-mode' )[ 0 ].value = self.configFile.encryptBlockMode.toLowerCase();
+            $( '#dc-master-password' )[ 0 ].value = '';
             $( '#dc-primary-cipher' )[ 0 ].value = discordCrypt
                 .cipherIndexToString( self.configFile.encryptMode, false );
             $( '#dc-secondary-cipher' )[ 0 ].value = discordCrypt
