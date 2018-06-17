@@ -2,7 +2,7 @@
     <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">
         <div class="dc-ruler-align">
             <input type="text" class="dc-input-field" id="dc-file-path"
-                   style="width: 100%;padding: 2px;margin-left: 4px;" readonly/>
+                   style="width: 100%;padding: 2px;margin-left: 4px;" readonly title="File Path"/>
             <button class="dc-button dc-button-inverse" type="button" id="dc-select-file-path-btn"
                     style="top: -8px;"> . . .</button>
         </div>
@@ -12,11 +12,13 @@
         </textarea>
 
         <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
-            <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox">
+            <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox"
+                   title="Add Deletion Link">
             <span style="margin-top: 5px;">Send Deletion Link</span>
         </div>
         <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
-            <input id="dc-file-name-random-checkbox" class="ui-switch-checkbox" type="checkbox" checked>
+            <input id="dc-file-name-random-checkbox" class="ui-switch-checkbox" type="checkbox" checked
+                   title="Use Random File Name">
             <span style="margin-top: 5px;">Randomize File Name</span>
         </div>
 
@@ -61,7 +63,7 @@
         <div class="dc-ruler-align">
             <strong class="dc-hint dc-update-field">Changelog:</strong></div>
         <div class="dc-ruler-align">
-            <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly/>
+            <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly title="Update Changes"/>
         </div>
         <br>
         <div class="dc-ruler-align">
@@ -83,7 +85,7 @@
 
             <div class="dc-ruler-align">
                 <div class="dc-input-label">Primary Cipher:</div>
-                <select class="dc-input-field" id="dc-primary-cipher">
+                <select class="dc-input-field" id="dc-primary-cipher" title="Primary Cipher">
                     <option value="bf" selected>Blowfish ( 512-Bit )</option>
                     <option value="aes">AES ( 256-Bit )</option>
                     <option value="camel">Camellia ( 256-Bit )</option>
@@ -94,7 +96,7 @@
 
             <div class="dc-ruler-align">
                 <div class="dc-input-label">Secondary Cipher:</div>
-                <select class="dc-input-field" id="dc-secondary-cipher">
+                <select class="dc-input-field" id="dc-secondary-cipher" title="Secondary Cipher">
                     <option value="bf">Blowfish ( 512-Bit )</option>
                     <option value="aes">AES ( 256-Bit )</option>
                     <option value="camel">Camellia ( 256-Bit )</option>
@@ -104,8 +106,8 @@
             </div>
 
             <div class="dc-ruler-align">
-                <div class="dc-input-label">Padding Mode:</div>
-                <select class="dc-input-field" id="dc-settings-padding-mode">
+                <div class="dc-input-label">Cipher Padding Mode:</div>
+                <select class="dc-input-field" id="dc-settings-padding-mode" title="Cipher Padding Scheme">
                     <option value="pkc7">PKCS #7</option>
                     <option value="ans2">ANSI X9.23</option>
                     <option value="iso1">ISO 10126</option>
@@ -114,8 +116,8 @@
             </div>
 
             <div class="dc-ruler-align">
-                <div class="dc-input-label">Cipher Operation Mode:</div>
-                <select class="dc-input-field" id="dc-settings-cipher-mode">
+                <div class="dc-input-label">Cipher Block Operation Mode:</div>
+                <select class="dc-input-field" id="dc-settings-cipher-mode" title="Cipher Block Operation Mode">
                     <option value="cbc">Cipher Block Chaining</option>
                     <option value="cfb">Cipher Feedback Mode</option>
                     <option value="ofb">Output Feedback Mode</option>
@@ -124,34 +126,40 @@
 
             <div class="dc-ruler-align">
                 <div class="dc-input-label">Default Encryption Password:</div>
-                <input type="text" class="dc-input-field" id="dc-settings-default-pwd"/>
+                <input type="text" class="dc-input-field" id="dc-settings-default-pwd"
+                       title="Default Encryption Password"/>
             </div>
 
             <div class="dc-ruler-align">
-                <div class="dc-input-label">Encryption Scanning Frequency:</div>
-                <input type="text" class="dc-input-field" id="dc-settings-scan-delay"/>
+                <div class="dc-input-label">Scanning Frequency:</div>
+                <input type="text" class="dc-input-field" id="dc-settings-scan-delay"
+                       title="Scanning Frequency"/>
             </div>
 
             <div class="dc-ruler-align">
                 <div class="dc-input-label">Message Trigger:</div>
-                <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger"/>
+                <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger" title="Message Trigger"/>
             </div>
 
-            <div style="font-size: 9px;">
-                <div style="display: flex;">
-                    <div style="width: 30%;"></div>
-                    <p class="dc-hint">
-                        The suffix at the end of a typed message to indicate whether to encrypt the text.</p>
-                </div>
-                <div style="display: flex;">
-                    <div style="width: 30%;"></div>
-                    <p class="dc-hint">Example: <u>This message will be encrypted.|ENC</u></p>
-                </div>
+            <div class="dc-hint">
+                <p>The suffix at the end of a typed message to indicate whether to encrypt the text.</p>
+                <p>Example: <u>This message will be encrypted.|ENC</u></p>
+            </div>
+
+            <div class="dc-ruler-align">
+                <div class="dc-input-label">Timed Message Expiration:</div>
+                <input type="number" class="dc-input-field" id="dc-timed-expire" title="Timed Message Expiration"/>
+            </div>
+
+            <div class="dc-hint">
+                <p>This indicates how long after an encrypted message is sent, should it be deleted in minutes.</p>
+                <p><u>Set this to "0" to disable timed messages.</u></p>
             </div>
 
             <div class="dc-ruler-align">
                 <div class="dc-input-label">New Master Database Password:</div>
-                <input type="text" class="dc-input-field" id="dc-master-password"/>
+                <input type="text" class="dc-input-field" id="dc-master-password"
+                       title="New Master Database Password"/>
             </div>
 
             <div class="dc-ruler-align">
@@ -239,14 +247,14 @@
             <br/>
 
             <strong>Exchange Algorithm:</strong>
-            <select id="dc-keygen-method">
+            <select id="dc-keygen-method" title="Exchange Algorithm">
                 <option value="dh" selected>Diffie-Hellman</option>
                 <option value="ecdh">Elliptic-Curve Diffie-Hellman</option>
             </select>
             <br/><br/>
 
             <strong>Key Length ( Bits ):</strong>
-            <select id="dc-keygen-algorithm">
+            <select id="dc-keygen-algorithm" title="Key Length">
                 <option value="768">768</option>
                 <option value="1024">1024</option>
                 <option value="1536">1536</option>
@@ -268,12 +276,12 @@
                 <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span>
                 )</strong><br/>
             <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"
-                      unselectable="on" disabled readonly/>
+                      unselectable="on" disabled readonly title="Private Key"/>
             <br/><br/>
 
             <strong>Public Key:</strong><br/>
             <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192"
-                      unselectable="on" disabled readonly/>
+                      unselectable="on" disabled readonly title="Public Key"/>
             <br/><br/>
 
             <div class="dc-ruler-align">
@@ -308,7 +316,7 @@
             <br/>
 
             <strong>Partner's Public Key:</strong><br/>
-            <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384"/>
+            <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384" title="Partner's Public Key"/>
             <br/><br/>
 
             <div class="dc-ruler-align">
@@ -326,12 +334,14 @@
 
             <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>
             <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"
-                      style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
+                      style="max-height: 14px;user-select: none;" unselectable="on" disabled
+                      title="Primary Secret"/>
             <br/><br/>
 
             <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>
             <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"
-                      style="max-height: 14px;user-select: none;" unselectable="on" disabled/>
+                      style="max-height: 14px;user-select: none;" unselectable="on" disabled
+                      title="Secondary Secret"/>
             <br/><br/>
 
             <div class="stat stat-bar" style="width:70%;">

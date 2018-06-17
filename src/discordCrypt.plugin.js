@@ -702,7 +702,7 @@ class discordCrypt {
             /* Internal message list for time expiration. */
             timedMessages: [],
             /* How long after a message is sent to remove it. */
-            timedMessageExpires: 30
+            timedMessageExpires: 0
         };
     }
 
