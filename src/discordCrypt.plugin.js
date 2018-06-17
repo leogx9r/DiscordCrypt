@@ -1452,7 +1452,7 @@ class discordCrypt {
         };
 
         /* Send this message as an embed. */
-        if( as_embed ) {
+        if ( as_embed ) {
             /* Generate a unique nonce for this message. */
             let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 6 ).toString( 'hex' ), 16 );
 
@@ -1499,7 +1499,7 @@ class discordCrypt {
         ].forEach(
             ( ( value ) => {
                 /* Skip empty values. */
-                if( !value.length )
+                if ( !value.length )
                     return;
 
                 /* Generate a unique nonce for this message. */
@@ -4786,7 +4786,7 @@ class discordCrypt {
                         let stat = fs.statSync( tmp );
 
                         /* Check if this is a file. */
-                        if( stat.isFile() ) {
+                        if ( stat.isFile() ) {
                             /* Read the file and store the file name. */
                             data = fs.readFileSync( tmp );
                             name = path.basename( tmp );
@@ -4797,7 +4797,7 @@ class discordCrypt {
                             data = Buffer.from( tmp, 'utf8' );
                         }
                     }
-                    catch( e ) {
+                    catch ( e ) {
                         /* Convert the text to a buffer. */
                         data = Buffer.from( tmp, 'utf8' );
                     }
