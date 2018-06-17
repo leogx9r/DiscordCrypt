@@ -93,9 +93,8 @@ ul.dc-list-red { color: #ff0000; }
     font-family: monospace !important;
     background: #000 !important;
     color: #fff !important;
-    border-radius: 3px;
     font-size: 12px;
-    width: 40%;
+    width: 50%;
     margin-bottom: 10px;
     margin-top: -5px;
     margin-left: 10%;
@@ -154,11 +153,12 @@ ul.dc-list-red { color: #ff0000; }
     animation: fadeEffect 1s;
     background: rgba(0, 0, 0, 0.7) !important;
 }
-.dc-main-overlay .tab-content .dc-hint {
-    margin: 14px;
-    padding-left: 5px;
-    font-size: 12px;
-    color: #f08080;
+.dc-hint {
+    font-size: 9px;
+    display: block;
+}
+.dc-hint > p {
+    margin: 0 0 0 30%;
 }
 .dc-svg {
     color: #fff; opacity: .6;
