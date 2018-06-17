@@ -1467,7 +1467,7 @@ class discordCrypt {
                 React.MessageController.receiveMessage( _channel, r.body );
 
                 /* Add the message to the TimedMessage array. */
-                if ( timed_messages && expire_time_minutes ) {
+                if ( timed_messages && expire_time_minutes > 0 ) {
                     timed_messages.push( {
                         messageId: r.body.id,
                         channelId: _channel,
