@@ -4711,16 +4711,26 @@ class discordCrypt {
                     }
                     break;
                 case 'text':
+                    /* Resolve what's in the clipboard. */
                     tmp = clipboard.readText();
 
-                    /* For text, see if this is a file path. */
-                    if ( fs.statSync( tmp ).isFile() ) {
-                        /* Read the file and store the file name. */
-                        data = fs.readFileSync( tmp );
-                        name = path.basename( tmp );
-                        is_file = true;
+                    try {
+                        /* Check if this is a valid file path. */
+                        let stat = fs.statSync( tmp );
+
+                        /* Check if this is a file. */
+                        if( stat.isFile() ) {
+                            /* Read the file and store the file name. */
+                            data = fs.readFileSync( tmp );
+                            name = path.basename( tmp );
+                            is_file = true;
+                        }
+                        else {
+                            /* This isn't a file. Assume we want to upload the path itself as text. */
+                            data = Buffer.from( tmp, 'utf8' );
+                        }
                     }
-                    else {
+                    catch( e ) {
                         /* Convert the text to a buffer. */
                         data = Buffer.from( tmp, 'utf8' );
                     }
