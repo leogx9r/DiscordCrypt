@@ -161,7 +161,7 @@ class Compiler {
             /* Read the file into a buffer. */
             let data = this.fs.readFileSync( this.path.join( asset_path, file ) ).toString();
 
-            data = data.split( "\r" ).join( "" ).split( "\n" ).join( '' );
+            data = data.split( "\r" ).join( "" ).split( "\n" ).join( '' ).split( '    ' ).join( ' ' );
 
             /* Replace the data. */
             original_data = original_data.split( constants[ file_name ] ).join( data );
@@ -282,8 +282,8 @@ class Compiler {
                 'unlocker.html':
                     '/* ----- APPLICATION UNLOCKING GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
             },
-            plugin: './src/discordCrypt.plugin.js',
             compression: false,
+            plugin: './src/discordCrypt.plugin.js',
             assets: './src/assets',
             output: './build',
             lib: './lib',
