@@ -533,14 +533,8 @@ class discordCrypt {
                 .findByUniqueProperties( [ 'initHighlighting', 'highlightBlock', 'highlightAuto' ] ),
         };
 
-        /* Hook switch events as the main event processor or fallback to timed event handlers. */
+        /* Hook switch events as the main event processor. */
         if ( !this.hookMessageCallbacks() ) {
-
-            /* Process any blocks on an interval since Discord loves to throttle messages. */
-            this.scanInterval = setInterval( () => {
-                self.decodeMessages();
-            }, self.configFile.encryptScanDelay );
-
             /* The toolbar fails to properly load on switches to the friends list. Create an interval to do this. */
             this.toolbarReloadInterval = setInterval( () => {
                 self.loadToolbar();
@@ -554,6 +548,11 @@ class discordCrypt {
             /* Attach the message handler. */
             this.attachHandler();
         }
+
+        /* Process any blocks on an interval since Discord loves to throttle messages. */
+        this.scanInterval = setInterval( () => {
+            self.decodeMessages();
+        }, self.configFile.encryptScanDelay );
 
         /* Setup the timed message handler to trigger every 5 seconds. */
         this.timedMessageInterval = setInterval( () => {
@@ -613,12 +612,12 @@ class discordCrypt {
 
         /* Unhook switch events if available or fallback to clearing timed handlers. */
         if ( !this.unhookMessageCallbacks() ) {
-            /* Unload the decryption interval. */
-            clearInterval( this.scanInterval );
-
             /* Unload the toolbar reload interval. */
             clearInterval( this.toolbarReloadInterval );
         }
+
+        /* Unload the decryption interval. */
+        clearInterval( this.scanInterval );
 
         /* Unload the timed message handler. */
         clearInterval( this.timedMessageInterval );
@@ -685,7 +684,7 @@ class discordCrypt {
             defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
             /* Defines what needs to be typed at the end of a message to encrypt it. */
             encodeMessageTrigger: "ENC",
-            /* How often to scan for encrypted messages during timed events if applicable. */
+            /* How often to scan for encrypted messages. */
             encryptScanDelay: 1000,
             /* Default encryption mode. */
             encryptMode: 7, /* AES(Camellia) */
@@ -1734,7 +1733,6 @@ class discordCrypt {
 
                             /* Decrypt any messages. */
                             this.decodeMessages();
-
                         },
                         1
                     );
@@ -2314,7 +2312,7 @@ class discordCrypt {
         /* If decryption didn't fail, set the decoded text along with a green foreground. */
         if ( ( typeof dataMsg === 'string' || dataMsg instanceof String ) && dataMsg !== "" ) {
             /* If this is an embed, increase the maximum width of it. */
-            if( as_embed ) {
+            if ( as_embed ) {
                 /* Expand the message to the maximum width. */
                 message.parent().parent().parent().parent().css( 'max-width', '100%' );
             }
@@ -2323,11 +2321,11 @@ class discordCrypt {
             dataMsg = discordCrypt.postProcessMessage( dataMsg, this.configFile.up1Host );
 
             /* Handle embeds and inline blocks differently. */
-            if( as_embed ) {
+            if ( as_embed ) {
                 /* Set the new HTML. */
                 message[ 0 ].innerHTML = dataMsg.html;
             }
-            else{
+            else {
                 /* For inline code blocks, we set the HTML to the parent element. */
                 let tmp = message.parent()[ 0 ];
                 tmp.innerHTML = dataMsg.html;
