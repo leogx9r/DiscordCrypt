@@ -1,3 +1,8 @@
+Version 1.2.1
+
+- Fixed updating bug due to using the old update URL.
+- Fixed a minor bug in the changelog display.
+
 Version 1.2.0
 
 - Added timed messages. Messages can now be deleted after a certain time period has passed.
