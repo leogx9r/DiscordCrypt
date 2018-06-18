@@ -71,7 +71,7 @@ For specific operating systems, see below:
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) the plugin file. ( Right 
 Click -> Save As )
 * Save the plugin to the following path: **`%APPDATA%\BetterDiscord\plugins`**.
-	* *Example: `C:\Users\Jeremy\AppData\Local\BetterDiscord\plugins\discordCrypt.plugin.js`*
+    * *Example: `C:\Users\Jeremy\AppData\Local\BetterDiscord\plugins\discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
@@ -81,7 +81,7 @@ Click -> Save As )
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) the plugin file. ( Right 
 Click -> Save As )
 * Save the plugin to the following path: **`~/Library/Preferences/BetterDiscord/plugins`**.
-	* *Example: `/home/jeremy/Library/Preferences/BetterDiscord/plugins/discordCrypt.plugin.js`*
+    * *Example: `/home/jeremy/Library/Preferences/BetterDiscord/plugins/discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
@@ -96,7 +96,7 @@ The *PTB* and *Canary* versions have **NOT** been tested.
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) the plugin file. ( Right 
 Click -> Save As )
 * Save the plugin to the following path: **`~/.config/BetterDiscord/plugins`**.
-	* *Example: `/home/jeremy/.config/BetterDiscord/plugins/discordCrypt.plugin.js`*
+    * *Example: `/home/jeremy/.config/BetterDiscord/plugins/discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
@@ -174,15 +174,15 @@ located at the bottom of the pop-up window.
 * Go in the channel or conversation you want to set a password for.
 * If you're not sure whether you've sent a key before, go to the `Key Exchange` menu ![1](images/key-exchange.png) 
 and then to the `Key Generation` tab.
-	* If both fields are empty, exit the Key Exchange menu by pressing the `[X]` on the top right 
-	![2](images/close-menu.png).
-	* If both fields are full of numbers and letters, clicks the `Clear` button, then exit the menu.
+    * If both fields are empty, exit the Key Exchange menu by pressing the `[X]` on the top right 
+    ![2](images/close-menu.png).
+    * If both fields are full of numbers and letters, clicks the `Clear` button, then exit the menu.
 * If you're initiating the key exchange, click on `Generate & Send New Public Key` ![3](images/auto-handshake.png) 
 and wait until a public key [is sent in the chat](images/public-key-message.png).
 * If your friend is initiating the key exchange, simply wait until you see his key appear in the chat, then click 
 `Perform Key Exchange`.
-	* If you've initiated the exchange, you also need to click this button after your friend has ( automatically ) 
-	shared their key.
+    * If you've initiated the exchange, you also need to click this button after your friend has ( automatically ) 
+    shared their key.
 * Once this is done, you should see a window pop up after a few seconds, with a progress bar at the bottom.
 * Wait until both passwords are generated, then click `Apply Generated Passwords`.
 
@@ -202,7 +202,7 @@ need to stop before clicking `Apply Generated Passwords`.
 * Once you've generated both passwords, you need to copy them using the `Copy Keys & Nuke` button.
 * Open up notepad or your preferred text editor and paste the passwords for later use.
 * As you should only share the passwords securely, you need to exchange keys with every members of the channel/group.
-	* This means you must create an encrypted, 1-on-1 conversation with every members and share the passwords.
+    * This means you must create an encrypted, 1-on-1 conversation with every members and share the passwords.
 * Once you've created a secure channel with every members, individually, you can send the passwords in an encrypted 
 message. 
 * After the passwords have been shared ( securely ), every user must manually set the passwords for the channel (more
