@@ -990,7 +990,7 @@ class discordCrypt {
      */
     static checkForUpdate( on_update_callback ) {
         /* Update URL and request method. */
-        const update_url = `https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/${discordCrypt.getPluginName()}`;
+        const update_url = `https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/${discordCrypt.getPluginName()}`;
         const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
 
         /* Make sure the callback is a function. */
