@@ -981,7 +981,7 @@ class discordCrypt {
     /**
      * @public
      * @desc Checks the update server for an encrypted update.
-     * @param {UpdateCallback} onUpdateCallback
+     * @param {UpdateCallback} on_update_callback
      * @returns {boolean}
      * @example
      * checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) =>
@@ -989,13 +989,13 @@ class discordCrypt {
      *      console.log( `Changelog:\n${full_changelog}` );
      * } );
      */
-    static checkForUpdate( onUpdateCallback ) {
+    static checkForUpdate( on_update_callback ) {
         /* Update URL and request method. */
         const update_url = `https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/${discordCrypt.getPluginName()}`;
         const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
 
         /* Make sure the callback is a function. */
-        if ( typeof onUpdateCallback !== 'function' )
+        if ( typeof on_update_callback !== 'function' )
             return false;
 
         /* Perform the request. */
@@ -1070,14 +1070,14 @@ class discordCrypt {
                     /* Fetch the changelog from the URL. */
                     discordCrypt.__getRequest( changelog_url, ( statusCode, errorString, changelog ) => {
                         /* Perform the callback. */
-                        onUpdateCallback( data, shortHash, version_number, statusCode == 200 ? changelog : '' );
+                        on_update_callback( data, shortHash, version_number, statusCode == 200 ? changelog : '' );
                     } );
                 }
                 catch ( e ) {
                     discordCrypt.log( 'Error fetching the changelog.', 'warn' );
 
                     /* Perform the callback without a changelog. */
-                    onUpdateCallback( data, shortHash, version_number, '' );
+                    on_update_callback( data, shortHash, version_number, '' );
                 }
             } );
         }
@@ -1294,23 +1294,23 @@ class discordCrypt {
     /**
      * @private
      * @desc Returns the React modules loaded natively in Discord.
-     * @param {CachedModules} cachedModules Cached module parameter for locating standard modules.
+     * @param {CachedModules} cached_modules Cached module parameter for locating standard modules.
      * @returns {ReactModules}
      */
-    static getReactModules( cachedModules ) {
+    static getReactModules( cached_modules ) {
 
-        if ( cachedModules ) {
+        if ( cached_modules ) {
             return {
                 ChannelProps:
                     discordCrypt.getChannelId() === '@me' ?
                         null :
                         discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
-                MessageParser: cachedModules.MessageParser,
-                MessageController: cachedModules.MessageController,
-                MessageActionTypes: cachedModules.MessageActionTypes,
-                MessageDispatcher: cachedModules.MessageDispatcher,
-                MessageQueue: cachedModules.MessageQueue,
-                HighlightJS: cachedModules.HighlightJS,
+                MessageParser: cached_modules.MessageParser,
+                MessageController: cached_modules.MessageController,
+                MessageActionTypes: cached_modules.MessageActionTypes,
+                MessageDispatcher: cached_modules.MessageDispatcher,
+                MessageQueue: cached_modules.MessageQueue,
+                HighlightJS: cached_modules.HighlightJS,
             };
         }
 
@@ -1323,22 +1323,22 @@ class discordCrypt {
      * @param {string} channel_id The channel's identifier that the message is located in.
      * @param {string} message_id The message's identifier to delete.
      * @param {string} content The message's new content.
-     * @param {CachedModules} cachedModules The internally cached module objects.
+     * @param {CachedModules} cached_modules The internally cached module objects.
      */
-    static editMessage( channel_id, message_id, content, cachedModules ) {
+    static editMessage( channel_id, message_id, content, cached_modules ) {
         /* Edit the message internally. */
-        cachedModules.MessageController.editMessage( channel_id, message_id, { content: content } );
+        cached_modules.MessageController.editMessage( channel_id, message_id, { content: content } );
     }
 
     /**
      * @desc Delete the message from the channel indicated.
      * @param {string} channel_id The channel's identifier that the message is located in.
      * @param {string} message_id The message's identifier to delete.
-     * @param {CachedModules} cachedModules The internally cached module objects.
+     * @param {CachedModules} cached_modules The internally cached module objects.
      */
-    static deleteMessage( channel_id, message_id, cachedModules ) {
+    static deleteMessage( channel_id, message_id, cached_modules ) {
         /* Delete the message internally. */
-        cachedModules.MessageController.deleteMessage( channel_id, message_id );
+        cached_modules.MessageController.deleteMessage( channel_id, message_id );
     }
 
     /**
@@ -1592,7 +1592,7 @@ class discordCrypt {
      * @desc Hooks a dispatcher from Discord's internals.
      * @author samogot & Leonardo Gates
      * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
-     * @param {string} methodName The name of the method to hook.
+     * @param {string} method_name The name of the method to hook.
      * @param {string} options The type of hook to apply. [ 'before', 'after', 'instead', 'revert' ]
      * @param {boolean} [options.once=false] Set to `true` if you want to automatically unhook method after first call.
      * @param {boolean} [options.silent=false] Set to `true` if you want to suppress log messages about patching and
@@ -1600,14 +1600,14 @@ class discordCrypt {
      *      example from another monkeyPatch callback.
      * @return {function} Returns the function used to cancel the hook.
      */
-    static hookDispatcher( dispatcher, methodName, options ) {
+    static hookDispatcher( dispatcher, method_name, options ) {
         const { before, after, instead, once = false, silent = false } = options;
-        const origMethod = dispatcher._actionHandlers[ methodName ];
+        const origMethod = dispatcher._actionHandlers[ method_name ];
 
         const cancel = () => {
             if ( !silent )
-                discordCrypt.log( `Unhooking "${methodName}" ...` );
-            dispatcher[ methodName ] = origMethod;
+                discordCrypt.log( `Unhooking "${method_name}" ...` );
+            dispatcher[ method_name ] = origMethod;
         };
 
         const suppressErrors = ( method, description ) => ( ... params ) => {
@@ -1619,11 +1619,11 @@ class discordCrypt {
             }
         };
 
-        if ( !dispatcher._actionHandlers[ methodName ].__hooked ) {
+        if ( !dispatcher._actionHandlers[ method_name ].__hooked ) {
             if ( !silent )
-                discordCrypt.log( `Hooking "${methodName}" ...` );
+                discordCrypt.log( `Hooking "${method_name}" ...` );
 
-            dispatcher._actionHandlers[ methodName ] = function () {
+            dispatcher._actionHandlers[ method_name ] = function () {
                 /**
                  * @interface
                  * @name PatchData
@@ -1652,7 +1652,7 @@ class discordCrypt {
                 };
                 if ( instead ) {
                     const tempRet =
-                        suppressErrors( instead, `${methodName} called hook via 'instead'.` )( data );
+                        suppressErrors( instead, `${method_name} called hook via 'instead'.` )( data );
 
                     if ( tempRet !== undefined )
                         data.returnValue = tempRet;
@@ -1660,12 +1660,12 @@ class discordCrypt {
                 else {
 
                     if ( before )
-                        suppressErrors( before, `${methodName} called hook via 'before'.` )( data );
+                        suppressErrors( before, `${method_name} called hook via 'before'.` )( data );
 
                     data.callOriginalMethod();
 
                     if ( after )
-                        suppressErrors( after, `${methodName} called hook via 'after'.` )( data );
+                        suppressErrors( after, `${method_name} called hook via 'after'.` )( data );
                 }
                 if ( once )
                     cancel();
@@ -1673,10 +1673,10 @@ class discordCrypt {
                 return data.returnValue;
             };
 
-            dispatcher._actionHandlers[ methodName ].__hooked = true;
-            dispatcher._actionHandlers[ methodName ].__cancel = cancel;
+            dispatcher._actionHandlers[ method_name ].__hooked = true;
+            dispatcher._actionHandlers[ method_name ].__cancel = cancel;
         }
-        return dispatcher._actionHandlers[ methodName ].__cancel;
+        return dispatcher._actionHandlers[ method_name ].__cancel;
     }
 
     /**
@@ -2248,13 +2248,13 @@ class discordCrypt {
      * @private
      * @desc Parses a message object and attempts to decrypt it..
      * @param {Object} obj The jQuery object of the current message being examined.
-     * @param {string} primaryKey The primary key used to decrypt the message.
-     * @param {string} secondaryKey The secondary key used to decrypt the message.
-     * @param {boolean} asEmbed Whether to consider this message object as an embed.
-     * @param {Object} ReactModules The modules retrieved by calling getReactModules()
+     * @param {string} primary_key The primary key used to decrypt the message.
+     * @param {string} secondary_key The secondary key used to decrypt the message.
+     * @param {boolean} as_embed Whether to consider this message object as an embed.
+     * @param {Object} react_modules The modules retrieved by calling getReactModules()
      * @returns {boolean} Returns true if the message has been decrypted.
      */
-    parseSymmetric( obj, primaryKey, secondaryKey, asEmbed, ReactModules ) {
+    parseSymmetric( obj, primary_key, secondary_key, as_embed, react_modules ) {
         let message = $( obj );
         let dataMsg;
 
@@ -2311,12 +2311,12 @@ class discordCrypt {
 
         /* Decrypt the message. */
         dataMsg = discordCrypt.symmetricDecrypt( message.text().replace( /\r?\n|\r/g, '' )
-            .substr( 8 ), primaryKey, secondaryKey, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
+            .substr( 8 ), primary_key, secondary_key, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
 
         /* If decryption didn't fail, set the decoded text along with a green foreground. */
         if ( ( typeof dataMsg === 'string' || dataMsg instanceof String ) && dataMsg !== "" ) {
             /* If this is an embed, increase the maximum width of it. */
-            if( asEmbed ) {
+            if( as_embed ) {
                 /* Expand the message to the maximum width. */
                 message.parent().parent().parent().parent().css( 'max-width', '100%' );
             }
@@ -2325,7 +2325,7 @@ class discordCrypt {
             dataMsg = discordCrypt.postProcessMessage( dataMsg, this.configFile.up1Host );
 
             /* Handle embeds and inline blocks differently. */
-            if( asEmbed ) {
+            if( as_embed ) {
                 /* Set the new HTML. */
                 message[ 0 ].innerHTML = dataMsg.html;
             }
@@ -2341,14 +2341,14 @@ class discordCrypt {
             /* If this contains code blocks, highlight them. */
             if ( dataMsg.code ) {
                 /* Sanity check. */
-                if ( ReactModules.HighlightJS !== null ) {
+                if ( react_modules.HighlightJS !== null ) {
                     /* The inner element contains a <span></span> class, get all children beneath that. */
                     let elements = $( message.children()[ 0 ] ).children();
 
                     /* Loop over each element to get the markup division list. */
                     for ( let i = 0; i < elements.length; i++ ) {
                         /* Highlight the element's <pre><code></code></code> block. */
-                        ReactModules.HighlightJS.highlightBlock( $( elements[ i ] ).children()[ 0 ] );
+                        react_modules.HighlightJS.highlightBlock( $( elements[ i ] ).children()[ 0 ] );
 
                         /* Reset the class name. */
                         $( elements[ i ] ).children()[ 0 ].className = 'hljs';
@@ -5117,14 +5117,14 @@ class discordCrypt {
      * @desc Performs the Scrypt hash function on the given input.
      * @param {string|Buffer|Array} input The input data to hash.
      * @param {string|Buffer|Array} salt The unique salt used for hashing.
-     * @param {int} dkLen The desired length of the output in bytes.
+     * @param {int} output_length The desired length of the output in bytes.
      * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
      * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
      * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
      * @param {ScryptCallback} cb Callback function for progress updates.
      * @returns {boolean} Returns true if successful.
      */
-    static scrypt( input, salt, dkLen, N = 16384, r = 8, p = 1, cb = null ) {
+    static scrypt( input, salt, output_length, N = 16384, r = 8, p = 1, cb = null ) {
         let _in, _salt;
 
         /* PBKDF2-HMAC-SHA256 Helper. */
@@ -5387,7 +5387,7 @@ class discordCrypt {
                         }
 
                         /* Done. Don't break to avoid rescheduling. */
-                        return cb( null, 1.0, Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), dkLen, 1 ) ) );
+                        return cb( null, 1.0, Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), output_length, 1 ) ) );
                     default:
                         return cb( new Error( 'invalid state' ), 0 );
                 }
@@ -5428,12 +5428,12 @@ class discordCrypt {
         }
 
         /* Validate derived key length. */
-        if ( typeof dkLen !== 'number' ) {
-            discordCrypt.log( 'Invalid dkLen parameter specified. Must be a numeric value.', 'error' );
+        if ( typeof output_length !== 'number' ) {
+            discordCrypt.log( 'Invalid output_length parameter specified. Must be a numeric value.', 'error' );
             return false;
         }
-        else if ( dkLen <= 0 || dkLen >= 65536 ) {
-            discordCrypt.log( 'Invalid dkLen parameter specified. Must be a numeric value.', 'error' );
+        else if ( output_length <= 0 || output_length >= 65536 ) {
+            discordCrypt.log( 'Invalid output_length parameter specified. Must be a numeric value.', 'error' );
             return false;
         }
 
@@ -6986,28 +6986,28 @@ class discordCrypt {
     /**
      * @public
      * @desc Encodes the given values as a braille encoded 32-bit word.
-     * @param {int} cipherIndex The index of the cipher(s) used to encrypt the message
-     * @param {int} cipherModeIndex The index of the cipher block mode used for the message.
-     * @param {int} paddingIndex The index of the padding scheme for the message.
-     * @param {int} pad The padding byte to use.
+     * @param {int} cipher_index The index of the cipher(s) used to encrypt the message
+     * @param {int} cipher_mode_index The index of the cipher block mode used for the message.
+     * @param {int} padding_scheme_index The index of the padding scheme for the message.
+     * @param {int} pad_byte The padding byte to use.
      * @returns {string} Returns a substituted UTF-16 string of a braille encoded 32-bit word containing these options.
      */
-    static metaDataEncode( cipherIndex, cipherModeIndex, paddingIndex, pad ) {
+    static metaDataEncode( cipher_index, cipher_mode_index, padding_scheme_index, pad_byte ) {
 
         /* Parse the first 8 bits. */
-        if ( typeof cipherIndex === 'string' )
-            cipherIndex = discordCrypt.cipherStringToIndex( cipherIndex );
+        if ( typeof cipher_index === 'string' )
+            cipher_index = discordCrypt.cipherStringToIndex( cipher_index );
 
         /* Parse the next 8 bits. */
-        if ( typeof cipherModeIndex === 'string' )
-            cipherModeIndex = [ 'cbc', 'cfb', 'ofb' ].indexOf( cipherModeIndex.toLowerCase() );
+        if ( typeof cipher_mode_index === 'string' )
+            cipher_mode_index = [ 'cbc', 'cfb', 'ofb' ].indexOf( cipher_mode_index.toLowerCase() );
 
         /* Parse the next 8 bits. */
-        if ( typeof paddingIndex === 'string' )
-            paddingIndex = [ 'pkc7', 'ans2', 'iso1', 'iso9' ].indexOf( paddingIndex.toLowerCase() );
+        if ( typeof padding_scheme_index === 'string' )
+            padding_scheme_index = [ 'pkc7', 'ans2', 'iso1', 'iso9' ].indexOf( padding_scheme_index.toLowerCase() );
 
         /* Buffered word. */
-        let buf = Buffer.from( [ cipherIndex, cipherModeIndex, paddingIndex, parseInt( pad ) ] );
+        let buf = Buffer.from( [ cipher_index, cipher_mode_index, padding_scheme_index, parseInt( pad_byte ) ] );
 
         /* Convert it and return. */
         return discordCrypt.substituteMessage( buf, true );
