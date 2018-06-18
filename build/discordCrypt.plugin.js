@@ -788,7 +788,7 @@ class discordCrypt {
                 delete this.configFile[ prop ];
 
                 /* Show a simple log. */
-                discordCrypt.log( `Removing unknown property '${prop}' in the configuration file.` );
+                discordCrypt.log( `Removing unknown property '${prop}' from the configuration file.` );
 
                 /* Set the flag for saving. */
                 needs_save = true;
