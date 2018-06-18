@@ -1,7 +1,6 @@
 <h1 align="center">
-    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" 
-    height="50" width="50">
-    DiscordCrypt <h3>End-To-End Message Encryption For Discord</h3>
+    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/discordCrypt-mini.png" height="50" width="50">
+    DiscordCrypt <h3>End-To-End File & Message Encryption For Discord</h3>
 </h1>
 
 * [**Introduction**](#introduction)
@@ -16,12 +15,12 @@
         * [*Personal Conversations*](#personal-conversations)
         * [*Group Conversations / Channels*](#group-conversations-channels)
             * [*Alternative Method*](#alternative-method)
-    * [***Resetting / Updating Conversation Passwords Manually***](#resetting-updating-conversation-passwords-manually)
+    * [***Resetting Or Updating Conversation Passwords Manually***](#resetting-or-updating-conversation-passwords-manually)
 * [**Best Practices**](#best-practices)
 * [**Debugging**](#debugging)
 * [**Frequently Asked Questions ( FAQs )**](#frequently-asked-questions-faqs-)
-* [**Known Limitations**](#known-limitations-bugs)
-* [**Support & Discussion**](#support-discussion)
+* [**Known Limitations And Bugs**](#known-limitations-and-bugs)
+* [**Support And Discussion**](#support-and-discussion)
 
  
 
@@ -35,10 +34,10 @@ messages between users and channels in a safe and secure manner.
 It achieves this by using [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) using 
 well known ciphers to ensure only the people you want to read your messages can read them and no one else.
 
-The source code is free and completely open source and licensed under the [**MIT License**](LICENSE) so feel free to 
-have a look or modify it as you see fit!
+The source code is completely free and open source ( [FOSS](https://en.wikipedia.org/wiki/Free_and_open-source_software) ) 
+and licensed under the [**MIT License**](LICENSE) so feel free to have a look or modify it as you see fit!
 
-If you'd like an in-depth explanation of its inner workings, [click here](TECHNICALITIES.md).
+If you'd like an in-depth explanation of its inner workings, click [here](TECHNICALITIES.md).
 
 Contributions are welcome! Be sure to read [our guidelines](CONTRIBUTING.md) before submitting your changes.
 
@@ -59,12 +58,12 @@ happily accept.
 # Installation
 
 **DiscordCrypt** is installed just like any other [BetterDiscord](https://github.com/rauenzi/BetterDiscordApp/releases)
-plugin. If you do not have BetterDiscord installed, be sure to do that before continuing with this guide.
+plugin. If you do not have BetterDiscord installed, be sure to do that first before continuing with this guide.
 
 **N.B** For now, the plugin has ***only*** been tested on *Windows* and *Linux* but it should work for all operating 
 systems that support BetterDiscord.
 
-For specific operating systems, see below:
+For installation on specific operating systems, see below:
 
 #### Windows
 
@@ -105,6 +104,46 @@ Click -> Save As )
 
 # Usage
 
+**DiscordCrypt** creates a menu bar upon loading, allowing you to interact with the plugin.
+
+---
+
+![Menu Bar](images/menu-bar.png)
+
+---
+
+These icons each offer a different functionality as follows:
+
+* **[1] Upload Encrypted Clipboard**
+    * This uploads your current clipboard an the Up1 service and sends an encrypted link to the file.
+    * After uploading, this sets your clipboard to the deletion link for the uploaded file which you may use to 
+    either manually delete the file after your colleague has downloaded it or for later deletion.
+* **[2] Upload Encrypted File**
+    * This opens a file upload menu that you may use to encrypt and upload a file less than 50 MB to an Up1 service.
+    * You may choose whether to randomize the file name and whether to attach a deletion link to the message.
+    * You are also able to write a message prior to sending the file.
+    * Files are encrypted using AES-256 CCM.
+* **[3] Plugin Settings**
+    * This menu controls the settings for the plugin.
+    * You can enable and disable each option here.
+* **[4] Enable/Disable Message Encryption**
+    * Clicking this button either enables or disables automatic encryption.
+    * Automatic encryption will always encrypt any message sent if passwords are defined for the current channel.
+    * Clicking this button changes the lock icon to an unlock icon indicating messages sent will not be automatically
+     encrypted.
+* **[5] Password Settings**
+    * This menu allows you to set, change or reset the passwords applied to the current channel.
+    * If you reset the current passwords, they will use the default passwords defined in `Plugin Settings`.
+    * You may also copy the current passwords using the `Copy Current Passwords` button to the clipboard for sharing.
+* **[6] Key Exchange Menu**
+    * This allows you to manually generate and send public keys to your colleges.
+    * This is also the menu responsible for performing key exchanges.
+* **[7] Generate & Send New Public Key**
+    * This simplifies the key exchanging process by manually generating and sending a new public key to your current 
+    channel.
+    * This generates a public key according to the current algorithm and bit length defined in the `Key Exchange Menu`.
+
+
 ### Creating a new database
 
 Every time Discord starts, you will be met with a prompt seen below:
@@ -115,17 +154,18 @@ Every time Discord starts, you will be met with a prompt seen below:
 
 ---
 
-**DiscordCrypt** uses an AES-256 encrypted database file to store its information and uses a ***master password*** to
- unlock this file.
+**DiscordCrypt** uses an AES-256 encrypted database file in GCM mode to store its information and uses a 
+***master password*** to unlock this file.
 
 The first time you use the plugin, you'll be prompted to input a new password that will be used to create the database.
 
-Every time you restart Discord, you'll be prompted with the above screen where you must enter the same password as 
-before. If you don't enter the same password, you will not be able to decrypt any messages.
+Every time you start or restart Discord, you'll be prompted with the above screen where you must enter the same 
+password as before. If you don't enter the same password, you will not be able to decrypt any messages.
 
 All exchanged keys and passwords are saved to this database and **cannot be recovered** if the master password is 
 lost so be sure to use a strong but memorable one. ( [Forgot Password?](#i-forgot-my-master-password-what-do-i-do-) )
 
+**N.B. This password is the only thing protecting all others and as such, should be a very strong and unpredictable.**
  
 
 ### Changing the database password
@@ -215,18 +255,21 @@ There is an alternative process for sharing existing passwords with users but it
 * Switch to the group or channel that currently uses encrypted messages.
 * Open the `Password Settings` menu. ( ![5](images/password-menu.png) )
 * Click on `Copy Current Passwords` located at the bottom of the panel.
-    * Please note this copies the keys from your current channel in an UNENCRYPTED form to your clipboard.
+    * Please note this copies the keys from your current channel in an **UNENCRYPTED** form to your clipboard.
+    * **KEEP THEM SAFE AND DO NOT SAVE THEM**.
 * Paste your clipboard to your partner over an encrypted channel. ( `Ctrl+V` or `Right Click -> Paste` )
 
  
 
-### Resetting / Updating Conversation Passwords Manually
+### Resetting Or Updating Conversation Passwords Manually
 
 You may one day end up in a situation where you need to manually reset or update the password for the current 
 conversation.
 
-**We recommend against manually creating a password as we offer a tool to securely generate strong passwords for both
- parties.**
+One such situation is when sharing keys for group conversations. If this is the case, use this method.
+
+**N.B. We recommend against manually creating a password as we offer a tool to securely generate strong passwords for 
+both parties.**
 
 If it comes to this, you simply need to go to the `Password Settings` menu ![6](images/password-menu.png) to apply 
 your passwords.
@@ -241,8 +284,8 @@ If you are manually updating the passwords to be able to have an encrypted group
 The following tips should be adhered to for maximum privacy between users.
 
 * Change your master database password frequently.
-* Do **NOT** share passwords across unencrypted communications. Always establish a secure connection before sending 
-passwords.
+* Do **NOT** share passwords across unencrypted communications. Always establish a secure connection by means of a 
+key exchange before sending passwords.
 * Change your message keys on a frequent basis. This ensures that even if your current key is compromised that an 
 attacker will not be able to read any future messages.
 * Use large key sizes ( preferably the maximum ) when exchanging keys. For Diffie-Hellman, this is 8192 bits or for 
@@ -254,7 +297,8 @@ combination of alphanumeric ( ***A-Z***, ***0-9*** ) and symbolic characters.
 * Use AES as either the primary or secondary ciphers for encryption. AES is a cipher developed in 1998 and is still 
 considered one of the most secure methods of sending and receiving confidential information to this day.
 * If you require absolute secrecy which is not vulnerable to Discord's potential MiTM attacks, use a strong password 
-generator, encrypt these using PGP and send them to your partner over a non-Discord channel.
+generator, encrypt these using PGP and send them to your partner over a non-Discord channel then manually apply these
+ keys after you decrypt them.
 
 
 
@@ -406,9 +450,14 @@ We wanted a way for users who both use and do not use the plugin to easily ident
 In addition to this, rich embeds provide a nicer means of conveying and formatting the encrypted messages that 
 standard messages do not as well as making the plugin itself detect encrypted messages easily.
 
+We however do support non-embedded messages but it is only used as a means to avoid users having their embed 
+permissions globally revoked and it does not offer the same look or feel that standard encrypted messages do.
+
+By default, however, the plugin will use embeds but warns users about this in the settings menu.
+
  
 
-# Known Limitations / Bugs
+# Known Limitations And Bugs
 
 **DiscordCrypt** is not ( and sadly cannot be ) perfect, the plugin is limited in the number of features it can provide.
 
@@ -440,8 +489,8 @@ could still be recorded by Discord.
 
  
 
-* Emojis are not visible in an encrypted message: As we use embeds, sending emojis in a message will result in them 
-not being visible.
+* Emojis are not visible in an encrypted message: As we encrypt messages, sending emojis in a message will result in 
+them not being visible.
     * As a workaround for this, messages starting with the character `:` will be not be encrypted. This means you
      can send your message, then an emoji in a second, unencrypted message.
     * This will also happen if your messages start with `#` ( For convenience, to quickly send an unencrypted message
@@ -465,7 +514,7 @@ not being visible.
 
  
 
-# Support & Discussion
+# Support And Discussion
 
 If you've discovered a bug in the plugin, feel free to create an issue after reading the 
 [contribution guide](CONTRIBUTING.md). Please be as detailed as possible when submitting your issues.
