@@ -5385,7 +5385,11 @@ class discordCrypt {
                         }
 
                         /* Done. Don't break to avoid rescheduling. */
-                        return cb( null, 1.0, Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), output_length, 1 ) ) );
+                        return cb(
+                            null,
+                            1.0,
+                            Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), output_length, 1 ) )
+                        );
                     default:
                         return cb( new Error( 'invalid state' ), 0 );
                 }
