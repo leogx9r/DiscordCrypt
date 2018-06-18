@@ -2250,10 +2250,11 @@ class discordCrypt {
      * @param {Object} obj The jQuery object of the current message being examined.
      * @param {string} primaryKey The primary key used to decrypt the message.
      * @param {string} secondaryKey The secondary key used to decrypt the message.
+     * @param {boolean} asEmbed Whether to consider this message object as an embed.
      * @param {Object} ReactModules The modules retrieved by calling getReactModules()
      * @returns {boolean} Returns true if the message has been decrypted.
      */
-    parseSymmetric( obj, primaryKey, secondaryKey, ReactModules ) {
+    parseSymmetric( obj, primaryKey, secondaryKey, asEmbed, ReactModules ) {
         let message = $( obj );
         let dataMsg;
 
@@ -2314,20 +2315,33 @@ class discordCrypt {
 
         /* If decryption didn't fail, set the decoded text along with a green foreground. */
         if ( ( typeof dataMsg === 'string' || dataMsg instanceof String ) && dataMsg !== "" ) {
-            /* Expand the message to the maximum width. */
-            message.parent().parent().parent().parent().css( 'max-width', '100%' );
+            /* If this is an embed, increase the maximum width of it. */
+            if( asEmbed ) {
+                /* Expand the message to the maximum width. */
+                message.parent().parent().parent().parent().css( 'max-width', '100%' );
+            }
 
             /* Process the message and apply all necessary element modifications. */
             dataMsg = discordCrypt.postProcessMessage( dataMsg, this.configFile.up1Host );
 
-            /* Set the new HTML. */
-            message[ 0 ].innerHTML = dataMsg.html;
+            /* Handle embeds and inline blocks differently. */
+            if( asEmbed ) {
+                /* Set the new HTML. */
+                message[ 0 ].innerHTML = dataMsg.html;
+            }
+            else{
+                /* For inline code blocks, we set the HTML to the parent element. */
+                let tmp = message.parent()[ 0 ];
+                tmp.innerHTML = dataMsg.html;
+
+                /* And update the message object with the parent element. */
+                message = $( tmp );
+            }
 
             /* If this contains code blocks, highlight them. */
             if ( dataMsg.code ) {
                 /* Sanity check. */
                 if ( ReactModules.HighlightJS !== null ) {
-
                     /* The inner element contains a <span></span> class, get all children beneath that. */
                     let elements = $( message.children()[ 0 ] ).children();
 
@@ -2431,7 +2445,7 @@ class discordCrypt {
                 return;
 
             /* Try parsing a symmetric message. */
-            self.parseSymmetric( this, password, secondary, React );
+            self.parseSymmetric( this, password, secondary, true, React );
 
             /* Set the flag. */
             $( this ).data( 'dc-parsed', true );
@@ -2444,7 +2458,7 @@ class discordCrypt {
                 return;
 
             /* Try parsing a symmetric message. */
-            self.parseSymmetric( this, password, secondary, React );
+            self.parseSymmetric( this, password, secondary, false, React );
 
             /* Set the flag. */
             $( this ).data( 'dc-parsed', true );
