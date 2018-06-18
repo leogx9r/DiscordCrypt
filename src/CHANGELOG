@@ -1,3 +1,13 @@
+Version 1.2.0
+
+- Added timed messages. Messages can now be deleted after a certain time period has passed.
+- Added the ability to send encrypted messages without using embeds.
+- Fixed a bug in menus in which scrolling would cut off part of the screen on smaller resolutions.
+- Updated key exchange secrets to display using braille instead of symbols.
+- Updated the settings menu with a warning about using embeds.
+- Updated the default passwords to use new braille patterns.
+- Minor performance enhancements.
+
 Version 1.1.2
 
 - Fixed a bug for public key parsing errors.
