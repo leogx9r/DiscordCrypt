@@ -647,7 +647,7 @@ class discordCrypt {
         /* Inject application CSS. */
         discordCrypt.injectCSS( 'dc-css', this.appCss );
 
-        /* Inject all compiled libraries. */
+        /* Inject all compiled libraries into the current VM. */
         for ( let name in this.libraries ) {
             vm.runInThisContext( this.libraries[ name ], {
                 filename: name,
@@ -743,8 +743,8 @@ class discordCrypt {
             return true;
         }
 
-        /* Try parsing the decrypted data. */
         try {
+            /* Try parsing the decrypted data. */
             this.configFile = JSON.parse(
                 discordCrypt.aes256_decrypt_gcm( data.data, this.masterPassword, 'PKC7', 'utf8', false )
             );
@@ -793,10 +793,6 @@ class discordCrypt {
             }
         }
 
-        /* Save the configuration file if necessary. */
-        if ( needs_save )
-            this.saveConfig();
-
         /* Check for version mismatch. */
         if ( this.configFile.version !== this.getVersion() ) {
             /* Preserve the old version for logging. */
@@ -811,15 +807,19 @@ class discordCrypt {
             /* Now restore the password list. */
             this.configFile.passList = oldCache;
 
-            /* Save the new configuration. */
-            this.saveConfig();
+            /* Set the flag for saving. */
+            needs_save = true;
 
             /* Alert. */
             discordCrypt.log( `Updated plugin version from v${oldVersion} to v${this.getVersion()}.` );
-            return true;
         }
 
+        /* Save the configuration file if necessary. */
+        if ( needs_save )
+            this.saveConfig();
+
         discordCrypt.log( `Loaded configuration file! - v${this.configFile.version}` );
+
         return true;
     }
 
@@ -1194,7 +1194,7 @@ class discordCrypt {
          * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
          * @returns {object} First module that matches `propNames` or `null` if none match.
          */
-        const findByUniqueProperties = ( propNames, force_load = true ) =>
+        const findByUniqueProperties = ( propNames, force_load = false ) =>
             find( module => propNames.every( prop => module[ prop ] !== undefined ), force_load );
 
         /**
@@ -1206,7 +1206,7 @@ class discordCrypt {
          * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
          * @return {object} First module that matches `displayName` or `null` if none match.
          */
-        const findByDisplayName = ( displayName, force_load = true ) =>
+        const findByDisplayName = ( displayName, force_load = false ) =>
             find( module => module.displayName === displayName, force_load );
 
         /**
@@ -2247,7 +2247,7 @@ class discordCrypt {
      * @param {string} primary_key The primary key used to decrypt the message.
      * @param {string} secondary_key The secondary key used to decrypt the message.
      * @param {boolean} as_embed Whether to consider this message object as an embed.
-     * @param {Object} react_modules The modules retrieved by calling getReactModules()
+     * @param {ReactModules} react_modules The modules retrieved by calling getReactModules()
      * @returns {boolean} Returns true if the message has been decrypted.
      */
     parseSymmetric( obj, primary_key, secondary_key, as_embed, react_modules ) {
