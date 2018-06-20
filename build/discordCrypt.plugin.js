@@ -3223,6 +3223,10 @@ class discordCrypt {
     static on_exchange_algorithm_changed() {
         /* Variable bit lengths. */
         let dh_bl = discordCrypt.getDHBitSizes(), ecdh_bl = discordCrypt.getECDHBitSizes();
+        
+        /* Cache jQuery results. */
+        let dc_keygen_method = $( '#dc-keygen-method' ),
+            dc_keygen_algorithm = $( '#dc-keygen-algorithm' );
 
         /* Clear the old select list. */
         $( '#dc-keygen-algorithm option' ).each( ( function () {
