@@ -4901,8 +4901,8 @@ class discordCrypt {
             /* Convert the file to a Uint8Array() then to SJCL's bit buffer. */
             data = sjcl.codec.bytes.toBits( new Uint8Array( data ) );
 
-            /* Generate a random 128 bit seed and calculate the key and IV from this. */
-            let params = getParams( crypto.randomBytes( 16 ) );
+            /* Generate a random 512 bit seed and calculate the key and IV from this. */
+            let params = getParams( crypto.randomBytes( 64 ) );
 
             /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
             data = sjcl.arrayBuffer.ccm.compat_encrypt( new sjcl.cipher.aes( params.key ), data, params.iv );
