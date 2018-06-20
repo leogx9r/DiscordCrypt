@@ -1,3 +1,11 @@
+Version 1.2.2
+
+- Fixed a bug when switching between key exchange algorithms.
+- Switched to Curve25519 instead of secp256k1 for ECDH key exchanges when using 256 bits.
+- Avoid using strong entropy for random padding byte for metadata.
+- Increased Up1's file encryption key length from 128 bits to 512 bits. ( URLs are longer. )
+- Embedded Up1 frames now use 100% of the message width instead of 400 pixels.
+
 Version 1.2.1
 
 - Fixed updating bug due to using the old update URL.

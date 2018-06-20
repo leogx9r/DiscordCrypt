@@ -268,7 +268,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.2.1';
+        return '1.2.2';
     }
 
     /* ============================================================== */
