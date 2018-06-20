@@ -24,15 +24,15 @@
 
 class testRunner {
     /**
-     * @desc Loads the SJCL library and discordCrypt.
+     * @desc Loads the dependency libraries and discordCrypt.
      */
     constructor() {
-        this.sjcl = require( '../lib/sjcl.js' );
-
+        /* Cache required modules. */
         this.process = require( 'process' );
-        this.nodeunit = require('nodeunit');
+        this.nodeunit = require( 'nodeunit' );
         this.child_process = require( 'child_process' );
 
+        /* Perform a build. */
         this.child_process.fork(
             this.process.argv[ 0 ],
             {
@@ -42,13 +42,19 @@ class testRunner {
             }
         ).on( 'exit', () => {
 
+            /* Import the built file. */
             this.discordCrypt = require( '../build/discordCrypt.plugin.js' ).discordCrypt;
 
+            /* Create an instance. */
             this.discordCrypt_instance = new ( this.discordCrypt )();
 
+            /* Load all libraries required. */
+            this.discordCrypt.loadLibraries( this.discordCrypt_instance.libraries );
+
+            /* Run the tests. */
             this.run();
 
-        });
+        } );
     }
 
     /**
@@ -168,7 +174,7 @@ class testRunner {
         let num_tests = coverage === undefined ? vectors.length : 1;
         for ( let i = 0; i < num_tests; i++ ) {
             let v = vectors[ i ],
-                k = `Test #${Object.keys( unit_tests.discordCrypt_scrypt ).length + 1}: `+
+                k = `Test #${Object.keys( unit_tests.discordCrypt_scrypt ).length + 1}: ` +
                     `[ N: ${v.N} r: ${v.r} p: ${v.p} ]`;
 
             /* Create a function callback for this test name. */
@@ -697,7 +703,7 @@ class testRunner {
 
                     /* Convert the cipher index to a string for logging. */
                     let cipher_string =
-                        `${this.discordCrypt.cipherIndexToString( cipher_index )}-`+
+                        `${this.discordCrypt.cipherIndexToString( cipher_index )}-` +
                         `${this.discordCrypt.cipherIndexToString( cipher_index, true )}`;
 
                     /* Create the test class. */
@@ -896,7 +902,7 @@ class testRunner {
                 './tests/test_generator.js',
                 'https://share.riseup.net',
                 '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
-                this.sjcl,
+                global.sjcl,
                 ( error, file_url, deletion_link, seed ) => {
                     /* Succeeds only if the error is null. */
                     ut.equal( error, null );
@@ -920,7 +926,7 @@ class testRunner {
             this.discordCrypt.__up1UploadClipboard(
                 'https://share.riseup.net',
                 '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
-                this.sjcl,
+                global.sjcl,
                 ( error, file_url, deletion_link, seed ) => {
                     /* Succeeds only if the error is null. */
                     ut.equal( error, null );

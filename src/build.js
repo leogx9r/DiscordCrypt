@@ -5,6 +5,21 @@
 class Compiler {
 
     /**
+     * @typedef {Object} LibraryInfo
+     * @desc Contains the library and necessary information.
+     * @property {boolean} requiresElectron Whether this library relies on Electron's internal support.
+     * @property {boolean} requiresBrowser Whether this library is meant to be run in a browser.
+     * @property {string} code The raw code for execution defined in the library.
+     */
+
+    /**
+     * @typedef {Object} LibraryDefinition
+     * @desc Contains a definition of a raw library executed upon plugin startup.
+     * @property {string} name The name of the library file.
+     * @property {LibraryInfo} info The library info.
+     */
+
+    /**
      * @public
      * @desc Resolves all necessary modules.
      */
@@ -87,9 +102,10 @@ class Compiler {
      * @private
      * @desc Reads all library files in the path specified and constructs an array string containing the data.
      * @param {string} library_path Relative path to look for all library files.
+     * @param {LibraryDefinition} library_info A list of the info requires to add to a library.
      * @returns {string} Returns a sanitized string containing the library name and the code.
      */
-    readLibraries( library_path = './lib' ) {
+    readLibraries( library_path = './lib', library_info = {} ) {
         let libs = {}, count = 0;
         let str = '';
 
@@ -107,6 +123,15 @@ class Compiler {
                 continue;
             }
 
+            /* Get the base name. */
+            let base = this.path.basename( file );
+
+            /* Make sure the base name is defined in the library info. */
+            if( !library_info.hasOwnProperty( base ) ) {
+                console.warn( `Skipping non-defined library: "${base}" ...` );
+                continue;
+            }
+
             /* Read the file to a buffer. */
             let data = this.fs.readFileSync( this.path.join( library_path, file ) );
 
@@ -119,9 +144,15 @@ class Compiler {
             /* Try compressing the library. */
             data = this.tryMinify( data );
 
+            /* Update the code in the library info. */
+            library_info[ base ][ 'code' ] = data;
+
             /* Add it to the array. */
-            libs[ file ] = data;
+            libs[ file ] = library_info[ base ];
             count++;
+
+            /* Quick log. */
+            console.info( `Added library: [ ${base} ] ...` );
         }
 
         console.info( `Added ${count} files from the library directory ...` );
@@ -166,6 +197,9 @@ class Compiler {
 
             /* Replace the data. */
             original_data = original_data.split( constants[ file_name ] ).join( data );
+
+            /* Quick log. */
+            console.info( `Added asset: [ ${this.path.basename( file )} ] ...` );
         }
 
         return original_data;
@@ -178,13 +212,14 @@ class Compiler {
      * @param {string} plugin_path The path to the plugin file used as the base.
      * @param {string} tag_name The tag name to scan the [plugin] for to insert all libraries.
      * @param {string} library_path The path to the libraries used to add to the base file.
+     * @param {LibraryDefinition} library_info Required library info.
      * @param {string} output_dir The output directory to store the plugin.
      * @param {string} assets_path The path to the assets directory.
      * @param {boolean} compress Whether to compress the plugin itself.
      * @param {Object} assets_data The asset tags for each file within the assets directory.
      * @return {boolean} Returns true on success and false on failure.
      */
-    compilePlugin( plugin_path, tag_name, library_path, output_dir, assets_path, compress, assets_data ) {
+    compilePlugin( plugin_path, tag_name, library_path, library_info, output_dir, assets_path, compress, assets_data ) {
         const header =
             `//META{"name":"discordCrypt"}*//
 
@@ -230,7 +265,7 @@ class Compiler {
             return false;
         }
         /* Compile all libraries and replace the tag with them. */
-        data = data.split( tag_name ).join( this.readLibraries( library_path ) );
+        data = data.split( tag_name ).join( this.readLibraries( library_path, library_info ) );
 
         /* Construct the output path and name. */
         let output_path = this.path.join( output_dir, this.path.basename( plugin_path ) );
@@ -283,6 +318,12 @@ class Compiler {
                 'unlocker.html':
                     '/* ----- APPLICATION UNLOCKING GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
             },
+            library_info: {
+                'sjcl.js': { requiresElectron: true, requiresBrowser: false },
+                'smalltalk.js': { requiresElectron: false, requiresBrowser: true },
+                'currify.js': { requiresElectron: false, requiresBrowser: false },
+                'curve25519.js': { requiresElectron: true, requiresBrowser: false },
+            },
             compression: false,
             plugin: './src/discordCrypt.plugin.js',
             assets: './src/assets',
@@ -316,6 +357,7 @@ class Compiler {
             args[ 'plugin-path' ] || args[ 'p' ] || defaults.plugin,
             args[ 'tag-name' ] || args[ 't' ] || defaults.library_tag,
             args[ 'library-path' ] || args[ 'l' ] || defaults.lib,
+            defaults.library_info,
             args[ 'output-directory' ] || args[ 'o' ] || defaults.output,
             args[ 'assets-directory' ] || args[ 'a' ] || defaults.assets,
             args[ 'enable-compression' ] || args[ 'c' ] || defaults.compression,

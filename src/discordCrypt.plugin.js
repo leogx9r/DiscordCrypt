@@ -219,10 +219,18 @@ class discordCrypt {
      */
 
     /**
+     * @typedef {Object} LibraryInfo
+     * @desc Contains the library and necessary information.
+     * @property {boolean} requiresElectron Whether this library relies on Electron's internal support.
+     * @property {boolean} requiresBrowser Whether this library is meant to be run in a browser.
+     * @property {string} code The raw code for execution defined in the library.
+     */
+
+    /**
      * @typedef {Object} LibraryDefinition
      * @desc Contains a definition of a raw library executed upon plugin startup.
      * @property {string} name The name of the library file.
-     * @property {string} code The raw code for execution defined in the library.
+     * @property {LibraryInfo} info The library info.
      */
 
     /* ============================================================== */
@@ -642,18 +650,11 @@ class discordCrypt {
      * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
      */
     load() {
-        const vm = require( 'vm' );
-
         /* Inject application CSS. */
         discordCrypt.injectCSS( 'dc-css', this.appCss );
 
-        /* Inject all compiled libraries into the current VM. */
-        for ( let name in this.libraries ) {
-            vm.runInThisContext( this.libraries[ name ], {
-                filename: name,
-                displayErrors: false
-            } );
-        }
+        /* Load necessary libraries. */
+        discordCrypt.loadLibraries( this.libraries );
     }
 
     /**
@@ -930,6 +931,67 @@ class discordCrypt {
     /* ================= END CONFIGURATION CBS ================= */
 
     /* =================== PROJECT UTILITIES =================== */
+
+    /**
+     * @public
+     * @desc Removes the extension from a file name.
+     * @param {string} file_name The name of the script file.
+     * @return {string} Returns the sanitized file name.
+     */
+    static sanitizeScriptNameToVariable( file_name ) {
+        return file_name.replace( '.js', '' )
+    }
+
+    /**
+     * @public
+     * @desc Loads all compiled libraries as needed.
+     * @param {LibraryDefinition} libraries A list of all libraries to load.
+     */
+    static loadLibraries( libraries ) {
+        const vm = require( 'vm' );
+
+        /* Inject all compiled libraries based on if they're needed */
+        for ( let name in libraries ) {
+            let libInfo = libraries[ name ];
+
+            /* Browser code requires a window object to be defined. */
+            if ( libInfo.requiresBrowser && typeof window === 'undefined' ) {
+                discordCrypt.log( `Skipping loading of browser-required plugin: ${name} ...`, 'warn' );
+                continue;
+            }
+
+            /* If the module can't be loaded, don't load this library. */
+            if ( libInfo.requiresElectron ) {
+                try {
+                    require( 'electron' );
+                }
+                catch ( e ) {
+                    discordCrypt.log( `Skipping loading of electron-required plugin: ${name} ...`, 'warn' );
+                    continue;
+                }
+            }
+
+            /* Determine how to run this. */
+            if ( libInfo.requiresBrowser || libInfo.requiresElectron ) {
+                /* Run in the current context as it operates on currently defined objects. */
+                vm.runInThisContext( libInfo.code, {
+                    filename: name,
+                    displayErrors: false
+                } );
+            }
+            else {
+                /* Run in a new sandbox and store the result in a global object. */
+                global[ discordCrypt.sanitizeScriptNameToVariable( name ) ] =
+                    vm.runInNewContext(
+                        libInfo.code,
+                        {
+                            filename: name,
+                            displayErrors: false
+                        }
+                    );
+            }
+        }
+    }
 
     /**
      * @public
@@ -2820,7 +2882,7 @@ class discordCrypt {
             discordCrypt.__up1UploadClipboard(
                 self.configFile.up1Host,
                 self.configFile.up1ApiKey,
-                sjcl,
+                global.sjcl,
                 ( error_string, file_url, deletion_link ) => {
                     /* Do some sanity checking. */
                     if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
@@ -2879,7 +2941,7 @@ class discordCrypt {
                 file_path_field.val(),
                 self.configFile.up1Host,
                 self.configFile.up1ApiKey,
-                sjcl,
+                global.sjcl,
                 ( error_string, file_url, deletion_link ) => {
                     /* Do some sanity checking. */
                     if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
