@@ -43,6 +43,7 @@ class Compiler {
             mangle: true,
             sourceMap: { url: "inline" },
             compress: {
+                ecma: 6,
                 toplevel: true,
                 dead_code: true,
                 unsafe_Function: true,
