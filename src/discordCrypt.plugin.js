@@ -2559,7 +2559,7 @@ class discordCrypt {
                 this.configFile.encryptMode,
                 this.configFile.encryptBlockMode,
                 this.configFile.paddingMode,
-                parseInt( crypto.randomBytes( 1 )[ 0 ] )
+                parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
             ) + msg;
 
             /* Break up the message into lines. */
@@ -2602,7 +2602,7 @@ class discordCrypt {
                     this.configFile.encryptMode,
                     this.configFile.encryptBlockMode,
                     this.configFile.paddingMode,
-                    parseInt( crypto.randomBytes( 1 )[ 0 ] )
+                    parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
                 ) + msg;
 
                 /* Break up the message into lines. */
