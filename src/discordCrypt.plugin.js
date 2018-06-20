@@ -6970,9 +6970,6 @@ class discordCrypt {
             case 224:
                 groupName = 'secp224k1';
                 break;
-            case 256:
-                groupName = 'secp256k1';
-                break;
             case 384:
                 groupName = 'secp384r1';
                 break;
@@ -6985,20 +6982,27 @@ class discordCrypt {
             case 571:
                 groupName = 'sect571k1';
                 break;
+            case 256:
+                break;
             default:
                 return null;
         }
 
         /* Create the key object. */
         try {
-            key = require( 'crypto' ).createECDH( groupName );
+            if ( size !== 256 )
+                key = require( 'crypto' ).createECDH( groupName );
+            else {
+                key = new global.Curve25519();
+                key.generateKeys( undefined, require( 'crypto' ).randomBytes( 32 ) );
+            }
         }
         catch ( err ) {
             return null;
         }
 
         /* Generate the key if it's valid. */
-        if ( key !== undefined && key !== null && typeof key.generateKeys !== 'undefined' ) {
+        if ( key !== undefined && key !== null && typeof key.generateKeys !== 'undefined' && size !== 256 ) {
             /* Generate a new key if the private key is undefined else set the private key. */
             if ( private_key === undefined )
                 key.generateKeys( 'hex', 'compressed' );

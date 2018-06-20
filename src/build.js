@@ -127,7 +127,7 @@ class Compiler {
             let base = this.path.basename( file );
 
             /* Make sure the base name is defined in the library info. */
-            if( !library_info.hasOwnProperty( base ) ) {
+            if ( !library_info.hasOwnProperty( base ) ) {
                 console.warn( `Skipping non-defined library: "${base}" ...` );
                 continue;
             }
@@ -368,4 +368,4 @@ class Compiler {
 
 module.exports = { Compiler };
 
-(new Compiler()).run();
+( new Compiler() ).run();

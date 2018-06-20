@@ -1,6 +1,5 @@
 <h1 align="center">
-    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/electronic_lock-512-mini.png" 
-    height="50" width="50">
+    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/discordCrypt-mini.png" height="50" width="50">
     DiscordCrypt
     <h3>End-To-End Message Encryption For Discord</h3>
     <h5>Technical Details Overview</h5>
@@ -38,6 +37,7 @@ Every algorithm used in this plugin is directly provided by NodeJS. The only thi
 
 * [Cipher Padding Modes](#message-padding)
 * [Scrypt Hashing Algorithm](https://en.wikipedia.org/wiki/Scrypt)
+* [Curve25519 Exchanges & Ed25519 Signatures](https://en.wikipedia.org/wiki/Curve25519)
 
 #### Ciphers
 
@@ -146,7 +146,7 @@ Diffie-Hellman keys with a much faster generation speed.
 The following key sizes in bits are supported:
 
 * 224 Bits ( `secp224k1: SECG curve over a 224 bit prime field.` )
-* 256 Bits ( `secp256k1: SECG curve over a 256 bit prime field.` )
+* 256 Bits ( `curve25519: NIST curve over a 256 bit prime field.` )
 * 384 Bits ( `secp384r1: NIST/SECG curve over a 384 bit prime field.` )
 * 409 Bits ( `sect409k1: NIST/SECG curve over a 409 bit binary field.` )
 * 521 Bits ( `secp521r1: NIST/SECG curve over a 521 bit prime field.` )
