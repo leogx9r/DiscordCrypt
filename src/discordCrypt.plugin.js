@@ -5874,9 +5874,10 @@ class discordCrypt {
             if ( _salt.length !== 8 )
                 _salt = Buffer.from( discordCrypt.whirlpool64( _salt, true ), 'hex' );
         }
-        else
-        /* Generate a random salt to derive the key and IV. */
+        else {
+            /* Generate a random salt to derive the key and IV. */
             _salt = crypto.randomBytes( 8 );
+        }
 
         /* Derive the key length and IV length. */
         _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
@@ -6228,9 +6229,10 @@ class discordCrypt {
             if ( _salt.length !== 8 )
                 _salt = Buffer.from( discordCrypt.whirlpool64( _salt, true ), 'hex' );
         }
-        else
-        /* Generate a random salt to derive the key and IV. */
+        else {
+            /* Generate a random salt to derive the key and IV. */
             _salt = crypto.randomBytes( 8 );
+        }
 
         /* Derive the key length and IV length. */
         _derived = discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
