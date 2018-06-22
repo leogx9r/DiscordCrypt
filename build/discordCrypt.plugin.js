@@ -42,6 +42,9 @@ class discordCrypt {
      * @property {Object} MessageActionTypes Internal message action types and constants for events.
      * @property {Object} MessageDispatcher Internal message dispatcher for pending queued messages.
      * @property {Object} MessageQueue Internal message Queue store for pending parsing.
+     * @property {Object} UserResolver Internal user resolver for retrieving all users known.
+     * @property {Object} GuildResolver Internal Guild resolver for retrieving a list of all guilds currently in.
+     * @property {Object} ChannelResolver Internal channel resolver for retrieving a list of all channels available.
      * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
      */
 
@@ -54,6 +57,9 @@ class discordCrypt {
      * @property {Object} MessageActionTypes Internal message action types and constants for events.
      * @property {Object} MessageDispatcher Internal message dispatcher for pending queued messages.
      * @property {Object} MessageQueue Internal message Queue store for pending parsing.
+     * @property {Object} UserResolver Internal user resolver for retrieving all users known.
+     * @property {Object} GuildResolver Internal Guild resolver for retrieving a list of all guilds currently in.
+     * @property {Object} ChannelResolver Internal channel resolver for retrieving a list of all channels available.
      * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
      */
 
@@ -422,14 +428,14 @@ class discordCrypt {
          * @type {string}
          */
         this.appCss =
-            `a#inbrowserbtn.btn{ display: none }.dc-overlay { position: fixed; font-family: monospace; display: none; width: 100%; height: 100%; left: 0; bottom: 0; right: 0; top: 0; z-index: 1000; cursor: default; transform: translateZ(0px); background: rgba(0, 0, 0, 0.85) !important;}.dc-password-field { width: 95%; margin: 10px; color: #ffffff; height: 10px; padding: 5px; background-color: #000000; border: 2px solid #3a71c1;}.dc-overlay-centerfield { position: absolute; top: 35%; left: 50%; font-size: 20px; color: #ffffff; padding: 16px; border-radius: 20px; background: rgba(0, 0, 0, 0.7); transform: translate(-50%, 50%);}.dc-overlay-main { overflow: hidden; position: absolute; left: 5%; right: 5%; top: 5%; bottom: 5%; width: 90%; height: 90%; border: 3px solid #3f3f3f; border-radius: 3px;}.dc-textarea { font-family: monospace; font-size: 12px; color: #ffffff; background: #000; overflow: auto; padding: 5px; resize: none; height: 100%; width: 100%; margin: 2px;}.dc-update-field { font-size: 14px; margin: 10px;}ul.dc-list { margin: 10px; padding: 5px; list-style-type: circle;}ul.dc-list > li { padding: 5px; }ul.dc-list-red { color: #ff0000; }.dc-overlay-main textarea { background: transparent !important; cursor: default; font-size: 12px; padding: 5px; margin-top: 10px; border-radius: 2px; resize: none; color: #8e8e8e; width: 70%; overflow-y: hidden; user-select: none;}.dc-overlay-main select { background-color: transparent; border-radius: 3px; font-size: 12px; color: #fff;}.dc-overlay-main select:hover { background-color: #000 !important; color: #fff;}.dc-input-field { font-family: monospace !important; background: #000 !important; color: #fff !important; font-size: 12px; width: 50%; margin-bottom: 10px; margin-top: -5px; margin-left: 10%;}.dc-input-label { font-family: monospace !important; color: #708090; min-width: 20%;}.dc-ruler-align { display: flex; margin: 10px;}.dc-code-block { font-family: monospace !important; font-size: 0.875rem; line-height: 1rem; overflow-x: visible; text-indent: 0; background: rgba(0,0,0,0.42)!important; color: hsla(0,0%,100%,0.7)!important; padding: 6px!important; position: relative;}.dc-overlay-main .tab { overflow: hidden; background-color: rgba(0, 0, 0, .9) !important; border-bottom: 3px solid #3f3f3f;}.dc-overlay-main .tab button { color: #008000; background-color: inherit; cursor: pointer; padding: 14px 14px; font-size: 14px; transition: 0.5s; font-family: monospace; border-radius: 3px; margin: 3px;}.dc-overlay-main .tab button:hover { background-color: #515c6b;}.dc-overlay-main .tab button.active { background-color: #1f1f2b;}.dc-overlay-main .tab-content { display: none; height: 95%; color: #9298a2; overflow: auto; padding: 10px 25px 5px; animation: fadeEffect 1s; background: rgba(0, 0, 0, 0.7) !important;}.dc-hint { font-size: 9px; display: block;}.dc-hint > p { margin: 0 0 0 30%;}.dc-svg { color: #fff; opacity: .6; margin: 0 4px; cursor: pointer; width: 24px; height: 24px;}.dc-svg:hover { color: #fff; opacity: .8;}.dc-button{ margin-right: 5px; margin-left: 5px; background-color: #7289da; color: #fff; align-items: center; border-radius: 3px; box-sizing: border-box; display: flex; font-size: 14px; width: auto; height: 32px; min-height: 32px; min-width: 60px; font-weight: 500; justify-content: center; line-height: 16px; padding: 2px 16px; position: relative; user-select: none;}.dc-button:hover{ background-color: #677bc4 !important; }.dc-button:active{ background-color: #5b6eae !important; }.dc-button-inverse{ color: #f04747; background: transparent !important; border: 1px solid rgba(240,71,71,.3); transition: color .17s ease,background-color .17s ease,border-color .17s ease;}.dc-button-inverse:hover{ border-color: rgba(240,71,71,.6); background: transparent !important;}.dc-button-inverse:active{ background-color: rgba(240,71,71,.1); }.stat-levels { box-shadow: inset 0 0 25px rgba(0,0,0,.5); margin: 5px auto 0 auto; height: 20px; padding: 15px; border: 1px solid #494a4e; border-radius: 10px; background: linear-gradient(#444549 0%, #343539 100%);}.stat-bar { background-color: #2a2b2f; box-shadow: inset 0 5px 15px rgba(0,0,0,.6); height: 8px; overflow: hidden; padding: 3px; border-radius: 3px; margin-bottom: 10px; margin-top: 10px; margin-left: 0;}.stat-bar-rating { border-radius: 4px; float: left; height: 100%; font-size: 12px; color: #ffffff; text-align: center; text-indent: -9999px; background-color: #3a71c1; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);}.stat-bar-rating { @include stat-bar(#cf3a02, #ff4500, top, bottom); }`;
+            `a#inbrowserbtn.btn{ display: none }.dc-overlay { position: fixed; font-family: monospace; display: none; width: 100%; height: 100%; left: 0; bottom: 0; right: 0; top: 0; z-index: 1000; cursor: default; transform: translateZ(0px); background: rgba(0, 0, 0, 0.85) !important;}.dc-scroll-table { margin-top: 20px; overflow: auto; height: 50%;}.dc-table { border: 1px solid lightgrey; padding: 5px; width: 100%;}.dc-table > thead { background: #d3d3d3; color: #000;}.dc-table > thead > tr > th { padding: 4px;}.dc-table > tbody > tr > td { text-align: center; padding: 2px;}.dc-table > tbody > tr > td > button { display: block; margin: auto;}.dc-password-field { width: 95%; margin: 10px; color: #ffffff; height: 10px; padding: 5px; background-color: #000000; border: 2px solid #3a71c1;}.dc-overlay-centerfield { position: absolute; top: 35%; left: 50%; font-size: 20px; color: #ffffff; padding: 16px; border-radius: 20px; background: rgba(0, 0, 0, 0.7); transform: translate(-50%, 50%);}.dc-overlay-main { overflow: hidden; position: absolute; left: 5%; right: 5%; top: 5%; bottom: 5%; width: 90%; height: 90%; border: 3px solid #3f3f3f; border-radius: 3px;}.dc-textarea { font-family: monospace; font-size: 12px; color: #ffffff; background: #000; overflow: auto; padding: 5px; resize: none; height: 100%; width: 100%; margin: 2px;}.dc-update-field { font-size: 14px; margin: 10px;}ul.dc-list { margin: 10px; padding: 5px; list-style-type: circle;}ul.dc-list > li { padding: 5px; }ul.dc-list-red { color: #ff0000; }.dc-overlay-main textarea { background: transparent !important; cursor: default; font-size: 12px; padding: 5px; margin-top: 10px; border-radius: 2px; resize: none; color: #8e8e8e; width: 70%; overflow-y: hidden; user-select: none;}.dc-overlay-main select { background-color: transparent; border-radius: 3px; font-size: 12px; color: #fff;}.dc-overlay-main select:hover { background-color: #000 !important; color: #fff;}.dc-input-field { font-family: monospace !important; background: #000 !important; color: #fff !important; font-size: 12px; width: 50%; margin-bottom: 10px; margin-top: -5px; margin-left: 10%;}.dc-input-label { font-family: monospace !important; color: #708090; min-width: 20%;}.dc-ruler-align { display: flex; margin: 10px;}.dc-code-block { font-family: monospace !important; font-size: 0.875rem; line-height: 1rem; overflow-x: visible; text-indent: 0; background: rgba(0,0,0,0.42)!important; color: hsla(0,0%,100%,0.7)!important; padding: 6px!important; position: relative;}.dc-overlay-main .tab { overflow: hidden; background-color: rgba(0, 0, 0, .9) !important; border-bottom: 3px solid #3f3f3f;}.dc-overlay-main .tab button { color: #008000; background-color: inherit; cursor: pointer; padding: 14px 14px; font-size: 14px; transition: 0.5s; font-family: monospace; border-radius: 3px; margin: 3px;}.dc-overlay-main .tab button:hover { background-color: #515c6b;}.dc-overlay-main .tab button.active { background-color: #1f1f2b;}.dc-overlay-main .tab-content { display: none; height: 95%; color: #9298a2; overflow: auto; padding: 10px 25px 5px; animation: fadeEffect 1s; background: rgba(0, 0, 0, 0.7) !important;}.dc-hint { font-size: 9px; display: block;}.dc-hint > p { margin: 0 0 0 30%;}.dc-svg { color: #fff; opacity: .6; margin: 0 4px; cursor: pointer; width: 24px; height: 24px;}.dc-svg:hover { color: #fff; opacity: .8;}.dc-button{ margin-right: 5px; margin-left: 5px; background-color: #7289da; color: #fff; align-items: center; border-radius: 3px; box-sizing: border-box; display: flex; font-size: 14px; width: auto; height: 32px; min-height: 32px; min-width: 60px; font-weight: 500; justify-content: center; line-height: 16px; padding: 2px 16px; position: relative; user-select: none;}.dc-button-small{ height: 20px !important; min-height: 20px !important; font-size: 10px;}.dc-button:hover{ background-color: #677bc4 !important; }.dc-button:active{ background-color: #5b6eae !important; }.dc-button-inverse{ color: #f04747; background: transparent !important; border: 1px solid rgba(240,71,71,.3); transition: color .17s ease,background-color .17s ease,border-color .17s ease;}.dc-button-inverse:hover{ border-color: rgba(240,71,71,.6); background: transparent !important;}.dc-button-inverse:active{ background-color: rgba(240,71,71,.1); }.stat-levels { box-shadow: inset 0 0 25px rgba(0,0,0,.5); margin: 5px auto 0 auto; height: 20px; padding: 15px; border: 1px solid #494a4e; border-radius: 10px; background: linear-gradient(#444549 0%, #343539 100%);}.stat-bar { background-color: #2a2b2f; box-shadow: inset 0 5px 15px rgba(0,0,0,.6); height: 8px; overflow: hidden; padding: 3px; border-radius: 3px; margin-bottom: 10px; margin-top: 10px; margin-left: 0;}.stat-bar-rating { border-radius: 4px; float: left; height: 100%; font-size: 12px; color: #ffffff; text-align: center; text-indent: -9999px; background-color: #3a71c1; box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);}.stat-bar-rating { @include stat-bar(#cf3a02, #ff4500, top, bottom); }`;
 
         /**
          * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
          * @type {string}
          */
         this.toolbarHtml =
-            `<button type="button" id="dc-clipboard-upload-btn" style="background-color: transparent;"  title="Upload Encrypted Clipboard"> <svg x="0px" y="0px" width="30" height="30" viewBox="0 0 18 18" class="dc-svg">  <path fill="lightgrey"     d="M13 4h-3v-4h-10v14h6v2h10v-9l-3-3zM3 1h4v1h-4v-1zM15       15h-8v-10h5v3h3v7zM13 7v-2l2 2h-2z"/> </svg></button><button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File"> <svg class="dc-svg" width="24" height="24" viewBox="0 0 1792 1792" fill="lightgrey">  <path d="M768 384v-128h-128v128h128zm128 128v-128h-128v128h128zm-128      128v-128h-128v128h128zm128 128v-128h-128v128h128zm700-388q28 28 48       76t20 88v1152q0 40-28 68t-68 28h-1344q-40 0-68-28t-28-68v-1600q0-40 28-68t68-28h896q40       0 88 20t76 48zm-444-244v376h376q-10-29-22-41l-313-313q-12-12-41-22zm384 1528v-1024h-416q-40       0-68-28t-28-68v-416h-128v128h-128v-128h-512v1536h1280zm-627-721l107 349q8 27 8 52 0 83-72.5       137.5t-183.5 54.5-183.5-54.5-72.5-137.5q0-25 8-52 21-63 120-396v-128h128v128h79q22 0 39       13t23 34zm-141 465q53 0 90.5-19t37.5-45-37.5-45-90.5-19-90.5 19-37.5 45 37.5 45 90.5 19z">  </path> </svg></button><button type="button" id="dc-settings-btn" style="background-color: transparent;"  title="DiscordCrypt Settings"> <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32"    width="20px" height="20px" xml:space="preserve">     <g>      <path fill="lightgrey" d="M28,10H18v2h10V10z M14,10H4v10h10V10z M32,0H0v28h15.518c1.614,2.411,      4.361,3.999,7.482,4c4.971-0.002,8.998-4.029,9-9         c0-0.362-0.027-0.718-0.069-1.069L32,22V0z M10,2h12v2H10V2z M6,2h2v2H6V2z M2,2h2v2H2V2z       M23,29.883         c-3.801-0.009-6.876-3.084-6.885-6.883c0.009-3.801,3.084-6.876,6.885-6.885c3.799,0.009,6.874,      3.084,6.883,6.885         C29.874,26.799,26.799,29.874,23,29.883z M29.999,      17.348c-0.57-0.706-1.243-1.324-1.999-1.83V14h-4.99c-0.003,0-0.007,0-0.01,0         s-0.007,0-0.01,0H18v1.516c-2.412,1.614-4,4.361-4,7.483c0,1.054,0.19,2.061,0.523,      3H2V6h27.999V17.348z M30,4h-4V2h4V4z"/>      <path fill="lightgrey" d="M28,      24v-2.001h-1.663c-0.063-0.212-0.145-0.413-0.245-0.606l1.187-1.187l-1.416-1.415l-1.165,1.166         c-0.22-0.123-0.452-0.221-0.697-0.294V18h-2v1.662c-0.229,0.068-0.446,0.158-0.652,      0.27l-1.141-1.14l-1.415,1.415l1.14,1.14         c-0.112,0.207-0.202,0.424-0.271,0.653H18v2h1.662c0.073,0.246,0.172,0.479,      0.295,0.698l-1.165,1.163l1.413,1.416l1.188-1.187         c0.192,0.101,0.394,0.182,0.605,0.245V28H24v-1.665c0.229-0.068,0.445-0.158,      0.651-0.27l1.212,1.212l1.414-1.416l-1.212-1.21         c0.111-0.206,0.201-0.423,0.27-0.651H28z M22.999,      24.499c-0.829-0.002-1.498-0.671-1.501-1.5c0.003-0.829,0.672-1.498,1.501-1.501         c0.829,0.003,1.498,0.672,1.5,1.501C24.497,23.828,23.828,24.497,22.999,24.499z"/>     </g>    </svg></button><button type="button" id="dc-lock-btn" style="background-color: transparent;"/><button type="button" id="dc-passwd-btn" style="background-color: transparent;" title="Password Settings"> <svg class="dc-svg" version="1.1" viewBox="0 0 32 32" width="20px" height="20px">  <g fill="none" fill-rule="evenodd" stroke="none" stroke-width="1">   <g fill="lightgrey">    <path d="M13.008518,22 L11.508518,23.5 L11.508518,23.5 L14.008518,26 L11.008518,       29 L8.50851798,26.5 L6.63305475,28.3754632 C5.79169774,29.2168202        4.42905085,29.2205817 3.5909158,28.3824466 L3.62607133,28.4176022 C2.78924,27.5807709        2.79106286,26.2174551 3.63305475,25.3754632 L15.7904495,13.2180685        C15.2908061,12.2545997 15.008518,11.1602658 15.008518,10 C15.008518,6.13400656 18.1425245,        3 22.008518,3 C25.8745114,3         29.008518,6.13400656 29.008518,10 C29.008518,13.8659934 25.8745114,17 22.008518,        17 C20.8482521,17 19.7539183,16.7177118 18.7904495,16.2180685         L18.7904495,16.2180685 L16.008518,19 L18.008518,21 L15.008518,24 L13.008518,22 L13.008518,        22 L13.008518,22 Z M22.008518,14 C24.2176571,14         26.008518,12.2091391 26.008518,10 C26.008518,7.79086089 24.2176571,6 22.008518,        6 C19.7993789,6 18.008518,7.79086089 18.008518,10 C18.008518,12.2091391         19.7993789,14 22.008518,14 L22.008518,14 Z" id="key"/>   </g>  </g> </svg></button><button type="button" id="dc-exchange-btn" style="background-color: transparent;" title="Key Exchange Menu"> <svg class="dc-svg" version="1.1" viewBox="0 0 78 78" width="20px" height="20px">  <path d="M72,4.5H6c-3.299,0-6,2.699-6,6V55.5c0,3.301,2.701,6,6,6h66c3.301,0,6-2.699,6-6V10.5     C78,7.2,75.301,4.5,72,4.5z M72,50.5H6V10.5h66V50.5z      M52.5,67.5h-27c-1.66,0-3,1.341-3,3v3h33v-3C55.5,68.84,54.16,67.5,52.5,67.5z        M26.991,36.5H36v-12h-9.009v-6.729L15.264,30.5l11.728,12.728V36.5z      M50.836,43.228L62.563,30.5L50.836,17.771V24.5h-9.009v12  h9.009V43.228z" style="fill:#d3d3d3;"/> </svg></button><button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;"  title="Generate & Send New Public Key"> <svg class="dc-svg iconActive-AKd_jq icon-1R19_H iconMargin-2YXk4F" x="0px" y="0px" viewBox="0 0 58 58">  <path style="fill:#d3d3d3;"     d="M27.767,26.73c-2.428-2.291-3.766-5.392-3.766-8.729c0-6.617,5.383-12,12-12s12,5.383,12,12     c0,3.288-1.372,6.469-3.765,8.728l-1.373-1.455c2.023-1.909,     3.138-4.492,3.138-7.272c0-5.514-4.486-10-10-10s-10,4.486-10,10       c0,2.781,1.114,5.365,3.139,7.274L27.767,26.73z"/>  <path style="fill:#d3d3d3;" d="M56.428,38.815c-0.937-0.695-2.188-0.896-3.435-0.55l-15.29,4.227     C37.891,42.028,38,41.522,38,     40.991c0-2.2-1.794-3.991-3.999-3.991h-9.377c-0.667-1-2.363-4-4.623-4H16v-0.999       C16,30.347,14.654,29,13,29H9c-1.654,0-3,1.347-3,3v17C6,50.655,7.346,52,9,52h4c1.654,0,     3-1.345,3-2.999v-0.753l12.14,8.201       c1.524,1.031,3.297,1.55,5.075,1.55c1.641,0,3.286-0.441,4.742-1.33l18.172-11.101C57.283,     44.864,58,43.587,58,42.233v-0.312       C58,40.688,57.427,39.556,56.428,38.815z M14,49C14,49.553,13.552,     50,13,50h-1v-4h-2v4H9c-0.552,0-1-0.447-1-0.999v-17       C8,31.449,8.448,31,9,31h4c0.552,0,1,0.449,1,1V49z M56,42.233c0,0.66-0.35,1.284-0.913,     1.628L36.915,54.962       c-2.367,1.443-5.37,1.376-7.655-0.17L16,45.833V35h4c1.06,0,2.469,2.034,3.088,3.409L23.354,39h10.646       C35.104,39,36,39.892,36,40.988C36,42.098,35.104,43,34,43H29h-5v2h5h5h2l17.525-4.807c0.637-0.18,     1.278-0.094,1.71,0.228       C55.722,40.781,56,41.328,56,41.922V42.233z"/>  <path style="fill:#d3d3d3;" d="M33,25.394v6.607C33,33.655,     34.347,35,36,35H38h1h4v-2h-4v-2h2v-2h-2v-3.577       c3.02-1.186,5-4.079,5-7.422c0-2.398-1.063-4.649-2.915-6.177c-1.85-1.524-4.283-2.134-6.683-1.668       c-3.155,0.614-5.671,3.153-6.261,6.318C27.39,20.523,29.933,24.041,33,     25.394z M30.108,16.84c0.44-2.364,2.319-4.262,4.677-4.721       c1.802-0.356,3.639,0.104,5.028,1.249S42,     16.202,42,18c0,2.702-1.719,5.011-4.276,5.745L37,23.954V33h-0.999       C35.449,33,35,32.553,35,32v-8.02l-0.689-0.225C31.822,22.943,29.509,20.067,30.108,16.84z"/>  <path d="M36,22c2.206,0,4-1.794,4-4s-1.794-4-4-4s-4,1.794-4,4S33.795,22,36,22z     M36,16c1.103,0,2,0.897,2,2s-0.897,2-2,2s-2-0.897-2-2S34.898,16,36,16z"/>  <circle style="fill:#d3d3d3;" cx="36" cy="18" r="3"/> </svg></button>`;
+            `<button type="button" id="dc-clipboard-upload-btn" style="background-color: transparent;" title="Upload Encrypted Clipboard"> <svg x="0px" y="0px" width="30" height="30" viewBox="0 0 18 18" class="dc-svg">  <path fill="lightgrey" d="M13 4h-3v-4h-10v14h6v2h10v-9l-3-3zM3 1h4v1h-4v-1zM15   15h-8v-10h5v3h3v7zM13 7v-2l2 2h-2z"/> </svg></button><button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File"> <svg class="dc-svg" width="24" height="24" viewBox="0 0 1792 1792" fill="lightgrey">  <path d="M768 384v-128h-128v128h128zm128 128v-128h-128v128h128zm-128   128v-128h-128v128h128zm128 128v-128h-128v128h128zm700-388q28 28 48   76t20 88v1152q0 40-28 68t-68 28h-1344q-40 0-68-28t-28-68v-1600q0-40 28-68t68-28h896q40   0 88 20t76 48zm-444-244v376h376q-10-29-22-41l-313-313q-12-12-41-22zm384 1528v-1024h-416q-40   0-68-28t-28-68v-416h-128v128h-128v-128h-512v1536h1280zm-627-721l107 349q8 27 8 52 0 83-72.5   137.5t-183.5 54.5-183.5-54.5-72.5-137.5q0-25 8-52 21-63 120-396v-128h128v128h79q22 0 39   13t23 34zm-141 465q53 0 90.5-19t37.5-45-37.5-45-90.5-19-90.5 19-37.5 45 37.5 45 90.5 19z">  </path> </svg></button><button type="button" id="dc-settings-btn" style="background-color: transparent;" title="DiscordCrypt Settings"> <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32"  width="20px" height="20px" xml:space="preserve">  <g>   <path fill="lightgrey" d="M28,10H18v2h10V10z M14,10H4v10h10V10z M32,0H0v28h15.518c1.614,2.411,    4.361,3.999,7.482,4c4.971-0.002,8.998-4.029,9-9    c0-0.362-0.027-0.718-0.069-1.069L32,22V0z M10,2h12v2H10V2z M6,2h2v2H6V2z M2,2h2v2H2V2z    M23,29.883    c-3.801-0.009-6.876-3.084-6.885-6.883c0.009-3.801,3.084-6.876,6.885-6.885c3.799,0.009,6.874,    3.084,6.883,6.885    C29.874,26.799,26.799,29.874,23,29.883z M29.999,    17.348c-0.57-0.706-1.243-1.324-1.999-1.83V14h-4.99c-0.003,0-0.007,0-0.01,0    s-0.007,0-0.01,0H18v1.516c-2.412,1.614-4,4.361-4,7.483c0,1.054,0.19,2.061,0.523,    3H2V6h27.999V17.348z M30,4h-4V2h4V4z"/>   <path fill="lightgrey" d="M28,    24v-2.001h-1.663c-0.063-0.212-0.145-0.413-0.245-0.606l1.187-1.187l-1.416-1.415l-1.165,1.166    c-0.22-0.123-0.452-0.221-0.697-0.294V18h-2v1.662c-0.229,0.068-0.446,0.158-0.652,    0.27l-1.141-1.14l-1.415,1.415l1.14,1.14    c-0.112,0.207-0.202,0.424-0.271,0.653H18v2h1.662c0.073,0.246,0.172,0.479,    0.295,0.698l-1.165,1.163l1.413,1.416l1.188-1.187    c0.192,0.101,0.394,0.182,0.605,0.245V28H24v-1.665c0.229-0.068,0.445-0.158,    0.651-0.27l1.212,1.212l1.414-1.416l-1.212-1.21    c0.111-0.206,0.201-0.423,0.27-0.651H28z M22.999,    24.499c-0.829-0.002-1.498-0.671-1.501-1.5c0.003-0.829,0.672-1.498,1.501-1.501    c0.829,0.003,1.498,0.672,1.5,1.501C24.497,23.828,23.828,24.497,22.999,24.499z"/>  </g> </svg></button><button type="button" id="dc-lock-btn" style="background-color: transparent;"/><button type="button" id="dc-passwd-btn" style="background-color: transparent;" title="Password Settings"> <svg class="dc-svg" version="1.1" viewBox="0 0 32 32" width="20px" height="20px">  <g fill="none" fill-rule="evenodd" stroke="none" stroke-width="1">   <g fill="lightgrey">    <path d="M13.008518,22 L11.508518,23.5 L11.508518,23.5 L14.008518,26 L11.008518,     29 L8.50851798,26.5 L6.63305475,28.3754632 C5.79169774,29.2168202     4.42905085,29.2205817 3.5909158,28.3824466 L3.62607133,28.4176022 C2.78924,27.5807709     2.79106286,26.2174551 3.63305475,25.3754632 L15.7904495,13.2180685     C15.2908061,12.2545997 15.008518,11.1602658 15.008518,10 C15.008518,6.13400656 18.1425245,     3 22.008518,3 C25.8745114,3     29.008518,6.13400656 29.008518,10 C29.008518,13.8659934 25.8745114,17 22.008518,     17 C20.8482521,17 19.7539183,16.7177118 18.7904495,16.2180685     L18.7904495,16.2180685 L16.008518,19 L18.008518,21 L15.008518,24 L13.008518,22 L13.008518,     22 L13.008518,22 Z M22.008518,14 C24.2176571,14     26.008518,12.2091391 26.008518,10 C26.008518,7.79086089 24.2176571,6 22.008518,     6 C19.7993789,6 18.008518,7.79086089 18.008518,10 C18.008518,12.2091391     19.7993789,14 22.008518,14 L22.008518,14 Z" id="key"/>   </g>  </g> </svg></button><button type="button" id="dc-exchange-btn" style="background-color: transparent;" title="Key Exchange Menu"> <svg class="dc-svg" version="1.1" viewBox="0 0 78 78" width="20px" height="20px">  <path d="M72,4.5H6c-3.299,0-6,2.699-6,6V55.5c0,3.301,2.701,6,6,6h66c3.301,0,6-2.699,6-6V10.5   C78,7.2,75.301,4.5,72,4.5z M72,50.5H6V10.5h66V50.5z   M52.5,67.5h-27c-1.66,0-3,1.341-3,3v3h33v-3C55.5,68.84,54.16,67.5,52.5,67.5z   M26.991,36.5H36v-12h-9.009v-6.729L15.264,30.5l11.728,12.728V36.5z   M50.836,43.228L62.563,30.5L50.836,17.771V24.5h-9.009v12  h9.009V43.228z" style="fill:#d3d3d3;"/> </svg></button><button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;"  title="Generate & Send New Public Key"> <svg class="dc-svg iconActive-AKd_jq icon-1R19_H iconMargin-2YXk4F"   x="0px" y="0px" viewBox="0 0 58 58" width="20px" height="20px">  <path style="fill:#d3d3d3;"     d="M27.767,26.73c-2.428-2.291-3.766-5.392-3.766-8.729c0-6.617,5.383-12,12-12s12,5.383,12,12   c0,3.288-1.372,6.469-3.765,8.728l-1.373-1.455c2.023-1.909,   3.138-4.492,3.138-7.272c0-5.514-4.486-10-10-10s-10,4.486-10,10   c0,2.781,1.114,5.365,3.139,7.274L27.767,26.73z"/>  <path style="fill:#d3d3d3;"     d="M56.428,38.815c-0.937-0.695-2.188-0.896-3.435-0.55l-15.29,4.227   C37.891,42.028,38,41.522,38,   40.991c0-2.2-1.794-3.991-3.999-3.991h-9.377c-0.667-1-2.363-4-4.623-4H16v-0.999   C16,30.347,14.654,29,13,29H9c-1.654,0-3,1.347-3,3v17C6,50.655,7.346,52,9,52h4c1.654,0,   3-1.345,3-2.999v-0.753l12.14,8.201   c1.524,1.031,3.297,1.55,5.075,1.55c1.641,0,3.286-0.441,4.742-1.33l18.172-11.101C57.283,   44.864,58,43.587,58,42.233v-0.312   C58,40.688,57.427,39.556,56.428,38.815z M14,49C14,49.553,13.552,   50,13,50h-1v-4h-2v4H9c-0.552,0-1-0.447-1-0.999v-17   C8,31.449,8.448,31,9,31h4c0.552,0,1,0.449,1,1V49z M56,42.233c0,0.66-0.35,1.284-0.913,   1.628L36.915,54.962   c-2.367,1.443-5.37,1.376-7.655-0.17L16,45.833V35h4c1.06,0,2.469,2.034,3.088,3.409L23.354,39h10.646   C35.104,39,36,39.892,36,40.988C36,42.098,35.104,43,34,43H29h-5v2h5h5h2l17.525-4.807c0.637-0.18,   1.278-0.094,1.71,0.228   C55.722,40.781,56,41.328,56,41.922V42.233z"/>  <path style="fill:#d3d3d3;" d="M33,25.394v6.607C33,33.655,   34.347,35,36,35H38h1h4v-2h-4v-2h2v-2h-2v-3.577   c3.02-1.186,5-4.079,5-7.422c0-2.398-1.063-4.649-2.915-6.177c-1.85-1.524-4.283-2.134-6.683-1.668   c-3.155,0.614-5.671,3.153-6.261,6.318C27.39,20.523,29.933,24.041,33,   25.394z M30.108,16.84c0.44-2.364,2.319-4.262,4.677-4.721   c1.802-0.356,3.639,0.104,5.028,1.249S42,   16.202,42,18c0,2.702-1.719,5.011-4.276,5.745L37,23.954V33h-0.999   C35.449,33,35,32.553,35,32v-8.02l-0.689-0.225C31.822,22.943,29.509,20.067,30.108,16.84z"/>  <path d="M36,22c2.206,0,4-1.794,4-4s-1.794-4-4-4s-4,1.794-4,4S33.795,22,36,22z   M36,16c1.103,0,2,0.897,2,2s-0.897,2-2,2s-2-0.897-2-2S34.898,16,36,16z"/>  <circle style="fill:#d3d3d3;" cx="36" cy="18" r="3"/> </svg></button>`;
 
         /**
          * @desc Contains the raw HTML injected into the overlay to prompt for the master password for database
@@ -444,7 +450,7 @@ class discordCrypt {
          * @type {string}
          */
         this.settingsMenuHtml =
-            `<div id="dc-overlay" class="dc-overlay"> <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">  <div class="dc-ruler-align">   <input type="text" class="dc-input-field" id="dc-file-path"       style="width: 100%;padding: 2px;margin-left: 4px;" readonly title="File Path"/>   <button class="dc-button dc-button-inverse" type="button" id="dc-select-file-path-btn"     style="top: -8px;"> . . .</button>  </div>  <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea"      placeholder="Enter any addition text to send with your message ..." maxlength="1820"></textarea>  <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">   <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox"       title="Add Deletion Link">   <span style="margin-top: 5px;">Send Deletion Link</span>  </div>  <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">   <input id="dc-file-name-random-checkbox" class="ui-switch-checkbox" type="checkbox" checked       title="Use Random File Name">   <span style="margin-top: 5px;">Randomize File Name</span>  </div>  <div class="stat stat-bar">   <span id = "dc-file-upload-status" class="stat-bar-rating" style="width: 0;"/>  </div>  <div class="dc-ruler-align">   <button class="dc-button" style="width:100%;" id="dc-file-upload-btn">Upload</button>  </div>  <div class="dc-ruler-align">   <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">    Close</button>  </div> </div> <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">  <span>Primary Password:</span>  <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>  <span>Secondary Password:</span>  <input type="password" class="dc-password-field" id="dc-password-secondary" placeholder="..."/><br/>  <div class="dc-ruler-align">   <button class="dc-button" id="dc-save-pwd">Update Passwords</button>   <button class="dc-button dc-button-inverse" id="dc-reset-pwd">Reset Passwords</button>   <button class="dc-button dc-button-inverse" id="dc-cancel-btn">Cancel</button>  </div>  <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">   Copy Current Passwords</button> </div> <div id="dc-update-overlay" class="dc-overlay-centerfield"   style="top: 5%;border: 1px solid;display: none">  <span>DiscordCrypt: Update Available</span>  <div class="dc-ruler-align">   <strong class="dc-update-field" id="dc-new-version"/>  </div>  <div class="dc-ruler-align">   <strong class="dc-update-field" id="dc-old-version"/>  </div>  <div class="dc-ruler-align">   <strong class="dc-update-field">Changelog:</strong></div>  <div class="dc-ruler-align">   <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly title="Update Changes"/>  </div>  <br>  <div class="dc-ruler-align">   <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">    Restart Discord Now</button>   <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">    Restart Discord Later</button>  </div> </div> <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">  <div class="tab" id="dc-settings-tab">   <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>  </div>  <div class="tab-content" id="dc-settings" style="display: block;">   <p style="text-align: center;">    <b>DiscordCrypt Settings</b>   </p>   <br/><br/>   <div class="dc-ruler-align">    <div class="dc-input-label">Primary Cipher:</div>    <select class="dc-input-field" id="dc-primary-cipher" title="Primary Cipher">     <option value="bf" selected>Blowfish ( 512-Bit )</option>     <option value="aes">AES ( 256-Bit )</option>     <option value="camel">Camellia ( 256-Bit )</option>     <option value="tdes">TripleDES ( 192-Bit )</option>     <option value="idea">IDEA ( 128-Bit )</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Secondary Cipher:</div>    <select class="dc-input-field" id="dc-secondary-cipher" title="Secondary Cipher">     <option value="bf">Blowfish ( 512-Bit )</option>     <option value="aes">AES ( 256-Bit )</option>     <option value="camel">Camellia ( 256-Bit )</option>     <option value="idea">IDEA ( 256-Bit )</option>     <option value="tdes">TripleDES ( 192-Bit )</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Cipher Padding Mode:</div>    <select class="dc-input-field" id="dc-settings-padding-mode" title="Cipher Padding Scheme">     <option value="pkc7">PKCS #7</option>     <option value="ans2">ANSI X9.23</option>     <option value="iso1">ISO 10126</option>     <option value="iso9">ISO 97971</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Cipher Block Operation Mode:</div>    <select class="dc-input-field" id="dc-settings-cipher-mode" title="Cipher Block Operation Mode">     <option value="cbc">Cipher Block Chaining</option>     <option value="cfb">Cipher Feedback Mode</option>     <option value="ofb">Output Feedback Mode</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Default Encryption Password:</div>    <input type="text" class="dc-input-field" id="dc-settings-default-pwd"        title="Default Encryption Password"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Scanning Frequency:</div>    <input type="text" class="dc-input-field" id="dc-settings-scan-delay"        title="Scanning Frequency"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Message Trigger:</div>    <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger" title="Message Trigger"/>   </div>   <div class="dc-hint">    <p>The suffix at the end of a typed message to indicate whether to encrypt the text.</p>    <p>Example: <u>This message will be encrypted.|ENC</u></p>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Timed Message Expiration:</div>    <input type="number" class="dc-input-field" id="dc-settings-timed-expire"        title="Timed Message Expiration"/>   </div>   <div class="dc-hint">    <p>This indicates how long after an encrypted message is sent, should it be deleted in minutes.</p>    <p><u>Set this to "0" to disable timed messages.</u></p>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">New Master Database Password:</div>    <input type="text" class="dc-input-field" id="dc-master-password"        title="New Master Database Password"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Use Embedded Messages:</div>    <input type="checkbox" class="dc-input-field" id="dc-embed-enabled"        title="Use Embedded Messages"/>   </div>   <div class="dc-hint">    <p>If enabled, send all encrypted messages using embeds.</p>    <p>     <b style="color: #f00">WARNING:</b>     <b> Using this option may result in your embedded permissions being globally revoked.</b>    </p>   </div>   <div class="dc-ruler-align">    <button id="dc-settings-save-btn" class="dc-button">Save & Apply</button>    <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">     Reset Settings</button>   </div>   <br/><br/><br/><br/>  </div> </div> <div id="dc-overlay-exchange" class="dc-overlay-main" style="display: none;">  <div class="tab" id="dc-exchange-tab">   <button class='dc-tab-link' id="dc-tab-info-btn">Info</button>   <button class='dc-tab-link' id="dc-tab-keygen-btn">Key Generation</button>   <button class='dc-tab-link' id="dc-tab-handshake-btn">Secret Computation</button>   <button class='dc-tab-link' id="dc-exit-exchange-btn" style="float:right;">[ X ]</button>  </div>  <div class="tab-content" id="dc-about-tab" style="display: block;">   <p style="text-align: center;">    <b>Key Exchanger</b>   </p>   <br/>   <strong>What is this used for?</strong>   <ul class="dc-list">    <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt     requires a secure channel to exchange these keys.</li>    <li>Using this generator, you may create new keys using standard algorithms such as     DH or ECDH for manual handshaking.</li>    <li>Follow the steps below and you can generate a password between channels or users     while being able to publicly post the messages.</li>    <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with     the Scrypt KDF function to derive two keys.</li>   </ul>   <br/>   <strong>How do I use this?</strong>   <ul class="dc-list">    <li>Generate a key pair using the specified algorithm and key size on the     "Key Generation" tab.</li>    <li>Give your partner your public key by clicking the "Send Public Key" button.</li>    <li>Ask your partner to give you their public key using the same step above.</li>    <li>Copy your partner's public key and paste it in the "Secret Computation" tab and     select "Compute Secret Keys".</li>    <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span>     the primary and secondary keys to be generated.</li>    <li>A status bar is provided to easily tell you when both passwords     have been generated.</li>    <li>Click the "Apply Generated Passwords" button to apply both passwords to     the current user or channel.</li>   </ul>   <strong>Algorithms Supported:</strong>   <ul class="dc-list">    <li>     <a title="Diffie–Hellman key exchange"        href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"        target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>    </li>    <li>     <a title="Elliptic curve Diffie–Hellman"        href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman"        target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>    </li>   </ul>   <span style="text-decoration: underline; color: #ff0000;">       <strong>DO NOT:</strong>      </span>   <ul class="dc-list dc-list-red">    <li>     <strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong>    </li>    <li>     <strong>Alter your public key or have your partner alter theirs in any way.</strong>    </li>    <li>     <strong>Insert a random public key.</strong>    </li>   </ul>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-keygen-tab" style="display: block;">   <p style="text-align: center;">    <b style="font-size: large;">Secure Key Generation</b>   </p>   <br/>   <strong>Exchange Algorithm:</strong>   <select id="dc-keygen-method" title="Exchange Algorithm">    <option value="dh" selected>Diffie-Hellman</option>    <option value="ecdh">Elliptic-Curve Diffie-Hellman</option>   </select>   <br/><br/>   <strong>Key Length ( Bits ):</strong>   <select id="dc-keygen-algorithm" title="Key Length">    <option value="768">768</option>    <option value="1024">1024</option>    <option value="1536">1536</option>    <option value="2048">2048</option>    <option value="3072">3072</option>    <option value="4096">4096</option>    <option value="6144">6144</option>    <option value="8192" selected>8192</option>   </select>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-keygen-gen-btn" class="dc-button">Generate</button>    <button id="dc-keygen-clear-btn" class="dc-button dc-button-inverse">Clear</button>   </div>   <br/><br/><br/>   <strong>Private Key: (    <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span>    )</strong><br/>   <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"       unselectable="on" disabled readonly title="Private Key"/>   <br/><br/>   <strong>Public Key:</strong><br/>   <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192"       unselectable="on" disabled readonly title="Public Key"/>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-keygen-send-pub-btn" class="dc-button">Send Public Key</button>   </div>   <br/>   <ul class="dc-list dc-list-red">    <li>Never rely on copying these keys. Use the "Send Public Key" button     to send your key.</li>    <li>Public keys are automatically encoded with a random salts.</li>    <li>Posting these keys directly won't work since they aren't encoded     in the format required.</li>   </ul>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-handshake-tab">   <p style="text-align: center;">    <b style="font-size: large;">Key Derivation</b>   </p>   <br/>   <p>    <span style="text-decoration: underline; color: #ff0000;">     <strong>NOTE:</strong>    </span>   </p>   <ul class="dc-list dc-list-red">    <li>Copy your partner's private key EXACTLY as it was posted.</li>    <li>Your last generated private key from the "Key Generation" tab     will be used to compute these keys.</li>   </ul>   <br/>   <strong>Partner's Public Key:</strong><br/>   <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384" title="Partner's Public Key"/>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">     Paste From Clipboard</button>    <button id="dc-handshake-compute-btn" class="dc-button">Compute Secret Keys</button>   </div>   <ul class="dc-list dc-list-red">    <li id="dc-handshake-algorithm">...</li>    <li id="dc-handshake-salts">...</li>    <li id="dc-handshake-secret">...</li>   </ul>   <br/>   <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>   <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"       style="max-height: 14px;user-select: none;" unselectable="on" disabled       title="Primary Secret"/>   <br/><br/>   <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>   <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"       style="max-height: 14px;user-select: none;" unselectable="on" disabled       title="Secondary Secret"/>   <br/><br/>   <div class="stat stat-bar" style="width:70%;">    <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>   </div><br/>   <div class="dc-ruler-align">    <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">     Copy Keys & Nuke</button>    <button id="dc-handshake-apply-keys-btn" class="dc-button">     Apply Generated Passwords</button>   </div>   <br/><br/><br/><br/>  </div> </div></div>`;
+            `<div id="dc-overlay" class="dc-overlay"> <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">  <div class="dc-ruler-align">   <input type="text" class="dc-input-field" id="dc-file-path"       style="width: 100%;padding: 2px;margin-left: 4px;" readonly title="File Path"/>   <button class="dc-button dc-button-inverse" type="button" id="dc-select-file-path-btn"     style="top: -8px;"> . . .</button>  </div>  <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea"      placeholder="Enter any addition text to send with your message ..." maxlength="1820"></textarea>  <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">   <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox"       title="Add Deletion Link">   <span style="margin-top: 5px;">Send Deletion Link</span>  </div>  <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">   <input id="dc-file-name-random-checkbox" class="ui-switch-checkbox" type="checkbox" checked       title="Use Random File Name">   <span style="margin-top: 5px;">Randomize File Name</span>  </div>  <div class="stat stat-bar">   <span id = "dc-file-upload-status" class="stat-bar-rating" style="width: 0;"/>  </div>  <div class="dc-ruler-align">   <button class="dc-button" style="width:100%;" id="dc-file-upload-btn">Upload</button>  </div>  <div class="dc-ruler-align">   <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">    Close</button>  </div> </div> <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">  <span>Primary Password:</span>  <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>  <span>Secondary Password:</span>  <input type="password" class="dc-password-field" id="dc-password-secondary" placeholder="..."/><br/>  <div class="dc-ruler-align">   <button class="dc-button" id="dc-save-pwd">Update Passwords</button>   <button class="dc-button dc-button-inverse" id="dc-reset-pwd">Reset Passwords</button>   <button class="dc-button dc-button-inverse" id="dc-cancel-btn">Cancel</button>  </div>  <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">   Copy Current Passwords</button> </div> <div id="dc-update-overlay" class="dc-overlay-centerfield"   style="top: 5%;border: 1px solid;display: none">  <span>DiscordCrypt: Update Available</span>  <div class="dc-ruler-align">   <strong class="dc-update-field" id="dc-new-version"/>  </div>  <div class="dc-ruler-align">   <strong class="dc-update-field" id="dc-old-version"/>  </div>  <div class="dc-ruler-align">   <strong class="dc-update-field">Changelog:</strong></div>  <div class="dc-ruler-align">   <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly title="Update Changes ..."/>  </div>  <br>  <div class="dc-ruler-align">   <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">    Restart Discord Now</button>   <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">    Restart Discord Later</button>  </div> </div> <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">  <div class="tab" id="dc-settings-tab">   <button class='dc-tab-link' id="dc-plugin-settings-btn">Plugin Settings</button>   <button class='dc-tab-link' id="dc-database-settings-btn">Database Settings</button>   <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>  </div>  <div class="tab-content" id="dc-plugin-settings-tab" style="display: block;">   <p style="text-align: center;">    <b>DiscordCrypt Settings</b>   </p>   <br/><br/>   <div class="dc-ruler-align">    <div class="dc-input-label">Primary Cipher:</div>    <select class="dc-input-field" id="dc-primary-cipher" title="Primary Cipher">     <option value="bf" selected>Blowfish ( 512-Bit )</option>     <option value="aes">AES ( 256-Bit )</option>     <option value="camel">Camellia ( 256-Bit )</option>     <option value="tdes">TripleDES ( 192-Bit )</option>     <option value="idea">IDEA ( 128-Bit )</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Secondary Cipher:</div>    <select class="dc-input-field" id="dc-secondary-cipher" title="Secondary Cipher">     <option value="bf">Blowfish ( 512-Bit )</option>     <option value="aes">AES ( 256-Bit )</option>     <option value="camel">Camellia ( 256-Bit )</option>     <option value="idea">IDEA ( 256-Bit )</option>     <option value="tdes">TripleDES ( 192-Bit )</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Cipher Padding Mode:</div>    <select class="dc-input-field" id="dc-settings-padding-mode" title="Cipher Padding Scheme">     <option value="pkc7">PKCS #7</option>     <option value="ans2">ANSI X9.23</option>     <option value="iso1">ISO 10126</option>     <option value="iso9">ISO 97971</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Cipher Block Operation Mode:</div>    <select class="dc-input-field" id="dc-settings-cipher-mode" title="Cipher Block Operation Mode">     <option value="cbc">Cipher Block Chaining</option>     <option value="cfb">Cipher Feedback Mode</option>     <option value="ofb">Output Feedback Mode</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Default Encryption Password:</div>    <input type="text" class="dc-input-field" id="dc-settings-default-pwd"        title="Default Encryption Password"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Scanning Frequency:</div>    <input type="text" class="dc-input-field" id="dc-settings-scan-delay"        title="Scanning Frequency"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Message Trigger:</div>    <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger" title="Message Trigger"/>   </div>   <div class="dc-hint">    <p>The suffix at the end of a typed message to indicate whether to encrypt the text.</p>    <p>Example: <u>This message will be encrypted.|ENC</u></p>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Timed Message Expiration:</div>    <input type="number" class="dc-input-field" id="dc-settings-timed-expire"        title="Timed Message Expiration"/>   </div>   <div class="dc-hint">    <p>This indicates how long after an encrypted message is sent, should it be deleted in minutes.</p>    <p><u>Set this to "0" to disable timed messages.</u></p>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">New Master Database Password:</div>    <input type="text" class="dc-input-field" id="dc-master-password"        title="New Master Database Password"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Use Embedded Messages:</div>    <input type="checkbox" class="dc-input-field" id="dc-embed-enabled"        title="Use Embedded Messages"/>   </div>   <div class="dc-hint">    <p>If enabled, send all encrypted messages using embeds.</p>    <p>     <b style="color: #f00">WARNING:</b>     <b> Using this option may result in your embedded permissions being globally revoked.</b>    </p>   </div>   <div class="dc-ruler-align">    <button id="dc-settings-save-btn" class="dc-button">Save & Apply</button>    <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">     Reset Settings</button>   </div>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-database-settings-tab">   <p style="text-align: center;">    <b>Database Settings</b>   </p>   <br/><br/>   <div class="dc-scroll-table">    <table class="dc-table">     <thead>     <tr>      <th><b>Channel</b></th>      <th><b>Name</b></th>      <th><b>Options</b></th>     </tr>     </thead>     <tbody id="dc-database-entries">      <tr>       <td>Placeholder</td>       <td>Placeholder</td>       <td><button class="dc-button dc-button-inverse dc-button-small">Delete Entry</button></td>      </tr>     </tbody>    </table>   </div>   <br/><br/>   <div class="dc-ruler-align">    <button class="dc-button">Import Database</button>    <button class="dc-button dc-button-inverse">Export Database</button>    <button class="dc-button dc-button-inverse">Erase Entries</button>   </div>  </div> </div> <div id="dc-overlay-exchange" class="dc-overlay-main" style="display: none;">  <div class="tab" id="dc-exchange-tab">   <button class='dc-tab-link' id="dc-tab-info-btn">Info</button>   <button class='dc-tab-link' id="dc-tab-keygen-btn">Key Generation</button>   <button class='dc-tab-link' id="dc-tab-handshake-btn">Secret Computation</button>   <button class='dc-tab-link' id="dc-exit-exchange-btn" style="float:right;">[ X ]</button>  </div>  <div class="tab-content" id="dc-about-tab" style="display: block;">   <p style="text-align: center;">    <b>Key Exchanger</b>   </p>   <br/>   <strong>What is this used for?</strong>   <ul class="dc-list">    <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt     requires a secure channel to exchange these keys.</li>    <li>Using this generator, you may create new keys using standard algorithms such as     DH or ECDH for manual handshaking.</li>    <li>Follow the steps below and you can generate a password between channels or users     while being able to publicly post the messages.</li>    <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with     the Scrypt KDF function to derive two keys.</li>   </ul>   <br/>   <strong>How do I use this?</strong>   <ul class="dc-list">    <li>Generate a key pair using the specified algorithm and key size on the     "Key Generation" tab.</li>    <li>Give your partner your public key by clicking the "Send Public Key" button.</li>    <li>Ask your partner to give you their public key using the same step above.</li>    <li>Copy your partner's public key and paste it in the "Secret Computation" tab and     select "Compute Secret Keys".</li>    <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span>     the primary and secondary keys to be generated.</li>    <li>A status bar is provided to easily tell you when both passwords     have been generated.</li>    <li>Click the "Apply Generated Passwords" button to apply both passwords to     the current user or channel.</li>   </ul>   <strong>Algorithms Supported:</strong>   <ul class="dc-list">    <li>     <a title="Diffie–Hellman key exchange"        href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"        target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>    </li>    <li>     <a title="Elliptic curve Diffie–Hellman"        href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman"        target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>    </li>   </ul>   <span style="text-decoration: underline; color: #ff0000;">       <strong>DO NOT:</strong>      </span>   <ul class="dc-list dc-list-red">    <li>     <strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong>    </li>    <li>     <strong>Alter your public key or have your partner alter theirs in any way.</strong>    </li>    <li>     <strong>Insert a random public key.</strong>    </li>   </ul>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-keygen-tab">   <p style="text-align: center;">    <b style="font-size: large;">Secure Key Generation</b>   </p>   <br/>   <strong>Exchange Algorithm:</strong>   <select id="dc-keygen-method" title="Exchange Algorithm">    <option value="dh" selected>Diffie-Hellman</option>    <option value="ecdh">Elliptic-Curve Diffie-Hellman</option>   </select>   <br/><br/>   <strong>Key Length ( Bits ):</strong>   <select id="dc-keygen-algorithm" title="Key Length">    <option value="768">768</option>    <option value="1024">1024</option>    <option value="1536">1536</option>    <option value="2048">2048</option>    <option value="3072">3072</option>    <option value="4096">4096</option>    <option value="6144">6144</option>    <option value="8192" selected>8192</option>   </select>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-keygen-gen-btn" class="dc-button">Generate</button>    <button id="dc-keygen-clear-btn" class="dc-button dc-button-inverse">Clear</button>   </div>   <br/><br/><br/>   <strong>Private Key: (    <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span>    )</strong><br/>   <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"       unselectable="on" disabled readonly title="Private Key"/>   <br/><br/>   <strong>Public Key:</strong><br/>   <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192"       unselectable="on" disabled readonly title="Public Key"/>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-keygen-send-pub-btn" class="dc-button">Send Public Key</button>   </div>   <br/>   <ul class="dc-list dc-list-red">    <li>Never rely on copying these keys. Use the "Send Public Key" button     to send your key.</li>    <li>Public keys are automatically encoded with a random salts.</li>    <li>Posting these keys directly won't work since they aren't encoded     in the format required.</li>   </ul>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-handshake-tab">   <p style="text-align: center;">    <b style="font-size: large;">Key Derivation</b>   </p>   <br/>   <p>    <span style="text-decoration: underline; color: #ff0000;">     <strong>NOTE:</strong>    </span>   </p>   <ul class="dc-list dc-list-red">    <li>Copy your partner's private key EXACTLY as it was posted.</li>    <li>Your last generated private key from the "Key Generation" tab     will be used to compute these keys.</li>   </ul>   <br/>   <strong>Partner's Public Key:</strong><br/>   <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384" title="Partner's Public Key"/>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">     Paste From Clipboard</button>    <button id="dc-handshake-compute-btn" class="dc-button">Compute Secret Keys</button>   </div>   <ul class="dc-list dc-list-red">    <li id="dc-handshake-algorithm">...</li>    <li id="dc-handshake-salts">...</li>    <li id="dc-handshake-secret">...</li>   </ul>   <br/>   <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>   <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"       style="max-height: 14px;user-select: none;" unselectable="on" disabled       title="Primary Secret"/>   <br/><br/>   <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>   <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"       style="max-height: 14px;user-select: none;" unselectable="on" disabled       title="Secondary Secret"/>   <br/><br/>   <div class="stat stat-bar" style="width:70%;">    <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>   </div><br/>   <div class="dc-ruler-align">    <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">     Copy Keys & Nuke</button>    <button id="dc-handshake-apply-keys-btn" class="dc-button">     Apply Generated Passwords</button>   </div>   <br/><br/><br/><br/>  </div> </div></div>`;
 
         /**
          * @desc The Base64 encoded SVG containing the unlocked status icon.
@@ -540,6 +546,12 @@ class discordCrypt {
                 .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
             MessageQueue: WebpackModules
                 .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
+            UserResolver: WebpackModules
+                .findByUniqueProperties( [ "getUser", "getUsers", "findByTag" ] ),
+            GuildResolver: WebpackModules
+                .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
+            ChannelResolver: WebpackModules
+                .findByUniqueProperties( [ "getChannel", "getChannels", "getDMFromUserId", 'getDMUserIds' ] ),
             HighlightJS: WebpackModules
                 .findByUniqueProperties( [ 'initHighlighting', 'highlightBlock', 'highlightAuto' ] ),
         };
@@ -1376,6 +1388,9 @@ class discordCrypt {
                 MessageActionTypes: cached_modules.MessageActionTypes,
                 MessageDispatcher: cached_modules.MessageDispatcher,
                 MessageQueue: cached_modules.MessageQueue,
+                UserResolver: cached_modules.UserResolver,
+                GuildResolver: cached_modules.GuildResolver,
+                ChannelResolver: cached_modules.ChannelResolver,
                 HighlightJS: cached_modules.HighlightJS,
             };
         }
@@ -1976,22 +1991,53 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc Sets the active tab index in the exchange key menu.
-     * @param {int} index The index ( 0-2 ) of the page to activate.
+     * @desc Sets the active tab index in the settings menu.
+     * @param {int} index The index ( 0-1 ) of the page to activate.
      * @example
      * setActiveTab( 1 );
      */
-    static setActiveTab( index ) {
-        let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
-        let tabs = $( '.dc-tab-link' );
+    static setActiveSettingsTab( index ) {
+        let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab' ];
+        let tabs = $( '#dc-settings-tab .dc-tab-link' );
 
         /* Hide all tabs. */
         for ( let i = 0; i < tab_names.length; i++ )
             $( `#${tab_names[ i ]}` ).css( 'display', 'none' );
 
         /* Deactivate all links. */
-        for ( let i = 0; i < tabs.length; i++ )
-            tabs[ i ].className = tabs[ i ].className.split( ' active' ).join( '' );
+        tabs.removeClass( 'active' );
+
+        switch ( index ) {
+            case 0:
+                $( '#dc-plugin-settings-btn' ).addClass( 'active' );
+                $( '#dc-plugin-settings-tab' ).css( 'display', 'block' );
+                break;
+            case 1:
+                $( '#dc-database-settings-btn' ).addClass( 'active' );
+                $( '#dc-database-settings-tab' ).css( 'display', 'block' );
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * @private
+     * @desc Sets the active tab index in the exchange key menu.
+     * @param {int} index The index ( 0-2 ) of the page to activate.
+     * @example
+     * setActiveTab( 1 );
+     */
+    static setActiveExchangeTab( index ) {
+        let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
+        let tabs = $( '#dc-exchange-tab .dc-tab-link' );
+
+        /* Hide all tabs. */
+        for ( let i = 0; i < tab_names.length; i++ )
+            $( `#${tab_names[ i ]}` ).css( 'display', 'none' );
+
+        /* Deactivate all links. */
+        tabs.removeClass( 'active' );
 
         switch ( index ) {
             case 0:
@@ -2059,7 +2105,8 @@ class discordCrypt {
         $( document.body ).prepend( this.settingsMenuHtml );
 
         /* Also by default, set the about tab to be shown. */
-        discordCrypt.setActiveTab( 0 );
+        discordCrypt.setActiveSettingsTab( 0 );
+        discordCrypt.setActiveExchangeTab( 0 );
 
         /* Update all settings from the settings panel. */
         $( '#dc-secondary-cipher' ).val( discordCrypt.cipherIndexToString( this.configFile.encryptMode, true ) );
@@ -2089,6 +2136,12 @@ class discordCrypt {
 
         /* Handle Settings tab opening. */
         $( '#dc-settings-btn' ).click( discordCrypt.on_settings_button_clicked );
+
+        /* Handle Plugin Settings tab selected. */
+        $( '#dc-plugin-settings-btn' ).click( discordCrypt.on_plugin_settings_tab_button_clicked );
+
+        /* Handle Database Settings tab selected. */
+        $( '#dc-database-settings-btn' ).click( discordCrypt.on_database_settings_tab_button_clicked( this ) );
 
         /* Handle Settings tab closing. */
         $( '#dc-exit-settings-btn' ).click( discordCrypt.on_settings_close_button_clicked );
@@ -3024,9 +3077,97 @@ class discordCrypt {
 
     /**
      * @private
+     * @desc Selects the Plugin Settings tab.
+     */
+    static on_plugin_settings_tab_button_clicked() {
+        /* Select the plugin settings. */
+        discordCrypt.setActiveSettingsTab( 0 );
+    }
+
+    /**
+     * @private
+     * @desc Selects the Database Settings tab and loads key info.
+     * @param {discordCrypt} self
+     */
+    static on_database_settings_tab_button_clicked( self ) {
+        return () => {
+            let users, guilds, channels, table;
+
+            /* Cache the table. */
+            table = $( '#dc-database-entries' );
+
+            /* Clear all entries. */
+            table.html( '' );
+
+            /* Resolve all users, guilds and channels the current user is a part of. */
+            users = self.cachedModules.UserResolver.getUsers();
+            guilds = self.cachedModules.GuildResolver.getGuilds();
+            channels = self.cachedModules.ChannelResolver.getChannels();
+
+            /* Iterate over each password in the configuration. */
+            for ( let prop in self.configFile.passList ) {
+                let name, id = prop;
+
+                /* Skip channels that don't have an ID. */
+                if ( !channels[ id ] )
+                    continue;
+
+                /* Check for the correct channel type. */
+                if ( channels[ id ].type === 0 ) {
+                    /* Guild Channel */
+                    let guild = guilds[ channels[ id ].guild_id ];
+
+                    /* Resolve the name as a "Guild @ #Channel" format. */
+                    name = `${guild.name} @ #${channels[ id ].name}`;
+                }
+                else if ( channels[ id ].type === 1 ) {
+                    /* DM */
+                    let user = users[ channels[ id ].recipients[ 0 ] ];
+
+                    /* Indicate this is a DM and give the full user name. */
+                    name = `DM @${user.username}#${user.discriminator}`;
+                }
+                else
+                    continue;
+
+                /* Create the elements needed for building the row. */
+                let element = $( `<tr><td>${prop}</td><td>${name}</td><td></td></tr>` ),
+                    btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'Delete' );
+
+                /* Handle deletion clicks. */
+                btn.click( function () {
+                    /* Delete the entry. */
+                    delete self.configFile.passList[ id ];
+
+                    /* Save the configuration. */
+                    self.saveConfig();
+
+                    /* Remove the entire row. */
+                    btn.parent().parent().remove();
+                } );
+
+                /* Append the button to the Options row. */
+                $( element.children()[ 2 ] ).append( btn );
+
+                /* Append the entire entry to the table. */
+                table.append( element );
+            }
+
+            /* Select the database settings. */
+            discordCrypt.setActiveSettingsTab( 1 );
+        };
+    }
+
+    /**
+     * @private
      * @desc Closes the settings menu.
      */
     static on_settings_close_button_clicked() {
+        /* Select the plugin settings. */
+        discordCrypt.setActiveSettingsTab( 0 );
+
         /* Hide main background. */
         $( '#dc-overlay' ).css( 'display', 'none' );
 
@@ -3159,7 +3300,7 @@ class discordCrypt {
      */
     static on_info_tab_button_clicked() {
         /* Switch to tab 0. */
-        discordCrypt.setActiveTab( 0 );
+        discordCrypt.setActiveExchangeTab( 0 );
     }
 
     /**
@@ -3168,7 +3309,7 @@ class discordCrypt {
      */
     static on_exchange_tab_button_clicked() {
         /* Switch to tab 1. */
-        discordCrypt.setActiveTab( 1 );
+        discordCrypt.setActiveExchangeTab( 1 );
     }
 
     /**
@@ -3177,7 +3318,7 @@ class discordCrypt {
      */
     static on_handshake_tab_button_clicked() {
         /* Switch to tab 2. */
-        discordCrypt.setActiveTab( 2 );
+        discordCrypt.setActiveExchangeTab( 2 );
     }
 
     /**
@@ -3812,7 +3953,7 @@ class discordCrypt {
                 $( '#dc-overlay-exchange' ).css( 'display', 'none' );
 
                 /* Reset the index to the info tab. */
-                discordCrypt.setActiveTab( 0 );
+                discordCrypt.setActiveExchangeTab( 0 );
             } ), 1000 );
         }
     }
@@ -5036,6 +5177,76 @@ class discordCrypt {
         catch ( ex ) {
             callback( ex.toString() );
         }
+    }
+
+    /**
+     * @public
+     * @desc Constructs a "random art" noise based BMP image from the input data.
+     * @param {Buffer} data The input data to construct the image from.
+     * @param {int} width The width of the image in pixels.
+     * @param {int} height The height of the image in pixels.
+     * @param {boolean} html_encode Whether to encode the image as a Base64 URI or return a raw buffer.
+     * @return {Buffer|string}
+     */
+    static __constructRandomArtImage( data, width, height, html_encode ) {
+        /* Construct a random color array from the input data and use the width + height as a salt. */
+        const colors = Buffer.from(
+            discordCrypt.pbkdf2_sha160(
+                data,
+                Buffer.alloc( width + height ).fill( 0 ),
+                true,
+                undefined,
+                undefined,
+                width * height * 3,
+                1000
+            ),
+            'hex'
+        );
+
+        /* Construct a buffer containing the BMP and DIB file headers. */
+        let image = Buffer.concat( [
+            /** ----------------------------- **/
+            /* BMP File Header Magic. */
+            Buffer.from( 'BM' ),
+            /* Compressed Size */
+            Buffer.from( [ 0, 0, 0, 0 ] ),
+            /* Reserved */
+            Buffer.from( [ 0, 0 ] ),
+            /* Reserved */
+            Buffer.from( [ 0, 0 ] ),
+            /* Pixel Array Offset */
+            Buffer.from( [ 26, 0, 0, 0 ] ),
+            /** ----------------------------- **/
+            /* DIB v2.0 Header Size */
+            Buffer.from( [ 12, 0, 0, 0 ] ),
+            /* BMP Width */
+            Buffer( [ width, 0 ] ),
+            /* BMP Height */
+            Buffer( [ height, 0 ] ),
+            /* Number Of Color Planes */
+            Buffer.from( [ 1, 0 ] ),
+            /* Bits Per Pixel */
+            Buffer.from( [ 24, 0 ] )
+            /** ----------------------------- **/
+        ] );
+
+        /* Iterate over each row. */
+        for ( let i = 0; i < height; i++ ) {
+            /* Add the row's pixels and the padding row if required. */
+            image = Buffer.concat( [
+                image,
+                colors.slice( i * height, ( i * height ) + ( width * 3 ) ),
+                Buffer.alloc( width % 4 ).fill( 0 )
+            ] );
+        }
+
+        /* Add the terminator. */
+        image = Buffer.concat( [ image, Buffer.from( [ 0 ] ) ] );
+
+        /* Return the result either encoded or as-is. */
+        return html_encode ?
+            `data:image/bmp;base64,${image.toString( 'base64' )}` :
+            image;
     }
 
     /**
