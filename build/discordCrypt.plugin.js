@@ -268,7 +268,7 @@ class discordCrypt {
      * @returns {string}
      */
     getVersion() {
-        return '1.2.2';
+        return '1.2.3';
     }
 
     /* ============================================================== */
@@ -683,7 +683,7 @@ class discordCrypt {
             /* Current Version. */
             version: this.getVersion(),
             /* Whether to send messages using embedded objects. */
-            useEmbeds: true,
+            useEmbeds: false,
             /* Default password for servers not set. */
             defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
             /* Defines what needs to be typed at the end of a message to encrypt it. */
