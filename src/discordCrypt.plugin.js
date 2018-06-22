@@ -42,6 +42,9 @@ class discordCrypt {
      * @property {Object} MessageActionTypes Internal message action types and constants for events.
      * @property {Object} MessageDispatcher Internal message dispatcher for pending queued messages.
      * @property {Object} MessageQueue Internal message Queue store for pending parsing.
+     * @property {Object} UserResolver Internal user resolver for retrieving all users known.
+     * @property {Object} GuildResolver Internal Guild resolver for retrieving a list of all guilds currently in.
+     * @property {Object} ChannelResolver Internal channel resolver for retrieving a list of all channels available.
      * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
      */
 
@@ -54,6 +57,9 @@ class discordCrypt {
      * @property {Object} MessageActionTypes Internal message action types and constants for events.
      * @property {Object} MessageDispatcher Internal message dispatcher for pending queued messages.
      * @property {Object} MessageQueue Internal message Queue store for pending parsing.
+     * @property {Object} UserResolver Internal user resolver for retrieving all users known.
+     * @property {Object} GuildResolver Internal Guild resolver for retrieving a list of all guilds currently in.
+     * @property {Object} ChannelResolver Internal channel resolver for retrieving a list of all channels available.
      * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
      */
 
@@ -537,6 +543,12 @@ class discordCrypt {
                 .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
             MessageQueue: WebpackModules
                 .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
+            UserResolver: WebpackModules
+                .findByUniqueProperties( [ "getUser", "getUsers", "findByTag" ] ),
+            GuildResolver: WebpackModules
+                .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
+            ChannelResolver: WebpackModules
+                .findByUniqueProperties( [ "getChannel", "getChannels", "getDMFromUserId", 'getDMUserIds' ] ),
             HighlightJS: WebpackModules
                 .findByUniqueProperties( [ 'initHighlighting', 'highlightBlock', 'highlightAuto' ] ),
         };
@@ -1373,6 +1385,9 @@ class discordCrypt {
                 MessageActionTypes: cached_modules.MessageActionTypes,
                 MessageDispatcher: cached_modules.MessageDispatcher,
                 MessageQueue: cached_modules.MessageQueue,
+                UserResolver: cached_modules.UserResolver,
+                GuildResolver: cached_modules.GuildResolver,
+                ChannelResolver: cached_modules.ChannelResolver,
                 HighlightJS: cached_modules.HighlightJS,
             };
         }
@@ -1973,22 +1988,53 @@ class discordCrypt {
 
     /**
      * @private
-     * @desc Sets the active tab index in the exchange key menu.
-     * @param {int} index The index ( 0-2 ) of the page to activate.
+     * @desc Sets the active tab index in the settings menu.
+     * @param {int} index The index ( 0-1 ) of the page to activate.
      * @example
      * setActiveTab( 1 );
      */
-    static setActiveTab( index ) {
-        let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
-        let tabs = $( '.dc-tab-link' );
+    static setActiveSettingsTab( index ) {
+        let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab' ];
+        let tabs = $( '#dc-settings-tab .dc-tab-link' );
 
         /* Hide all tabs. */
         for ( let i = 0; i < tab_names.length; i++ )
             $( `#${tab_names[ i ]}` ).css( 'display', 'none' );
 
         /* Deactivate all links. */
-        for ( let i = 0; i < tabs.length; i++ )
-            tabs[ i ].className = tabs[ i ].className.split( ' active' ).join( '' );
+        tabs.removeClass( 'active' );
+
+        switch ( index ) {
+            case 0:
+                $( '#dc-plugin-settings-btn' ).addClass( 'active' );
+                $( '#dc-plugin-settings-tab' ).css( 'display', 'block' );
+                break;
+            case 1:
+                $( '#dc-database-settings-btn' ).addClass( 'active' );
+                $( '#dc-database-settings-tab' ).css( 'display', 'block' );
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * @private
+     * @desc Sets the active tab index in the exchange key menu.
+     * @param {int} index The index ( 0-2 ) of the page to activate.
+     * @example
+     * setActiveTab( 1 );
+     */
+    static setActiveExchangeTab( index ) {
+        let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
+        let tabs = $( '#dc-exchange-tab .dc-tab-link' );
+
+        /* Hide all tabs. */
+        for ( let i = 0; i < tab_names.length; i++ )
+            $( `#${tab_names[ i ]}` ).css( 'display', 'none' );
+
+        /* Deactivate all links. */
+        tabs.removeClass( 'active' );
 
         switch ( index ) {
             case 0:
@@ -2056,7 +2102,8 @@ class discordCrypt {
         $( document.body ).prepend( this.settingsMenuHtml );
 
         /* Also by default, set the about tab to be shown. */
-        discordCrypt.setActiveTab( 0 );
+        discordCrypt.setActiveSettingsTab( 0 );
+        discordCrypt.setActiveExchangeTab( 0 );
 
         /* Update all settings from the settings panel. */
         $( '#dc-secondary-cipher' ).val( discordCrypt.cipherIndexToString( this.configFile.encryptMode, true ) );
@@ -2086,6 +2133,12 @@ class discordCrypt {
 
         /* Handle Settings tab opening. */
         $( '#dc-settings-btn' ).click( discordCrypt.on_settings_button_clicked );
+
+        /* Handle Plugin Settings tab selected. */
+        $( '#dc-plugin-settings-btn' ).click( discordCrypt.on_plugin_settings_tab_button_clicked );
+
+        /* Handle Database Settings tab selected. */
+        $( '#dc-database-settings-btn' ).click( discordCrypt.on_database_settings_tab_button_clicked( this ) );
 
         /* Handle Settings tab closing. */
         $( '#dc-exit-settings-btn' ).click( discordCrypt.on_settings_close_button_clicked );
@@ -3021,9 +3074,97 @@ class discordCrypt {
 
     /**
      * @private
+     * @desc Selects the Plugin Settings tab.
+     */
+    static on_plugin_settings_tab_button_clicked() {
+        /* Select the plugin settings. */
+        discordCrypt.setActiveSettingsTab( 0 );
+    }
+
+    /**
+     * @private
+     * @desc Selects the Database Settings tab and loads key info.
+     * @param {discordCrypt} self
+     */
+    static on_database_settings_tab_button_clicked( self ) {
+        return () => {
+            let users, guilds, channels, table;
+
+            /* Cache the table. */
+            table = $( '#dc-database-entries' );
+
+            /* Clear all entries. */
+            table.html( '' );
+
+            /* Resolve all users, guilds and channels the current user is a part of. */
+            users = self.cachedModules.UserResolver.getUsers();
+            guilds = self.cachedModules.GuildResolver.getGuilds();
+            channels = self.cachedModules.ChannelResolver.getChannels();
+
+            /* Iterate over each password in the configuration. */
+            for ( let prop in self.configFile.passList ) {
+                let name, id = prop;
+
+                /* Skip channels that don't have an ID. */
+                if ( !channels[ id ] )
+                    continue;
+
+                /* Check for the correct channel type. */
+                if ( channels[ id ].type === 0 ) {
+                    /* Guild Channel */
+                    let guild = guilds[ channels[ id ].guild_id ];
+
+                    /* Resolve the name as a "Guild @ #Channel" format. */
+                    name = `${guild.name} @ #${channels[ id ].name}`;
+                }
+                else if ( channels[ id ].type === 1 ) {
+                    /* DM */
+                    let user = users[ channels[ id ].recipients[ 0 ] ];
+
+                    /* Indicate this is a DM and give the full user name. */
+                    name = `DM @${user.username}#${user.discriminator}`;
+                }
+                else
+                    continue;
+
+                /* Create the elements needed for building the row. */
+                let element = $( `<tr><td>${prop}</td><td>${name}</td><td></td></tr>` ),
+                    btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'Delete' );
+
+                /* Handle deletion clicks. */
+                btn.click( function () {
+                    /* Delete the entry. */
+                    delete self.configFile.passList[ id ];
+
+                    /* Save the configuration. */
+                    self.saveConfig();
+
+                    /* Remove the entire row. */
+                    btn.parent().parent().remove();
+                } );
+
+                /* Append the button to the Options row. */
+                $( element.children()[ 2 ] ).append( btn );
+
+                /* Append the entire entry to the table. */
+                table.append( element );
+            }
+
+            /* Select the database settings. */
+            discordCrypt.setActiveSettingsTab( 1 );
+        };
+    }
+
+    /**
+     * @private
      * @desc Closes the settings menu.
      */
     static on_settings_close_button_clicked() {
+        /* Select the plugin settings. */
+        discordCrypt.setActiveSettingsTab( 0 );
+
         /* Hide main background. */
         $( '#dc-overlay' ).css( 'display', 'none' );
 
@@ -3156,7 +3297,7 @@ class discordCrypt {
      */
     static on_info_tab_button_clicked() {
         /* Switch to tab 0. */
-        discordCrypt.setActiveTab( 0 );
+        discordCrypt.setActiveExchangeTab( 0 );
     }
 
     /**
@@ -3165,7 +3306,7 @@ class discordCrypt {
      */
     static on_exchange_tab_button_clicked() {
         /* Switch to tab 1. */
-        discordCrypt.setActiveTab( 1 );
+        discordCrypt.setActiveExchangeTab( 1 );
     }
 
     /**
@@ -3174,7 +3315,7 @@ class discordCrypt {
      */
     static on_handshake_tab_button_clicked() {
         /* Switch to tab 2. */
-        discordCrypt.setActiveTab( 2 );
+        discordCrypt.setActiveExchangeTab( 2 );
     }
 
     /**
@@ -3809,7 +3950,7 @@ class discordCrypt {
                 $( '#dc-overlay-exchange' ).css( 'display', 'none' );
 
                 /* Reset the index to the info tab. */
-                discordCrypt.setActiveTab( 0 );
+                discordCrypt.setActiveExchangeTab( 0 );
             } ), 1000 );
         }
     }
@@ -5033,6 +5174,76 @@ class discordCrypt {
         catch ( ex ) {
             callback( ex.toString() );
         }
+    }
+
+    /**
+     * @public
+     * @desc Constructs a "random art" noise based BMP image from the input data.
+     * @param {Buffer} data The input data to construct the image from.
+     * @param {int} width The width of the image in pixels.
+     * @param {int} height The height of the image in pixels.
+     * @param {boolean} html_encode Whether to encode the image as a Base64 URI or return a raw buffer.
+     * @return {Buffer|string}
+     */
+    static __constructRandomArtImage( data, width, height, html_encode ) {
+        /* Construct a random color array from the input data and use the width + height as a salt. */
+        const colors = Buffer.from(
+            discordCrypt.pbkdf2_sha160(
+                data,
+                Buffer.alloc( width + height ).fill( 0 ),
+                true,
+                undefined,
+                undefined,
+                width * height * 3,
+                1000
+            ),
+            'hex'
+        );
+
+        /* Construct a buffer containing the BMP and DIB file headers. */
+        let image = Buffer.concat( [
+            /** ----------------------------- **/
+            /* BMP File Header Magic. */
+            Buffer.from( 'BM' ),
+            /* Compressed Size */
+            Buffer.from( [ 0, 0, 0, 0 ] ),
+            /* Reserved */
+            Buffer.from( [ 0, 0 ] ),
+            /* Reserved */
+            Buffer.from( [ 0, 0 ] ),
+            /* Pixel Array Offset */
+            Buffer.from( [ 26, 0, 0, 0 ] ),
+            /** ----------------------------- **/
+            /* DIB v2.0 Header Size */
+            Buffer.from( [ 12, 0, 0, 0 ] ),
+            /* BMP Width */
+            Buffer( [ width, 0 ] ),
+            /* BMP Height */
+            Buffer( [ height, 0 ] ),
+            /* Number Of Color Planes */
+            Buffer.from( [ 1, 0 ] ),
+            /* Bits Per Pixel */
+            Buffer.from( [ 24, 0 ] )
+            /** ----------------------------- **/
+        ] );
+
+        /* Iterate over each row. */
+        for ( let i = 0; i < height; i++ ) {
+            /* Add the row's pixels and the padding row if required. */
+            image = Buffer.concat( [
+                image,
+                colors.slice( i * height, ( i * height ) + ( width * 3 ) ),
+                Buffer.alloc( width % 4 ).fill( 0 )
+            ] );
+        }
+
+        /* Add the terminator. */
+        image = Buffer.concat( [ image, Buffer.from( [ 0 ] ) ] );
+
+        /* Return the result either encoded or as-is. */
+        return html_encode ?
+            `data:image/bmp;base64,${image.toString( 'base64' )}` :
+            image;
     }
 
     /**

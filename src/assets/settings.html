@@ -62,7 +62,7 @@
         <div class="dc-ruler-align">
             <strong class="dc-update-field">Changelog:</strong></div>
         <div class="dc-ruler-align">
-            <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly title="Update Changes"/>
+            <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly title="Update Changes ..."/>
         </div>
         <br>
         <div class="dc-ruler-align">
@@ -74,9 +74,11 @@
     </div>
     <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">
         <div class="tab" id="dc-settings-tab">
+            <button class='dc-tab-link' id="dc-plugin-settings-btn">Plugin Settings</button>
+            <button class='dc-tab-link' id="dc-database-settings-btn">Database Settings</button>
             <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>
         </div>
-        <div class="tab-content" id="dc-settings" style="display: block;">
+        <div class="tab-content" id="dc-plugin-settings-tab" style="display: block;">
             <p style="text-align: center;">
                 <b>DiscordCrypt Settings</b>
             </p>
@@ -184,6 +186,37 @@
 
             <br/><br/><br/><br/>
         </div>
+        <div class="tab-content" id="dc-database-settings-tab">
+            <p style="text-align: center;">
+                <b>Database Settings</b>
+            </p>
+            <br/><br/>
+
+            <div class="dc-scroll-table">
+                <table class="dc-table">
+                    <thead>
+                    <tr>
+                        <th><b>Channel</b></th>
+                        <th><b>Name</b></th>
+                        <th><b>Options</b></th>
+                    </tr>
+                    </thead>
+                    <tbody id="dc-database-entries">
+                        <tr>
+                            <td>Placeholder</td>
+                            <td>Placeholder</td>
+                            <td><button class="dc-button dc-button-inverse dc-button-small">Delete Entry</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <br/><br/>
+            <div class="dc-ruler-align">
+                <button class="dc-button">Import Database</button>
+                <button class="dc-button dc-button-inverse">Export Database</button>
+                <button class="dc-button dc-button-inverse">Erase Entries</button>
+            </div>
+        </div>
     </div>
     <div id="dc-overlay-exchange" class="dc-overlay-main" style="display: none;">
         <div class="tab" id="dc-exchange-tab">
@@ -258,7 +291,7 @@
 
             <br/><br/><br/><br/>
         </div>
-        <div class="tab-content" id="dc-keygen-tab" style="display: block;">
+        <div class="tab-content" id="dc-keygen-tab">
             <p style="text-align: center;">
                 <b style="font-size: large;">Secure Key Generation</b>
             </p>
