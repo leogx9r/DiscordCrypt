@@ -1,3 +1,8 @@
+Version 1.2.3
+
+- Fixed a bug introduced due to Discord's Game Tab update.
+- Minor code improvements.
+
 Version 1.2.2
 
 - Fixed a bug when switching between key exchange algorithms.
