@@ -1360,11 +1360,15 @@ class discordCrypt {
      * @returns {ReactModules}
      */
     static getReactModules( cached_modules ) {
+        const blacklisted_channel_props = [
+            '@me',
+            'activity'
+        ];
 
         if ( cached_modules ) {
             return {
                 ChannelProps:
-                    discordCrypt.getChannelId() === '@me' ?
+                    blacklisted_channel_props.indexOf( discordCrypt.getChannelId() ) !== -1 ?
                         null :
                         discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
                 MessageParser: cached_modules.MessageParser,
