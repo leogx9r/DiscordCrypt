@@ -450,12 +450,12 @@ We wanted a way for users who both use and do not use the plugin to easily ident
 In addition to this, rich embeds provide a nicer means of conveying and formatting the encrypted messages that 
 standard messages do not as well as making the plugin itself detect encrypted messages easily.
 
-We however do support non-embedded messages but it is only used as a means to avoid users having their embed 
-permissions globally revoked and it does not offer the same look or feel that standard encrypted messages do.
+We however do support non-embedded messages as a means to avoid users having their embed permissions 
+globally revoked and it does not offer the same look or feel that standard encrypted messages do.
 
-By default, however, the plugin will use embeds but warns users about this in the settings menu.
+By default, the plugin will NOT use embeds and warns users about this in the settings menu.
 
- 
+
 
 # Known Limitations And Bugs
 
