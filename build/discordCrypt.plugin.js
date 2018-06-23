@@ -556,6 +556,14 @@ class discordCrypt {
                 .findByUniqueProperties( [ 'initHighlighting', 'highlightBlock', 'highlightAuto' ] ),
         };
 
+        /* Throw an error if a cached module can't be found. */
+        for ( let prop in this.cachedModules ) {
+            if ( typeof this.cachedModules[ prop ] !== 'object' ) {
+                _alert( 'Error Loading DiscordCrypt', `Could not find requisite module: ${prop}` );
+                return;
+            }
+        }
+
         /* Hook switch events as the main event processor. */
         if ( !this.hookMessageCallbacks() ) {
             /* The toolbar fails to properly load on switches to the friends list. Create an interval to do this. */
@@ -565,11 +573,13 @@ class discordCrypt {
             }, 5000 );
         }
         else {
-            /* Add the toolbar. */
-            this.loadToolbar();
+            setImmediate( () => {
+                /* Add the toolbar. */
+                this.loadToolbar();
 
-            /* Attach the message handler. */
-            this.attachHandler();
+                /* Attach the message handler. */
+                this.attachHandler();
+            } );
         }
 
         /* Process any blocks on an interval since Discord loves to throttle messages. */
@@ -617,8 +627,10 @@ class discordCrypt {
 
         }, 5000 );
 
-        /* Decode all messages immediately. */
-        this.decodeMessages();
+        setImmediate( () => {
+            /* Decode all messages immediately. */
+            self.decodeMessages();
+        } );
     }
 
     /**
