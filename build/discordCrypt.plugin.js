@@ -1657,7 +1657,10 @@ class discordCrypt {
      * log( 'This is printed in red.', 'error' );
      *
      * @example
-     * log( 'This is printed green.', 'success' );
+     * log( 'This is printed green.', 'trace' );
+     *
+     * @example
+     * log( 'This is printed green.', 'debug' );
      *
      */
     static log( message, method = "info" ) {
