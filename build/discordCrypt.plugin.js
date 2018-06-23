@@ -450,7 +450,7 @@ class discordCrypt {
          * @type {string}
          */
         this.settingsMenuHtml =
-            `<div id="dc-overlay" class="dc-overlay"> <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">  <div class="dc-ruler-align">   <input type="text" class="dc-input-field" id="dc-file-path"       style="width: 100%;padding: 2px;margin-left: 4px;" readonly title="File Path"/>   <button class="dc-button dc-button-inverse" type="button" id="dc-select-file-path-btn"     style="top: -8px;"> . . .</button>  </div>  <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea"      placeholder="Enter any addition text to send with your message ..." maxlength="1820"></textarea>  <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">   <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox"       title="Add Deletion Link">   <span style="margin-top: 5px;">Send Deletion Link</span>  </div>  <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">   <input id="dc-file-name-random-checkbox" class="ui-switch-checkbox" type="checkbox" checked       title="Use Random File Name">   <span style="margin-top: 5px;">Randomize File Name</span>  </div>  <div class="stat stat-bar">   <span id = "dc-file-upload-status" class="stat-bar-rating" style="width: 0;"/>  </div>  <div class="dc-ruler-align">   <button class="dc-button" style="width:100%;" id="dc-file-upload-btn">Upload</button>  </div>  <div class="dc-ruler-align">   <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">    Close</button>  </div> </div> <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">  <span>Primary Password:</span>  <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>  <span>Secondary Password:</span>  <input type="password" class="dc-password-field" id="dc-password-secondary" placeholder="..."/><br/>  <div class="dc-ruler-align">   <button class="dc-button" id="dc-save-pwd">Update Passwords</button>   <button class="dc-button dc-button-inverse" id="dc-reset-pwd">Reset Passwords</button>   <button class="dc-button dc-button-inverse" id="dc-cancel-btn">Cancel</button>  </div>  <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">   Copy Current Passwords</button> </div> <div id="dc-update-overlay" class="dc-overlay-centerfield"   style="top: 5%;border: 1px solid;display: none">  <span>DiscordCrypt: Update Available</span>  <div class="dc-ruler-align">   <strong class="dc-update-field" id="dc-new-version"/>  </div>  <div class="dc-ruler-align">   <strong class="dc-update-field" id="dc-old-version"/>  </div>  <div class="dc-ruler-align">   <strong class="dc-update-field">Changelog:</strong></div>  <div class="dc-ruler-align">   <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly title="Update Changes ..."/>  </div>  <br>  <div class="dc-ruler-align">   <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">    Restart Discord Now</button>   <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">    Restart Discord Later</button>  </div> </div> <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">  <div class="tab" id="dc-settings-tab">   <button class='dc-tab-link' id="dc-plugin-settings-btn">Plugin Settings</button>   <button class='dc-tab-link' id="dc-database-settings-btn">Database Settings</button>   <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>  </div>  <div class="tab-content" id="dc-plugin-settings-tab" style="display: block;">   <p style="text-align: center;">    <b>DiscordCrypt Settings</b>   </p>   <br/><br/>   <div class="dc-ruler-align">    <div class="dc-input-label">Primary Cipher:</div>    <select class="dc-input-field" id="dc-primary-cipher" title="Primary Cipher">     <option value="bf" selected>Blowfish ( 512-Bit )</option>     <option value="aes">AES ( 256-Bit )</option>     <option value="camel">Camellia ( 256-Bit )</option>     <option value="tdes">TripleDES ( 192-Bit )</option>     <option value="idea">IDEA ( 128-Bit )</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Secondary Cipher:</div>    <select class="dc-input-field" id="dc-secondary-cipher" title="Secondary Cipher">     <option value="bf">Blowfish ( 512-Bit )</option>     <option value="aes">AES ( 256-Bit )</option>     <option value="camel">Camellia ( 256-Bit )</option>     <option value="idea">IDEA ( 256-Bit )</option>     <option value="tdes">TripleDES ( 192-Bit )</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Cipher Padding Mode:</div>    <select class="dc-input-field" id="dc-settings-padding-mode" title="Cipher Padding Scheme">     <option value="pkc7">PKCS #7</option>     <option value="ans2">ANSI X9.23</option>     <option value="iso1">ISO 10126</option>     <option value="iso9">ISO 97971</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Cipher Block Operation Mode:</div>    <select class="dc-input-field" id="dc-settings-cipher-mode" title="Cipher Block Operation Mode">     <option value="cbc">Cipher Block Chaining</option>     <option value="cfb">Cipher Feedback Mode</option>     <option value="ofb">Output Feedback Mode</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Default Encryption Password:</div>    <input type="text" class="dc-input-field" id="dc-settings-default-pwd"        title="Default Encryption Password"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Scanning Frequency:</div>    <input type="text" class="dc-input-field" id="dc-settings-scan-delay"        title="Scanning Frequency"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Message Trigger:</div>    <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger" title="Message Trigger"/>   </div>   <div class="dc-hint">    <p>The suffix at the end of a typed message to indicate whether to encrypt the text.</p>    <p>Example: <u>This message will be encrypted.|ENC</u></p>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Timed Message Expiration:</div>    <input type="number" class="dc-input-field" id="dc-settings-timed-expire"        title="Timed Message Expiration"/>   </div>   <div class="dc-hint">    <p>This indicates how long after an encrypted message is sent, should it be deleted in minutes.</p>    <p><u>Set this to "0" to disable timed messages.</u></p>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">New Master Database Password:</div>    <input type="text" class="dc-input-field" id="dc-master-password"        title="New Master Database Password"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Use Embedded Messages:</div>    <input type="checkbox" class="dc-input-field" id="dc-embed-enabled"        title="Use Embedded Messages"/>   </div>   <div class="dc-hint">    <p>If enabled, send all encrypted messages using embeds.</p>    <p>     <b style="color: #f00">WARNING:</b>     <b> Using this option may result in your embedded permissions being globally revoked.</b>    </p>   </div>   <div class="dc-ruler-align">    <button id="dc-settings-save-btn" class="dc-button">Save & Apply</button>    <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">     Reset Settings</button>   </div>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-database-settings-tab">   <p style="text-align: center;">    <b>Database Settings</b>   </p>   <br/><br/>   <div class="dc-scroll-table">    <table class="dc-table">     <thead>     <tr>      <th><b>Channel</b></th>      <th><b>Name</b></th>      <th><b>Options</b></th>     </tr>     </thead>     <tbody id="dc-database-entries">      <tr>       <td>Placeholder</td>       <td>Placeholder</td>       <td><button class="dc-button dc-button-inverse dc-button-small">Delete Entry</button></td>      </tr>     </tbody>    </table>   </div>   <br/><br/>   <div class="dc-ruler-align">    <button class="dc-button">Import Database</button>    <button class="dc-button dc-button-inverse">Export Database</button>    <button class="dc-button dc-button-inverse">Erase Entries</button>   </div>  </div> </div> <div id="dc-overlay-exchange" class="dc-overlay-main" style="display: none;">  <div class="tab" id="dc-exchange-tab">   <button class='dc-tab-link' id="dc-tab-info-btn">Info</button>   <button class='dc-tab-link' id="dc-tab-keygen-btn">Key Generation</button>   <button class='dc-tab-link' id="dc-tab-handshake-btn">Secret Computation</button>   <button class='dc-tab-link' id="dc-exit-exchange-btn" style="float:right;">[ X ]</button>  </div>  <div class="tab-content" id="dc-about-tab" style="display: block;">   <p style="text-align: center;">    <b>Key Exchanger</b>   </p>   <br/>   <strong>What is this used for?</strong>   <ul class="dc-list">    <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt     requires a secure channel to exchange these keys.</li>    <li>Using this generator, you may create new keys using standard algorithms such as     DH or ECDH for manual handshaking.</li>    <li>Follow the steps below and you can generate a password between channels or users     while being able to publicly post the messages.</li>    <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with     the Scrypt KDF function to derive two keys.</li>   </ul>   <br/>   <strong>How do I use this?</strong>   <ul class="dc-list">    <li>Generate a key pair using the specified algorithm and key size on the     "Key Generation" tab.</li>    <li>Give your partner your public key by clicking the "Send Public Key" button.</li>    <li>Ask your partner to give you their public key using the same step above.</li>    <li>Copy your partner's public key and paste it in the "Secret Computation" tab and     select "Compute Secret Keys".</li>    <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span>     the primary and secondary keys to be generated.</li>    <li>A status bar is provided to easily tell you when both passwords     have been generated.</li>    <li>Click the "Apply Generated Passwords" button to apply both passwords to     the current user or channel.</li>   </ul>   <strong>Algorithms Supported:</strong>   <ul class="dc-list">    <li>     <a title="Diffie–Hellman key exchange"        href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"        target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>    </li>    <li>     <a title="Elliptic curve Diffie–Hellman"        href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman"        target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>    </li>   </ul>   <span style="text-decoration: underline; color: #ff0000;">       <strong>DO NOT:</strong>      </span>   <ul class="dc-list dc-list-red">    <li>     <strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong>    </li>    <li>     <strong>Alter your public key or have your partner alter theirs in any way.</strong>    </li>    <li>     <strong>Insert a random public key.</strong>    </li>   </ul>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-keygen-tab">   <p style="text-align: center;">    <b style="font-size: large;">Secure Key Generation</b>   </p>   <br/>   <strong>Exchange Algorithm:</strong>   <select id="dc-keygen-method" title="Exchange Algorithm">    <option value="dh" selected>Diffie-Hellman</option>    <option value="ecdh">Elliptic-Curve Diffie-Hellman</option>   </select>   <br/><br/>   <strong>Key Length ( Bits ):</strong>   <select id="dc-keygen-algorithm" title="Key Length">    <option value="768">768</option>    <option value="1024">1024</option>    <option value="1536">1536</option>    <option value="2048">2048</option>    <option value="3072">3072</option>    <option value="4096">4096</option>    <option value="6144">6144</option>    <option value="8192" selected>8192</option>   </select>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-keygen-gen-btn" class="dc-button">Generate</button>    <button id="dc-keygen-clear-btn" class="dc-button dc-button-inverse">Clear</button>   </div>   <br/><br/><br/>   <strong>Private Key: (    <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span>    )</strong><br/>   <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"       unselectable="on" disabled readonly title="Private Key"/>   <br/><br/>   <strong>Public Key:</strong><br/>   <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192"       unselectable="on" disabled readonly title="Public Key"/>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-keygen-send-pub-btn" class="dc-button">Send Public Key</button>   </div>   <br/>   <ul class="dc-list dc-list-red">    <li>Never rely on copying these keys. Use the "Send Public Key" button     to send your key.</li>    <li>Public keys are automatically encoded with a random salts.</li>    <li>Posting these keys directly won't work since they aren't encoded     in the format required.</li>   </ul>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-handshake-tab">   <p style="text-align: center;">    <b style="font-size: large;">Key Derivation</b>   </p>   <br/>   <p>    <span style="text-decoration: underline; color: #ff0000;">     <strong>NOTE:</strong>    </span>   </p>   <ul class="dc-list dc-list-red">    <li>Copy your partner's private key EXACTLY as it was posted.</li>    <li>Your last generated private key from the "Key Generation" tab     will be used to compute these keys.</li>   </ul>   <br/>   <strong>Partner's Public Key:</strong><br/>   <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384" title="Partner's Public Key"/>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">     Paste From Clipboard</button>    <button id="dc-handshake-compute-btn" class="dc-button">Compute Secret Keys</button>   </div>   <ul class="dc-list dc-list-red">    <li id="dc-handshake-algorithm">...</li>    <li id="dc-handshake-salts">...</li>    <li id="dc-handshake-secret">...</li>   </ul>   <br/>   <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>   <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"       style="max-height: 14px;user-select: none;" unselectable="on" disabled       title="Primary Secret"/>   <br/><br/>   <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>   <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"       style="max-height: 14px;user-select: none;" unselectable="on" disabled       title="Secondary Secret"/>   <br/><br/>   <div class="stat stat-bar" style="width:70%;">    <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>   </div><br/>   <div class="dc-ruler-align">    <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">     Copy Keys & Nuke</button>    <button id="dc-handshake-apply-keys-btn" class="dc-button">     Apply Generated Passwords</button>   </div>   <br/><br/><br/><br/>  </div> </div></div>`;
+            `<div id="dc-overlay" class="dc-overlay"> <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">  <div class="dc-ruler-align">   <input type="text" class="dc-input-field" id="dc-file-path"       style="width: 100%;padding: 2px;margin-left: 4px;" readonly title="File Path"/>   <button class="dc-button dc-button-inverse" type="button" id="dc-select-file-path-btn"     style="top: -8px;"> . . .</button>  </div>  <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea"      placeholder="Enter any addition text to send with your message ..." maxlength="1820"></textarea>  <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">   <input id="dc-file-deletion-checkbox" class="ui-switch-checkbox" type="checkbox"       title="Add Deletion Link">   <span style="margin-top: 5px;">Send Deletion Link</span>  </div>  <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">   <input id="dc-file-name-random-checkbox" class="ui-switch-checkbox" type="checkbox" checked       title="Use Random File Name">   <span style="margin-top: 5px;">Randomize File Name</span>  </div>  <div class="stat stat-bar">   <span id = "dc-file-upload-status" class="stat-bar-rating" style="width: 0;"/>  </div>  <div class="dc-ruler-align">   <button class="dc-button" style="width:100%;" id="dc-file-upload-btn">Upload</button>  </div>  <div class="dc-ruler-align">   <button class="dc-button dc-button-inverse" style="width:100%;" id="dc-file-cancel-btn">    Close</button>  </div> </div> <div id="dc-overlay-password" class="dc-overlay-centerfield" style="display:none;">  <span>Primary Password:</span>  <input type="password" class="dc-password-field" id="dc-password-primary" placeholder="..."/><br/>  <span>Secondary Password:</span>  <input type="password" class="dc-password-field" id="dc-password-secondary" placeholder="..."/><br/>  <div class="dc-ruler-align">   <button class="dc-button" id="dc-save-pwd">Update Passwords</button>   <button class="dc-button dc-button-inverse" id="dc-reset-pwd">Reset Passwords</button>   <button class="dc-button dc-button-inverse" id="dc-cancel-btn">Cancel</button>  </div>  <button class="dc-button dc-button-inverse" style="width: 100%;" id="dc-cpy-pwds-btn">   Copy Current Passwords</button> </div> <div id="dc-update-overlay" class="dc-overlay-centerfield"   style="top: 5%;border: 1px solid;display: none">  <span>DiscordCrypt: Update Available</span>  <div class="dc-ruler-align">   <strong class="dc-update-field" id="dc-new-version"/>  </div>  <div class="dc-ruler-align">   <strong class="dc-update-field" id="dc-old-version"/>  </div>  <div class="dc-ruler-align">   <strong class="dc-update-field">Changelog:</strong></div>  <div class="dc-ruler-align">   <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly title="Update Changes ..."/>  </div>  <br>  <div class="dc-ruler-align">   <button class="dc-button" id="dc-restart-now-btn" style="width: 50%;">    Restart Discord Now</button>   <button class="dc-button dc-button-inverse" id="dc-restart-later-btn" style="width: 50%;">    Restart Discord Later</button>  </div> </div> <div id="dc-overlay-settings" class="dc-overlay-main" style="display: none;">  <div class="tab" id="dc-settings-tab">   <button class='dc-tab-link' id="dc-plugin-settings-btn">Plugin Settings</button>   <button class='dc-tab-link' id="dc-database-settings-btn">Database Settings</button>   <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>  </div>  <div class="tab-content" id="dc-plugin-settings-tab" style="display: block;">   <p style="text-align: center;">    <b>DiscordCrypt Settings</b>   </p>   <br/><br/>   <div class="dc-ruler-align">    <div class="dc-input-label">Primary Cipher:</div>    <select class="dc-input-field" id="dc-primary-cipher" title="Primary Cipher">     <option value="bf" selected>Blowfish ( 512-Bit )</option>     <option value="aes">AES ( 256-Bit )</option>     <option value="camel">Camellia ( 256-Bit )</option>     <option value="tdes">TripleDES ( 192-Bit )</option>     <option value="idea">IDEA ( 128-Bit )</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Secondary Cipher:</div>    <select class="dc-input-field" id="dc-secondary-cipher" title="Secondary Cipher">     <option value="bf">Blowfish ( 512-Bit )</option>     <option value="aes">AES ( 256-Bit )</option>     <option value="camel">Camellia ( 256-Bit )</option>     <option value="idea">IDEA ( 256-Bit )</option>     <option value="tdes">TripleDES ( 192-Bit )</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Cipher Padding Mode:</div>    <select class="dc-input-field" id="dc-settings-padding-mode" title="Cipher Padding Scheme">     <option value="pkc7">PKCS #7</option>     <option value="ans2">ANSI X9.23</option>     <option value="iso1">ISO 10126</option>     <option value="iso9">ISO 97971</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Cipher Block Operation Mode:</div>    <select class="dc-input-field" id="dc-settings-cipher-mode" title="Cipher Block Operation Mode">     <option value="cbc">Cipher Block Chaining</option>     <option value="cfb">Cipher Feedback Mode</option>     <option value="ofb">Output Feedback Mode</option>    </select>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Default Encryption Password:</div>    <input type="text" class="dc-input-field" id="dc-settings-default-pwd"        title="Default Encryption Password"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Scanning Frequency:</div>    <input type="text" class="dc-input-field" id="dc-settings-scan-delay"        title="Scanning Frequency"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Message Trigger:</div>    <input type="text" class="dc-input-field" id="dc-settings-encrypt-trigger" title="Message Trigger"/>   </div>   <div class="dc-hint">    <p>The suffix at the end of a typed message to indicate whether to encrypt the text.</p>    <p>Example: <u>This message will be encrypted.|ENC</u></p>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Timed Message Expiration:</div>    <input type="number" class="dc-input-field" id="dc-settings-timed-expire"        title="Timed Message Expiration"/>   </div>   <div class="dc-hint">    <p>This indicates how long after an encrypted message is sent, should it be deleted in minutes.</p>    <p><u>Set this to "0" to disable timed messages.</u></p>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">New Master Database Password:</div>    <input type="text" class="dc-input-field" id="dc-master-password"        title="New Master Database Password"/>   </div>   <div class="dc-ruler-align">    <div class="dc-input-label">Use Embedded Messages:</div>    <input type="checkbox" class="dc-input-field" id="dc-embed-enabled"        title="Use Embedded Messages"/>   </div>   <div class="dc-hint">    <p>If enabled, send all encrypted messages using embeds.</p>    <p>     <b style="color: #f00">WARNING:</b>     <b> Using this option may result in your embedded permissions being globally revoked.</b>    </p>   </div>   <div class="dc-ruler-align">    <button id="dc-settings-save-btn" class="dc-button">Save & Apply</button>    <button id="dc-settings-reset-btn" class="dc-button dc-button-inverse">     Reset Settings</button>   </div>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-database-settings-tab">   <p style="text-align: center;">    <b>Database Settings</b>   </p>   <br/><br/>   <div class="dc-scroll-table">    <table class="dc-table">     <thead>     <tr>      <th><b>Channel</b></th>      <th><b>Name</b></th>      <th><b>Options</b></th>     </tr>     </thead>     <tbody id="dc-database-entries">      <tr>       <td>Placeholder</td>       <td>Placeholder</td>       <td><button class="dc-button dc-button-inverse dc-button-small">Delete Entry</button></td>      </tr>     </tbody>    </table>   </div>   <br/><br/>   <div class="dc-ruler-align">    <button class="dc-button" id="dc-import-database-btn">Import Database(s)</button>    <button class="dc-button dc-button-inverse" id="dc-export-database-btn">Export Database</button>    <button class="dc-button dc-button-inverse" id="dc-erase-entries-btn">Erase Entries</button>   </div>  </div> </div> <div id="dc-overlay-exchange" class="dc-overlay-main" style="display: none;">  <div class="tab" id="dc-exchange-tab">   <button class='dc-tab-link' id="dc-tab-info-btn">Info</button>   <button class='dc-tab-link' id="dc-tab-keygen-btn">Key Generation</button>   <button class='dc-tab-link' id="dc-tab-handshake-btn">Secret Computation</button>   <button class='dc-tab-link' id="dc-exit-exchange-btn" style="float:right;">[ X ]</button>  </div>  <div class="tab-content" id="dc-about-tab" style="display: block;">   <p style="text-align: center;">    <b>Key Exchanger</b>   </p>   <br/>   <strong>What is this used for?</strong>   <ul class="dc-list">    <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt     requires a secure channel to exchange these keys.</li>    <li>Using this generator, you may create new keys using standard algorithms such as     DH or ECDH for manual handshaking.</li>    <li>Follow the steps below and you can generate a password between channels or users     while being able to publicly post the messages.</li>    <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with     the Scrypt KDF function to derive two keys.</li>   </ul>   <br/>   <strong>How do I use this?</strong>   <ul class="dc-list">    <li>Generate a key pair using the specified algorithm and key size on the     "Key Generation" tab.</li>    <li>Give your partner your public key by clicking the "Send Public Key" button.</li>    <li>Ask your partner to give you their public key using the same step above.</li>    <li>Copy your partner's public key and paste it in the "Secret Computation" tab and     select "Compute Secret Keys".</li>    <li>Wait for <span style="text-decoration: underline;color: #ff0000;">BOTH</span>     the primary and secondary keys to be generated.</li>    <li>A status bar is provided to easily tell you when both passwords     have been generated.</li>    <li>Click the "Apply Generated Passwords" button to apply both passwords to     the current user or channel.</li>   </ul>   <strong>Algorithms Supported:</strong>   <ul class="dc-list">    <li>     <a title="Diffie–Hellman key exchange"        href="https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"        target="_blank" rel="noopener">Diffie-Hellman ( DH )</a>    </li>    <li>     <a title="Elliptic curve Diffie–Hellman"        href="https://en.wikipedia.org/wiki/Elliptic_curve_Diffie%E2%80%93Hellman"        target="_blank" rel="noopener">Elliptic Curve Diffie-Hellman ( ECDH )</a>    </li>   </ul>   <span style="text-decoration: underline; color: #ff0000;">       <strong>DO NOT:</strong>      </span>   <ul class="dc-list dc-list-red">    <li>     <strong>Post your private key. If you do, generate a new one IMMEDIATELY.</strong>    </li>    <li>     <strong>Alter your public key or have your partner alter theirs in any way.</strong>    </li>    <li>     <strong>Insert a random public key.</strong>    </li>   </ul>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-keygen-tab">   <p style="text-align: center;">    <b style="font-size: large;">Secure Key Generation</b>   </p>   <br/>   <strong>Exchange Algorithm:</strong>   <select id="dc-keygen-method" title="Exchange Algorithm">    <option value="dh" selected>Diffie-Hellman</option>    <option value="ecdh">Elliptic-Curve Diffie-Hellman</option>   </select>   <br/><br/>   <strong>Key Length ( Bits ):</strong>   <select id="dc-keygen-algorithm" title="Key Length">    <option value="768">768</option>    <option value="1024">1024</option>    <option value="1536">1536</option>    <option value="2048">2048</option>    <option value="3072">3072</option>    <option value="4096">4096</option>    <option value="6144">6144</option>    <option value="8192" selected>8192</option>   </select>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-keygen-gen-btn" class="dc-button">Generate</button>    <button id="dc-keygen-clear-btn" class="dc-button dc-button-inverse">Clear</button>   </div>   <br/><br/><br/>   <strong>Private Key: (    <span style="text-decoration: underline; color: #ff0000;">KEEP SECRET</span>    )</strong><br/>   <textarea id="dc-priv-key-ta" rows="8" cols="128" maxsize="8192"       unselectable="on" disabled readonly title="Private Key"/>   <br/><br/>   <strong>Public Key:</strong><br/>   <textarea id="dc-pub-key-ta" rows="8" cols="128" maxsize="8192"       unselectable="on" disabled readonly title="Public Key"/>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-keygen-send-pub-btn" class="dc-button">Send Public Key</button>   </div>   <br/>   <ul class="dc-list dc-list-red">    <li>Never rely on copying these keys. Use the "Send Public Key" button     to send your key.</li>    <li>Public keys are automatically encoded with a random salts.</li>    <li>Posting these keys directly won't work since they aren't encoded     in the format required.</li>   </ul>   <br/><br/><br/><br/>  </div>  <div class="tab-content" id="dc-handshake-tab">   <p style="text-align: center;">    <b style="font-size: large;">Key Derivation</b>   </p>   <br/>   <p>    <span style="text-decoration: underline; color: #ff0000;">     <strong>NOTE:</strong>    </span>   </p>   <ul class="dc-list dc-list-red">    <li>Copy your partner's private key EXACTLY as it was posted.</li>    <li>Your last generated private key from the "Key Generation" tab     will be used to compute these keys.</li>   </ul>   <br/>   <strong>Partner's Public Key:</strong><br/>   <textarea id="dc-handshake-ppk" rows="8" cols="128" maxsize="16384" title="Partner's Public Key"/>   <br/><br/>   <div class="dc-ruler-align">    <button id="dc-handshake-paste-btn" class="dc-button dc-button-inverse">     Paste From Clipboard</button>    <button id="dc-handshake-compute-btn" class="dc-button">Compute Secret Keys</button>   </div>   <ul class="dc-list dc-list-red">    <li id="dc-handshake-algorithm">...</li>    <li id="dc-handshake-salts">...</li>    <li id="dc-handshake-secret">...</li>   </ul>   <br/>   <strong id="dc-handshake-prim-lbl">Primary Secret:</strong><br/>   <textarea id="dc-handshake-primary-key" rows="1" columns="128" maxsize="32768"       style="max-height: 14px;user-select: none;" unselectable="on" disabled       title="Primary Secret"/>   <br/><br/>   <strong id="dc-handshake-sec-lbl">Secondary Secret:</strong><br/>   <textarea id="dc-handshake-secondary-key" rows="1" columns="128" maxsize="32768"       style="max-height: 14px;user-select: none;" unselectable="on" disabled       title="Secondary Secret"/>   <br/><br/>   <div class="stat stat-bar" style="width:70%;">    <span id="dc-exchange-status" class="stat-bar-rating" style="width: 0;"/>   </div><br/>   <div class="dc-ruler-align">    <button id="dc-handshake-cpy-keys-btn" class="dc-button dc-button-inverse">     Copy Keys & Nuke</button>    <button id="dc-handshake-apply-keys-btn" class="dc-button">     Apply Generated Passwords</button>   </div>   <br/><br/><br/><br/>  </div> </div></div>`;
 
         /**
          * @desc The Base64 encoded SVG containing the unlocked status icon.
@@ -2143,6 +2143,15 @@ class discordCrypt {
         /* Handle Database Settings tab selected. */
         $( '#dc-database-settings-btn' ).click( discordCrypt.on_database_settings_tab_button_clicked( this ) );
 
+        /* Handle Database Import button. */
+        $( '#dc-import-database-btn' ).click( discordCrypt.on_import_database_button_clicked( this ) );
+
+        /* Handle Database Export button. */
+        $( '#dc-export-database-btn' ).click( discordCrypt.on_export_database_button_clicked( this ) );
+
+        /* Handle Clear Database Entries button. */
+        $( '#dc-erase-entries-btn' ).click( discordCrypt.on_clear_entries_button_clicked( this ) );
+
         /* Handle Settings tab closing. */
         $( '#dc-exit-settings-btn' ).click( discordCrypt.on_settings_close_button_clicked );
 
@@ -2914,7 +2923,7 @@ class discordCrypt {
         /* Create an input element. */
         let file = require( 'electron' ).remote.dialog.showOpenDialog( {
             title: 'Select a file to encrypt and upload',
-            label: 'Select',
+            buttonLabel: 'Select',
             message: 'Maximum file size is 50 MB',
             properties: [ 'openFile', 'showHiddenFiles', 'treatPackageAsDirectory' ]
         } );
@@ -3088,6 +3097,7 @@ class discordCrypt {
      * @private
      * @desc Selects the Database Settings tab and loads key info.
      * @param {discordCrypt} self
+     * @return {Function}
      */
     static on_database_settings_tab_button_clicked( self ) {
         return () => {
@@ -3131,7 +3141,7 @@ class discordCrypt {
                     continue;
 
                 /* Create the elements needed for building the row. */
-                let element = $( `<tr><td>${prop}</td><td>${name}</td><td></td></tr>` ),
+                let element = $( `<tr><td>${id}</td><td>${name}</td><td></td></tr>` ),
                     btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
                         .text( 'Delete' );
@@ -3148,7 +3158,7 @@ class discordCrypt {
                     btn.parent().parent().remove();
                 } );
 
-                /* Append the button to the Options row. */
+                /* Append the button to the Options column. */
                 $( element.children()[ 2 ] ).append( btn );
 
                 /* Append the entire entry to the table. */
@@ -3157,6 +3167,205 @@ class discordCrypt {
 
             /* Select the database settings. */
             discordCrypt.setActiveSettingsTab( 1 );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Opens a file dialog to import a JSON encoded entries file.
+     * @param self
+     * @return {Function}
+     */
+    static on_import_database_button_clicked( self ) {
+        return () => {
+            /* Get the FS module. */
+            const fs = require( 'fs' );
+
+            /* Create an input element. */
+            let files = require( 'electron' ).remote.dialog.showOpenDialog( {
+                title: 'Import Database',
+                message: 'Select the configuration file(s) to import',
+                buttonLabel: 'Import',
+                filters: [ {
+                    name: 'Database Entries ( *.json )',
+                    extensions: [ 'json' ]
+                } ],
+                properties: [ 'openFile', 'multiSelections', 'showHiddenFiles', 'treatPackageAsDirectory' ]
+            } );
+
+            /* Ignore if no files was selected. */
+            if ( !files.length )
+                return;
+
+            /* Cache the button. */
+            let import_btn = $( '#dc-import-database-btn' );
+
+            /* For reference. */
+            let imported = 0;
+
+            /* Update the status. */
+            import_btn.text( `Importing ( ${files.length} ) File(s)` );
+
+            /* Loop over every file.  */
+            for ( let i = 0; i < files.length; i++ ) {
+                let file = files[ i ],
+                    data;
+
+                /* Sanity check. */
+                if ( !fs.statSync( file ).isFile() )
+                    continue;
+
+                /* Read the file. */
+                try {
+                    data = JSON.parse( fs.readFileSync( file ).toString() );
+                }
+                catch ( e ) {
+                    discordCrypt.log( `Error reading JSON file '${file} ...`, 'warn' );
+                    continue;
+                }
+
+                /* Make sure the root element of entries exists. */
+                if ( !data.discordCrypt_entries || !data.discordCrypt_entries.length )
+                    continue;
+
+                /* Iterate all entries. */
+                for ( let j = 0; j < data.discordCrypt_entries.length; j++ ) {
+                    let e = data.discordCrypt_entries[ j ];
+
+                    /* Skip invalid entries. */
+                    if ( !e.id || !e.primary || !e.secondary )
+                        continue;
+
+                    /* Determine if to count this as an import or an update which aren't counted. */
+                    if ( !self.configFile.passList.hasOwnProperty( e.id ) ) {
+                        /* Update the number imported. */
+                        imported++;
+                    }
+
+                    /* Add it to the configuration file. */
+                    self.configFile.passList[ e.id ] = discordCrypt.createPassword( e.primary, e.secondary );
+                }
+            }
+
+            /* Update the button's text. */
+            setTimeout( () => {
+                import_btn.text( `Imported (${imported}) ${imported === 1 ? 'Entry' : 'Entries'}` );
+
+                /* Reset the button's text. */
+                setTimeout( () => {
+                    import_btn.text( 'Import Database(s)' );
+                }, 1000 );
+
+            }, 500 );
+
+            /* Determine if to save the database. */
+            if ( imported !== 0 ) {
+                /* Trigger updating the database entries field. */
+                discordCrypt.on_database_settings_tab_button_clicked( self )();
+
+                /* Save the configuration. */
+                self.saveConfig();
+            }
+        };
+    }
+
+    /**
+     * @private
+     * @desc Opens a file dialog to import a JSON encoded entries file.
+     * @param self
+     * @return {Function}
+     */
+    static on_export_database_button_clicked( self ) {
+        return () => {
+            /* Create an input element. */
+            let file = require( 'electron' ).remote.dialog.showSaveDialog( {
+                title: 'Export Database',
+                message: 'Select the destination file',
+                buttonLabel: 'Export',
+                filters: [ {
+                    name: 'Database Entries ( *.json )',
+                    extensions: [ 'json' ]
+                } ]
+            } );
+
+            /* Ignore if no files was selected. */
+            if ( !file.length )
+                return;
+
+            /* Get the FS module. */
+            const fs = require( 'fs' );
+
+            /* Cache the button. */
+            let export_btn = $( '#dc-export-database-btn' );
+
+            /* Create the main object for exporting. */
+            let data = { discordCrypt_entries: [] },
+                entries;
+
+            /* Iterate each entry in the configuration file. */
+            for ( let prop in self.configFile.passList ) {
+                let e = self.configFile.passList[ prop ];
+
+                /* Insert the entry to the list. */
+                data.discordCrypt_entries.push( {
+                    id: prop,
+                    primary: e.primary,
+                    secondary: e.secondary
+                } );
+            }
+
+            /* Update the entry count. */
+            entries = data.discordCrypt_entries.length;
+
+            try {
+                /* Try writing the file. */
+                fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
+
+                /* Update the button's text. */
+                export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
+            }
+            catch ( e ) {
+                /* Log an error. */
+                discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
+
+                /* Update the button's text. */
+                export_btn.text( 'Error: See Console' );
+            }
+
+            /* Reset the button's text. */
+            setTimeout( () => {
+                export_btn.text( 'Export Database' );
+            }, 1000 );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Clears all entries in the database.
+     * @param self
+     * @return {Function}
+     */
+    static on_clear_entries_button_clicked( self ) {
+        return () => {
+            /* Cache the button. */
+            let erase_entries_btn = $( '#dc-erase-entries-btn' );
+
+            /* Remove all entries. */
+            self.configFile.passList = {};
+
+            /* Clear the table. */
+            $( '#dc-database-entries' ).html( '' );
+
+            /* Save the database. */
+            self.saveConfig();
+
+            /* Update the button's text. */
+            erase_entries_btn.text( 'Cleared Entries' );
+
+            /* Reset the button's text. */
+            setTimeout( () => {
+                erase_entries_btn.text( 'Erase Entries' );
+            }, 1000 );
         };
     }
 

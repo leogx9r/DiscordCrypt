@@ -2140,6 +2140,15 @@ class discordCrypt {
         /* Handle Database Settings tab selected. */
         $( '#dc-database-settings-btn' ).click( discordCrypt.on_database_settings_tab_button_clicked( this ) );
 
+        /* Handle Database Import button. */
+        $( '#dc-import-database-btn' ).click( discordCrypt.on_import_database_button_clicked( this ) );
+
+        /* Handle Database Export button. */
+        $( '#dc-export-database-btn' ).click( discordCrypt.on_export_database_button_clicked( this ) );
+
+        /* Handle Clear Database Entries button. */
+        $( '#dc-erase-entries-btn' ).click( discordCrypt.on_clear_entries_button_clicked( this ) );
+
         /* Handle Settings tab closing. */
         $( '#dc-exit-settings-btn' ).click( discordCrypt.on_settings_close_button_clicked );
 
@@ -2911,7 +2920,7 @@ class discordCrypt {
         /* Create an input element. */
         let file = require( 'electron' ).remote.dialog.showOpenDialog( {
             title: 'Select a file to encrypt and upload',
-            label: 'Select',
+            buttonLabel: 'Select',
             message: 'Maximum file size is 50 MB',
             properties: [ 'openFile', 'showHiddenFiles', 'treatPackageAsDirectory' ]
         } );
@@ -3085,6 +3094,7 @@ class discordCrypt {
      * @private
      * @desc Selects the Database Settings tab and loads key info.
      * @param {discordCrypt} self
+     * @return {Function}
      */
     static on_database_settings_tab_button_clicked( self ) {
         return () => {
@@ -3128,7 +3138,7 @@ class discordCrypt {
                     continue;
 
                 /* Create the elements needed for building the row. */
-                let element = $( `<tr><td>${prop}</td><td>${name}</td><td></td></tr>` ),
+                let element = $( `<tr><td>${id}</td><td>${name}</td><td></td></tr>` ),
                     btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
                         .text( 'Delete' );
@@ -3145,7 +3155,7 @@ class discordCrypt {
                     btn.parent().parent().remove();
                 } );
 
-                /* Append the button to the Options row. */
+                /* Append the button to the Options column. */
                 $( element.children()[ 2 ] ).append( btn );
 
                 /* Append the entire entry to the table. */
@@ -3154,6 +3164,205 @@ class discordCrypt {
 
             /* Select the database settings. */
             discordCrypt.setActiveSettingsTab( 1 );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Opens a file dialog to import a JSON encoded entries file.
+     * @param self
+     * @return {Function}
+     */
+    static on_import_database_button_clicked( self ) {
+        return () => {
+            /* Get the FS module. */
+            const fs = require( 'fs' );
+
+            /* Create an input element. */
+            let files = require( 'electron' ).remote.dialog.showOpenDialog( {
+                title: 'Import Database',
+                message: 'Select the configuration file(s) to import',
+                buttonLabel: 'Import',
+                filters: [ {
+                    name: 'Database Entries ( *.json )',
+                    extensions: [ 'json' ]
+                } ],
+                properties: [ 'openFile', 'multiSelections', 'showHiddenFiles', 'treatPackageAsDirectory' ]
+            } );
+
+            /* Ignore if no files was selected. */
+            if ( !files.length )
+                return;
+
+            /* Cache the button. */
+            let import_btn = $( '#dc-import-database-btn' );
+
+            /* For reference. */
+            let imported = 0;
+
+            /* Update the status. */
+            import_btn.text( `Importing ( ${files.length} ) File(s)` );
+
+            /* Loop over every file.  */
+            for ( let i = 0; i < files.length; i++ ) {
+                let file = files[ i ],
+                    data;
+
+                /* Sanity check. */
+                if ( !fs.statSync( file ).isFile() )
+                    continue;
+
+                /* Read the file. */
+                try {
+                    data = JSON.parse( fs.readFileSync( file ).toString() );
+                }
+                catch ( e ) {
+                    discordCrypt.log( `Error reading JSON file '${file} ...`, 'warn' );
+                    continue;
+                }
+
+                /* Make sure the root element of entries exists. */
+                if ( !data.discordCrypt_entries || !data.discordCrypt_entries.length )
+                    continue;
+
+                /* Iterate all entries. */
+                for ( let j = 0; j < data.discordCrypt_entries.length; j++ ) {
+                    let e = data.discordCrypt_entries[ j ];
+
+                    /* Skip invalid entries. */
+                    if ( !e.id || !e.primary || !e.secondary )
+                        continue;
+
+                    /* Determine if to count this as an import or an update which aren't counted. */
+                    if ( !self.configFile.passList.hasOwnProperty( e.id ) ) {
+                        /* Update the number imported. */
+                        imported++;
+                    }
+
+                    /* Add it to the configuration file. */
+                    self.configFile.passList[ e.id ] = discordCrypt.createPassword( e.primary, e.secondary );
+                }
+            }
+
+            /* Update the button's text. */
+            setTimeout( () => {
+                import_btn.text( `Imported (${imported}) ${imported === 1 ? 'Entry' : 'Entries'}` );
+
+                /* Reset the button's text. */
+                setTimeout( () => {
+                    import_btn.text( 'Import Database(s)' );
+                }, 1000 );
+
+            }, 500 );
+
+            /* Determine if to save the database. */
+            if ( imported !== 0 ) {
+                /* Trigger updating the database entries field. */
+                discordCrypt.on_database_settings_tab_button_clicked( self )();
+
+                /* Save the configuration. */
+                self.saveConfig();
+            }
+        };
+    }
+
+    /**
+     * @private
+     * @desc Opens a file dialog to import a JSON encoded entries file.
+     * @param self
+     * @return {Function}
+     */
+    static on_export_database_button_clicked( self ) {
+        return () => {
+            /* Create an input element. */
+            let file = require( 'electron' ).remote.dialog.showSaveDialog( {
+                title: 'Export Database',
+                message: 'Select the destination file',
+                buttonLabel: 'Export',
+                filters: [ {
+                    name: 'Database Entries ( *.json )',
+                    extensions: [ 'json' ]
+                } ]
+            } );
+
+            /* Ignore if no files was selected. */
+            if ( !file.length )
+                return;
+
+            /* Get the FS module. */
+            const fs = require( 'fs' );
+
+            /* Cache the button. */
+            let export_btn = $( '#dc-export-database-btn' );
+
+            /* Create the main object for exporting. */
+            let data = { discordCrypt_entries: [] },
+                entries;
+
+            /* Iterate each entry in the configuration file. */
+            for ( let prop in self.configFile.passList ) {
+                let e = self.configFile.passList[ prop ];
+
+                /* Insert the entry to the list. */
+                data.discordCrypt_entries.push( {
+                    id: prop,
+                    primary: e.primary,
+                    secondary: e.secondary
+                } );
+            }
+
+            /* Update the entry count. */
+            entries = data.discordCrypt_entries.length;
+
+            try {
+                /* Try writing the file. */
+                fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
+
+                /* Update the button's text. */
+                export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
+            }
+            catch ( e ) {
+                /* Log an error. */
+                discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
+
+                /* Update the button's text. */
+                export_btn.text( 'Error: See Console' );
+            }
+
+            /* Reset the button's text. */
+            setTimeout( () => {
+                export_btn.text( 'Export Database' );
+            }, 1000 );
+        };
+    }
+
+    /**
+     * @private
+     * @desc Clears all entries in the database.
+     * @param self
+     * @return {Function}
+     */
+    static on_clear_entries_button_clicked( self ) {
+        return () => {
+            /* Cache the button. */
+            let erase_entries_btn = $( '#dc-erase-entries-btn' );
+
+            /* Remove all entries. */
+            self.configFile.passList = {};
+
+            /* Clear the table. */
+            $( '#dc-database-entries' ).html( '' );
+
+            /* Save the database. */
+            self.saveConfig();
+
+            /* Update the button's text. */
+            erase_entries_btn.text( 'Cleared Entries' );
+
+            /* Reset the button's text. */
+            setTimeout( () => {
+                erase_entries_btn.text( 'Erase Entries' );
+            }, 1000 );
         };
     }
 
