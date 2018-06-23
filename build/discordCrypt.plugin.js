@@ -1340,17 +1340,18 @@ class discordCrypt {
      * @private
      * @experimental
      * @desc Dumps all function callback handlers with their names, IDs and function prototypes. [ Debug Function ]
+     * @param {boolean} dump_actions Whether to dump action handlers.
      * @returns {Array} Returns an array of all IDs and identifier callbacks.
      */
-    static dumpWebpackModuleCallbacks() {
+    static dumpWebpackModuleCallbacks( dump_actions = true ) {
         /* Resolve the finder function. */
         let finder = discordCrypt.getWebpackModuleSearcher().findByDispatchToken;
 
         /* Create the dumping array. */
         let dump = [];
 
-        /* Iterate over let's say 500 possible modules ? In reality, there's < 100. */
-        for ( let i = 0; i < 500; i++ ) {
+        /* Iterate over let's say 1000 possible modules ? */
+        for ( let i = 0; i < 1000; i++ ) {
             /* Locate the module. */
             let module = finder( i );
 
@@ -1361,15 +1362,36 @@ class discordCrypt {
             /* Create an entry in the array. */
             dump[ i ] = {};
 
-            /* Loop over every property name in the action handler. */
-            for ( let prop in module._actionHandlers ) {
-
-                /* Quick sanity check. */
-                if ( !module._actionHandlers.hasOwnProperty( prop ) )
+            /* Loop over every property in the module. */
+            for( let prop in module ) {
+                /* Skip dependencies. */
+                if( prop == '_dependencies' )
                     continue;
 
-                /* Assign the module property name and it's basic prototype. */
-                dump[ i ][ prop ] = module._actionHandlers[ prop ].prototype.constructor.toString().split( '{' )[ 0 ];
+                /* Dump action handlers. */
+                if( prop == '_actionHandlers' || prop == '_changeCallbacks' ) {
+                    /* Skip if not required. */
+                    if( !dump_actions )
+                        continue;
+
+                    dump[ i ][ prop ] = {};
+
+                    /* Loop over every property name in the action handler. */
+                    for ( let action in module[ prop ] ) {
+
+                        /* Quick sanity check. */
+                        if ( !module._actionHandlers.hasOwnProperty( action ) )
+                            continue;
+
+                        /* Assign the module property name and it's basic prototype. */
+                        dump[ i ][ prop ][ action ] =
+                            module[ prop ][ action ].prototype.constructor.toString().split( '{' )[ 0 ];
+                    }
+                }
+                else {
+                    /* Add the actual property name and its prototype. */
+                    dump[ i ][ prop ] = module[ prop ].toString().split( '{' )[ 0 ];
+                }
             }
         }
 
@@ -1683,7 +1705,7 @@ class discordCrypt {
 
     /**
      * @desc Hooks a dispatcher from Discord's internals.
-     * @author samogot & Leonardo Gates
+     * @author samogot
      * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
      * @param {string} method_name The name of the method to hook.
      * @param {string} options The type of hook to apply. [ 'before', 'after', 'instead', 'revert' ]
