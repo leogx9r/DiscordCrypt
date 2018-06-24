@@ -614,7 +614,7 @@ class discordCrypt {
                     }
                     catch ( e ) {
                         /* Log the error that occurred. */
-                        discordCrypt.log( e.messageId + ': ' + e.toString(), 'error' );
+                        discordCrypt.log( `${e.messageId}: ${e.toString()}`, 'error' );
                     }
 
                     /* Delete the index. */
@@ -662,11 +662,13 @@ class discordCrypt {
 
         /* Unload elements. */
         $( "#dc-overlay" ).remove();
+        $( '#dc-file-btn' ).remove();
         $( '#dc-lock-btn' ).remove();
         $( '#dc-passwd-btn' ).remove();
         $( '#dc-exchange-btn' ).remove();
         $( '#dc-settings-btn' ).remove();
-        $( '#dc-toolbar-line' ).remove();
+        $( '#dc-quick-exchange-btn' ).remove();
+        $( '#dc-clipboard-upload-btn' ).remove();
 
         /* Clear the configuration file. */
         this.configFile = null;
