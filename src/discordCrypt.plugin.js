@@ -5362,7 +5362,7 @@ class discordCrypt {
             let params = getParams( crypto.randomBytes( 64 ) );
 
             /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
-            data = sjcl.arrayBuffer.ccm.compat_encrypt( new sjcl.cipher.aes( params.key ), data, params.iv );
+            data = sjcl.mode.ccm.encrypt( new sjcl.cipher.aes( params.key ), data, params.iv );
 
             /* Execute the callback. */
             callback(
