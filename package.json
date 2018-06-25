@@ -24,6 +24,7 @@
     "esdoc-standard-plugin": "^1.0.0",
     "form-data": "^2.3.2",
     "fs": "0.0.1-security",
+    "gpg": "^0.6.0",
     "istanbul": "^0.4.5",
     "mime-types": "^2.1.18",
     "minimist": "^1.2.0",
