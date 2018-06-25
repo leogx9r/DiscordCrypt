@@ -43,6 +43,11 @@ class Compiler {
         this.process = require( 'process' );
 
         /**
+         * @desc Cache the GPG module wrapper for build signature generation.
+         */
+        this.gpg = require( 'gpg' );
+
+        /**
          * @desc Cache the Uglify-JS ( ES ) Module for compressing sources.
          */
         this.uglifyjs = require( 'uglify-es' );
@@ -217,9 +222,20 @@ class Compiler {
      * @param {string} assets_path The path to the assets directory.
      * @param {boolean} compress Whether to compress the plugin itself.
      * @param {Object} assets_data The asset tags for each file within the assets directory.
+     * @param {string} [sign_key_id] Generates a GPG signature on the output file using this key ID.
      * @return {boolean} Returns true on success and false on failure.
      */
-    compilePlugin( plugin_path, tag_name, library_path, library_info, output_dir, assets_path, compress, assets_data ) {
+    compilePlugin(
+        plugin_path,
+        tag_name,
+        library_path,
+        library_info,
+        output_dir,
+        assets_path,
+        compress,
+        assets_data,
+        sign_key_id
+    ) {
         const header =
             `//META{"name":"discordCrypt"}*//
 
@@ -294,7 +310,27 @@ class Compiler {
         }
 
         /* Signal to the user. */
-        console.info( `Built plugin file!\nDestination: ${output_path}` );
+        console.info( `Destination File: ${output_path}` );
+
+        /* Generate a signature if required. */
+        if( sign_key_id ) {
+            console.info( `Generating GPG Signature Using Key: ${sign_key_id} ...` );
+
+            /* Generate the signature. */
+            this.gpg.callStreaming(
+                output_path,
+                this.path.join( output_dir, `${this.path.basename( plugin_path )}.sig` ),
+                [ '-a', '-b', '--default-key', sign_key_id ],
+                ( error, result ) => {
+                    /* Log the output. */
+                    if( !error && !result )
+                        console.info( `Generated GPG Signature: \`${output_path}.sig\` ...` );
+                    else
+                        console.error( `Error Generating Signature:\n    Error: ${error}\n    Result: ${result}\n` );
+                }
+            )
+
+        }
 
         return true;
     }
@@ -343,6 +379,7 @@ class Compiler {
                 "   --assets-directory|-a    -  The path to the assets folder containing add-in assets.\n" +
                 "   --output-directory|-o    -  The output directory to store the compiled file in.\n" +
                 "   --enable-compression|-c  -  If used, the plugin file will be compressed.\n" +
+                "   --sign|-s                -  If specified, this is the key ID used to sign the built output.\n" +
                 "\n" +
                 "Example:\n" +
                 `   ${this.process.argv[ 0 ]} ${this.process.argv[ 1 ]} ` +
@@ -361,7 +398,8 @@ class Compiler {
             args[ 'output-directory' ] || args[ 'o' ] || defaults.output,
             args[ 'assets-directory' ] || args[ 'a' ] || defaults.assets,
             args[ 'enable-compression' ] || args[ 'c' ] || defaults.compression,
-            defaults.assets_tag
+            defaults.assets_tag,
+            args[ 'sign' ] || args[ 's' ]
         );
     }
 }
