@@ -2585,7 +2585,7 @@ class discordCrypt {
         let id = discordCrypt.getChannelId();
 
         /* Use the default password for decryption if one hasn't been defined for this channel. */
-        let password = Buffer.from(
+        let primary = Buffer.from(
             this.configFile.passList[ id ] && this.configFile.passList[ id ].primary ?
                 this.configFile.passList[ id ].primary :
                 this.configFile.defaultPassword
@@ -2608,7 +2608,7 @@ class discordCrypt {
                 return;
 
             /* Try parsing a symmetric message. */
-            self.parseSymmetric( this, password, secondary, true, React );
+            self.parseSymmetric( this, primary, secondary, true, React );
 
             /* Set the flag. */
             $( this ).data( 'dc-parsed', true );
@@ -2621,7 +2621,7 @@ class discordCrypt {
                 return;
 
             /* Try parsing a symmetric message. */
-            self.parseSymmetric( this, password, secondary, false, React );
+            self.parseSymmetric( this, primary, secondary, false, React );
 
             /* Set the flag. */
             $( this ).data( 'dc-parsed', true );
@@ -7577,6 +7577,7 @@ class discordCrypt {
      * @throws An exception indicating the error that occurred.
      */
     static symmetricEncrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode ) {
+        const customizationParameter = new Uint8Array( Buffer.from( 'DiscordCrypt MAC' ) );
 
         /* Performs one of the 5 standard encryption algorithms on the plain text. */
         function handleEncodeSegment( message, key, cipher, mode, pad ) {
@@ -7655,7 +7656,12 @@ class discordCrypt {
             throw `Unknown cipher selected: ${cipher_index}`;
 
         /* Get MAC tag as a hex string. */
-        let tag = discordCrypt.hmac_sha256( Buffer.from( msg, 'hex' ), primary_key, true );
+        let tag = kmac256(
+            new Uint8Array( Buffer.concat( [ primary_key, secondary_key ] ) ),
+            new Uint8Array( Buffer.from( msg, 'hex' ) ),
+            256,
+            customizationParameter
+        );
 
         /* Prepend the authentication tag hex string & convert it to Base64. */
         msg = Buffer.from( tag + msg, 'hex' );
@@ -7681,6 +7687,7 @@ class discordCrypt {
      * @throws An exception indicating the error that occurred.
      */
     static symmetricDecrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode ) {
+        const customizationParameter = new Uint8Array( Buffer.from( 'DiscordCrypt MAC' ) );
         const crypto = require( 'crypto' );
 
         /* Performs one of the 5 standard decryption algorithms on the plain text. */
@@ -7745,8 +7752,16 @@ class discordCrypt {
             /* Strip off the authentication tag. */
             message = Buffer.from( message.subarray( 32 ) );
 
-            /* Compute the HMAC-SHA-256 of the cipher text as hex. */
-            let computed_tag = Buffer.from( discordCrypt.hmac_sha256( message, primary_key, true ), 'hex' );
+            /* Compute the HMAC-SHA3-256 of the cipher text as hex. */
+            let computed_tag = Buffer.from(
+                kmac256(
+                    new Uint8Array( Buffer.concat( [ primary_key, secondary_key ] ) ),
+                    new Uint8Array( message ),
+                    256,
+                    customizationParameter
+                ),
+                'hex'
+            );
 
             /* Compare the tag for validity. */
             if ( !crypto.timingSafeEqual( computed_tag, tag ) )

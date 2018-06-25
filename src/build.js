@@ -379,6 +379,7 @@ class Compiler {
             },
             library_info: {
                 'sjcl.js': { requiresElectron: true, requiresBrowser: false },
+                'sha3.js': { requiresElectron: true, requiresBrowser: false },
                 'smalltalk.js': { requiresElectron: false, requiresBrowser: true },
                 'currify.js': { requiresElectron: false, requiresBrowser: true },
                 'curve25519.js': { requiresElectron: true, requiresBrowser: false },
