@@ -392,7 +392,7 @@ class Compiler {
 
         let args = require( 'minimist' )( this.process.argv.slice( 2 ) );
 
-        /* Display a help message.*/
+        /* Display a help message. */
         if ( !args || args[ 'help' ] || args[ 'h' ] ) {
             console.info(
                 "Usage:\n" +
