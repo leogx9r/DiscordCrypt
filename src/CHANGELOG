@@ -1,3 +1,10 @@
+Version 1.2.4
+
+- Introduced signed releases for increased authenticity.
+- Disable embedded messages by default so as to prevent possible bans.
+- Added the ability to import and export the database as well as manually removing keys.
+- Updated internal SJCL dependency for encrypted file uploads to the latest public version.
+
 Version 1.2.3
 
 - Fixed a bug introduced due to Discord's Game Tab update.

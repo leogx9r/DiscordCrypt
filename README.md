@@ -4,6 +4,7 @@
 </h1>
 
 * [**Introduction**](#introduction)
+* [**Verifying Signatures**](#verifying-signatures)
 * [**Installation**](#installation)
     * [***Windows***](#windows)
     * [***MacOS***](#macos)
@@ -57,7 +58,43 @@ happily accept.
 | Monero ( `XMR` )       | `83h2PKvpjx9dDK1VJ5B2h8ADbZZUcfEbwaQqqve8nmWv3VyvY7tNv5FLa3dUPwybJGZoGWCz5UDjfDYmKttQmChV2Wv9uiq`  |
 
 
- 
+
+# Verifying Signatures
+
+For every release starting with version [`1.2.4`](https://gitlab.com/leogx9r/DiscordCrypt/tags/v1.2.4), 
+we [sign](https://www.gnupg.org/gph/en/manual/x135.html) the built file using 
+[GPG](https://en.wikipedia.org/wiki/GNU_Privacy_Guard) for increased security.
+ 
+**You should ***ALWAYS*** verify the signature of this plugin before using it to ensure it has not been maliciously 
+tampered with.**
+
+For Windows and Linux operating systems, we recommend you use [`Kleopatra`](https://www.openpgp.org/software/kleopatra/)
+ for verifying signatures and for MacOS, we recommend [`GnuPG for OS X`](https://gnupg.org/download/index.html).
+
+The signature for each release is located [here](build/discordCrypt.plugin.js.sig). Please read the manual 
+for your specific client to determine how to verify signatures.
+
+If everything goes well, you'll notice output similar to below:
+
+```
+$ gpg --verify build/discordCrypt.plugin.js.sig
+gpg: assuming signed data in `build/discordCrypt.plugin.js'
+gpg: Signature made Fri 1 Jun 2018 00:00:01 AM 00 using RSA key ID 3787CE3F
+gpg: Good signature from "DiscordCrypt (DiscordCrypt Signing Key)"
+```
+
+The above depends on the client you use but you must always look for a "Good" or "Valid" signature.
+
+Please note, you will need to import the signing key located [here](build/signing-key.pub) to verify signatures.
+
+Finally, you should manually verify that the signing key you import above matches the information below:
+
+```
+Key ID: 3787CE3F 
+Fingerprint: B8EC 0775 960A EB2E 4C11 F084 DA61 3E75 3787 CE3F 
+```
+
+
 
 # Installation
 
@@ -68,6 +105,7 @@ plugin. If you do not have BetterDiscord installed, be sure to do that first bef
 systems that support BetterDiscord.
 
 For installation on specific operating systems, see below:
+
 
 #### Windows
 
