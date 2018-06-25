@@ -31,6 +31,10 @@
 **DiscordCrypt** is a plugin for Discord that uses BetterDiscord's internal structure to send and receive encrypted 
 messages between users and channels in a safe and secure manner.
 
+If you wish to use a web browser instead of Discord's native application, we recommend you use 
+[**SimpleDiscordCrypt**](https://gitlab.com/An0/SimpleDiscordCrypt) made by our friend An0.
+Please note, these two versions are incompatible with one another.
+
 It achieves this by using [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) using 
 well known ciphers to ensure only the people you want to read your messages can read them and no one else.
 
