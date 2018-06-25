@@ -299,14 +299,23 @@ For this, two ciphers are used. The primary cipher is used to encrypt the
 [ciphertext](https://en.wikipedia.org/wiki/Ciphertext).
 
 Following this, the secondary cipher is used along with a completely different key to encrypt the ciphertext yet 
-again yielding the final ciphertext. Finally, a HMAC hash using SHA-256 is computed on the final ciphertext and 
-is prepended to it creating the final result.
+again yielding the final ciphertext.
+
+Finally, a HMAC authentication tag using 
+[KMAC](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-185.pdf) 
+is computed on the final ciphertext with the concatenated primary and secondary keys and is prepended to it, 
+thus creating the final result.
 
 This result is then encoded to [base 64](https://en.wikipedia.org/wiki/Base64) and undergoes 
 [byte encoding](#byte-encoding) to produce a monospace-compatible message.
 
+Putting this all together from a diagram perspective, a general message is as follows:
+
+
+![Message Format](images/message-format.png)
+
 This message is sent to Discord's servers in an embedded message with additional aesthetic icons to produce the image
- seen below.
+ seen below. It may optionally be sent in the form of a code block in the case that embeds are not used.
  
 
 ![An encrypted message](images/encrypted-message.png)
@@ -335,6 +344,7 @@ Please note that this AES-256 bit key also undergoes the OpenSSL process of deri
 
 That is:
 
+- `script_password = scrypt( input: password, salt: whirlpool_hash( password ), N: 4096, r: 8, p: 1, dkLen: 32 )`
 - `random_salt = crypto.randomBytes( size: 8 )`
 - `derived_length = aes_block_size + aes_256_key_size`
 - `derived_string = PBKF2_SHA256( input: scrypt_password, salt: random_salt, length: derived_length, iterations: 1000 )`
