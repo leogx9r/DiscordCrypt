@@ -316,20 +316,43 @@ class Compiler {
         if( sign_key_id ) {
             console.info( `Generating GPG Signature Using Key: ${sign_key_id} ...` );
 
+            let signature_file = this.path.join( output_dir, `${this.path.basename( plugin_path )}.sig` );
+
             /* Generate the signature. */
             this.gpg.callStreaming(
                 output_path,
-                this.path.join( output_dir, `${this.path.basename( plugin_path )}.sig` ),
+                signature_file,
                 [ '-a', '-b', '--default-key', sign_key_id ],
                 ( error, result ) => {
-                    /* Log the output. */
-                    if( !error && !result )
-                        console.info( `Generated GPG Signature: \`${output_path}.sig\` ...` );
+                    /* Check if an error occurred and log it. */
+                    if ( !error && !result ) {
+                        /* Log the result. */
+                        console.info( `Generated GPG Signature: \`${signature_file}\` ...` );
+
+                        /* Attempt to validate the signature produced. */
+                        this.gpg.call(
+                            '',
+                            [ '--logger-fd', '1', '--verify', signature_file, output_path ],
+                            ( e, r ) => {
+                            /* Check if an error occurred and log it. */
+                            if ( !e && r && r.length ) {
+                                /* Test the output for the "Good signature" message from GPG. */
+                                let valid = ( new RegExp( /good signature/i ) ).exec( r.toString() ) !== null;
+
+                                /* Log the appropriate response. */
+                                if ( valid )
+                                    console.info( `Verified Signature's Validity !` );
+                                else
+                                    console.error( `Invalid Signature Generated ...\n${r.toString()}` );
+                            }
+                            else
+                                console.error( `Error Generating Signature:\n    Error: ${e}` );
+                        } );
+                    }
                     else
                         console.error( `Error Generating Signature:\n    Error: ${error}\n    Result: ${result}\n` );
                 }
             )
-
         }
 
         return true;
