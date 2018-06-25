@@ -65,8 +65,8 @@ For every release starting with version [`1.2.4`](https://gitlab.com/leogx9r/Dis
 we [sign](https://www.gnupg.org/gph/en/manual/x135.html) the built file using 
 [GPG](https://en.wikipedia.org/wiki/GNU_Privacy_Guard) for increased security.
  
-**You should ***ALWAYS*** verify the signature of this plugin before using it to ensure it has not been maliciously 
-tampered with.**
+***You should ALWAYS verify the signature of this plugin before using it to ensure it has not been maliciously 
+tampered with.***
 
 For Windows and Linux operating systems, we recommend you use [`Kleopatra`](https://www.openpgp.org/software/kleopatra/)
  for verifying signatures and for MacOS, we recommend [`GnuPG for OS X`](https://gnupg.org/download/index.html).
