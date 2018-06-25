@@ -1,3 +1,11 @@
+Version 1.2.5
+
+- NOTE: Changing the authentication algorithm will prevent any old messages from being decrypted.
+
+- Switched the message authentication cipher to SHA3's KMAC over SHA2's HMAC for increased security.
+- Removed an annoying console error when starting due to the SJCL dependency.
+- Added SHA3-JS's MIT license.
+
 Version 1.2.4
 
 - Introduced signed releases for increased authenticity.
