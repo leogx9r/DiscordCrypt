@@ -1,3 +1,10 @@
+Version 1.2.6
+
+- Fixed a bug regarding detecting the update version.
+- Restyled the UI to use a dark theme similar to Discord's colors.
+- Attempted to update the UI for users with smaller screens. ( No Promises. )
+- Reduced the plugin's size.
+
 Version 1.2.5
 
 - NOTE: Changing the authentication algorithm will prevent any old messages from being decrypted.
