@@ -1144,7 +1144,10 @@ class discordCrypt {
                 /* Try parsing a version number. */
                 let version_number = '';
                 try {
-                    version_number = data.match( /('[0-9]+\.[0-9]+\.[0-9]+')/gi ).toString().replace( /('*')/g, '' );
+                    version_number = data
+                        .match( /((["'])(\d+\.)(\d+\.)(\*|\d+)(["']))/gi )
+                        .toString()
+                        .replace( /(['|"]*['|"])/g, '' );
                 }
                 catch ( e ) {
                     discordCrypt.log( 'Failed to locate the version number in the update ...', 'warn' );
