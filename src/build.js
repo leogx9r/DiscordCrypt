@@ -61,7 +61,6 @@ class Compiler {
                 bare_returns: true
             },
             mangle: true,
-            sourceMap: { url: "inline" },
             compress: {
                 ecma: 6,
                 toplevel: true,
