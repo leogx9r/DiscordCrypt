@@ -1,5 +1,5 @@
 <div id="dc-overlay" class="dc-overlay">
-    <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none; top: 5%;">
+    <div id="dc-overlay-upload" class="dc-overlay-centerfield" style="display:none;">
         <div class="dc-ruler-align">
             <input type="text" class="dc-input-field" id="dc-file-path"
                    style="width: 100%;padding: 2px;margin-left: 4px;" readonly title="File Path"/>
@@ -76,7 +76,7 @@
         <div class="tab" id="dc-settings-tab">
             <button class='dc-tab-link' id="dc-plugin-settings-btn">Plugin Settings</button>
             <button class='dc-tab-link' id="dc-database-settings-btn">Database Settings</button>
-            <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">[ X ]</button>
+            <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">✖</button>
         </div>
         <div class="tab-content" id="dc-plugin-settings-tab" style="display: block;">
             <p style="text-align: center;">
@@ -160,13 +160,13 @@
 
             <div class="dc-ruler-align">
                 <div class="dc-input-label">New Master Database Password:</div>
-                <input type="text" class="dc-input-field" id="dc-master-password"
+                <input type="password" class="dc-input-field" id="dc-master-password"
                        title="New Master Database Password"/>
             </div>
 
             <div class="dc-ruler-align">
                 <div class="dc-input-label">Use Embedded Messages:</div>
-                <input type="checkbox" class="dc-input-field" id="dc-embed-enabled"
+                <input type="checkbox" class="dc-checkbox" id="dc-embed-enabled"
                        title="Use Embedded Messages"/>
             </div>
 
@@ -223,7 +223,7 @@
             <button class='dc-tab-link' id="dc-tab-info-btn">Info</button>
             <button class='dc-tab-link' id="dc-tab-keygen-btn">Key Generation</button>
             <button class='dc-tab-link' id="dc-tab-handshake-btn">Secret Computation</button>
-            <button class='dc-tab-link' id="dc-exit-exchange-btn" style="float:right;">[ X ]</button>
+            <button class='dc-tab-link' id="dc-exit-exchange-btn" style="float:right;">✖</button>
         </div>
         <div class="tab-content" id="dc-about-tab" style="display: block;">
             <p style="text-align: center;">
