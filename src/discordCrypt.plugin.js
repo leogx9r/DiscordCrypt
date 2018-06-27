@@ -974,16 +974,6 @@ class discordCrypt {
 
     /**
      * @public
-     * @desc Removes the extension from a file name.
-     * @param {string} file_name The name of the script file.
-     * @return {string} Returns the sanitized file name.
-     */
-    static sanitizeScriptNameToVariable( file_name ) {
-        return file_name.replace( '.js', '' )
-    }
-
-    /**
-     * @public
      * @desc Loads all compiled libraries as needed.
      * @param {LibraryDefinition} libraries A list of all libraries to load.
      */
@@ -1027,7 +1017,7 @@ class discordCrypt {
             }
             else {
                 /* Run in a new sandbox and store the result in a global object. */
-                global[ discordCrypt.sanitizeScriptNameToVariable( name ) ] =
+                global[ name.replace( '.js', '' ) ] =
                     vm.runInNewContext(
                         code,
                         {
