@@ -3190,13 +3190,17 @@ class discordCrypt {
                     continue;
 
                 /* Create the elements needed for building the row. */
-                let element = $( `<tr><td>${id}</td><td>${name}</td><td></td></tr>` ),
-                    btn = $( '<button>' )
+                let element =
+                        $( `<tr><td>${id}</td><td>${name}</td><td><div style="display:flex;"></div></td></tr>` ),
+                    delete_btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                        .text( 'Delete' );
+                        .text( 'Delete' ),
+                    copy_btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'Copy' );
 
                 /* Handle deletion clicks. */
-                btn.click( function () {
+                delete_btn.click( function () {
                     /* Delete the entry. */
                     delete self.configFile.passList[ id ];
 
@@ -3204,11 +3208,31 @@ class discordCrypt {
                     self.saveConfig();
 
                     /* Remove the entire row. */
-                    btn.parent().parent().remove();
+                    delete_btn.parent().parent().remove();
+                } );
+
+                /* Handle copy clicks. */
+                copy_btn.click( function() {
+                    /* Resolve the entry. */
+                    let current_keys = self.configFile.passList[ id ];
+
+                    /* Write to the clipboard. */
+                    require( 'electron' ).clipboard.writeText(
+                        `Primary Key: ${current_keys.primary}\n\nSecondary Key: ${current_keys.secondary}`
+                    );
+
+                    copy_btn.text( 'Copied' );
+
+                    setTimeout( () => {
+                        copy_btn.text( 'Copy' );
+                    }, 1000 );
                 } );
 
                 /* Append the button to the Options column. */
-                $( element.children()[ 2 ] ).append( btn );
+                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( copy_btn );
+
+                /* Append the button to the Options column. */
+                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( delete_btn );
 
                 /* Append the entire entry to the table. */
                 table.append( element );
