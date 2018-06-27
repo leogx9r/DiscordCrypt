@@ -5669,20 +5669,12 @@ class discordCrypt {
      * @returns {boolean} Returns true if successful.
      */
     static scrypt( input, salt, output_length, N = 16384, r = 8, p = 1, cb = null ) {
+        let crypto = require( 'crypto' );
         let _in, _salt;
 
         /* PBKDF2-HMAC-SHA256 Helper. */
         function PBKDF2_SHA256( input, salt, size, iterations ) {
-            try {
-                return Buffer.from(
-                    discordCrypt.pbkdf2_sha256( input, salt, true, undefined, undefined, size, iterations ),
-                    'hex'
-                );
-            }
-            catch ( e ) {
-                discordCrypt.log( e.toString(), 'error' );
-                return Buffer.alloc( 1 );
-            }
+            return crypto.pbkdf2Sync( input, salt, iterations, size, 'sha256' );
         }
 
         /**
