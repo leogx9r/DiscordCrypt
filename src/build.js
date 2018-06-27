@@ -43,6 +43,12 @@ class Compiler {
         this.process = require( 'process' );
 
         /**
+         * @desc Cache the ZLIB module for compression.
+         * @type {module:zlib}
+         */
+        this.zlib = require( 'zlib' );
+
+        /**
          * @desc Cache the GPG module wrapper for build signature generation.
          */
         this.gpg = require( 'gpg' );
@@ -148,8 +154,12 @@ class Compiler {
             /* Try compressing the library. */
             data = this.tryMinify( data );
 
-            /* Update the code in the library info. */
-            library_info[ base ][ 'code' ] = data;
+            /* Compress the data to a Base64 buffer and update the code in the library info. */
+            library_info[ base ][ 'code' ] = this.zlib.deflateSync( data, {
+                level: 9,
+                memLevel: 9,
+                windowBits: 15
+            } ).toString( 'base64' );
 
             /* Add it to the array. */
             libs[ file ] = library_info[ base ];
