@@ -309,10 +309,104 @@ thus creating the final result.
 This result is then encoded to [base 64](https://en.wikipedia.org/wiki/Base64) and undergoes 
 [byte encoding](#byte-encoding) to produce a monospace-compatible message.
 
-Putting this all together from a diagram perspective, a general message is as follows:
+
+## Putting It Together
+
+A general user message is as follows:
 
 
-![Message Format](images/message-format.png)
+```
+| ------------------------- ENCRYPTED MESSAGE PAYLOAD ------------------------- |
+|                                                                               |
+|  | --------- | | -------- | | -------- | | ------------------------------- |  |
+|  |           | |          | |          | |                                 |  |
+|  |           | |          | |          | |                                 |  |
+|  |   MAGIC   | | METADATA | |   KMAC   | |         CIPHERTEXT BLOB         |  |
+|  |           | |          | |          | |                                 |  |
+|  |  4 Bytes  | | 8 Bytes  | | 32 Bytes | |          < VARIABLE >           |  |
+|  |           | |          | |          | |                                 |  |
+|  |           | |          | |          | |                                 |  |
+|  | --------- | | -------- | | -------- | | ------------------------------- |  |
+|                                                                               |
+| ----------------------------------------------------------------------------- |
+```
+
+- `MAGIC`
+    - Contains the 4 magic characters indicating an encrypted message payload.
+
+- `METADATA`
+    - Encoded metadata indicates the ciphers used, padding scheme and block operation.
+
+- `KMAC`
+    - Contains a KECCAK-256 MAC of the `CIPHERTEXT BLOB` object.
+
+- `CIPHERTEXT BLOB`
+    - Contains an encrypted message blob detailed below.
+    
+    
+```
+| ------------------------------ CIPHERTEXT BLOB ----------------------------- |
+|                                                                              |
+|   | ---------------------- OUTER CIPHERTEXT DATA ----------------------- |   |
+|   |                                                                      |   |
+|   |  | ---------- | | ----------------------------------------------- |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |   NONCE    | |              INNER CIPHERTEXT BLOB              |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |  8 Bytes   | |                  < VARIABLE >                   |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  | ---------- | | ----------------------------------------------- |  |   |
+|   |                                                                      |   |
+|   | -------------------------------------------------------------------- |   |
+|                                                                              |
+| ---------------------------------------------------------------------------- |
+```
+
+- `OUTER CIPHERTEXT DATA`
+    - Contains a nonce concatenated with an encrypted blob.
+
+- `NONCE`
+    - Contains a random 64-bit nonce used for KDF decryption of the INNER CIPHERTEXT DATA.
+
+- `INNER CIPHERTEXT BLOB`
+    - Contains an encrypted `CIPHERTEXT DATA` object from using the **secondary key and nonce**.
+
+
+```
+| --------------------------- INNER CIPHERTEXT BLOB -------------------------- |
+|                                                                              |
+|   | ---------------------- INNER CIPHERTEXT DATA ----------------------- |   |
+|   |                                                                      |   |
+|   |  | ---------- | | ----------------------------------------------- |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |   NONCE    | |                    MESSAGE                      |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |  8 Bytes   | |                  < VARIABLE >                   |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  |            | |                                                 |  |   |
+|   |  | ---------- | | ----------------------------------------------- |  |   |
+|   |                                                                      |   |
+|   | -------------------------------------------------------------------- |   |
+|                                                                              |
+| ---------------------------------------------------------------------------- |
+```
+
+- `INNER CIPHERTEXT DATA`
+    - Contains a nonce concatenated with an encrypted blob.
+
+- `NONCE`
+    - Contains a random 64-bit nonce used for KDF decryption of the MESSAGE.
+
+- `MESSAGE`
+    - Contains the encrypted message using the **primary key and nonce**.
+
 
 This message is sent to Discord's servers in an embedded message with additional aesthetic icons to produce the image
  seen below. It may optionally be sent in the form of a code block in the case that embeds are not used.
