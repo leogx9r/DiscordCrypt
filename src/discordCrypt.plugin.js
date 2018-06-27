@@ -975,6 +975,7 @@ class discordCrypt {
      */
     static loadLibraries( libraries ) {
         const vm = require( 'vm' );
+        const zlib = require( 'zlib' );
 
         /* Inject all compiled libraries based on if they're needed */
         for ( let name in libraries ) {
@@ -997,19 +998,25 @@ class discordCrypt {
                 }
             }
 
+            /* Decompress the Base64 code. */
+            let code = zlib.inflateSync( Buffer.from( libInfo.code, 'base64' ), { windowBits: 15 });
+
             /* Determine how to run this. */
             if ( libInfo.requiresBrowser || libInfo.requiresElectron ) {
                 /* Run in the current context as it operates on currently defined objects. */
-                vm.runInThisContext( libInfo.code, {
-                    filename: name,
-                    displayErrors: false
-                } );
+                vm.runInThisContext(
+                    code,
+                    {
+                        filename: name,
+                        displayErrors: false
+                    }
+                );
             }
             else {
                 /* Run in a new sandbox and store the result in a global object. */
                 global[ discordCrypt.sanitizeScriptNameToVariable( name ) ] =
                     vm.runInNewContext(
-                        libInfo.code,
+                        code,
                         {
                             filename: name,
                             displayErrors: false
