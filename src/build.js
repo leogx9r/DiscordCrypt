@@ -84,6 +84,22 @@ class Compiler {
     }
 
     /**
+     * @desc Compress the input data using ZLIB and return the Base64 converted output.
+     * @param {string} data The input data to compress.
+     * @return {string} Returns the Base64 output of the compression operation.
+     */
+    compress( data ) {
+        return this.zlib.deflateSync(
+            data,
+            {
+                level: 9,
+                memLevel: 9,
+                windowBits: 15
+            }
+        ).toString( 'base64' );
+    }
+
+    /**
      * @desc Attempts to compress the specified data via uglify-es.
      * @param {string} data The data to compress.
      * @param {boolean} use_options Whether to use the default mangling options defined in the constructor.
@@ -155,11 +171,7 @@ class Compiler {
             data = this.tryMinify( data );
 
             /* Compress the data to a Base64 buffer and update the code in the library info. */
-            library_info[ base ][ 'code' ] = this.zlib.deflateSync( data, {
-                level: 9,
-                memLevel: 9,
-                windowBits: 15
-            } ).toString( 'base64' );
+            library_info[ base ][ 'code' ] = this.compress( data );
 
             /* Add it to the array. */
             libs[ file ] = library_info[ base ];
@@ -209,8 +221,10 @@ class Compiler {
 
             data = data.split( "\r" ).join( "" ).split( "\n" ).join( '' ).split( '    ' ).join( ' ' );
 
-            /* Replace the data. */
-            original_data = original_data.split( constants[ file_name ] ).join( data );
+            /* Replace the data with the compressed result. */
+            original_data = original_data
+                .split( constants[ file_name ] )
+                .join( this.compress( data ) );
 
             /* Quick log. */
             console.info( `Added asset: [ ${this.path.basename( file )} ] ...` );

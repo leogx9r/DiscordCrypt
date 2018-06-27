@@ -677,7 +677,7 @@ class discordCrypt {
      */
     load() {
         /* Inject application CSS. */
-        discordCrypt.injectCSS( 'dc-css', this.appCss );
+        discordCrypt.injectCSS( 'dc-css', discordCrypt.zlib_decompress( this.appCss ) );
 
         /* Load necessary libraries. */
         discordCrypt.loadLibraries( this.libraries );
@@ -959,6 +959,20 @@ class discordCrypt {
     /* =================== PROJECT UTILITIES =================== */
 
     /**
+     * @desc Decompresses an encoded ZLIB package.
+     * @param {string} data The input data to decompress.
+     * @param {string} format The format of the input data.
+     *      Can be either hex, base64, latin1, utf8 or undefined.
+     * @return {string} The original data.
+     */
+    static zlib_decompress( data, format = 'base64' ) {
+        return require( 'zlib' ).inflateSync(
+            Buffer.from( data, format ),
+            { windowBits: 15 }
+        ).toString( 'utf8' );
+    }
+
+    /**
      * @public
      * @desc Removes the extension from a file name.
      * @param {string} file_name The name of the script file.
@@ -975,7 +989,6 @@ class discordCrypt {
      */
     static loadLibraries( libraries ) {
         const vm = require( 'vm' );
-        const zlib = require( 'zlib' );
 
         /* Inject all compiled libraries based on if they're needed */
         for ( let name in libraries ) {
@@ -999,7 +1012,7 @@ class discordCrypt {
             }
 
             /* Decompress the Base64 code. */
-            let code = zlib.inflateSync( Buffer.from( libInfo.code, 'base64' ), { windowBits: 15 });
+            let code = discordCrypt.zlib_decompress( libInfo.code );
 
             /* Determine how to run this. */
             if ( libInfo.requiresBrowser || libInfo.requiresElectron ) {
@@ -1931,7 +1944,7 @@ class discordCrypt {
         const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
 
         /* Construct the password updating field. */
-        $( document.body ).prepend( this.masterPasswordHtml );
+        $( document.body ).prepend( discordCrypt.zlib_decompress( this.masterPasswordHtml ) );
 
         const pwd_field = $( '#dc-db-password' );
         const cancel_btn = $( '#dc-cancel-btn' );
@@ -2122,7 +2135,7 @@ class discordCrypt {
             return;
 
         /* Inject the toolbar. */
-        $( this.searchUiClass ).parent().parent().parent().prepend( this.toolbarHtml );
+        $( this.searchUiClass ).parent().parent().parent().prepend( discordCrypt.zlib_decompress( this.toolbarHtml ) );
 
         /* Cache jQuery results. */
         let dc_passwd_btn = $( '#dc-passwd-btn' ),
@@ -2148,7 +2161,7 @@ class discordCrypt {
         }
 
         /* Inject the settings. */
-        $( document.body ).prepend( this.settingsMenuHtml );
+        $( document.body ).prepend( discordCrypt.zlib_decompress( this.settingsMenuHtml ) );
 
         /* Also by default, set the about tab to be shown. */
         discordCrypt.setActiveSettingsTab( 0 );
