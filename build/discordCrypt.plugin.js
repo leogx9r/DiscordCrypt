@@ -5686,7 +5686,7 @@ class discordCrypt {
          * @param {Uint32Array} x Salsa20 scratchpad for row mixing.
          * @param {Uint32Array} _X Salsa20 scratchpad for block mixing.
          */
-        function Script_RowMix( BY, Yi, r, x, _X ) {
+        function ScryptRowMix( BY, Yi, r, x, _X ) {
             let i, j, k, l;
 
             for ( i = 0, j = ( 2 * r - 1 ) * 16; i < 16; i++ )
@@ -5847,7 +5847,7 @@ class discordCrypt {
                             while ( z-- ) V[ z + y ] = XY[ z ];
 
                             /* Row mix #4 */
-                            Script_RowMix( XY, Yi, r, x, _X );
+                            ScryptRowMix( XY, Yi, r, x, _X );
                         }
 
                         i1 += steps;
@@ -5884,7 +5884,7 @@ class discordCrypt {
                             for ( z = 0, y = ( XY[ ( 2 * r - 1 ) * 16 ] & ( N - 1 ) ) * Yi; z < Yi; z++ )
                                 XY[ z ] ^= V[ y + z ];
                             /* Row mix #9 ( outer ) */
-                            Script_RowMix( XY, Yi, r, x, _X );
+                            ScryptRowMix( XY, Yi, r, x, _X );
                         }
 
                         i1 += steps;
