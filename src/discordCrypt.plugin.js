@@ -867,28 +867,30 @@ class discordCrypt
     /**
      * @private
      * @desc Updates and saves the configuration data used and updates a given button's text.
-     * @param {Object} btn The jQuery button to set the update text for.
+     * @param {Object} [btn] The jQuery button to set the update text for.
      */
     saveSettings( btn ) {
         /* Save the configuration file. */
         this.saveConfig();
 
-        /* Tell the user that their settings were applied. */
-        btn.text( 'Saved & Applied!' );
-
-        /* Reset the original text after a second. */
-        setTimeout( ( function () {
-            btn.text( 'Save & Apply' );
-        } ), 1000 );
-
         /* Force decode messages. */
         this.decodeMessages( true );
+
+        if( btn ) {
+            /* Tell the user that their settings were applied. */
+            btn.text( 'Saved & Applied!' );
+
+            /* Reset the original text after a second. */
+            setTimeout( ( function () {
+                btn.text( 'Save & Apply' );
+            } ), 1000 );
+        }
     }
 
     /**
      * @private
      * @desc Resets the default configuration data used and updates a given button's text.
-     * @param {Object} btn The jQuery button to set the update text for.
+     * @param {Object} [btn] The jQuery button to set the update text for.
      */
     resetSettings( btn ) {
         /* Preserve the old password list before resetting. */
@@ -903,16 +905,18 @@ class discordCrypt
         /* Save the configuration file to update any settings. */
         this.saveConfig();
 
-        /* Tell the user that their settings were reset. */
-        btn.text( 'Restored Default Settings!' );
-
-        /* Reset the original text after a second. */
-        setTimeout( ( function () {
-            btn.text( 'Reset Settings' );
-        } ), 1000 );
-
         /* Force decode messages. */
         this.decodeMessages( true );
+
+        if( btn ) {
+            /* Tell the user that their settings were reset. */
+            btn.text( 'Restored Default Settings!' );
+
+            /* Reset the original text after a second. */
+            setTimeout( ( function () {
+                btn.text( 'Reset Settings' );
+            } ), 1000 );
+        }
     }
 
     /**
@@ -1232,8 +1236,8 @@ class discordCrypt
         $( document.body ).prepend( discordCrypt.__zlibDecompress( this.settingsMenuHtml ) );
 
         /* Also by default, set the about tab to be shown. */
-        discordCrypt.setActiveSettingsTab( 0 );
-        discordCrypt.setActiveExchangeTab( 0 );
+        discordCrypt.set_active_settings_tab( 0 );
+        discordCrypt.set_active_exchange_tab( 0 );
 
         /* Update all settings from the settings panel. */
         $( '#dc-secondary-cipher' ).val( discordCrypt.cipherIndexToString( this.configFile.encryptMode, true ) );
@@ -1390,7 +1394,7 @@ class discordCrypt
                 return;
 
             /* Send the encrypted message. */
-            if ( self.sendEncryptedMessage( $( this ).val() ) != 0 )
+            if ( !self.sendEncryptedMessage( $( this ).val() ) )
                 return;
 
             /* Clear text field. */
@@ -1723,10 +1727,10 @@ class discordCrypt
      * @private
      * @desc Sends an encrypted message to the current channel.
      * @param {string} message The unencrypted message to send.
-     * @param {boolean} force_send Whether to ignore checking for the encryption trigger and always encrypt and send.
-     * @returns {number} Returns 1 if the message failed to be parsed correctly and 0 on success.
-     * @param {int|undefined} channel_id If specified, sends the embedded message to this channel instead of the
-     *      current channel.
+     * @param {boolean} [force_send] Whether to ignore checking for the encryption trigger and always encrypt and send.
+     * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the current
+     *      channel.
+     * @returns {boolean} Returns false if the message failed to be parsed correctly and 0 on success.
      */
     sendEncryptedMessage( message, force_send = false, channel_id = undefined ) {
         /* Let's use a maximum message size of 1820 instead of 2000 to account for encoding, new line feeds & packet
@@ -1741,7 +1745,7 @@ class discordCrypt
 
         /* Skip messages starting with pre-defined escape characters. */
         if ( escapeCharacters.indexOf( message[ 0 ] ) !== -1 )
-            return 1;
+            return false;
 
         /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
         if ( force_send === false &&
@@ -1754,11 +1758,11 @@ class discordCrypt
 
             /* Check if the message actually has the split arg. */
             if ( message.length <= 0 )
-                return 1;
+                return false;
 
             /* Check if it has the trigger. */
             if ( message[ message.length - 1 ] !== this.configFile.encodeMessageTrigger )
-                return 1;
+                return false;
 
             /* Use the first part of the message. */
             cleaned = message[ 0 ];
@@ -1771,7 +1775,7 @@ class discordCrypt
 
         /* Check if we actually have a message ... */
         if ( cleaned.length === 0 )
-            return 1;
+            return false;
 
         /* Try parsing any user-tags. */
         let parsed = discordCrypt.__extractTags( cleaned );
@@ -1887,7 +1891,7 @@ class discordCrypt
         /* Save the configuration file and store the new message(s). */
         this.saveConfig();
 
-        return 0;
+        return true;
     }
 
     /* ========================================================= */
@@ -2219,7 +2223,7 @@ class discordCrypt
      */
     static on_plugin_settings_tab_button_clicked() {
         /* Select the plugin settings. */
-        discordCrypt.setActiveSettingsTab( 0 );
+        discordCrypt.set_active_settings_tab( 0 );
     }
 
     /**
@@ -2319,7 +2323,7 @@ class discordCrypt
             }
 
             /* Select the database settings. */
-            discordCrypt.setActiveSettingsTab( 1 );
+            discordCrypt.set_active_settings_tab( 1 );
         };
     }
 
@@ -2528,7 +2532,7 @@ class discordCrypt
      */
     static on_settings_close_button_clicked() {
         /* Select the plugin settings. */
-        discordCrypt.setActiveSettingsTab( 0 );
+        discordCrypt.set_active_settings_tab( 0 );
 
         /* Hide main background. */
         $( '#dc-overlay' ).css( 'display', 'none' );
@@ -2662,7 +2666,7 @@ class discordCrypt
      */
     static on_info_tab_button_clicked() {
         /* Switch to tab 0. */
-        discordCrypt.setActiveExchangeTab( 0 );
+        discordCrypt.set_active_exchange_tab( 0 );
     }
 
     /**
@@ -2671,7 +2675,7 @@ class discordCrypt
      */
     static on_exchange_tab_button_clicked() {
         /* Switch to tab 1. */
-        discordCrypt.setActiveExchangeTab( 1 );
+        discordCrypt.set_active_exchange_tab( 1 );
     }
 
     /**
@@ -2680,7 +2684,7 @@ class discordCrypt
      */
     static on_handshake_tab_button_clicked() {
         /* Switch to tab 2. */
-        discordCrypt.setActiveExchangeTab( 2 );
+        discordCrypt.set_active_exchange_tab( 2 );
     }
 
     /**
@@ -3315,7 +3319,7 @@ class discordCrypt
                 $( '#dc-overlay-exchange' ).css( 'display', 'none' );
 
                 /* Reset the index to the info tab. */
-                discordCrypt.setActiveExchangeTab( 0 );
+                discordCrypt.set_active_exchange_tab( 0 );
             } ), 1000 );
         }
     }
@@ -3484,7 +3488,7 @@ class discordCrypt
      * @example
      * setActiveTab( 1 );
      */
-    static setActiveSettingsTab( index ) {
+    static set_active_settings_tab( index ) {
         let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab' ];
         let tabs = $( '#dc-settings-tab .dc-tab-link' );
 
@@ -3516,7 +3520,7 @@ class discordCrypt
      * @example
      * setActiveTab( 1 );
      */
-    static setActiveExchangeTab( index ) {
+    static set_active_exchange_tab( index ) {
         let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
         let tabs = $( '#dc-exchange-tab .dc-tab-link' );
 
@@ -3550,7 +3554,7 @@ class discordCrypt
     /* ====================== APP UTILITIES ==================== */
 
     /**
-     * @public
+     * @private
      * @desc Returns the name of the plugin file expected on the disk.
      * @returns {string}
      * @example
@@ -3562,7 +3566,7 @@ class discordCrypt
     }
 
     /**
-     * @public
+     * @private
      * @desc Check if the plugin is named correctly by attempting to open the plugin file in the BetterDiscord
      *      plugin path.
      * @returns {boolean}
@@ -3577,7 +3581,7 @@ class discordCrypt
     }
 
     /**
-     * @public
+     * @private
      * @desc Returns the platform-specific path to BetterDiscord's plugin directory.
      * @returns {string} The expected path ( which may not exist ) to BetterDiscord's plugin directory.
      * @example
@@ -3594,7 +3598,7 @@ class discordCrypt
     }
 
     /**
-     * @public
+     * @private
      * @desc Checks the update server for an encrypted update.
      * @param {UpdateCallback} on_update_callback
      * @returns {boolean}
@@ -3721,7 +3725,7 @@ class discordCrypt
     }
 
     /**
-     * @public
+     * @private
      * @desc Creates a password object using a primary and secondary password.
      * @param {string} primary_password The primary password.
      * @param {string} secondary_password The secondary password.
@@ -3734,7 +3738,7 @@ class discordCrypt
     }
 
     /**
-     * @public
+     * @private
      * @desc Returns functions to locate exported webpack modules.
      * @returns {{find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames}}
      */
@@ -3872,7 +3876,7 @@ class discordCrypt
      * @private
      * @experimental
      * @desc Dumps all function callback handlers with their names, IDs and function prototypes. [ Debug Function ]
-     * @param {boolean} dump_actions Whether to dump action handlers.
+     * @param {boolean} [dump_actions] Whether to dump action handlers.
      * @returns {Array} Returns an array of all IDs and identifier callbacks.
      */
     static dumpWebpackModuleCallbacks( dump_actions = true ) {
@@ -3965,6 +3969,7 @@ class discordCrypt
     }
 
     /**
+     * @private
      * @desc Edits the message's content from the channel indicated.
      *      N.B. This does not edit embeds due to the internal code Discord uses.
      * @param {string} channel_id The channel's identifier that the message is located in.
@@ -3978,6 +3983,7 @@ class discordCrypt
     }
 
     /**
+     * @private
      * @desc Delete the message from the channel indicated.
      * @param {string} channel_id The channel's identifier that the message is located in.
      * @param {string} message_id The message's identifier to delete.
@@ -4000,8 +4006,8 @@ class discordCrypt
      * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the
      *      current channel.
      * @param {CachedModules} cached_modules Internally cached modules.
-     * @param {Array<TimedMessage>} timed_messages Array containing timed messages to add this sent message to.
-     * @param {int} expire_time_minutes The amount of minutes till this message is to be deleted.
+     * @param {Array<TimedMessage>} [timed_messages] Array containing timed messages to add this sent message to.
+     * @param {int} [expire_time_minutes] The amount of minutes till this message is to be deleted.
      */
     static dispatchMessage(
         as_embed,
@@ -4011,7 +4017,7 @@ class discordCrypt
         embedded_color = 0x551A8B,
         message_content = '',
         channel_id = undefined,
-        cached_modules = undefined,
+        cached_modules = {},
         timed_messages = undefined,
         expire_time_minutes = 0
     ) {
@@ -4173,38 +4179,6 @@ class discordCrypt
     }
 
     /**
-     * @public
-     * @desc Logs a message to the console in HTML coloring. ( For Electron clients. )
-     * @param {string} message The message to log to the console.
-     * @param {string} method The indication level of the message.
-     *      This can be either ['info', 'warn', 'error', 'success']
-     *
-     * @example
-     * log( 'Hello World!' );
-     *
-     * @example
-     * log( 'This is printed in yellow.', 'warn' );
-     *
-     * @example
-     * log( 'This is printed in red.', 'error' );
-     *
-     * @example
-     * log( 'This is printed green.', 'trace' );
-     *
-     * @example
-     * log( 'This is printed green.', 'debug' );
-     *
-     */
-    static log( message, method = "info" ) {
-        try {
-            console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
-        }
-        catch ( ex ) {
-            console.error( '[DiscordCrypt] - Error logging message ...' );
-        }
-    }
-
-    /**
      * @private
      * @desc Injects a CSS style element into the header tag.
      * @param {string} id The HTML ID string used to identify this CSS style segment.
@@ -4225,7 +4199,7 @@ class discordCrypt
      * @example
      * clearCSS( 'my-css' );
      */
-    static clearCSS( id = undefined ) {
+    static clearCSS( id ) {
         /* Make sure the ID is a valid string. */
         if ( !id || typeof id !== 'string' || !id.length )
             return;
@@ -4235,6 +4209,7 @@ class discordCrypt
     }
 
     /**
+     * @private
      * @desc Hooks a dispatcher from Discord's internals.
      * @author samogot
      * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
@@ -4325,15 +4300,49 @@ class discordCrypt
         return dispatcher._actionHandlers[ method_name ].__cancel;
     }
 
+    /**
+     * @public
+     * @desc Logs a message to the console in HTML coloring. ( For Electron clients. )
+     * @param {string} message The message to log to the console.
+     * @param {string} method The indication level of the message.
+     *      This can be either ['info', 'warn', 'error', 'success']
+     *
+     * @example
+     * log( 'Hello World!' );
+     *
+     * @example
+     * log( 'This is printed in yellow.', 'warn' );
+     *
+     * @example
+     * log( 'This is printed in red.', 'error' );
+     *
+     * @example
+     * log( 'This is printed green.', 'trace' );
+     *
+     * @example
+     * log( 'This is printed green.', 'debug' );
+     *
+     */
+    static log( message, method = "info" ) {
+        try {
+            console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
+        }
+        catch ( ex ) {
+            console.error( '[DiscordCrypt] - Error logging message ...' );
+        }
+    }
+
     /* ========================================================= */
 
     /* ======================= UTILITIES ======================= */
 
     /**
+     * @public
      * @desc Decompresses an encoded ZLIB package.
      * @param {string} data The input data to decompress.
-     * @param {string} format The format of the input data.
+     * @param {string} [format] The format of the input data.
      *      Can be either hex, base64, latin1, utf8 or undefined.
+     *      Defaults to Base64.
      * @return {string} The original data.
      */
     static __zlibDecompress( data, format = 'base64' ) {
@@ -4486,7 +4495,7 @@ class discordCrypt
      * @public
      * @desc Returns the exchange algorithm and bit size for the given metadata as well as a fingerprint.
      * @param {string} key_message The encoded metadata to extract the information from.
-     * @param {boolean} header_present Whether the message's magic string is attached to the input.
+     * @param {boolean} [header_present] Whether the message's magic string is attached to the input.
      * @returns {PublicKeyInfo|null} Returns the algorithm's bit length and name or null.
      * @example
      * __extractKeyInfo( public_key, true );
@@ -6103,7 +6112,6 @@ class discordCrypt
         return discordCrypt.__createHash( message, 'sha256', to_hex, true, secret );
     }
 
-    /*  */
     /**
      * @public
      * @desc Returns an HMAC-SHA-512 digest of the message.
@@ -7253,6 +7261,7 @@ class discordCrypt
     }
 
     /**
+     * @public
      * @desc Returns 256-characters of Braille.
      * @return {string}
      */
