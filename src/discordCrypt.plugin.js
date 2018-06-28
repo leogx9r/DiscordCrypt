@@ -3581,7 +3581,7 @@ class discordCrypt
     }
 
     /**
-     * @private
+     * @public
      * @desc Returns the platform-specific path to BetterDiscord's plugin directory.
      * @returns {string} The expected path ( which may not exist ) to BetterDiscord's plugin directory.
      * @example
@@ -3598,7 +3598,7 @@ class discordCrypt
     }
 
     /**
-     * @private
+     * @public
      * @desc Checks the update server for an encrypted update.
      * @param {UpdateCallback} on_update_callback
      * @returns {boolean}

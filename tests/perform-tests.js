@@ -67,65 +67,65 @@ class testRunner {
         /* Handle which tests to run. */
         try {
             switch ( process.argv[ 2 ].toLowerCase() ) {
-                case 'scrypt':
-                    /* Run Scrypt tests. */
-                    this.addScryptTests( unit_tests );
-                    break;
-                case 'pbkdf2':
-                    /* Run PBKDF2 tests. */
-                    this.addPBKDF2Tests( unit_tests );
-                    break;
-                case 'hash':
-                    /* Run hash tests. */
-                    this.addHashTests( unit_tests );
-                    break;
-                case 'hmac':
-                    /* Run HMAC tests. */
-                    this.addHMACTests( unit_tests );
-                    break;
-                case 'cipher':
-                    /* Run cipher tests. */
-                    this.addCipherTests( unit_tests, process.argv.length >= 4 ? process.argv[ 3 ] : '' );
-                    break;
-                case 'general':
-                    /* Run generic tests. */
-                    this.addGenericTests( unit_tests );
-                    break;
-                case 'exchange':
-                    /* Run key exchange tests. */
-                    this.addDiffieHellmanTests( unit_tests );
-                    break;
-                case 'encoding':
-                    /* Run encoding tests. */
-                    this.addEncodingTests( unit_tests );
-                    break;
-                case 'coverage':
-                    /* Run generic tests. */
-                    this.addGenericTests( unit_tests );
+            case 'scrypt':
+                /* Run Scrypt tests. */
+                this.addScryptTests( unit_tests );
+                break;
+            case 'pbkdf2':
+                /* Run PBKDF2 tests. */
+                this.addPBKDF2Tests( unit_tests );
+                break;
+            case 'hash':
+                /* Run hash tests. */
+                this.addHashTests( unit_tests );
+                break;
+            case 'hmac':
+                /* Run HMAC tests. */
+                this.addHMACTests( unit_tests );
+                break;
+            case 'cipher':
+                /* Run cipher tests. */
+                this.addCipherTests( unit_tests, process.argv.length >= 4 ? process.argv[ 3 ] : '' );
+                break;
+            case 'general':
+                /* Run generic tests. */
+                this.addGenericTests( unit_tests );
+                break;
+            case 'exchange':
+                /* Run key exchange tests. */
+                this.addDiffieHellmanTests( unit_tests );
+                break;
+            case 'encoding':
+                /* Run encoding tests. */
+                this.addEncodingTests( unit_tests );
+                break;
+            case 'coverage':
+                /* Run generic tests. */
+                this.addGenericTests( unit_tests );
 
-                    /* Run one Scrypt test. */
-                    this.addScryptTests( unit_tests, true );
+                /* Run one Scrypt test. */
+                this.addScryptTests( unit_tests, true );
 
-                    /* Run a single Hash/PBKDF2 test of each type. */
-                    this.addPBKDF2Tests( unit_tests, true );
+                /* Run a single Hash/PBKDF2 test of each type. */
+                this.addPBKDF2Tests( unit_tests, true );
 
-                    /* Run hash tests. */
-                    this.addHashTests( unit_tests, true );
+                /* Run hash tests. */
+                this.addHashTests( unit_tests, true );
 
-                    /* Run HMAC tests. */
-                    this.addHMACTests( unit_tests, true );
+                /* Run HMAC tests. */
+                this.addHMACTests( unit_tests, true );
 
-                    /* Run only a single test of each cipher type. */
-                    this.addCipherTests( unit_tests, undefined, true );
+                /* Run only a single test of each cipher type. */
+                this.addCipherTests( unit_tests, undefined, true );
 
-                    /* Run encoding tests. */
-                    this.addEncodingTests( unit_tests, true );
+                /* Run encoding tests. */
+                this.addEncodingTests( unit_tests, true );
 
-                    /* Run key exchange tests once for every key length. */
-                    this.addDiffieHellmanTests( unit_tests, true );
-                    break;
-                default:
-                    throw 'Executing all tests.';
+                /* Run key exchange tests once for every key length. */
+                this.addDiffieHellmanTests( unit_tests, true );
+                break;
+            default:
+                throw 'Executing all tests.';
             }
         }
         catch ( e ) {
@@ -571,112 +571,112 @@ class testRunner {
 
         /* Locate the desired cipher. Tons of redundant code here :) */
         switch ( preferred_cipher ) {
-            case 'aes':
-            case 'aes256':
-            case 'aes-256':
-                addCipherTest(
-                    unit_tests,
-                    aes_vectors.full_name,
-                    aes_vectors.tests,
-                    this.discordCrypt.aes256_encrypt,
-                    this.discordCrypt.aes256_decrypt
-                );
-                addCipherTest(
-                    unit_tests,
-                    aes_gcm_vectors.full_name,
-                    aes_gcm_vectors.tests,
-                    this.discordCrypt.aes256_encrypt_gcm,
-                    this.discordCrypt.aes256_decrypt_gcm
-                );
-                break;
-            case 'camellia':
-            case 'camellia256':
-            case 'camellia-256':
-                addCipherTest(
-                    unit_tests,
-                    camellia_vectors.full_name,
-                    camellia_vectors.tests,
-                    this.discordCrypt.camellia256_encrypt,
-                    this.discordCrypt.camellia256_decrypt
-                );
-                break;
-            case 'tripledes':
-            case 'tripledes192':
-            case 'tripledes-192':
-                addCipherTest(
-                    unit_tests,
-                    tripledes_vectors.full_name,
-                    tripledes_vectors.tests,
-                    this.discordCrypt.tripledes192_encrypt,
-                    this.discordCrypt.tripledes192_decrypt
-                );
-                break;
-            case 'idea':
-            case 'idea128':
-            case 'idea-128':
-                addCipherTest(
-                    unit_tests,
-                    idea_vectors.full_name,
-                    idea_vectors.tests,
-                    this.discordCrypt.idea128_encrypt,
-                    this.discordCrypt.idea128_decrypt
-                );
-                break;
-            case 'blowfish':
-            case 'blowfish512':
-            case 'blowfish-512':
-                addCipherTest(
-                    unit_tests,
-                    blowfish_vectors.full_name,
-                    blowfish_vectors.tests,
-                    this.discordCrypt.blowfish512_encrypt,
-                    this.discordCrypt.blowfish512_decrypt
-                );
-                break;
-            default:
-                addCipherTest(
-                    unit_tests,
-                    aes_vectors.full_name,
-                    aes_vectors.tests,
-                    this.discordCrypt.aes256_encrypt,
-                    this.discordCrypt.aes256_decrypt
-                );
-                addCipherTest(
-                    unit_tests,
-                    aes_gcm_vectors.full_name,
-                    aes_gcm_vectors.tests,
-                    this.discordCrypt.aes256_encrypt_gcm,
-                    this.discordCrypt.aes256_decrypt_gcm
-                );
-                addCipherTest(
-                    unit_tests,
-                    camellia_vectors.full_name,
-                    camellia_vectors.tests,
-                    this.discordCrypt.camellia256_encrypt,
-                    this.discordCrypt.camellia256_decrypt
-                );
-                addCipherTest(
-                    unit_tests,
-                    tripledes_vectors.full_name,
-                    tripledes_vectors.tests,
-                    this.discordCrypt.tripledes192_encrypt,
-                    this.discordCrypt.tripledes192_decrypt
-                );
-                addCipherTest(
-                    unit_tests,
-                    idea_vectors.full_name,
-                    idea_vectors.tests,
-                    this.discordCrypt.idea128_encrypt,
-                    this.discordCrypt.idea128_decrypt
-                );
-                addCipherTest(
-                    unit_tests,
-                    blowfish_vectors.full_name,
-                    blowfish_vectors.tests,
-                    this.discordCrypt.blowfish512_encrypt,
-                    this.discordCrypt.blowfish512_decrypt
-                );
-                break;
+        case 'aes':
+        case 'aes256':
+        case 'aes-256':
+            addCipherTest(
+                unit_tests,
+                aes_vectors.full_name,
+                aes_vectors.tests,
+                this.discordCrypt.aes256_encrypt,
+                this.discordCrypt.aes256_decrypt
+            );
+            addCipherTest(
+                unit_tests,
+                aes_gcm_vectors.full_name,
+                aes_gcm_vectors.tests,
+                this.discordCrypt.aes256_encrypt_gcm,
+                this.discordCrypt.aes256_decrypt_gcm
+            );
+            break;
+        case 'camellia':
+        case 'camellia256':
+        case 'camellia-256':
+            addCipherTest(
+                unit_tests,
+                camellia_vectors.full_name,
+                camellia_vectors.tests,
+                this.discordCrypt.camellia256_encrypt,
+                this.discordCrypt.camellia256_decrypt
+            );
+            break;
+        case 'tripledes':
+        case 'tripledes192':
+        case 'tripledes-192':
+            addCipherTest(
+                unit_tests,
+                tripledes_vectors.full_name,
+                tripledes_vectors.tests,
+                this.discordCrypt.tripledes192_encrypt,
+                this.discordCrypt.tripledes192_decrypt
+            );
+            break;
+        case 'idea':
+        case 'idea128':
+        case 'idea-128':
+            addCipherTest(
+                unit_tests,
+                idea_vectors.full_name,
+                idea_vectors.tests,
+                this.discordCrypt.idea128_encrypt,
+                this.discordCrypt.idea128_decrypt
+            );
+            break;
+        case 'blowfish':
+        case 'blowfish512':
+        case 'blowfish-512':
+            addCipherTest(
+                unit_tests,
+                blowfish_vectors.full_name,
+                blowfish_vectors.tests,
+                this.discordCrypt.blowfish512_encrypt,
+                this.discordCrypt.blowfish512_decrypt
+            );
+            break;
+        default:
+            addCipherTest(
+                unit_tests,
+                aes_vectors.full_name,
+                aes_vectors.tests,
+                this.discordCrypt.aes256_encrypt,
+                this.discordCrypt.aes256_decrypt
+            );
+            addCipherTest(
+                unit_tests,
+                aes_gcm_vectors.full_name,
+                aes_gcm_vectors.tests,
+                this.discordCrypt.aes256_encrypt_gcm,
+                this.discordCrypt.aes256_decrypt_gcm
+            );
+            addCipherTest(
+                unit_tests,
+                camellia_vectors.full_name,
+                camellia_vectors.tests,
+                this.discordCrypt.camellia256_encrypt,
+                this.discordCrypt.camellia256_decrypt
+            );
+            addCipherTest(
+                unit_tests,
+                tripledes_vectors.full_name,
+                tripledes_vectors.tests,
+                this.discordCrypt.tripledes192_encrypt,
+                this.discordCrypt.tripledes192_decrypt
+            );
+            addCipherTest(
+                unit_tests,
+                idea_vectors.full_name,
+                idea_vectors.tests,
+                this.discordCrypt.idea128_encrypt,
+                this.discordCrypt.idea128_decrypt
+            );
+            addCipherTest(
+                unit_tests,
+                blowfish_vectors.full_name,
+                blowfish_vectors.tests,
+                this.discordCrypt.blowfish512_encrypt,
+                this.discordCrypt.blowfish512_decrypt
+            );
+            break;
         }
     }
 
@@ -853,6 +853,7 @@ class testRunner {
                     console[ method ]( `[DiscordCrypt] - ${message}` );
                 }
                 catch ( ex ) {
+                    console.error( `Failed to execute logger: ${ex}` );
                 }
             };
 
@@ -1142,4 +1143,4 @@ class testRunner {
     }
 }
 
-new testRunner();
+( new testRunner() );
