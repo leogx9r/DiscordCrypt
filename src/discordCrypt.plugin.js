@@ -1,5 +1,3 @@
-//META{"name":"discordCrypt"}*//
-
 /*******************************************************************************
  * MIT License
  *
@@ -132,6 +130,7 @@ class discordCrypt
      * @property {int} statusCode The HTTP static code of the operation.
      * @property {string|null} The HTTP error string if an error occurred.
      * @property {string} data The returned data from the request.
+     * @return {boolean} Returns true if the data was parsed sucessfully.
      */
 
     /**
@@ -3637,7 +3636,7 @@ class discordCrypt
                         break;
                     }
 
-                    return;
+                    return false;
                 }
 
                 /* Format properly. */
@@ -3660,7 +3659,7 @@ class discordCrypt
                 /* Check the first line which contains the metadata to make sure that they're equal. */
                 if ( data.split( '\n' )[ 0 ] !== localFile.split( '\n' )[ 0 ] ) {
                     discordCrypt.log( 'Plugin metadata is missing from either the local or update file.', 'error' );
-                    return;
+                    return false;
                 }
 
                 /* Read the current hash of the plugin and compare them.. */
@@ -3701,7 +3700,11 @@ class discordCrypt
 
                     /* Perform the callback without a changelog. */
                     on_update_callback( data, shortHash, version_number, '' );
+
+                    return false;
                 }
+
+                return true;
             } );
         }
         catch ( ex ) {
@@ -4231,6 +4234,7 @@ class discordCrypt
             dispatcher[ method_name ] = origMethod;
         };
 
+        // eslint-disable-next-line consistent-return
         const suppressErrors = ( method, description ) => ( ... params ) => {
             try {
                 return method( ... params );
@@ -5431,6 +5435,8 @@ class discordCrypt
             catch ( e ) {
                 throw e;
             }
+
+        return '';
     }
 
     /**
@@ -5843,8 +5849,10 @@ class discordCrypt
             let nextTick = ( typeof( setImmediate ) !== 'undefined' ) ? setImmediate : setTimeout;
 
             const incrementalSMix = function () {
-                if ( stop )
-                    return cb( new Error( 'cancelled' ), currentOps / totalOps );
+                if ( stop ) {
+                    cb( new Error( 'cancelled' ), currentOps / totalOps );
+                    return;
+                }
 
                 let steps, i, y, z, currentPercentage;
                 switch ( state ) {
@@ -5949,13 +5957,15 @@ class discordCrypt
                     }
 
                     /* Done. Don't break to avoid rescheduling. */
-                    return cb(
+                    cb(
                         null,
                         1.0,
                         Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), output_length, 1 ) )
                     );
+                    return;
                 default:
-                    return cb( new Error( 'invalid state' ), 0 );
+                    cb( new Error( 'invalid state' ), 0 );
+                    return;
                 }
 
                 /* Schedule the next steps. */

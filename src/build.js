@@ -185,7 +185,7 @@ class Compiler {
 
         /* Construct a sanitized array string. */
         for ( let id in libs )
-            str += `            '${id}': ${JSON.stringify( libs[ id ] )},\n`;
+            str += `'${id}': ${JSON.stringify( libs[ id ] )},\n            `;
 
         /* Remove the last comma added by the above loop. */
         str = str.slice( 0, str.length - 1 - 1 );
@@ -259,10 +259,9 @@ class Compiler {
         assets_data,
         sign_key_id
     ) {
-        const header =
-            `//META{"name":"discordCrypt"}*//
-
-/*******************************************************************************
+        const metadata = `//META{"name":"discordCrypt"}*//\n\n`;
+        const license =
+`/*******************************************************************************
  * MIT License
  *
  * Copyright (c) 2018 Leonardo Gates
@@ -321,11 +320,11 @@ class Compiler {
 
         /* Only do this if we're compressing the plugin. */
         if ( compress )
-            data = header + this.tryMinify( data, true );
+            data = metadata + license + this.tryMinify( data, true );
 
         try {
             /* Write the file to the output. */
-            this.fs.writeFileSync( output_path, data );
+            this.fs.writeFileSync( output_path, metadata + data );
         }
         catch ( e ) {
             console.error( `Error building plugin:\n    ${e.toString()}` );
@@ -358,19 +357,20 @@ class Compiler {
                             [ '--logger-fd', '1', '--verify', signature_file, output_path ],
                             ( e, r ) => {
                             /* Check if an error occurred and log it. */
-                            if ( !e && r && r.length ) {
-                                /* Test the output for the "Good signature" message from GPG. */
-                                let valid = ( new RegExp( /good signature/i ) ).exec( r.toString() ) !== null;
+                                if ( !e && r && r.length ) {
+                                    /* Test the output for the "Good signature" message from GPG. */
+                                    let valid = ( new RegExp( /good signature/i ) ).exec( r.toString() ) !== null;
 
-                                /* Log the appropriate response. */
-                                if ( valid )
-                                    console.info( `Verified Signature's Validity !` );
+                                    /* Log the appropriate response. */
+                                    if ( valid )
+                                        console.info( `Verified Signature's Validity !` );
+                                    else
+                                        console.error( `Invalid Signature Generated ...\n${r.toString()}` );
+                                }
                                 else
-                                    console.error( `Invalid Signature Generated ...\n${r.toString()}` );
+                                    console.error( `Error Generating Signature:\n    Error: ${e}` );
                             }
-                            else
-                                console.error( `Error Generating Signature:\n    Error: ${e}` );
-                        } );
+                        );
                     }
                     else
                         console.error( `Error Generating Signature:\n    Error: ${error}\n    Result: ${result}\n` );
