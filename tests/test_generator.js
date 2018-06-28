@@ -341,7 +341,10 @@ class testGenerator {
     }
 
     /* Generate symmetric encryption/decryption tests. */
-    generateFullEncryptionTests( /* int */ num_tests = 5, /* string */ output_path = './tests/encode-test-vectors.json' ) {
+    generateFullEncryptionTests(
+        /* int */ num_tests = 5,
+        /* string */ output_path = './tests/encode-test-vectors.json'
+    ) {
         let unit_tests = [];
 
         /* Loop over each dual-encryption type. */
