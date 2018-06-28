@@ -35,5 +35,9 @@
     "request": "^2.87.0",
     "uglify-es": "^3.3.9",
     "vm": "^0.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.0.1",
+    "eslint-config-defaults": "^9.0.0"
   }
 }
