@@ -188,7 +188,7 @@ class Compiler {
             str += `'${id}': ${JSON.stringify( libs[ id ] )},\n            `;
 
         /* Remove the last comma added by the above loop. */
-        str = str.slice( 0, str.length - 1 - 1 );
+        str = str.trimRight().slice( 0, str.length - 1 - 1 );
 
         /* Return the full string. */
         return str;
