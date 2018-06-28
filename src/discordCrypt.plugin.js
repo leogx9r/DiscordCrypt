@@ -674,10 +674,10 @@ class discordCrypt
      */
     load() {
         /* Inject application CSS. */
-        discordCrypt.injectCSS( 'dc-css', discordCrypt.zlib_decompress( this.appCss ) );
+        discordCrypt.injectCSS( 'dc-css', discordCrypt.__zlibDecompress( this.appCss ) );
 
         /* Load necessary libraries. */
-        discordCrypt.loadLibraries( this.libraries );
+        discordCrypt.__loadLibraries( this.libraries );
     }
 
     /**
@@ -953,858 +953,7 @@ class discordCrypt
 
     /* ========================================================= */
 
-    /* =================== PROJECT UTILITIES =================== */
-
-    /**
-     * @desc Decompresses an encoded ZLIB package.
-     * @param {string} data The input data to decompress.
-     * @param {string} format The format of the input data.
-     *      Can be either hex, base64, latin1, utf8 or undefined.
-     * @return {string} The original data.
-     */
-    static zlib_decompress( data, format = 'base64' ) {
-        return require( 'zlib' ).inflateSync(
-            Buffer.from( data, format ),
-            { windowBits: 15 }
-        ).toString( 'utf8' );
-    }
-
-    /**
-     * @public
-     * @desc Loads all compiled libraries as needed.
-     * @param {LibraryDefinition} libraries A list of all libraries to load.
-     */
-    static loadLibraries( libraries ) {
-        const vm = require( 'vm' );
-
-        /* Inject all compiled libraries based on if they're needed */
-        for ( let name in libraries ) {
-            let libInfo = libraries[ name ];
-
-            /* Browser code requires a window object to be defined. */
-            if ( libInfo.requiresBrowser && typeof window === 'undefined' ) {
-                discordCrypt.log( `Skipping loading of browser-required plugin: ${name} ...`, 'warn' );
-                continue;
-            }
-
-            /* If the module can't be loaded, don't load this library. */
-            if ( libInfo.requiresElectron ) {
-                try {
-                    require( 'electron' );
-                }
-                catch ( e ) {
-                    discordCrypt.log( `Skipping loading of electron-required plugin: ${name} ...`, 'warn' );
-                    continue;
-                }
-            }
-
-            /* Decompress the Base64 code. */
-            let code = discordCrypt.zlib_decompress( libInfo.code );
-
-            /* Determine how to run this. */
-            if ( libInfo.requiresBrowser || libInfo.requiresElectron ) {
-                /* Run in the current context as it operates on currently defined objects. */
-                vm.runInThisContext(
-                    code,
-                    {
-                        filename: name,
-                        displayErrors: false
-                    }
-                );
-            }
-            else {
-                /* Run in a new sandbox and store the result in a global object. */
-                global[ name.replace( '.js', '' ) ] =
-                    vm.runInNewContext(
-                        code,
-                        {
-                            filename: name,
-                            displayErrors: false
-                        }
-                    );
-            }
-        }
-    }
-
-    /**
-     * @public
-     * @desc Returns the name of the plugin file expected on the disk.
-     * @returns {string}
-     * @example
-     * console.log( discordCrypt.getPluginName() );
-     * // "discordCrypt.plugin.js"
-     */
-    static getPluginName() {
-        return 'discordCrypt.plugin.js';
-    }
-
-    /**
-     * @public
-     * @desc Check if the plugin is named correctly by attempting to open the plugin file in the BetterDiscord
-     *      plugin path.
-     * @returns {boolean}
-     * @example
-     * console.log( discordCrypt.validPluginName() );
-     * // False
-     */
-    static validPluginName() {
-        return require( 'fs' )
-            .existsSync( require( 'path' )
-                .join( discordCrypt.getPluginsPath(), discordCrypt.getPluginName() ) );
-    }
-
-    /**
-     * @public
-     * @desc Returns the platform-specific path to BetterDiscord's plugin directory.
-     * @returns {string} The expected path ( which may not exist ) to BetterDiscord's plugin directory.
-     * @example
-     * console.log( discordCrypt.getPluginsPath() );
-     * // "C:\Users\John Doe\AppData\Local/BetterDiscord/plugins"
-     */
-    static getPluginsPath() {
-        const process = require( 'process' );
-        return `${process.platform === 'win32' ?
-            process.env.APPDATA :
-            process.platform === 'darwin' ?
-                process.env.HOME + '/Library/Preferences' :
-                process.env.HOME + '/.config'}/BetterDiscord/plugins/`;
-    }
-
-    /**
-     * @public
-     * @desc Checks the update server for an encrypted update.
-     * @param {UpdateCallback} on_update_callback
-     * @returns {boolean}
-     * @example
-     * checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) =>
-     *      console.log( `New Update Available: #${short_hash} - v${new_version}` );
-     *      console.log( `Changelog:\n${full_changelog}` );
-     * } );
-     */
-    static checkForUpdate( on_update_callback ) {
-        /* Update URL and request method. */
-        const update_url = `https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/${discordCrypt.getPluginName()}`;
-        const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
-
-        /* Make sure the callback is a function. */
-        if ( typeof on_update_callback !== 'function' )
-            return false;
-
-        /* Perform the request. */
-        try {
-            /* Download the update. */
-            discordCrypt.__getRequest( update_url, ( statusCode, errorString, data ) => {
-                /* Make sure no error occurred. */
-                if ( statusCode !== 200 ) {
-                    /* Log the error accordingly. */
-                    switch ( statusCode ) {
-                        case 404:
-                            discordCrypt.log( 'Update URL is broken.', 'error' );
-                            break;
-                        case 403:
-                            discordCrypt.log( 'Forbidden request when checking for updates.', 'error' );
-                            break;
-                        default:
-                            discordCrypt.log( `Error while fetching update: ${errorString}`, 'error' );
-                            break;
-                    }
-
-                    return;
-                }
-
-                /* Format properly. */
-                data = data.replace( '\r', '' );
-
-                /* Get the local file. */
-                let localFile = '//META{"name":"discordCrypt"}*//\n';
-                try {
-                    localFile = require( 'fs' ).readFileSync(
-                        require( 'path' ).join(
-                            discordCrypt.getPluginsPath(),
-                            discordCrypt.getPluginName()
-                        )
-                    ).toString().replace( '\r', '' );
-                }
-                catch ( e ) {
-                    discordCrypt.log( 'Plugin file could not be locally read. Assuming testing version ...', 'warn' );
-                }
-
-                /* Check the first line which contains the metadata to make sure that they're equal. */
-                if ( data.split( '\n' )[ 0 ] !== localFile.split( '\n' )[ 0 ] ) {
-                    discordCrypt.log( 'Plugin metadata is missing from either the local or update file.', 'error' );
-                    return;
-                }
-
-                /* Read the current hash of the plugin and compare them.. */
-                let currentHash = discordCrypt.sha256( localFile );
-                let hash = discordCrypt.sha256( data );
-                let shortHash = Buffer.from( hash, 'base64' )
-                    .toString( 'hex' )
-                    .slice( 0, 8 );
-
-                /* If the hash equals the retrieved one, no update is needed. */
-                if ( hash === currentHash ) {
-                    discordCrypt.log( `No Update Needed - #${shortHash}` );
-                    return true;
-                }
-
-                /* Try parsing a version number. */
-                let version_number = '';
-                try {
-                    version_number = data
-                        .match( /((["'])(\d+\.)(\d+\.)(\*|\d+)(["']))/gi )
-                        .toString()
-                        .replace( /(['|"]*['|"])/g, '' );
-                }
-                catch ( e ) {
-                    discordCrypt.log( 'Failed to locate the version number in the update ...', 'warn' );
-                }
-
-                /* Now get the changelog. */
-                try {
-                    /* Fetch the changelog from the URL. */
-                    discordCrypt.__getRequest( changelog_url, ( statusCode, errorString, changelog ) => {
-                        /* Perform the callback. */
-                        on_update_callback( data, shortHash, version_number, statusCode == 200 ? changelog : '' );
-                    } );
-                }
-                catch ( e ) {
-                    discordCrypt.log( 'Error fetching the changelog.', 'warn' );
-
-                    /* Perform the callback without a changelog. */
-                    on_update_callback( data, shortHash, version_number, '' );
-                }
-            } );
-        }
-        catch ( ex ) {
-            /* Handle failure. */
-            discordCrypt.log( `Error while retrieving update: ${ex.toString()}`, 'warn' );
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * @private
-     * @description Returns the current message ID used by Discord.
-     * @returns {string | undefined}
-     * @example
-     * console.log( discordCrypt.getChannelId() );
-     * // "414714693498014617"
-     */
-    static getChannelId() {
-        return window.location.pathname.split( '/' ).pop();
-    }
-
-    /**
-     * @public
-     * @desc Creates a password object using a primary and secondary password.
-     * @param {string} primary_password The primary password.
-     * @param {string} secondary_password The secondary password.
-     * @returns {ChannelPassword} Object containing the two passwords.
-     * console.log( discordCrypt.createPassword( 'Hello', 'World' ) );
-     * // Object {primary: "Hello", secondary: "World"}
-     */
-    static createPassword( primary_password, secondary_password ) {
-        return { primary: primary_password, secondary: secondary_password };
-    }
-
-    /**
-     * @public
-     * @desc Returns functions to locate exported webpack modules.
-     * @returns {{find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames}}
-     */
-    static getWebpackModuleSearcher() {
-        /* [ Credits to the creator. ] */
-        const req = typeof( webpackJsonp ) === "function" ?
-            webpackJsonp(
-                [],
-                { '__extra_id__': ( module, _export_, req ) => _export_.default = req },
-                [ '__extra_id__' ]
-            ).default :
-            webpackJsonp.push( [
-                [],
-                { '__extra_id__': ( _module_, exports, req ) => _module_.exports = req },
-                [ [ '__extra_id__' ] ] ]
-            );
-
-        delete req.m[ '__extra_id__' ];
-        delete req.c[ '__extra_id__' ];
-
-        /**
-         * @desc Look through all modules of internal Discord's Webpack and return first one that matches filter
-         *      predicate. At first this function will look through already loaded modules cache.
-         *      If no loaded modules match, then this function tries to load all modules and match for them.
-         *      Loading any module may have unexpected side effects, like changing current locale of moment.js,
-         *      so in that case there will be a warning the console.
-         *      If no module matches, this function returns `null`.
-         *      ou should always try to provide a predicate that will match something,
-         *      but your code should be ready to receive `null` in case of changes in Discord's codebase.
-         *      If module is ES6 module and has default property, consider default first;
-         *      otherwise, consider the full module object.
-         * @param {ModulePredicate} filter Predicate to match module
-         * @param {boolean} force_load Whether to force load all modules if cached modules don't work.
-         * @return {*} First module that matches `filter` or `null` if none match.
-         */
-        const find = ( filter, force_load ) => {
-            for ( let i in req.c ) {
-                if ( req.c.hasOwnProperty( i ) ) {
-                    let m = req.c[ i ].exports;
-
-                    if ( m && m.__esModule && m.default )
-                        m = m.default;
-
-                    if ( m && filter( m ) )
-                        return m;
-                }
-            }
-
-            if ( force_load ) {
-                discordCrypt.log( "Couldn't find module in existing cache. Loading all modules.", 'warn' );
-
-                for ( let i = 0; i < req.m.length; ++i ) {
-                    try {
-                        let m = req( i );
-                        if ( m && m.__esModule && m.default && filter( m.default ) )
-                            return m.default;
-                        if ( m && filter( m ) )
-                            return m;
-                    }
-                    catch ( e ) {
-                        discordCrypt.log( `Could not load module index ${i} ...`, 'warn' );
-                    }
-                }
-
-                discordCrypt.log( 'Cannot find React module.', 'warn' );
-            }
-
-            return null;
-        };
-
-        /**
-         * @desc Look through all modules of internal Discord's Webpack and return first object that has all of
-         *      following properties. You should be ready that in any moment, after Discord update,
-         *      this function may start returning `null` (if no such object exists anymore) or even some
-         *      different object with the same properties. So you should provide all property names that
-         *      you use, and often even some extra properties to make sure you'll get exactly what you want.
-         * @param {string[]} propNames Array of property names to look for.
-         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
-         * @returns {object} First module that matches `propNames` or `null` if none match.
-         */
-        const findByUniqueProperties = ( propNames, force_load = false ) =>
-            find( module => propNames.every( prop => module[ prop ] !== undefined ), force_load );
-
-        /**
-         * @desc Look through all modules of internal Discord's Webpack and return first object that has
-         *      `displayName` property with following value. This is useful for searching for React components by
-         *      name. Take into account that not all components are exported as modules. Also, there might be
-         *      several components with the same name.
-         * @param {string} displayName Display name property value to look for.
-         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
-         * @return {object} First module that matches `displayName` or `null` if none match.
-         */
-        const findByDisplayName = ( displayName, force_load = false ) =>
-            find( module => module.displayName === displayName, force_load );
-
-        /**
-         * @desc Look through all modules of internal Discord's Webpack and return the first object that matches
-         *      a dispatch token's ID. These usually contain a bundle of `_actionHandlers` used to handle events
-         *      internally.
-         * @param {int} token The internal token ID number.
-         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
-         * @return {object} First module that matches the dispatch ID or `null` if none match.
-         */
-        const findByDispatchToken = ( token, force_load = false ) =>
-            find( module =>
-                module[ '_dispatchToken' ] !== undefined &&
-                module[ '_dispatchToken' ] === `ID_${token}` &&
-                module[ '_actionHandlers' ] !== undefined,
-                force_load
-            );
-
-        /**
-         * @desc Look through all modules of internal Discord's Webpack and return the first object that matches
-         *      every dispatcher name provided.
-         * @param {string[]} dispatchNames Names of events to search for.
-         * @return {object} First module that matches every dispatch name provided or null if no full matches.
-         */
-        const findByDispatchNames = dispatchNames => {
-            for ( let i = 0; i < 500; i++ ) {
-                let dispatcher = findByDispatchToken( i );
-
-                if ( !dispatcher )
-                    continue;
-
-                if ( dispatchNames.every( prop => dispatcher._actionHandlers.hasOwnProperty( prop ) ) )
-                    return dispatcher;
-            }
-            return null;
-        };
-
-        return { find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames };
-    }
-
-    /**
-     * @private
-     * @experimental
-     * @desc Dumps all function callback handlers with their names, IDs and function prototypes. [ Debug Function ]
-     * @param {boolean} dump_actions Whether to dump action handlers.
-     * @returns {Array} Returns an array of all IDs and identifier callbacks.
-     */
-    static dumpWebpackModuleCallbacks( dump_actions = true ) {
-        /* Resolve the finder function. */
-        let finder = discordCrypt.getWebpackModuleSearcher().findByDispatchToken;
-
-        /* Create the dumping array. */
-        let dump = [];
-
-        /* Iterate over let's say 1000 possible modules ? */
-        for ( let i = 0; i < 1000; i++ ) {
-            /* Locate the module. */
-            let module = finder( i );
-
-            /* Skip if it's invalid. */
-            if ( !module )
-                continue;
-
-            /* Create an entry in the array. */
-            dump[ i ] = {};
-
-            /* Loop over every property in the module. */
-            for( let prop in module ) {
-                /* Skip dependencies. */
-                if( prop == '_dependencies' )
-                    continue;
-
-                /* Dump action handlers. */
-                if( prop == '_actionHandlers' || prop == '_changeCallbacks' ) {
-                    /* Skip if not required. */
-                    if( !dump_actions )
-                        continue;
-
-                    dump[ i ][ prop ] = {};
-
-                    /* Loop over every property name in the action handler. */
-                    for ( let action in module[ prop ] ) {
-
-                        /* Quick sanity check. */
-                        if ( !module._actionHandlers.hasOwnProperty( action ) )
-                            continue;
-
-                        /* Assign the module property name and it's basic prototype. */
-                        dump[ i ][ prop ][ action ] =
-                            module[ prop ][ action ].prototype.constructor.toString().split( '{' )[ 0 ];
-                    }
-                }
-                else {
-                    /* Add the actual property name and its prototype. */
-                    dump[ i ][ prop ] = module[ prop ].toString().split( '{' )[ 0 ];
-                }
-            }
-        }
-
-        /* Return any found module handlers. */
-        return dump;
-    }
-
-    /**
-     * @private
-     * @desc Returns the React modules loaded natively in Discord.
-     * @param {CachedModules} cached_modules Cached module parameter for locating standard modules.
-     * @returns {ReactModules}
-     */
-    static getReactModules( cached_modules ) {
-        const blacklisted_channel_props = [
-            '@me',
-            'activity'
-        ];
-
-        if ( cached_modules ) {
-            return {
-                ChannelProps:
-                    blacklisted_channel_props.indexOf( discordCrypt.getChannelId() ) !== -1 ?
-                        null :
-                        discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
-                MessageParser: cached_modules.MessageParser,
-                MessageController: cached_modules.MessageController,
-                MessageActionTypes: cached_modules.MessageActionTypes,
-                MessageDispatcher: cached_modules.MessageDispatcher,
-                MessageQueue: cached_modules.MessageQueue,
-                UserResolver: cached_modules.UserResolver,
-                GuildResolver: cached_modules.GuildResolver,
-                ChannelResolver: cached_modules.ChannelResolver,
-                HighlightJS: cached_modules.HighlightJS,
-            };
-        }
-
-        return null;
-    }
-
-    /**
-     * @desc Edits the message's content from the channel indicated.
-     *      N.B. This does not edit embeds due to the internal code Discord uses.
-     * @param {string} channel_id The channel's identifier that the message is located in.
-     * @param {string} message_id The message's identifier to delete.
-     * @param {string} content The message's new content.
-     * @param {CachedModules} cached_modules The internally cached module objects.
-     */
-    static editMessage( channel_id, message_id, content, cached_modules ) {
-        /* Edit the message internally. */
-        cached_modules.MessageController.editMessage( channel_id, message_id, { content: content } );
-    }
-
-    /**
-     * @desc Delete the message from the channel indicated.
-     * @param {string} channel_id The channel's identifier that the message is located in.
-     * @param {string} message_id The message's identifier to delete.
-     * @param {CachedModules} cached_modules The internally cached module objects.
-     */
-    static deleteMessage( channel_id, message_id, cached_modules ) {
-        /* Delete the message internally. */
-        cached_modules.MessageController.deleteMessage( channel_id, message_id );
-    }
-
-    /**
-     * @private
-     * @desc Sends either an embedded message or an inline message to Discord.
-     * @param {boolean} as_embed Whether to dispatch this message as an embed or not.
-     * @param {string} main_message The main content to send.
-     * @param {string} [message_header] The text to display at the top of an embed.
-     * @param {string} [message_footer] The text to display at the bottom of an embed.
-     * @param {int} [embedded_color] A hex color used to outline the left side of the embed if applicable.
-     * @param {string} [message_content] Message content to be attached above the main message.
-     * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the
-     *      current channel.
-     * @param {CachedModules} cached_modules Internally cached modules.
-     * @param {Array<TimedMessage>} timed_messages Array containing timed messages to add this sent message to.
-     * @param {int} expire_time_minutes The amount of minutes till this message is to be deleted.
-     */
-    static dispatchMessage(
-        as_embed,
-        main_message,
-        message_header,
-        message_footer,
-        embedded_color = 0x551A8B,
-        message_content = '',
-        channel_id = undefined,
-        cached_modules = undefined,
-        timed_messages = undefined,
-        expire_time_minutes = 0
-    ) {
-        let mention_everyone = false;
-
-        /* Finds appropriate React modules. */
-        const React = discordCrypt.getReactModules( cached_modules );
-
-        /* Parse the message content to the required format if applicable.. */
-        if ( typeof message_content === 'string' && message_content.length ) {
-            /* Sanity check. */
-            if ( React.MessageParser === null ) {
-                discordCrypt.log( 'Could not locate the MessageParser module!', 'error' );
-                return;
-            }
-
-            try {
-                /* Parse the message. */
-                message_content = React.MessageParser.parse( React.ChannelProps, message_content ).content;
-
-                /* Check for @everyone or @here mentions. */
-                if ( message_content.includes( '@everyone' ) || message_content.includes( '@here' ) )
-                    mention_everyone = true;
-            }
-            catch ( e ) {
-                message_content = '';
-            }
-        }
-        else
-            message_content = '';
-
-        /* Save the Channel ID. */
-        let _channel = channel_id !== undefined ? channel_id : discordCrypt.getChannelId();
-
-        /* Sanity check. */
-        if ( React.MessageQueue === null ) {
-            discordCrypt.log( 'Could not locate the MessageQueue module!', 'error' );
-            return;
-        }
-
-        /* Sanity check. */
-        if ( React.MessageController === null ) {
-            discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
-            return;
-        }
-
-        /* Handles returns for messages. */
-        const onDispatchResponse = ( r ) => {
-            /* Check if an error occurred and inform Clyde bot about it. */
-            if ( !r.ok ) {
-                /* Perform Clyde dispatch if necessary. */
-                if (
-                    r.status >= 400 &&
-                    r.status < 500 &&
-                    r.body &&
-                    !React.MessageController.sendClydeError( _channel, r.body.code )
-                ) {
-                    /* Log the error in case we can't manually dispatch the error. */
-                    discordCrypt.log( `Error sending message: ${r.status}`, 'error' );
-
-                    /* Sanity check. */
-                    if ( React.MessageDispatcher === null || React.MessageActionTypes === null ) {
-                        discordCrypt.log( 'Could not locate the MessageDispatcher module!', 'error' );
-                        return;
-                    }
-
-                    React.MessageDispatcher.dispatch( {
-                        type: React.MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
-                        messageId: _nonce,
-                        channelId: _channel
-                    } );
-                }
-            }
-            else {
-                /* Receive the message normally. */
-                React.MessageController.receiveMessage( _channel, r.body );
-
-                /* Add the message to the TimedMessage array. */
-                if ( timed_messages && expire_time_minutes > 0 ) {
-                    timed_messages.push( {
-                        messageId: r.body.id,
-                        channelId: _channel,
-                        expireTime: Date.now() + ( expire_time_minutes * 60000 )
-                    } );
-                }
-            }
-        };
-
-        /* Send this message as an embed. */
-        if ( as_embed ) {
-            /* Generate a unique nonce for this message. */
-            let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 6 ).toString( 'hex' ), 16 );
-
-            /* Create the message embed object and add it to the queue. */
-            React.MessageQueue.enqueue(
-                {
-                    type: 'send',
-                    message: {
-                        channelId: _channel,
-                        nonce: _nonce,
-                        content: message_content,
-                        mention_everyone: mention_everyone,
-                        tts: false,
-                        embed: {
-                            type: "rich",
-                            url: "https://gitlab.com/leogx9r/DiscordCrypt",
-                            color: embedded_color || 0x551A8B,
-                            output_mime_type: "text/x-html",
-                            timestamp: ( new Date() ).toISOString(),
-                            encoding: "utf-16",
-                            author: {
-                                name: message_header || '-----MESSAGE-----',
-                                icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png',
-                                url: 'https://discord.me/discordCrypt'
-                            },
-                            footer: {
-                                text: message_footer || 'DiscordCrypt',
-                                icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/app-logo.png',
-                            },
-                            description: main_message,
-                        }
-                    }
-                },
-                onDispatchResponse
-            );
-
-            return;
-        }
-
-        /* Dispatch the message as normal content. */
-        [
-            main_message,
-            message_content
-        ].forEach(
-            ( ( value ) => {
-                /* Skip empty values. */
-                if ( !value.length )
-                    return;
-
-                /* Generate a unique nonce for this message. */
-                let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 6 ).toString( 'hex' ), 16 );
-
-                /* Create the message object and dispatch it to the queue. */
-                React.MessageQueue.enqueue(
-                    {
-                        type: 'send',
-                        message: {
-                            channelId: _channel,
-                            nonce: _nonce,
-                            content: value === message_content ? value : `\`${value}\``,
-                            mention_everyone: value === message_content ? mention_everyone : false,
-                            tts: false
-                        }
-                    },
-                    onDispatchResponse
-                );
-            } )
-        );
-    }
-
-    /**
-     * @public
-     * @desc Logs a message to the console in HTML coloring. ( For Electron clients. )
-     * @param {string} message The message to log to the console.
-     * @param {string} method The indication level of the message.
-     *      This can be either ['info', 'warn', 'error', 'success']
-     *
-     * @example
-     * log( 'Hello World!' );
-     *
-     * @example
-     * log( 'This is printed in yellow.', 'warn' );
-     *
-     * @example
-     * log( 'This is printed in red.', 'error' );
-     *
-     * @example
-     * log( 'This is printed green.', 'trace' );
-     *
-     * @example
-     * log( 'This is printed green.', 'debug' );
-     *
-     */
-    static log( message, method = "info" ) {
-        try {
-            console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
-        }
-        catch ( ex ) {
-            console.error( '[DiscordCrypt] - Error logging message ...' );
-        }
-    }
-
-    /**
-     * @private
-     * @desc Injects a CSS style element into the header tag.
-     * @param {string} id The HTML ID string used to identify this CSS style segment.
-     * @param {string} css The actual CSS style excluding the <style> tags.
-     * @example
-     * injectCSS( 'my-css', 'p { font-size: 32px; }' );
-     */
-    static injectCSS( id, css ) {
-        /* Inject into the header tag. */
-        $( "head" )
-            .append( $( "<style>", { id: id.replace( /^[^a-z]+|[^\w-]+/gi, "" ), html: css } ) )
-    }
-
-    /**
-     * @private
-     * @desc Clears an injected element via its ID tag.
-     * @param {string} id The HTML ID string used to identify this CSS style segment.
-     * @example
-     * clearCSS( 'my-css' );
-     */
-    static clearCSS( id = undefined ) {
-        /* Make sure the ID is a valid string. */
-        if ( !id || typeof id !== 'string' || !id.length )
-            return;
-
-        /* Remove the element. */
-        $( `#${id.replace( /^[^a-z]+|[^\w-]+/gi, "" )}` ).remove();
-    }
-
-    /* ========================================================= */
-
     /* ==================== MAIN CALLBACKS ==================== */
-
-    /**
-     * @desc Hooks a dispatcher from Discord's internals.
-     * @author samogot
-     * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
-     * @param {string} method_name The name of the method to hook.
-     * @param {string} options The type of hook to apply. [ 'before', 'after', 'instead', 'revert' ]
-     * @param {boolean} [options.once=false] Set to `true` if you want to automatically unhook method after first call.
-     * @param {boolean} [options.silent=false] Set to `true` if you want to suppress log messages about patching and
-     *      unhooking. Useful to avoid clogging the console in case of frequent conditional hooking/unhooking, for
-     *      example from another monkeyPatch callback.
-     * @return {function} Returns the function used to cancel the hook.
-     */
-    static hookDispatcher( dispatcher, method_name, options ) {
-        const { before, after, instead, once = false, silent = false } = options;
-        const origMethod = dispatcher._actionHandlers[ method_name ];
-
-        const cancel = () => {
-            if ( !silent )
-                discordCrypt.log( `Unhooking "${method_name}" ...` );
-            dispatcher[ method_name ] = origMethod;
-        };
-
-        const suppressErrors = ( method, description ) => ( ... params ) => {
-            try {
-                return method( ... params );
-            }
-            catch ( e ) {
-                discordCrypt.log( `Error occurred in ${description}`, 'error' )
-            }
-        };
-
-        if ( !dispatcher._actionHandlers[ method_name ].__hooked ) {
-            if ( !silent )
-                discordCrypt.log( `Hooking "${method_name}" ...` );
-
-            dispatcher._actionHandlers[ method_name ] = function () {
-                /**
-                 * @interface
-                 * @name PatchData
-                 * @property {object} thisObject Original `this` value in current call of patched method.
-                 * @property {Arguments} methodArguments Original `arguments` object in current call of patched method.
-                 *      Please, never change function signatures, as it may cause a lot of problems in future.
-                 * @property {cancelPatch} cancelPatch Function with no arguments and no return value that may be called
-                 *      to reverse patching of current method. Calling this function prevents running of this callback
-                 *      on further original method calls.
-                 * @property {function} originalMethod Reference to the original method that is patched. You can use it
-                 *      if you need some special usage. You should explicitly provide a value for `this` and any method
-                 *      arguments when you call this function.
-                 * @property {function} callOriginalMethod This is a shortcut for calling original method using `this`
-                 *      and `arguments` from original call.
-                 * @property {*} returnValue This is a value returned from original function call. This property is
-                 *      available only in `after` callback or in `instead` callback after calling `callOriginalMethod`
-                 *      function.
-                 */
-                const data = {
-                    thisObject: this,
-                    methodArguments: arguments,
-                    cancelPatch: cancel,
-                    originalMethod: origMethod,
-                    callOriginalMethod: () => data.returnValue =
-                        data.originalMethod.apply( data.thisObject, data.methodArguments )
-                };
-                if ( instead ) {
-                    const tempRet =
-                        suppressErrors( instead, `${method_name} called hook via 'instead'.` )( data );
-
-                    if ( tempRet !== undefined )
-                        data.returnValue = tempRet;
-                }
-                else {
-
-                    if ( before )
-                        suppressErrors( before, `${method_name} called hook via 'before'.` )( data );
-
-                    data.callOriginalMethod();
-
-                    if ( after )
-                        suppressErrors( after, `${method_name} called hook via 'after'.` )( data );
-                }
-                if ( once )
-                    cancel();
-
-                return data.returnValue;
-            };
-
-            dispatcher._actionHandlers[ method_name ].__hooked = true;
-            dispatcher._actionHandlers[ method_name ].__cancel = cancel;
-        }
-        return dispatcher._actionHandlers[ method_name ].__cancel;
-    }
 
     /**
      * @private
@@ -1931,7 +1080,7 @@ class discordCrypt
         const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
 
         /* Construct the password updating field. */
-        $( document.body ).prepend( discordCrypt.zlib_decompress( this.masterPasswordHtml ) );
+        $( document.body ).prepend( discordCrypt.__zlibDecompress( this.masterPasswordHtml ) );
 
         const pwd_field = $( '#dc-db-password' );
         const cancel_btn = $( '#dc-cancel-btn' );
@@ -2037,74 +1186,6 @@ class discordCrypt
 
     /**
      * @private
-     * @desc Sets the active tab index in the settings menu.
-     * @param {int} index The index ( 0-1 ) of the page to activate.
-     * @example
-     * setActiveTab( 1 );
-     */
-    static setActiveSettingsTab( index ) {
-        let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab' ];
-        let tabs = $( '#dc-settings-tab .dc-tab-link' );
-
-        /* Hide all tabs. */
-        for ( let i = 0; i < tab_names.length; i++ )
-            $( `#${tab_names[ i ]}` ).css( 'display', 'none' );
-
-        /* Deactivate all links. */
-        tabs.removeClass( 'active' );
-
-        switch ( index ) {
-            case 0:
-                $( '#dc-plugin-settings-btn' ).addClass( 'active' );
-                $( '#dc-plugin-settings-tab' ).css( 'display', 'block' );
-                break;
-            case 1:
-                $( '#dc-database-settings-btn' ).addClass( 'active' );
-                $( '#dc-database-settings-tab' ).css( 'display', 'block' );
-                break;
-            default:
-                break;
-        }
-    }
-
-    /**
-     * @private
-     * @desc Sets the active tab index in the exchange key menu.
-     * @param {int} index The index ( 0-2 ) of the page to activate.
-     * @example
-     * setActiveTab( 1 );
-     */
-    static setActiveExchangeTab( index ) {
-        let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
-        let tabs = $( '#dc-exchange-tab .dc-tab-link' );
-
-        /* Hide all tabs. */
-        for ( let i = 0; i < tab_names.length; i++ )
-            $( `#${tab_names[ i ]}` ).css( 'display', 'none' );
-
-        /* Deactivate all links. */
-        tabs.removeClass( 'active' );
-
-        switch ( index ) {
-            case 0:
-                $( '#dc-tab-info-btn' ).addClass( 'active' );
-                $( '#dc-about-tab' ).css( 'display', 'block' );
-                break;
-            case 1:
-                $( '#dc-tab-keygen-btn' ).addClass( 'active' );
-                $( '#dc-keygen-tab' ).css( 'display', 'block' );
-                break;
-            case 2:
-                $( '#dc-tab-handshake-btn' ).addClass( 'active' );
-                $( '#dc-handshake-tab' ).css( 'display', 'block' );
-                break;
-            default:
-                break;
-        }
-    }
-
-    /**
-     * @private
      * @desc Inserts the plugin's option toolbar to the current toolbar and handles all triggers.
      */
     loadToolbar() {
@@ -2122,7 +1203,7 @@ class discordCrypt
             return;
 
         /* Inject the toolbar. */
-        $( this.searchUiClass ).parent().parent().parent().prepend( discordCrypt.zlib_decompress( this.toolbarHtml ) );
+        $( this.searchUiClass ).parent().parent().parent().prepend( discordCrypt.__zlibDecompress( this.toolbarHtml ) );
 
         /* Cache jQuery results. */
         let dc_passwd_btn = $( '#dc-passwd-btn' ),
@@ -2148,7 +1229,7 @@ class discordCrypt
         }
 
         /* Inject the settings. */
-        $( document.body ).prepend( discordCrypt.zlib_decompress( this.settingsMenuHtml ) );
+        $( document.body ).prepend( discordCrypt.__zlibDecompress( this.settingsMenuHtml ) );
 
         /* Also by default, set the about tab to be shown. */
         discordCrypt.setActiveSettingsTab( 0 );
@@ -2495,7 +1576,7 @@ class discordCrypt
             }
 
             /* Process the message and apply all necessary element modifications. */
-            dataMsg = discordCrypt.postProcessMessage( dataMsg, this.configFile.up1Host );
+            dataMsg = this.postProcessMessage( dataMsg, this.configFile.up1Host );
 
             /* Handle embeds and inline blocks differently. */
             if ( as_embed ) {
@@ -2556,7 +1637,7 @@ class discordCrypt
      * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
      * @returns {ProcessedMessage}
      */
-    static postProcessMessage( message, embed_link_prefix ) {
+    postProcessMessage( message, embed_link_prefix ) {
         /* HTML escape characters. */
         const html_escape_characters = { '&': '&amp;', '<': '&lt', '>': '&gt;' };
 
@@ -4396,9 +3477,928 @@ class discordCrypt
         };
     }
 
+    /**
+     * @private
+     * @desc Sets the active tab index in the settings menu.
+     * @param {int} index The index ( 0-1 ) of the page to activate.
+     * @example
+     * setActiveTab( 1 );
+     */
+    static setActiveSettingsTab( index ) {
+        let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab' ];
+        let tabs = $( '#dc-settings-tab .dc-tab-link' );
+
+        /* Hide all tabs. */
+        for ( let i = 0; i < tab_names.length; i++ )
+            $( `#${tab_names[ i ]}` ).css( 'display', 'none' );
+
+        /* Deactivate all links. */
+        tabs.removeClass( 'active' );
+
+        switch ( index ) {
+            case 0:
+                $( '#dc-plugin-settings-btn' ).addClass( 'active' );
+                $( '#dc-plugin-settings-tab' ).css( 'display', 'block' );
+                break;
+            case 1:
+                $( '#dc-database-settings-btn' ).addClass( 'active' );
+                $( '#dc-database-settings-tab' ).css( 'display', 'block' );
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * @private
+     * @desc Sets the active tab index in the exchange key menu.
+     * @param {int} index The index ( 0-2 ) of the page to activate.
+     * @example
+     * setActiveTab( 1 );
+     */
+    static setActiveExchangeTab( index ) {
+        let tab_names = [ 'dc-about-tab', 'dc-keygen-tab', 'dc-handshake-tab' ];
+        let tabs = $( '#dc-exchange-tab .dc-tab-link' );
+
+        /* Hide all tabs. */
+        for ( let i = 0; i < tab_names.length; i++ )
+            $( `#${tab_names[ i ]}` ).css( 'display', 'none' );
+
+        /* Deactivate all links. */
+        tabs.removeClass( 'active' );
+
+        switch ( index ) {
+            case 0:
+                $( '#dc-tab-info-btn' ).addClass( 'active' );
+                $( '#dc-about-tab' ).css( 'display', 'block' );
+                break;
+            case 1:
+                $( '#dc-tab-keygen-btn' ).addClass( 'active' );
+                $( '#dc-keygen-tab' ).css( 'display', 'block' );
+                break;
+            case 2:
+                $( '#dc-tab-handshake-btn' ).addClass( 'active' );
+                $( '#dc-handshake-tab' ).css( 'display', 'block' );
+                break;
+            default:
+                break;
+        }
+    }
+
+    /* ========================================================= */
+
+    /* ====================== APP UTILITIES ==================== */
+
+    /**
+     * @public
+     * @desc Returns the name of the plugin file expected on the disk.
+     * @returns {string}
+     * @example
+     * console.log( discordCrypt.getPluginName() );
+     * // "discordCrypt.plugin.js"
+     */
+    static getPluginName() {
+        return 'discordCrypt.plugin.js';
+    }
+
+    /**
+     * @public
+     * @desc Check if the plugin is named correctly by attempting to open the plugin file in the BetterDiscord
+     *      plugin path.
+     * @returns {boolean}
+     * @example
+     * console.log( discordCrypt.validPluginName() );
+     * // False
+     */
+    static validPluginName() {
+        return require( 'fs' )
+            .existsSync( require( 'path' )
+                .join( discordCrypt.getPluginsPath(), discordCrypt.getPluginName() ) );
+    }
+
+    /**
+     * @public
+     * @desc Returns the platform-specific path to BetterDiscord's plugin directory.
+     * @returns {string} The expected path ( which may not exist ) to BetterDiscord's plugin directory.
+     * @example
+     * console.log( discordCrypt.getPluginsPath() );
+     * // "C:\Users\John Doe\AppData\Local/BetterDiscord/plugins"
+     */
+    static getPluginsPath() {
+        const process = require( 'process' );
+        return `${process.platform === 'win32' ?
+            process.env.APPDATA :
+            process.platform === 'darwin' ?
+                process.env.HOME + '/Library/Preferences' :
+                process.env.HOME + '/.config'}/BetterDiscord/plugins/`;
+    }
+
+    /**
+     * @public
+     * @desc Checks the update server for an encrypted update.
+     * @param {UpdateCallback} on_update_callback
+     * @returns {boolean}
+     * @example
+     * checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) =>
+     *      console.log( `New Update Available: #${short_hash} - v${new_version}` );
+     *      console.log( `Changelog:\n${full_changelog}` );
+     * } );
+     */
+    static checkForUpdate( on_update_callback ) {
+        /* Update URL and request method. */
+        const update_url = `https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/${discordCrypt.getPluginName()}`;
+        const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
+
+        /* Make sure the callback is a function. */
+        if ( typeof on_update_callback !== 'function' )
+            return false;
+
+        /* Perform the request. */
+        try {
+            /* Download the update. */
+            discordCrypt.__getRequest( update_url, ( statusCode, errorString, data ) => {
+                /* Make sure no error occurred. */
+                if ( statusCode !== 200 ) {
+                    /* Log the error accordingly. */
+                    switch ( statusCode ) {
+                        case 404:
+                            discordCrypt.log( 'Update URL is broken.', 'error' );
+                            break;
+                        case 403:
+                            discordCrypt.log( 'Forbidden request when checking for updates.', 'error' );
+                            break;
+                        default:
+                            discordCrypt.log( `Error while fetching update: ${errorString}`, 'error' );
+                            break;
+                    }
+
+                    return;
+                }
+
+                /* Format properly. */
+                data = data.replace( '\r', '' );
+
+                /* Get the local file. */
+                let localFile = '//META{"name":"discordCrypt"}*//\n';
+                try {
+                    localFile = require( 'fs' ).readFileSync(
+                        require( 'path' ).join(
+                            discordCrypt.getPluginsPath(),
+                            discordCrypt.getPluginName()
+                        )
+                    ).toString().replace( '\r', '' );
+                }
+                catch ( e ) {
+                    discordCrypt.log( 'Plugin file could not be locally read. Assuming testing version ...', 'warn' );
+                }
+
+                /* Check the first line which contains the metadata to make sure that they're equal. */
+                if ( data.split( '\n' )[ 0 ] !== localFile.split( '\n' )[ 0 ] ) {
+                    discordCrypt.log( 'Plugin metadata is missing from either the local or update file.', 'error' );
+                    return;
+                }
+
+                /* Read the current hash of the plugin and compare them.. */
+                let currentHash = discordCrypt.sha256( localFile );
+                let hash = discordCrypt.sha256( data );
+                let shortHash = Buffer.from( hash, 'base64' )
+                    .toString( 'hex' )
+                    .slice( 0, 8 );
+
+                /* If the hash equals the retrieved one, no update is needed. */
+                if ( hash === currentHash ) {
+                    discordCrypt.log( `No Update Needed - #${shortHash}` );
+                    return true;
+                }
+
+                /* Try parsing a version number. */
+                let version_number = '';
+                try {
+                    version_number = data
+                        .match( /((["'])(\d+\.)(\d+\.)(\*|\d+)(["']))/gi )
+                        .toString()
+                        .replace( /(['|"]*['|"])/g, '' );
+                }
+                catch ( e ) {
+                    discordCrypt.log( 'Failed to locate the version number in the update ...', 'warn' );
+                }
+
+                /* Now get the changelog. */
+                try {
+                    /* Fetch the changelog from the URL. */
+                    discordCrypt.__getRequest( changelog_url, ( statusCode, errorString, changelog ) => {
+                        /* Perform the callback. */
+                        on_update_callback( data, shortHash, version_number, statusCode == 200 ? changelog : '' );
+                    } );
+                }
+                catch ( e ) {
+                    discordCrypt.log( 'Error fetching the changelog.', 'warn' );
+
+                    /* Perform the callback without a changelog. */
+                    on_update_callback( data, shortHash, version_number, '' );
+                }
+            } );
+        }
+        catch ( ex ) {
+            /* Handle failure. */
+            discordCrypt.log( `Error while retrieving update: ${ex.toString()}`, 'warn' );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @private
+     * @description Returns the current message ID used by Discord.
+     * @returns {string | undefined}
+     * @example
+     * console.log( discordCrypt.getChannelId() );
+     * // "414714693498014617"
+     */
+    static getChannelId() {
+        return window.location.pathname.split( '/' ).pop();
+    }
+
+    /**
+     * @public
+     * @desc Creates a password object using a primary and secondary password.
+     * @param {string} primary_password The primary password.
+     * @param {string} secondary_password The secondary password.
+     * @returns {ChannelPassword} Object containing the two passwords.
+     * console.log( discordCrypt.createPassword( 'Hello', 'World' ) );
+     * // Object {primary: "Hello", secondary: "World"}
+     */
+    static createPassword( primary_password, secondary_password ) {
+        return { primary: primary_password, secondary: secondary_password };
+    }
+
+    /**
+     * @public
+     * @desc Returns functions to locate exported webpack modules.
+     * @returns {{find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames}}
+     */
+    static getWebpackModuleSearcher() {
+        /* [ Credits to the creator. ] */
+        const req = typeof( webpackJsonp ) === "function" ?
+            webpackJsonp(
+                [],
+                { '__extra_id__': ( module, _export_, req ) => _export_.default = req },
+                [ '__extra_id__' ]
+            ).default :
+            webpackJsonp.push( [
+                [],
+                { '__extra_id__': ( _module_, exports, req ) => _module_.exports = req },
+                [ [ '__extra_id__' ] ] ]
+            );
+
+        delete req.m[ '__extra_id__' ];
+        delete req.c[ '__extra_id__' ];
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first one that matches filter
+         *      predicate. At first this function will look through already loaded modules cache.
+         *      If no loaded modules match, then this function tries to load all modules and match for them.
+         *      Loading any module may have unexpected side effects, like changing current locale of moment.js,
+         *      so in that case there will be a warning the console.
+         *      If no module matches, this function returns `null`.
+         *      ou should always try to provide a predicate that will match something,
+         *      but your code should be ready to receive `null` in case of changes in Discord's codebase.
+         *      If module is ES6 module and has default property, consider default first;
+         *      otherwise, consider the full module object.
+         * @param {ModulePredicate} filter Predicate to match module
+         * @param {boolean} force_load Whether to force load all modules if cached modules don't work.
+         * @return {*} First module that matches `filter` or `null` if none match.
+         */
+        const find = ( filter, force_load ) => {
+            for ( let i in req.c ) {
+                if ( req.c.hasOwnProperty( i ) ) {
+                    let m = req.c[ i ].exports;
+
+                    if ( m && m.__esModule && m.default )
+                        m = m.default;
+
+                    if ( m && filter( m ) )
+                        return m;
+                }
+            }
+
+            if ( force_load ) {
+                discordCrypt.log( "Couldn't find module in existing cache. Loading all modules.", 'warn' );
+
+                for ( let i = 0; i < req.m.length; ++i ) {
+                    try {
+                        let m = req( i );
+                        if ( m && m.__esModule && m.default && filter( m.default ) )
+                            return m.default;
+                        if ( m && filter( m ) )
+                            return m;
+                    }
+                    catch ( e ) {
+                        discordCrypt.log( `Could not load module index ${i} ...`, 'warn' );
+                    }
+                }
+
+                discordCrypt.log( 'Cannot find React module.', 'warn' );
+            }
+
+            return null;
+        };
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first object that has all of
+         *      following properties. You should be ready that in any moment, after Discord update,
+         *      this function may start returning `null` (if no such object exists anymore) or even some
+         *      different object with the same properties. So you should provide all property names that
+         *      you use, and often even some extra properties to make sure you'll get exactly what you want.
+         * @param {string[]} propNames Array of property names to look for.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @returns {object} First module that matches `propNames` or `null` if none match.
+         */
+        const findByUniqueProperties = ( propNames, force_load = false ) =>
+            find( module => propNames.every( prop => module[ prop ] !== undefined ), force_load );
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first object that has
+         *      `displayName` property with following value. This is useful for searching for React components by
+         *      name. Take into account that not all components are exported as modules. Also, there might be
+         *      several components with the same name.
+         * @param {string} displayName Display name property value to look for.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @return {object} First module that matches `displayName` or `null` if none match.
+         */
+        const findByDisplayName = ( displayName, force_load = false ) =>
+            find( module => module.displayName === displayName, force_load );
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return the first object that matches
+         *      a dispatch token's ID. These usually contain a bundle of `_actionHandlers` used to handle events
+         *      internally.
+         * @param {int} token The internal token ID number.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @return {object} First module that matches the dispatch ID or `null` if none match.
+         */
+        const findByDispatchToken = ( token, force_load = false ) =>
+            find( module =>
+                module[ '_dispatchToken' ] !== undefined &&
+                module[ '_dispatchToken' ] === `ID_${token}` &&
+                module[ '_actionHandlers' ] !== undefined,
+                force_load
+            );
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return the first object that matches
+         *      every dispatcher name provided.
+         * @param {string[]} dispatchNames Names of events to search for.
+         * @return {object} First module that matches every dispatch name provided or null if no full matches.
+         */
+        const findByDispatchNames = dispatchNames => {
+            for ( let i = 0; i < 500; i++ ) {
+                let dispatcher = findByDispatchToken( i );
+
+                if ( !dispatcher )
+                    continue;
+
+                if ( dispatchNames.every( prop => dispatcher._actionHandlers.hasOwnProperty( prop ) ) )
+                    return dispatcher;
+            }
+            return null;
+        };
+
+        return { find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames };
+    }
+
+    /**
+     * @private
+     * @experimental
+     * @desc Dumps all function callback handlers with their names, IDs and function prototypes. [ Debug Function ]
+     * @param {boolean} dump_actions Whether to dump action handlers.
+     * @returns {Array} Returns an array of all IDs and identifier callbacks.
+     */
+    static dumpWebpackModuleCallbacks( dump_actions = true ) {
+        /* Resolve the finder function. */
+        let finder = discordCrypt.getWebpackModuleSearcher().findByDispatchToken;
+
+        /* Create the dumping array. */
+        let dump = [];
+
+        /* Iterate over let's say 1000 possible modules ? */
+        for ( let i = 0; i < 1000; i++ ) {
+            /* Locate the module. */
+            let module = finder( i );
+
+            /* Skip if it's invalid. */
+            if ( !module )
+                continue;
+
+            /* Create an entry in the array. */
+            dump[ i ] = {};
+
+            /* Loop over every property in the module. */
+            for( let prop in module ) {
+                /* Skip dependencies. */
+                if( prop == '_dependencies' )
+                    continue;
+
+                /* Dump action handlers. */
+                if( prop == '_actionHandlers' || prop == '_changeCallbacks' ) {
+                    /* Skip if not required. */
+                    if( !dump_actions )
+                        continue;
+
+                    dump[ i ][ prop ] = {};
+
+                    /* Loop over every property name in the action handler. */
+                    for ( let action in module[ prop ] ) {
+
+                        /* Quick sanity check. */
+                        if ( !module._actionHandlers.hasOwnProperty( action ) )
+                            continue;
+
+                        /* Assign the module property name and it's basic prototype. */
+                        dump[ i ][ prop ][ action ] =
+                            module[ prop ][ action ].prototype.constructor.toString().split( '{' )[ 0 ];
+                    }
+                }
+                else {
+                    /* Add the actual property name and its prototype. */
+                    dump[ i ][ prop ] = module[ prop ].toString().split( '{' )[ 0 ];
+                }
+            }
+        }
+
+        /* Return any found module handlers. */
+        return dump;
+    }
+
+    /**
+     * @private
+     * @desc Returns the React modules loaded natively in Discord.
+     * @param {CachedModules} cached_modules Cached module parameter for locating standard modules.
+     * @returns {ReactModules}
+     */
+    static getReactModules( cached_modules ) {
+        const blacklisted_channel_props = [
+            '@me',
+            'activity'
+        ];
+
+        if ( cached_modules ) {
+            return {
+                ChannelProps:
+                    blacklisted_channel_props.indexOf( discordCrypt.getChannelId() ) !== -1 ?
+                        null :
+                        discordCrypt.__getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
+                MessageParser: cached_modules.MessageParser,
+                MessageController: cached_modules.MessageController,
+                MessageActionTypes: cached_modules.MessageActionTypes,
+                MessageDispatcher: cached_modules.MessageDispatcher,
+                MessageQueue: cached_modules.MessageQueue,
+                UserResolver: cached_modules.UserResolver,
+                GuildResolver: cached_modules.GuildResolver,
+                ChannelResolver: cached_modules.ChannelResolver,
+                HighlightJS: cached_modules.HighlightJS,
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * @desc Edits the message's content from the channel indicated.
+     *      N.B. This does not edit embeds due to the internal code Discord uses.
+     * @param {string} channel_id The channel's identifier that the message is located in.
+     * @param {string} message_id The message's identifier to delete.
+     * @param {string} content The message's new content.
+     * @param {CachedModules} cached_modules The internally cached module objects.
+     */
+    static editMessage( channel_id, message_id, content, cached_modules ) {
+        /* Edit the message internally. */
+        cached_modules.MessageController.editMessage( channel_id, message_id, { content: content } );
+    }
+
+    /**
+     * @desc Delete the message from the channel indicated.
+     * @param {string} channel_id The channel's identifier that the message is located in.
+     * @param {string} message_id The message's identifier to delete.
+     * @param {CachedModules} cached_modules The internally cached module objects.
+     */
+    static deleteMessage( channel_id, message_id, cached_modules ) {
+        /* Delete the message internally. */
+        cached_modules.MessageController.deleteMessage( channel_id, message_id );
+    }
+
+    /**
+     * @private
+     * @desc Sends either an embedded message or an inline message to Discord.
+     * @param {boolean} as_embed Whether to dispatch this message as an embed or not.
+     * @param {string} main_message The main content to send.
+     * @param {string} [message_header] The text to display at the top of an embed.
+     * @param {string} [message_footer] The text to display at the bottom of an embed.
+     * @param {int} [embedded_color] A hex color used to outline the left side of the embed if applicable.
+     * @param {string} [message_content] Message content to be attached above the main message.
+     * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the
+     *      current channel.
+     * @param {CachedModules} cached_modules Internally cached modules.
+     * @param {Array<TimedMessage>} timed_messages Array containing timed messages to add this sent message to.
+     * @param {int} expire_time_minutes The amount of minutes till this message is to be deleted.
+     */
+    static dispatchMessage(
+        as_embed,
+        main_message,
+        message_header,
+        message_footer,
+        embedded_color = 0x551A8B,
+        message_content = '',
+        channel_id = undefined,
+        cached_modules = undefined,
+        timed_messages = undefined,
+        expire_time_minutes = 0
+    ) {
+        let mention_everyone = false;
+
+        /* Finds appropriate React modules. */
+        const React = discordCrypt.getReactModules( cached_modules );
+
+        /* Parse the message content to the required format if applicable.. */
+        if ( typeof message_content === 'string' && message_content.length ) {
+            /* Sanity check. */
+            if ( React.MessageParser === null ) {
+                discordCrypt.log( 'Could not locate the MessageParser module!', 'error' );
+                return;
+            }
+
+            try {
+                /* Parse the message. */
+                message_content = React.MessageParser.parse( React.ChannelProps, message_content ).content;
+
+                /* Check for @everyone or @here mentions. */
+                if ( message_content.includes( '@everyone' ) || message_content.includes( '@here' ) )
+                    mention_everyone = true;
+            }
+            catch ( e ) {
+                message_content = '';
+            }
+        }
+        else
+            message_content = '';
+
+        /* Save the Channel ID. */
+        let _channel = channel_id !== undefined ? channel_id : discordCrypt.getChannelId();
+
+        /* Sanity check. */
+        if ( React.MessageQueue === null ) {
+            discordCrypt.log( 'Could not locate the MessageQueue module!', 'error' );
+            return;
+        }
+
+        /* Sanity check. */
+        if ( React.MessageController === null ) {
+            discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
+            return;
+        }
+
+        /* Handles returns for messages. */
+        const onDispatchResponse = ( r ) => {
+            /* Check if an error occurred and inform Clyde bot about it. */
+            if ( !r.ok ) {
+                /* Perform Clyde dispatch if necessary. */
+                if (
+                    r.status >= 400 &&
+                    r.status < 500 &&
+                    r.body &&
+                    !React.MessageController.sendClydeError( _channel, r.body.code )
+                ) {
+                    /* Log the error in case we can't manually dispatch the error. */
+                    discordCrypt.log( `Error sending message: ${r.status}`, 'error' );
+
+                    /* Sanity check. */
+                    if ( React.MessageDispatcher === null || React.MessageActionTypes === null ) {
+                        discordCrypt.log( 'Could not locate the MessageDispatcher module!', 'error' );
+                        return;
+                    }
+
+                    React.MessageDispatcher.dispatch( {
+                        type: React.MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
+                        messageId: _nonce,
+                        channelId: _channel
+                    } );
+                }
+            }
+            else {
+                /* Receive the message normally. */
+                React.MessageController.receiveMessage( _channel, r.body );
+
+                /* Add the message to the TimedMessage array. */
+                if ( timed_messages && expire_time_minutes > 0 ) {
+                    timed_messages.push( {
+                        messageId: r.body.id,
+                        channelId: _channel,
+                        expireTime: Date.now() + ( expire_time_minutes * 60000 )
+                    } );
+                }
+            }
+        };
+
+        /* Send this message as an embed. */
+        if ( as_embed ) {
+            /* Generate a unique nonce for this message. */
+            let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 6 ).toString( 'hex' ), 16 );
+
+            /* Create the message embed object and add it to the queue. */
+            React.MessageQueue.enqueue(
+                {
+                    type: 'send',
+                    message: {
+                        channelId: _channel,
+                        nonce: _nonce,
+                        content: message_content,
+                        mention_everyone: mention_everyone,
+                        tts: false,
+                        embed: {
+                            type: "rich",
+                            url: "https://gitlab.com/leogx9r/DiscordCrypt",
+                            color: embedded_color || 0x551A8B,
+                            output_mime_type: "text/x-html",
+                            timestamp: ( new Date() ).toISOString(),
+                            encoding: "utf-16",
+                            author: {
+                                name: message_header || '-----MESSAGE-----',
+                                icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png',
+                                url: 'https://discord.me/discordCrypt'
+                            },
+                            footer: {
+                                text: message_footer || 'DiscordCrypt',
+                                icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/app-logo.png',
+                            },
+                            description: main_message,
+                        }
+                    }
+                },
+                onDispatchResponse
+            );
+
+            return;
+        }
+
+        /* Dispatch the message as normal content. */
+        [
+            main_message,
+            message_content
+        ].forEach(
+            ( ( value ) => {
+                /* Skip empty values. */
+                if ( !value.length )
+                    return;
+
+                /* Generate a unique nonce for this message. */
+                let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 6 ).toString( 'hex' ), 16 );
+
+                /* Create the message object and dispatch it to the queue. */
+                React.MessageQueue.enqueue(
+                    {
+                        type: 'send',
+                        message: {
+                            channelId: _channel,
+                            nonce: _nonce,
+                            content: value === message_content ? value : `\`${value}\``,
+                            mention_everyone: value === message_content ? mention_everyone : false,
+                            tts: false
+                        }
+                    },
+                    onDispatchResponse
+                );
+            } )
+        );
+    }
+
+    /**
+     * @public
+     * @desc Logs a message to the console in HTML coloring. ( For Electron clients. )
+     * @param {string} message The message to log to the console.
+     * @param {string} method The indication level of the message.
+     *      This can be either ['info', 'warn', 'error', 'success']
+     *
+     * @example
+     * log( 'Hello World!' );
+     *
+     * @example
+     * log( 'This is printed in yellow.', 'warn' );
+     *
+     * @example
+     * log( 'This is printed in red.', 'error' );
+     *
+     * @example
+     * log( 'This is printed green.', 'trace' );
+     *
+     * @example
+     * log( 'This is printed green.', 'debug' );
+     *
+     */
+    static log( message, method = "info" ) {
+        try {
+            console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
+        }
+        catch ( ex ) {
+            console.error( '[DiscordCrypt] - Error logging message ...' );
+        }
+    }
+
+    /**
+     * @private
+     * @desc Injects a CSS style element into the header tag.
+     * @param {string} id The HTML ID string used to identify this CSS style segment.
+     * @param {string} css The actual CSS style excluding the <style> tags.
+     * @example
+     * injectCSS( 'my-css', 'p { font-size: 32px; }' );
+     */
+    static injectCSS( id, css ) {
+        /* Inject into the header tag. */
+        $( "head" )
+            .append( $( "<style>", { id: id.replace( /^[^a-z]+|[^\w-]+/gi, "" ), html: css } ) )
+    }
+
+    /**
+     * @private
+     * @desc Clears an injected element via its ID tag.
+     * @param {string} id The HTML ID string used to identify this CSS style segment.
+     * @example
+     * clearCSS( 'my-css' );
+     */
+    static clearCSS( id = undefined ) {
+        /* Make sure the ID is a valid string. */
+        if ( !id || typeof id !== 'string' || !id.length )
+            return;
+
+        /* Remove the element. */
+        $( `#${id.replace( /^[^a-z]+|[^\w-]+/gi, "" )}` ).remove();
+    }
+
+    /**
+     * @desc Hooks a dispatcher from Discord's internals.
+     * @author samogot
+     * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
+     * @param {string} method_name The name of the method to hook.
+     * @param {string} options The type of hook to apply. [ 'before', 'after', 'instead', 'revert' ]
+     * @param {boolean} [options.once=false] Set to `true` if you want to automatically unhook method after first call.
+     * @param {boolean} [options.silent=false] Set to `true` if you want to suppress log messages about patching and
+     *      unhooking. Useful to avoid clogging the console in case of frequent conditional hooking/unhooking, for
+     *      example from another monkeyPatch callback.
+     * @return {function} Returns the function used to cancel the hook.
+     */
+    static hookDispatcher( dispatcher, method_name, options ) {
+        const { before, after, instead, once = false, silent = false } = options;
+        const origMethod = dispatcher._actionHandlers[ method_name ];
+
+        const cancel = () => {
+            if ( !silent )
+                discordCrypt.log( `Unhooking "${method_name}" ...` );
+            dispatcher[ method_name ] = origMethod;
+        };
+
+        const suppressErrors = ( method, description ) => ( ... params ) => {
+            try {
+                return method( ... params );
+            }
+            catch ( e ) {
+                discordCrypt.log( `Error occurred in ${description}`, 'error' )
+            }
+        };
+
+        if ( !dispatcher._actionHandlers[ method_name ].__hooked ) {
+            if ( !silent )
+                discordCrypt.log( `Hooking "${method_name}" ...` );
+
+            dispatcher._actionHandlers[ method_name ] = function () {
+                /**
+                 * @interface
+                 * @name PatchData
+                 * @property {object} thisObject Original `this` value in current call of patched method.
+                 * @property {Arguments} methodArguments Original `arguments` object in current call of patched method.
+                 *      Please, never change function signatures, as it may cause a lot of problems in future.
+                 * @property {cancelPatch} cancelPatch Function with no arguments and no return value that may be called
+                 *      to reverse patching of current method. Calling this function prevents running of this callback
+                 *      on further original method calls.
+                 * @property {function} originalMethod Reference to the original method that is patched. You can use it
+                 *      if you need some special usage. You should explicitly provide a value for `this` and any method
+                 *      arguments when you call this function.
+                 * @property {function} callOriginalMethod This is a shortcut for calling original method using `this`
+                 *      and `arguments` from original call.
+                 * @property {*} returnValue This is a value returned from original function call. This property is
+                 *      available only in `after` callback or in `instead` callback after calling `callOriginalMethod`
+                 *      function.
+                 */
+                const data = {
+                    thisObject: this,
+                    methodArguments: arguments,
+                    cancelPatch: cancel,
+                    originalMethod: origMethod,
+                    callOriginalMethod: () => data.returnValue =
+                        data.originalMethod.apply( data.thisObject, data.methodArguments )
+                };
+                if ( instead ) {
+                    const tempRet =
+                        suppressErrors( instead, `${method_name} called hook via 'instead'.` )( data );
+
+                    if ( tempRet !== undefined )
+                        data.returnValue = tempRet;
+                }
+                else {
+
+                    if ( before )
+                        suppressErrors( before, `${method_name} called hook via 'before'.` )( data );
+
+                    data.callOriginalMethod();
+
+                    if ( after )
+                        suppressErrors( after, `${method_name} called hook via 'after'.` )( data );
+                }
+                if ( once )
+                    cancel();
+
+                return data.returnValue;
+            };
+
+            dispatcher._actionHandlers[ method_name ].__hooked = true;
+            dispatcher._actionHandlers[ method_name ].__cancel = cancel;
+        }
+        return dispatcher._actionHandlers[ method_name ].__cancel;
+    }
+
     /* ========================================================= */
 
     /* ======================= UTILITIES ======================= */
+
+    /**
+     * @desc Decompresses an encoded ZLIB package.
+     * @param {string} data The input data to decompress.
+     * @param {string} format The format of the input data.
+     *      Can be either hex, base64, latin1, utf8 or undefined.
+     * @return {string} The original data.
+     */
+    static __zlibDecompress( data, format = 'base64' ) {
+        return require( 'zlib' ).inflateSync(
+            Buffer.from( data, format ),
+            { windowBits: 15 }
+        ).toString( 'utf8' );
+    }
+
+    /**
+     * @public
+     * @desc Loads all compiled libraries as needed.
+     * @param {LibraryDefinition} libraries A list of all libraries to load.
+     */
+    static __loadLibraries( libraries ) {
+        const vm = require( 'vm' );
+
+        /* Inject all compiled libraries based on if they're needed */
+        for ( let name in libraries ) {
+            let libInfo = libraries[ name ];
+
+            /* Browser code requires a window object to be defined. */
+            if ( libInfo.requiresBrowser && typeof window === 'undefined' ) {
+                discordCrypt.log( `Skipping loading of browser-required plugin: ${name} ...`, 'warn' );
+                continue;
+            }
+
+            /* If the module can't be loaded, don't load this library. */
+            if ( libInfo.requiresElectron ) {
+                try {
+                    require( 'electron' );
+                }
+                catch ( e ) {
+                    discordCrypt.log( `Skipping loading of electron-required plugin: ${name} ...`, 'warn' );
+                    continue;
+                }
+            }
+
+            /* Decompress the Base64 code. */
+            let code = discordCrypt.__zlibDecompress( libInfo.code );
+
+            /* Determine how to run this. */
+            if ( libInfo.requiresBrowser || libInfo.requiresElectron ) {
+                /* Run in the current context as it operates on currently defined objects. */
+                vm.runInThisContext(
+                    code,
+                    {
+                        filename: name,
+                        displayErrors: false
+                    }
+                );
+            }
+            else {
+                /* Run in a new sandbox and store the result in a global object. */
+                global[ name.replace( '.js', '' ) ] =
+                    vm.runInNewContext(
+                        code,
+                        {
+                            filename: name,
+                            displayErrors: false
+                        }
+                    );
+            }
+        }
+    }
 
     /**
      * @private

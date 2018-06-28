@@ -49,7 +49,7 @@ class testRunner {
             this.discordCrypt_instance = new ( this.discordCrypt )();
 
             /* Load all libraries required. */
-            this.discordCrypt.loadLibraries( this.discordCrypt_instance.libraries );
+            this.discordCrypt.__loadLibraries( this.discordCrypt_instance.libraries );
 
             /* Run the tests. */
             this.run();
