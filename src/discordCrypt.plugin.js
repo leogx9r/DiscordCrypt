@@ -2741,21 +2741,22 @@ class discordCrypt
         } ) );
 
         /* Repopulate the entries. */
-        switch ( dc_keygen_method.val() ) {
-            case 'dh':
-                for ( let i = 0; i < dh_bl.length; i++ ) {
-                    let v = dh_bl[ i ];
-                    dc_keygen_algorithm.append( new Option( v, v, i === ( dh_bl.length - 1 ) ) );
-                }
-                break;
-            case 'ecdh':
-                for ( let i = 0; i < ecdh_bl.length; i++ ) {
-                    let v = ecdh_bl[ i ];
-                    $( '#dc-keygen-algorithm' ).append( new Option( v, v, i === ( ecdh_bl.length - 1 ) ) );
-                }
-                break;
-            default:
-                return;
+        switch ( dc_keygen_method.val() )
+        {
+        case 'dh':
+            for ( let i = 0; i < dh_bl.length; i++ ) {
+                let v = dh_bl[ i ];
+                dc_keygen_algorithm.append( new Option( v, v, i === ( dh_bl.length - 1 ) ) );
+            }
+            break;
+        case 'ecdh':
+            for ( let i = 0; i < ecdh_bl.length; i++ ) {
+                let v = ecdh_bl[ i ];
+                $( '#dc-keygen-algorithm' ).append( new Option( v, v, i === ( ecdh_bl.length - 1 ) ) );
+            }
+            break;
+        default:
+            return;
         }
     }
 
@@ -2774,23 +2775,23 @@ class discordCrypt
 
         /* Get the current algorithm. */
         switch ( dc_keygen_method.val() ) {
-            case 'dh':
-                /* Generate a new Diffie-Hellman RSA key from the bit size specified. */
-                key = discordCrypt.generateDH( parseInt( dc_keygen_algorithm.val() ) );
+        case 'dh':
+            /* Generate a new Diffie-Hellman RSA key from the bit size specified. */
+            key = discordCrypt.generateDH( parseInt( dc_keygen_algorithm.val() ) );
 
-                /* Calculate the index number starting from 0. */
-                index = dh_bl.indexOf( parseInt( dc_keygen_algorithm.val() ) );
-                break;
-            case 'ecdh':
-                /* Generate a new Elliptic-Curve Diffie-Hellman key from the bit size specified. */
-                key = discordCrypt.generateECDH( parseInt( dc_keygen_algorithm.val() ) );
+            /* Calculate the index number starting from 0. */
+            index = dh_bl.indexOf( parseInt( dc_keygen_algorithm.val() ) );
+            break;
+        case 'ecdh':
+            /* Generate a new Elliptic-Curve Diffie-Hellman key from the bit size specified. */
+            key = discordCrypt.generateECDH( parseInt( dc_keygen_algorithm.val() ) );
 
-                /* Calculate the index number starting from dh_bl.length. */
-                index = ( ecdh_bl.indexOf( parseInt( dc_keygen_algorithm.val() ) ) + dh_bl.length );
-                break;
-            default:
-                /* Should never happen. */
-                return;
+            /* Calculate the index number starting from dh_bl.length. */
+            index = ( ecdh_bl.indexOf( parseInt( dc_keygen_algorithm.val() ) ) + dh_bl.length );
+            break;
+        default:
+            /* Should never happen. */
+            return;
         }
 
         /* Sanity check. */
@@ -3089,7 +3090,7 @@ class discordCrypt
                 `Derived Secret: [ ${displaySecret( derived_secret.length > 64 ?
                     derived_secret.substring( 0, 64 ) :
                     derived_secret )
-                    } ]`
+                } ]`
             );
 
             /* We have two salts. We can't know which one is our primary salt so just do a simple check on which
@@ -3167,7 +3168,7 @@ class discordCrypt
                         /* Generate a quality report and apply the password. */
                         $( '#dc-handshake-prim-lbl' ).text( `Primary Key: ( Quality - ${
                             discordCrypt.entropicBitLength( key.toString( 'base64' ) )
-                            } Bits )` );
+                        } Bits )` );
                         $( '#dc-handshake-primary-key' ).val( key.toString( 'base64' ) );
 
                         /* Since more iterations are done for the primary key, this takes 4x as long thus will
@@ -3217,7 +3218,7 @@ class discordCrypt
                     /* Generate a quality report and apply the password. */
                     $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
                         discordCrypt.entropicBitLength( key.toString( 'base64' ) )
-                        } Bits )` );
+                    } Bits )` );
                     $( '#dc-handshake-secondary-key' ).val( key.toString( 'base64' ) );
                 }
 
@@ -3500,16 +3501,16 @@ class discordCrypt
         tabs.removeClass( 'active' );
 
         switch ( index ) {
-            case 0:
-                $( '#dc-plugin-settings-btn' ).addClass( 'active' );
-                $( '#dc-plugin-settings-tab' ).css( 'display', 'block' );
-                break;
-            case 1:
-                $( '#dc-database-settings-btn' ).addClass( 'active' );
-                $( '#dc-database-settings-tab' ).css( 'display', 'block' );
-                break;
-            default:
-                break;
+        case 0:
+            $( '#dc-plugin-settings-btn' ).addClass( 'active' );
+            $( '#dc-plugin-settings-tab' ).css( 'display', 'block' );
+            break;
+        case 1:
+            $( '#dc-database-settings-btn' ).addClass( 'active' );
+            $( '#dc-database-settings-tab' ).css( 'display', 'block' );
+            break;
+        default:
+            break;
         }
     }
 
@@ -3532,20 +3533,20 @@ class discordCrypt
         tabs.removeClass( 'active' );
 
         switch ( index ) {
-            case 0:
-                $( '#dc-tab-info-btn' ).addClass( 'active' );
-                $( '#dc-about-tab' ).css( 'display', 'block' );
-                break;
-            case 1:
-                $( '#dc-tab-keygen-btn' ).addClass( 'active' );
-                $( '#dc-keygen-tab' ).css( 'display', 'block' );
-                break;
-            case 2:
-                $( '#dc-tab-handshake-btn' ).addClass( 'active' );
-                $( '#dc-handshake-tab' ).css( 'display', 'block' );
-                break;
-            default:
-                break;
+        case 0:
+            $( '#dc-tab-info-btn' ).addClass( 'active' );
+            $( '#dc-about-tab' ).css( 'display', 'block' );
+            break;
+        case 1:
+            $( '#dc-tab-keygen-btn' ).addClass( 'active' );
+            $( '#dc-keygen-tab' ).css( 'display', 'block' );
+            break;
+        case 2:
+            $( '#dc-tab-handshake-btn' ).addClass( 'active' );
+            $( '#dc-handshake-tab' ).css( 'display', 'block' );
+            break;
+        default:
+            break;
         }
     }
 
@@ -3625,15 +3626,15 @@ class discordCrypt
                 if ( statusCode !== 200 ) {
                     /* Log the error accordingly. */
                     switch ( statusCode ) {
-                        case 404:
-                            discordCrypt.log( 'Update URL is broken.', 'error' );
-                            break;
-                        case 403:
-                            discordCrypt.log( 'Forbidden request when checking for updates.', 'error' );
-                            break;
-                        default:
-                            discordCrypt.log( `Error while fetching update: ${errorString}`, 'error' );
-                            break;
+                    case 404:
+                        discordCrypt.log( 'Update URL is broken.', 'error' );
+                        break;
+                    case 403:
+                        discordCrypt.log( 'Forbidden request when checking for updates.', 'error' );
+                        break;
+                    default:
+                        discordCrypt.log( `Error while fetching update: ${errorString}`, 'error' );
+                        break;
                     }
 
                     return;
@@ -3846,8 +3847,7 @@ class discordCrypt
             find( module =>
                 module[ '_dispatchToken' ] !== undefined &&
                 module[ '_dispatchToken' ] === `ID_${token}` &&
-                module[ '_actionHandlers' ] !== undefined,
-                force_load
+                module[ '_actionHandlers' ] !== undefined, force_load
             );
 
         /**
@@ -4599,8 +4599,8 @@ class discordCrypt
                         /* Do a weak check to ensure that the Base-10 parsed integer is the same as the string. */
                         return !isNaN( n ) && parseInt( n, 10 ) == n;
                     }
-                        /* If parsing or slicing somehow fails, this isn't valid. */
                     catch ( e ) {
+                        /* If parsing or slicing somehow fails, this isn't valid. */
                         return false;
                     }
                 }
@@ -4629,7 +4629,7 @@ class discordCrypt
                 cleaned_msg += `${split_msg[ i ].split( '#' )[ 0 ]} `;
             }
             /* Check for @here or @everyone. */
-            else if ( split_msg[ i ] === '@everyone' || split_msg[ i ] === '@here' ) {
+            else if ( [ '@everyone', '@here', '@me' ].indexOf( split_msg[ i ] ) !== -1 ) {
                 user_tags[ k++ ] = split_msg[ i ];
                 cleaned_msg += `${split_msg[ i ]} `;
             }
@@ -4924,51 +4924,51 @@ class discordCrypt
 
             /* For types, prioritize images. */
             switch ( format[ 0 ] ) {
-                case 'image':
-                    /* Convert the image type. */
-                    switch ( format[ 1 ].toLowerCase() ) {
-                        case 'png':
-                            data = clipboard.readImage().toPNG();
-                            break;
-                        case 'bmp':
-                        case 'bitmap':
-                            data = clipboard.readImage().toBitmap();
-                            break;
-                        case 'jpg':
-                        case 'jpeg':
-                            data = clipboard.readImage().toJPEG( 100 );
-                            break;
-                        default:
-                            break;
-                    }
+            case 'image':
+                /* Convert the image type. */
+                switch ( format[ 1 ].toLowerCase() ) {
+                case 'png':
+                    data = clipboard.readImage().toPNG();
                     break;
-                case 'text':
-                    /* Resolve what's in the clipboard. */
-                    tmp = clipboard.readText();
-
-                    try {
-                        /* Check if this is a valid file path. */
-                        let stat = fs.statSync( tmp );
-
-                        /* Check if this is a file. */
-                        if ( stat.isFile() ) {
-                            /* Read the file and store the file name. */
-                            data = fs.readFileSync( tmp );
-                            name = path.basename( tmp );
-                            is_file = true;
-                        }
-                        else {
-                            /* This isn't a file. Assume we want to upload the path itself as text. */
-                            data = Buffer.from( tmp, 'utf8' );
-                        }
-                    }
-                    catch ( e ) {
-                        /* Convert the text to a buffer. */
-                        data = Buffer.from( tmp, 'utf8' );
-                    }
+                case 'bmp':
+                case 'bitmap':
+                    data = clipboard.readImage().toBitmap();
+                    break;
+                case 'jpg':
+                case 'jpeg':
+                    data = clipboard.readImage().toJPEG( 100 );
                     break;
                 default:
                     break;
+                }
+                break;
+            case 'text':
+                /* Resolve what's in the clipboard. */
+                tmp = clipboard.readText();
+
+                try {
+                    /* Check if this is a valid file path. */
+                    let stat = fs.statSync( tmp );
+
+                    /* Check if this is a file. */
+                    if ( stat.isFile() ) {
+                        /* Read the file and store the file name. */
+                        data = fs.readFileSync( tmp );
+                        name = path.basename( tmp );
+                        is_file = true;
+                    }
+                    else {
+                        /* This isn't a file. Assume we want to upload the path itself as text. */
+                        data = Buffer.from( tmp, 'utf8' );
+                    }
+                }
+                catch ( e ) {
+                    /* Convert the text to a buffer. */
+                    data = Buffer.from( tmp, 'utf8' );
+                }
+                break;
+            default:
+                break;
             }
 
             /* Keep trying till it has at least a byte of data to return. */
@@ -5235,7 +5235,8 @@ class discordCrypt
                     form.append( 'api_key', up1_api_key );
 
                 /* Perform the post request. */
-                require( 'request' ).post( {
+                require( 'request' ).post(
+                    {
                         headers: form.getHeaders(),
                         uri: `${up1_host}/up`,
                         body: form
@@ -5297,7 +5298,8 @@ class discordCrypt
                     form.append( 'api_key', up1_api_key );
 
                 /* Perform the post request. */
-                require( 'request' ).post( {
+                require( 'request' ).post(
+                    {
                         headers: form.getHeaders(),
                         uri: `${up1_host}/up`,
                         body: form
@@ -5567,16 +5569,16 @@ class discordCrypt
 
         /* Apply the message padding based on the format specified. */
         switch ( padding_scheme.toUpperCase() ) {
-            case 'PKC7':
-                return __PKCS7( _message, _padBytes, remove_padding );
-            case 'ANS2':
-                return __ANSIX923( _message, _padBytes, remove_padding );
-            case 'ISO1':
-                return __ISO10126( _message, _padBytes, remove_padding );
-            case 'ISO9':
-                return __ISO97971( _message, _padBytes, remove_padding );
-            default:
-                return '';
+        case 'PKC7':
+            return __PKCS7( _message, _padBytes, remove_padding );
+        case 'ANS2':
+            return __ANSIX923( _message, _padBytes, remove_padding );
+        case 'ISO1':
+            return __ISO10126( _message, _padBytes, remove_padding );
+        case 'ISO9':
+            return __ISO97971( _message, _padBytes, remove_padding );
+        default:
+            return '';
         }
     }
 
@@ -5631,27 +5633,27 @@ class discordCrypt
 
             /* Get the appropriate hash algorithm for the key size. */
             switch ( keyBytes ) {
-                case 8:
-                    hash = discordCrypt.whirlpool64;
-                    break;
-                case 16:
-                    hash = discordCrypt.sha512_128;
-                    break;
-                case 20:
-                    hash = discordCrypt.sha160;
-                    break;
-                case 24:
-                    hash = discordCrypt.whirlpool192;
-                    break;
-                case 32:
-                    hash = discordCrypt.sha256;
-                    break;
-                case 64:
-                    hash = use_whirlpool !== undefined ? discordCrypt.sha512 : discordCrypt.whirlpool;
-                    break;
-                default:
-                    throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys' +
-                    ' are supported.';
+            case 8:
+                hash = discordCrypt.whirlpool64;
+                break;
+            case 16:
+                hash = discordCrypt.sha512_128;
+                break;
+            case 20:
+                hash = discordCrypt.sha160;
+                break;
+            case 24:
+                hash = discordCrypt.whirlpool192;
+                break;
+            case 32:
+                hash = discordCrypt.sha256;
+                break;
+            case 64:
+                hash = use_whirlpool !== undefined ? discordCrypt.sha512 : discordCrypt.whirlpool;
+                break;
+            default:
+                throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys' +
+                ' are supported.';
             }
             /* Hash the key and return it as a buffer. */
             return Buffer.from( hash( key, true ), 'hex' );
@@ -5846,114 +5848,114 @@ class discordCrypt
 
                 let steps, i, y, z, currentPercentage;
                 switch ( state ) {
-                    case 0:
-                        Bi = stateCount * 32 * r;
-                        /* Row mix #1 */
-                        for ( let z = 0; z < Yi; z++ )
-                            XY[ z ] = B[ Bi + z ]
+                case 0:
+                    Bi = stateCount * 32 * r;
+                    /* Row mix #1 */
+                    for ( let z = 0; z < Yi; z++ )
+                        XY[ z ] = B[ Bi + z ]
 
-                        /* Move to second row mix. */
-                        state = 1;
-                        i1 = 0;
-                    /* Fall through purposely. */
-                    case 1:
-                        /* Run up to 1000 steps of the first inner S-Mix loop. */
-                        steps = N - i1;
+                    /* Move to second row mix. */
+                    state = 1;
+                    i1 = 0;
+                /* Fall through purposely. */
+                case 1:
+                    /* Run up to 1000 steps of the first inner S-Mix loop. */
+                    steps = N - i1;
 
-                        if ( steps > limit )
-                            steps = limit;
+                    if ( steps > limit )
+                        steps = limit;
 
-                        /* Row mix #2 */
-                        for ( i = 0; i < steps; i++ ) {
-                            /* Row mix #3 */
-                            y = ( i1 + i ) * Yi;
-                            z = Yi;
-                            while ( z-- ) V[ z + y ] = XY[ z ];
+                    /* Row mix #2 */
+                    for ( i = 0; i < steps; i++ ) {
+                        /* Row mix #3 */
+                        y = ( i1 + i ) * Yi;
+                        z = Yi;
+                        while ( z-- ) V[ z + y ] = XY[ z ];
 
-                            /* Row mix #4 */
-                            ScryptRowMix( XY, Yi, r, x, _X );
-                        }
+                        /* Row mix #4 */
+                        ScryptRowMix( XY, Yi, r, x, _X );
+                    }
 
-                        i1 += steps;
-                        currentOps += steps;
+                    i1 += steps;
+                    currentOps += steps;
 
-                        /* Call the callback with the progress. ( Optionally stopping us. ) */
-                        currentPercentage = parseInt( 1000 * currentOps / totalOps );
-                        if ( currentPercentage !== lastPercentage ) {
-                            stop = cb( null, currentOps / totalOps );
+                    /* Call the callback with the progress. ( Optionally stopping us. ) */
+                    currentPercentage = parseInt( 1000 * currentOps / totalOps );
+                    if ( currentPercentage !== lastPercentage ) {
+                        stop = cb( null, currentOps / totalOps );
 
-                            if ( stop )
-                                break;
-
-                            lastPercentage = currentPercentage;
-                        }
-
-                        if ( i1 < N )
+                        if ( stop )
                             break;
 
-                        /* Row mix #6 */
-                        i1 = 0;
-                        state = 2;
-                    /* Fall through purposely. */
-                    case 2:
+                        lastPercentage = currentPercentage;
+                    }
 
-                        /* Run up to 1000 steps of the second inner S-Mix loop. */
-                        steps = N - i1;
+                    if ( i1 < N )
+                        break;
 
-                        if ( steps > limit )
-                            steps = limit;
+                    /* Row mix #6 */
+                    i1 = 0;
+                    state = 2;
+                /* Fall through purposely. */
+                case 2:
 
-                        for ( i = 0; i < steps; i++ ) {
-                            /* Row mix #8 ( inner ) */
-                            for ( z = 0, y = ( XY[ ( 2 * r - 1 ) * 16 ] & ( N - 1 ) ) * Yi; z < Yi; z++ )
-                                XY[ z ] ^= V[ y + z ];
-                            /* Row mix #9 ( outer ) */
-                            ScryptRowMix( XY, Yi, r, x, _X );
-                        }
+                    /* Run up to 1000 steps of the second inner S-Mix loop. */
+                    steps = N - i1;
 
-                        i1 += steps;
-                        currentOps += steps;
+                    if ( steps > limit )
+                        steps = limit;
 
-                        /* Call the callback with the progress. ( Optionally stopping us. ) */
-                        currentPercentage = parseInt( 1000 * currentOps / totalOps );
-                        if ( currentPercentage !== lastPercentage ) {
-                            stop = cb( null, currentOps / totalOps );
+                    for ( i = 0; i < steps; i++ ) {
+                        /* Row mix #8 ( inner ) */
+                        for ( z = 0, y = ( XY[ ( 2 * r - 1 ) * 16 ] & ( N - 1 ) ) * Yi; z < Yi; z++ )
+                            XY[ z ] ^= V[ y + z ];
+                        /* Row mix #9 ( outer ) */
+                        ScryptRowMix( XY, Yi, r, x, _X );
+                    }
 
-                            if ( stop )
-                                break;
+                    i1 += steps;
+                    currentOps += steps;
 
-                            lastPercentage = currentPercentage;
-                        }
+                    /* Call the callback with the progress. ( Optionally stopping us. ) */
+                    currentPercentage = parseInt( 1000 * currentOps / totalOps );
+                    if ( currentPercentage !== lastPercentage ) {
+                        stop = cb( null, currentOps / totalOps );
 
-                        if ( i1 < N )
+                        if ( stop )
                             break;
 
-                        /* Row mix #10 */
-                        for ( z = 0; z < Yi; z++ )
-                            B[ Bi + z ] = XY[ z ];
+                        lastPercentage = currentPercentage;
+                    }
 
-                        stateCount++;
-                        if ( stateCount < p ) {
-                            state = 0;
-                            break;
-                        }
+                    if ( i1 < N )
+                        break;
 
-                        b = [];
-                        for ( i = 0; i < B.length; i++ ) {
-                            b.push( ( B[ i ] >> 0 ) & 0xff );
-                            b.push( ( B[ i ] >> 8 ) & 0xff );
-                            b.push( ( B[ i ] >> 16 ) & 0xff );
-                            b.push( ( B[ i ] >> 24 ) & 0xff );
-                        }
+                    /* Row mix #10 */
+                    for ( z = 0; z < Yi; z++ )
+                        B[ Bi + z ] = XY[ z ];
 
-                        /* Done. Don't break to avoid rescheduling. */
-                        return cb(
-                            null,
-                            1.0,
-                            Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), output_length, 1 ) )
-                        );
-                    default:
-                        return cb( new Error( 'invalid state' ), 0 );
+                    stateCount++;
+                    if ( stateCount < p ) {
+                        state = 0;
+                        break;
+                    }
+
+                    b = [];
+                    for ( i = 0; i < B.length; i++ ) {
+                        b.push( ( B[ i ] >> 0 ) & 0xff );
+                        b.push( ( B[ i ] >> 8 ) & 0xff );
+                        b.push( ( B[ i ] >> 16 ) & 0xff );
+                        b.push( ( B[ i ] >> 24 ) & 0xff );
+                    }
+
+                    /* Done. Don't break to avoid rescheduling. */
+                    return cb(
+                        null,
+                        1.0,
+                        Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), output_length, 1 ) )
+                    );
+                default:
+                    return cb( new Error( 'invalid state' ), 0 );
                 }
 
                 /* Schedule the next steps. */
@@ -7146,45 +7148,45 @@ class discordCrypt
 
         /* Resolve the primary index. */
         switch ( primary_cipher ) {
-            case 'bf':
-                /* value = 0; */
-                break;
-            case 'aes':
-                value = 1;
-                break;
-            case 'camel':
-                value = 2;
-                break;
-            case 'idea':
-                value = 3;
-                break;
-            case 'tdes':
-                value = 4;
-                break;
-            default:
-                return 0;
+        case 'bf':
+            /* value = 0; */
+            break;
+        case 'aes':
+            value = 1;
+            break;
+        case 'camel':
+            value = 2;
+            break;
+        case 'idea':
+            value = 3;
+            break;
+        case 'tdes':
+            value = 4;
+            break;
+        default:
+            return 0;
         }
 
         /* Make sure the secondary is valid. */
         if ( secondary_cipher !== undefined ) {
             switch ( secondary_cipher ) {
-                case 'bf':
-                    /* value = 0; */
-                    break;
-                case 'aes':
-                    value += 5;
-                    break;
-                case 'camel':
-                    value += 10;
-                    break;
-                case 'idea':
-                    value += 15;
-                    break;
-                case 'tdes':
-                    value += 20;
-                    break;
-                default:
-                    break;
+            case 'bf':
+                /* value = 0; */
+                break;
+            case 'aes':
+                value += 5;
+                break;
+            case 'camel':
+                value += 10;
+                break;
+            case 'idea':
+                value += 15;
+                break;
+            case 'tdes':
+                value += 20;
+                break;
+            default:
+                break;
             }
         }
 
@@ -7399,32 +7401,32 @@ class discordCrypt
 
         /* Calculate the appropriate group. */
         switch ( size ) {
-            case 768:
-                groupName = 'modp1';
-                break;
-            case 1024:
-                groupName = 'modp2';
-                break;
-            case 1536:
-                groupName = 'modp5';
-                break;
-            case 2048:
-                groupName = 'modp14';
-                break;
-            case 3072:
-                groupName = 'modp15';
-                break;
-            case 4096:
-                groupName = 'modp16';
-                break;
-            case 6144:
-                groupName = 'modp17';
-                break;
-            case 8192:
-                groupName = 'modp18';
-                break;
-            default:
-                return null;
+        case 768:
+            groupName = 'modp1';
+            break;
+        case 1024:
+            groupName = 'modp2';
+            break;
+        case 1536:
+            groupName = 'modp5';
+            break;
+        case 2048:
+            groupName = 'modp14';
+            break;
+        case 3072:
+            groupName = 'modp15';
+            break;
+        case 4096:
+            groupName = 'modp16';
+            break;
+        case 6144:
+            groupName = 'modp17';
+            break;
+        case 8192:
+            groupName = 'modp18';
+            break;
+        default:
+            return null;
         }
 
         /* Create the key object. */
@@ -7461,25 +7463,25 @@ class discordCrypt
 
         /* Calculate the appropriate group. */
         switch ( size ) {
-            case 224:
-                groupName = 'secp224k1';
-                break;
-            case 384:
-                groupName = 'secp384r1';
-                break;
-            case 409:
-                groupName = 'sect409k1';
-                break;
-            case 521:
-                groupName = 'secp521r1';
-                break;
-            case 571:
-                groupName = 'sect571k1';
-                break;
-            case 256:
-                break;
-            default:
-                return null;
+        case 224:
+            groupName = 'secp224k1';
+            break;
+        case 384:
+            groupName = 'secp384r1';
+            break;
+        case 409:
+            groupName = 'sect409k1';
+            break;
+        case 521:
+            groupName = 'secp521r1';
+            break;
+        case 571:
+            groupName = 'sect571k1';
+            break;
+        case 256:
+            break;
+        default:
+            return null;
         }
 
         /* Create the key object. */
@@ -7609,18 +7611,18 @@ class discordCrypt
         /* Performs one of the 5 standard encryption algorithms on the plain text. */
         function handleEncodeSegment( message, key, cipher, mode, pad ) {
             switch ( cipher ) {
-                case 0:
-                    return discordCrypt.blowfish512_encrypt( message, key, mode, pad );
-                case 1:
-                    return discordCrypt.aes256_encrypt( message, key, mode, pad );
-                case 2:
-                    return discordCrypt.camellia256_encrypt( message, key, mode, pad );
-                case 3:
-                    return discordCrypt.idea128_encrypt( message, key, mode, pad );
-                case 4:
-                    return discordCrypt.tripledes192_encrypt( message, key, mode, pad );
-                default:
-                    return null;
+            case 0:
+                return discordCrypt.blowfish512_encrypt( message, key, mode, pad );
+            case 1:
+                return discordCrypt.aes256_encrypt( message, key, mode, pad );
+            case 2:
+                return discordCrypt.camellia256_encrypt( message, key, mode, pad );
+            case 3:
+                return discordCrypt.idea128_encrypt( message, key, mode, pad );
+            case 4:
+                return discordCrypt.tripledes192_encrypt( message, key, mode, pad );
+            default:
+                return null;
             }
         }
 
@@ -7728,18 +7730,18 @@ class discordCrypt
             is_message_hex = undefined
         ) {
             switch ( cipher ) {
-                case 0:
-                    return discordCrypt.blowfish512_decrypt( message, key, mode, pad, output_format, is_message_hex );
-                case 1:
-                    return discordCrypt.aes256_decrypt( message, key, mode, pad, output_format, is_message_hex );
-                case 2:
-                    return discordCrypt.camellia256_decrypt( message, key, mode, pad, output_format, is_message_hex );
-                case 3:
-                    return discordCrypt.idea128_decrypt( message, key, mode, pad, output_format, is_message_hex );
-                case 4:
-                    return discordCrypt.tripledes192_decrypt( message, key, mode, pad, output_format, is_message_hex );
-                default:
-                    return null;
+            case 0:
+                return discordCrypt.blowfish512_decrypt( message, key, mode, pad, output_format, is_message_hex );
+            case 1:
+                return discordCrypt.aes256_decrypt( message, key, mode, pad, output_format, is_message_hex );
+            case 2:
+                return discordCrypt.camellia256_decrypt( message, key, mode, pad, output_format, is_message_hex );
+            case 3:
+                return discordCrypt.idea128_decrypt( message, key, mode, pad, output_format, is_message_hex );
+            case 4:
+                return discordCrypt.tripledes192_decrypt( message, key, mode, pad, output_format, is_message_hex );
+            default:
+                return null;
             }
         }
 
