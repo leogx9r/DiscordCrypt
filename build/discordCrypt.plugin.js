@@ -30,9 +30,10 @@
  * @public
  * @desc Main plugin prototype.
  */
-class discordCrypt {
+class discordCrypt
+{
 
-    /* ============================================================== */
+    /* ========================================================= */
 
     /**
      * @typedef {Object} CachedModules
@@ -239,45 +240,7 @@ class discordCrypt {
      * @property {LibraryInfo} info The library info.
      */
 
-    /* ============================================================== */
-
-    /**
-     * @public
-     * @desc Returns the name of the plugin.
-     * @returns {string}
-     */
-    getName() {
-        return 'DiscordCrypt';
-    }
-
-    /**
-     * @public
-     * @desc Returns the description of the plugin.
-     * @returns {string}
-     */
-    getDescription() {
-        return 'Provides secure messaging for Discord using various cryptography standards.';
-    }
-
-    /**
-     * @public
-     * @desc Returns the plugin's original author.
-     * @returns {string}
-     */
-    getAuthor() {
-        return 'Leonardo Gates';
-    }
-
-    /**
-     * @public
-     * @desc Returns the current version of the plugin.
-     * @returns {string}
-     */
-    getVersion() {
-        return '1.2.6';
-    }
-
-    /* ============================================================== */
+    /* ========================================================= */
 
     /**
      * @public
@@ -487,9 +450,43 @@ class discordCrypt {
         };
     }
 
-    /* ============================================================== */
+    /* ==================== STANDARD CALLBACKS ================= */
 
-    /* ===================== STANDARD CALLBACKS ===================== */
+    /**
+     * @public
+     * @desc Returns the name of the plugin.
+     * @returns {string}
+     */
+    getName() {
+        return 'DiscordCrypt';
+    }
+
+    /**
+     * @public
+     * @desc Returns the description of the plugin.
+     * @returns {string}
+     */
+    getDescription() {
+        return 'Provides secure messaging for Discord using various cryptography standards.';
+    }
+
+    /**
+     * @public
+     * @desc Returns the plugin's original author.
+     * @returns {string}
+     */
+    getAuthor() {
+        return 'Leonardo Gates';
+    }
+
+    /**
+     * @public
+     * @desc Returns the current version of the plugin.
+     * @returns {string}
+     */
+    getVersion() {
+        return '1.2.6';
+    }
 
     /**
      * @public
@@ -696,9 +693,9 @@ class discordCrypt {
         discordCrypt.clearCSS( 'dc-css' );
     }
 
-    /* =================== END STANDARD CALLBACKS =================== */
+    /* ========================================================= */
 
-    /* =================== CONFIGURATION DATA CBS =================== */
+    /* ================= CONFIGURATION DATA CBS ================ */
 
     /**
      * @private
@@ -958,7 +955,7 @@ class discordCrypt {
         this.decodeMessages( true );
     }
 
-    /* ================= END CONFIGURATION CBS ================= */
+    /* ========================================================= */
 
     /* =================== PROJECT UTILITIES =================== */
 
@@ -1718,9 +1715,9 @@ class discordCrypt {
         $( `#${id.replace( /^[^a-z]+|[^\w-]+/gi, "" )}` ).remove();
     }
 
-    /* ================= END PROJECT UTILITIES ================= */
+    /* ========================================================= */
 
-    /* ================= BEGIN MAIN CALLBACKS ================== */
+    /* ==================== MAIN CALLBACKS ==================== */
 
     /**
      * @desc Hooks a dispatcher from Discord's internals.
@@ -2816,7 +2813,9 @@ class discordCrypt {
         return 0;
     }
 
-    /* =============== BEGIN UI HANDLE CALLBACKS =============== */
+    /* ========================================================= */
+
+    /* ================== UI HANDLE CALLBACKS ================== */
 
     /**
      * @desc Attempts to unlock the database upon startup.
@@ -4401,11 +4400,7 @@ class discordCrypt {
         };
     }
 
-    /* ================ END UI HANDLE CALLBACKS ================ */
-
-    /* =================== END MAIN CALLBACKS ================== */
-
-    /* =============== BEGIN CRYPTO CALLBACKS ================== */
+    /* ========================================================= */
 
     /* ======================= UTILITIES ======================= */
 
@@ -4881,355 +4876,6 @@ class discordCrypt {
 
     /**
      * @public
-     * @desc Creates a hash of the specified algorithm and returns either a hex-encoded or base64-encoded digest.
-     * @param {string|Buffer|Array} message The message to perform the hash on.
-     * @param {string} algorithm The specified hash algorithm to use.
-     * @param {boolean} [to_hex] If true, converts the output to hex else it converts it to Base64.
-     * @param {boolean} hmac If this is true, an HMAC hash is created using a secret.
-     * @param {string|Buffer|Array} secret The input secret used for the creation of an HMAC object.
-     * @returns {string} Returns either a Base64 or hex string on success and an empty string on failure.
-     * @example
-     * console.log( __createHash( 'Hello World!', 'sha256', true ) );
-     * // "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
-     * @example
-     * console.log( __createHash( 'Hello World', 'sha256', true, true, 'My Secret' ) );
-     * // "852f78f917c4408000a8a94be61687865000bec5b2b77c0704dc5ad73ea06368"
-     */
-    static __createHash( message, algorithm, to_hex, hmac, secret ) {
-        try {
-            const crypto = require( 'crypto' );
-
-            /* Create the hash algorithm. */
-            const hash = hmac ? crypto.createHmac( algorithm, secret ) :
-                crypto.createHash( algorithm );
-
-            /* Hash the data. */
-            hash.update( message );
-
-            /* Return the digest. */
-            return hash.digest( to_hex ? 'hex' : 'base64' );
-        }
-        catch ( e ) {
-            return '';
-        }
-    }
-
-    /**
-     * @public
-     * @desc Computes a key-derivation based on the PBKDF2 standard and returns a hex or base64 encoded digest.
-     * @param {string|Buffer|Array} input The input value to hash.
-     * @param {string|Buffer|Array} salt The secret value used to derive the hash.
-     * @param {boolean} [to_hex] Whether to conver the result to a hex string or a Base64 string.
-     * @param {boolean} [is_input_hex] Whether to treat the input as a hex or Base64 string.
-     *      If undefined, it is interpreted as a UTF-8 string.
-     * @param {boolean} [is_salt_hex] Whether to treat the salt as a hex or Base64 string.
-     *      If undefined, it is interpreted as a UTF-8 string.
-     * @param {PBKDF2Callback} [callback] The callback function if performing an async request.
-     * @param {string} algorithm The name of the hash algorithm to use.
-     * @param {int} key_length The length of the desired key in bytes.
-     * @param {int} iterations The number of recursive iterations to use to produce the resulting hash.
-     * @returns {string} If a callback is not specified, this returns the hex or Base64 result or an empty string on
-     *      failure.
-     * @example
-     * __pbkdf2( 'Hello World!', 'Super Secret', true, undefined, undefined, undefined, 'sha256', 32, 10000 );
-     * // "89205432badb5b1e53c7bb930d428afd0f98e5702c4e549ea2da4cfefe8af254"
-     * @example
-     * __pbkdf2( 'ABC', 'Salty!', true, undefined, undefined, ( e, h ) => { console.log( `Hash: ${h}` ); },
-     *      'sha256', 32, 1000 );
-     * // Hash: f0e110b17b02006bbbcecb8eb295421c69081a6ecda75c94d55d20759dc295b1
-     */
-    static __pbkdf2( input, salt, to_hex, is_input_hex, is_salt_hex, callback, algorithm, key_length, iterations ) {
-        const crypto = require( 'crypto' );
-        let _input, _salt;
-
-        /* Convert necessary data to Buffer objects. */
-        if ( typeof input === 'object' ) {
-            if ( Buffer.isBuffer( input ) )
-                _input = input;
-            else if ( Array.isArray )
-                _input = Buffer.from( input );
-            else
-                _input = Buffer.from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
-        }
-        else if ( typeof input === 'string' )
-            _input = Buffer.from( input, 'utf8' );
-
-        if ( typeof salt === 'object' ) {
-            if ( Buffer.isBuffer( salt ) )
-                _salt = salt;
-            else if ( Array.isArray )
-                _salt = Buffer.from( salt );
-            else
-                _salt = Buffer.from( salt, is_salt_hex === undefined ? 'utf8' : is_salt_hex ? 'hex' : 'base64' );
-        }
-        else if ( typeof salt === 'string' )
-            _salt = Buffer.from( salt, 'utf8' );
-
-        /* For function callbacks, use the async method else use the synchronous method. */
-        if ( typeof callback === 'function' )
-            crypto.pbkdf2( _input, _salt, iterations, key_length, algorithm, ( e, key ) => {
-                callback( e, !e ? key.toString( to_hex ? 'hex' : 'base64' ) : '' );
-            } );
-        else
-            try {
-                return crypto.pbkdf2Sync( _input, _salt, iterations, key_length, algorithm )
-                    .toString( to_hex ? 'hex' : 'base64' );
-            }
-            catch ( e ) {
-                throw e;
-            }
-    }
-
-    /**
-     * @public
-     * @desc Pads or un-pads the input message using the specified encoding format and block size.
-     * @param {string|Buffer|Array} message The input message to either pad or unpad.
-     * @param {string} padding_scheme The padding scheme used. This can be either: [ ISO1, ISO9, PKC7, ANS2 ]
-     * @param {int} block_size The block size that the padding scheme must align the message to.
-     * @param {boolean} [is_hex] Whether to treat the message as a hex or Base64 string.
-     *      If undefined, it is interpreted as a UTF-8 string.
-     * @param {boolean} [remove_padding] Whether to remove the padding applied to the message. If undefined, it is
-     *      treated as false.
-     * @returns {Buffer} Returns the padded or unpadded message as a Buffer object.
-     */
-    static __padMessage( message, padding_scheme, block_size, is_hex = undefined, remove_padding = undefined ) {
-        let _message, _padBytes;
-
-        /* Returns the number of bytes required to pad a message based on the block size. */
-        function __getPaddingLength( totalLength, blockSize ) {
-            return totalLength % blockSize === blockSize ? blockSize : blockSize - ( totalLength % blockSize );
-        }
-
-        /* Pads a message according to the PKCS #7 / PKCS #5 format. */
-        function __PKCS7( message, paddingBytes, remove ) {
-            if ( remove === undefined ) {
-                /* Allocate required padding length + message length. */
-                let padded = Buffer.alloc( message.length + paddingBytes );
-
-                /* Copy the message. */
-                message.copy( padded );
-
-                /* Append the number of padding bytes according to PKCS #7 / PKCS #5 format. */
-                Buffer.alloc( paddingBytes ).fill( paddingBytes ).copy( padded, message.length );
-
-                /* Return the result. */
-                return padded;
-            }
-            else {
-                /* Remove the padding indicated by the last byte. */
-                return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
-            }
-        }
-
-        /* Pads a message according to the ANSI X9.23 format. */
-        function __ANSIX923( message, paddingBytes, remove ) {
-            if ( remove === undefined ) {
-                /* Allocate required padding length + message length. */
-                let padded = Buffer.alloc( message.length + paddingBytes );
-
-                /* Copy the message. */
-                message.copy( padded );
-
-                /* Append null-bytes till the end of the message. */
-                Buffer.alloc( paddingBytes - 1 ).fill( 0x00 ).copy( padded, message.length );
-
-                /* Append the padding length as the final byte of the message. */
-                Buffer.alloc( 1 ).fill( paddingBytes ).copy( padded, message.length + paddingBytes - 1 );
-
-                /* Return the result. */
-                return padded;
-            }
-            else {
-                /* Remove the padding indicated by the last byte. */
-                return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
-            }
-        }
-
-        /* Pads a message according to the ISO 10126 format. */
-        function __ISO10126( message, paddingBytes, remove ) {
-            const crypto = require( 'crypto' );
-
-            if ( remove === undefined ) {
-                /* Allocate required padding length + message length. */
-                let padded = Buffer.alloc( message.length + paddingBytes );
-
-                /* Copy the message. */
-                message.copy( padded );
-
-                /* Copy random data to the end of the message. */
-                crypto.randomBytes( paddingBytes - 1 ).copy( padded, message.length );
-
-                /* Write the padding length at the last byte. */
-                padded.writeUInt8( paddingBytes, message.length + paddingBytes - 1 );
-
-                /* Return the result. */
-                return padded;
-            }
-            else {
-                /* Remove the padding indicated by the last byte. */
-                return message.slice( 0, message.length - message.readUInt8( message.length - 1 ) );
-            }
-        }
-
-        /* Pads a message according to the ISO 97971 format. */
-        function __ISO97971( message, paddingBytes, remove ) {
-            if ( remove === undefined ) {
-                /* Allocate required padding length + message length. */
-                let padded = Buffer.alloc( message.length + paddingBytes );
-
-                /* Copy the message. */
-                message.copy( padded );
-
-                /* Append the first byte as 0x80 */
-                Buffer.alloc( 1 ).fill( 0x80 ).copy( padded, message.length );
-
-                /* Fill the rest of the padding with zeros. */
-                Buffer.alloc( paddingBytes - 1 ).fill( 0x00 ).copy( message, message.length + 1 );
-
-                /* Return the result. */
-                return padded;
-            }
-            else {
-
-                /* Scan backwards. */
-                let lastIndex = message.length - 1;
-
-                /* Find the amount of null padding bytes. */
-                for ( ; lastIndex > 0; lastIndex-- )
-                    /* If a null byte is encountered, split at this index. */
-                    if ( message[ lastIndex ] !== 0x00 )
-                        break;
-
-                /* Remove the null-padding. */
-                let cleaned = message.slice( 0, lastIndex + 1 );
-
-                /* Remove the final byte which is 0x80. */
-                return cleaned.slice( 0, cleaned.length - 1 );
-            }
-        }
-
-        /* Convert the message to a Buffer object. */
-        _message = discordCrypt.__toBuffer( message, is_hex );
-
-        /* Get the number of bytes required to pad this message. */
-        _padBytes = remove_padding ? 0 : __getPaddingLength( _message.length, block_size / 8 );
-
-        /* Apply the message padding based on the format specified. */
-        switch ( padding_scheme.toUpperCase() ) {
-            case 'PKC7':
-                return __PKCS7( _message, _padBytes, remove_padding );
-            case 'ANS2':
-                return __ANSIX923( _message, _padBytes, remove_padding );
-            case 'ISO1':
-                return __ISO10126( _message, _padBytes, remove_padding );
-            case 'ISO9':
-                return __ISO97971( _message, _padBytes, remove_padding );
-            default:
-                return '';
-        }
-    }
-
-    /**
-     * @public
-     * @desc Determines whether the passed cipher name is valid.
-     * @param {string} cipher The name of the cipher to check.
-     * @returns {boolean} Returns true if the cipher name is valid.
-     * @example
-     * console.log( __isValidCipher( 'aes-256-cbc' ) ); // True
-     * @example
-     * console.log( __isValidCipher( 'aes-256-gcm' ) ); // True
-     * @example
-     * console.log( __isValidCipher( 'camellia-256-gcm' ) ); // False
-     */
-    static __isValidCipher( cipher ) {
-        const crypto = require( 'crypto' );
-        let isValid = false;
-
-        /* Iterate all valid Crypto ciphers and compare the name. */
-        let cipher_name = cipher.toLowerCase();
-        crypto.getCiphers().every( ( s ) => {
-            /* If the cipher matches, stop iterating. */
-            if ( s === cipher_name ) {
-                isValid = true;
-                return false;
-            }
-
-            /* Continue iterating. */
-            return true;
-        } );
-
-        /* Return the result. */
-        return isValid;
-    }
-
-    /**
-     * @public
-     * @desc Converts a given key or iv into a buffer object. Performs a hash of the key it doesn't match the blockSize.
-     * @param {string|Buffer|Array} key The key to perform validation on.
-     * @param {int} key_size_bits The bit length of the desired key.
-     * @param {boolean} [use_whirlpool] If the key length is 512-bits, use Whirlpool or SHA-512 hashing.
-     * @returns {Buffer} Returns a Buffer() object containing the key of the desired length.
-     */
-    static __validateKeyIV( key, key_size_bits = 256, use_whirlpool = undefined ) {
-        /* Get the designed hashing algorithm. */
-        let keyBytes = key_size_bits / 8;
-
-        /* If the length of the key isn't of the desired size, hash it. */
-        if ( key.length !== keyBytes ) {
-            let hash;
-
-            /* Get the appropriate hash algorithm for the key size. */
-            switch ( keyBytes ) {
-                case 8:
-                    hash = discordCrypt.whirlpool64;
-                    break;
-                case 16:
-                    hash = discordCrypt.sha512_128;
-                    break;
-                case 20:
-                    hash = discordCrypt.sha160;
-                    break;
-                case 24:
-                    hash = discordCrypt.whirlpool192;
-                    break;
-                case 32:
-                    hash = discordCrypt.sha256;
-                    break;
-                case 64:
-                    hash = use_whirlpool !== undefined ? discordCrypt.sha512 : discordCrypt.whirlpool;
-                    break;
-                default:
-                    throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys' +
-                    ' are supported.';
-            }
-            /* Hash the key and return it as a buffer. */
-            return Buffer.from( hash( key, true ), 'hex' );
-        }
-        else
-            return Buffer.from( key );
-    }
-
-    /**
-     * @public
-     * @desc Convert the message to a buffer object.
-     * @param {string|Buffer|Array} message The input message.
-     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
-     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
-     * @returns {Buffer} Returns a Buffer() object containing the message.
-     * @throws An exception indicating the input message type is neither an Array(), Buffer() or string.
-     */
-    static __validateMessage( message, is_message_hex = undefined ) {
-        /* Convert the message to a buffer. */
-        try {
-            return discordCrypt.__toBuffer( message, is_message_hex );
-        }
-        catch ( e ) {
-            throw 'exception - Invalid message type.';
-        }
-    }
-
-    /**
-     * @public
      * @desc Returns the string encoded mime type of a file based on the file extension.
      * @param {string} file_path The path to the file in question.
      * @returns {string} Returns the known file extension's MIME type or "application/octet-stream".
@@ -5677,7 +5323,356 @@ class discordCrypt {
 
     /* ========================================================= */
 
-    /* ============== NODE CRYPTO HASH PRIMITIVES ============== */
+    /* =================== CRYPTO PRIMITIVES =================== */
+
+    /**
+     * @public
+     * @desc Creates a hash of the specified algorithm and returns either a hex-encoded or base64-encoded digest.
+     * @param {string|Buffer|Array} message The message to perform the hash on.
+     * @param {string} algorithm The specified hash algorithm to use.
+     * @param {boolean} [to_hex] If true, converts the output to hex else it converts it to Base64.
+     * @param {boolean} hmac If this is true, an HMAC hash is created using a secret.
+     * @param {string|Buffer|Array} secret The input secret used for the creation of an HMAC object.
+     * @returns {string} Returns either a Base64 or hex string on success and an empty string on failure.
+     * @example
+     * console.log( __createHash( 'Hello World!', 'sha256', true ) );
+     * // "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
+     * @example
+     * console.log( __createHash( 'Hello World', 'sha256', true, true, 'My Secret' ) );
+     * // "852f78f917c4408000a8a94be61687865000bec5b2b77c0704dc5ad73ea06368"
+     */
+    static __createHash( message, algorithm, to_hex, hmac, secret ) {
+        try {
+            const crypto = require( 'crypto' );
+
+            /* Create the hash algorithm. */
+            const hash = hmac ? crypto.createHmac( algorithm, secret ) :
+                crypto.createHash( algorithm );
+
+            /* Hash the data. */
+            hash.update( message );
+
+            /* Return the digest. */
+            return hash.digest( to_hex ? 'hex' : 'base64' );
+        }
+        catch ( e ) {
+            return '';
+        }
+    }
+
+    /**
+     * @public
+     * @desc Computes a key-derivation based on the PBKDF2 standard and returns a hex or base64 encoded digest.
+     * @param {string|Buffer|Array} input The input value to hash.
+     * @param {string|Buffer|Array} salt The secret value used to derive the hash.
+     * @param {boolean} [to_hex] Whether to conver the result to a hex string or a Base64 string.
+     * @param {boolean} [is_input_hex] Whether to treat the input as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [is_salt_hex] Whether to treat the salt as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {PBKDF2Callback} [callback] The callback function if performing an async request.
+     * @param {string} algorithm The name of the hash algorithm to use.
+     * @param {int} key_length The length of the desired key in bytes.
+     * @param {int} iterations The number of recursive iterations to use to produce the resulting hash.
+     * @returns {string} If a callback is not specified, this returns the hex or Base64 result or an empty string on
+     *      failure.
+     * @example
+     * __pbkdf2( 'Hello World!', 'Super Secret', true, undefined, undefined, undefined, 'sha256', 32, 10000 );
+     * // "89205432badb5b1e53c7bb930d428afd0f98e5702c4e549ea2da4cfefe8af254"
+     * @example
+     * __pbkdf2( 'ABC', 'Salty!', true, undefined, undefined, ( e, h ) => { console.log( `Hash: ${h}` ); },
+     *      'sha256', 32, 1000 );
+     * // Hash: f0e110b17b02006bbbcecb8eb295421c69081a6ecda75c94d55d20759dc295b1
+     */
+    static __pbkdf2( input, salt, to_hex, is_input_hex, is_salt_hex, callback, algorithm, key_length, iterations ) {
+        const crypto = require( 'crypto' );
+        let _input, _salt;
+
+        /* Convert necessary data to Buffer objects. */
+        if ( typeof input === 'object' ) {
+            if ( Buffer.isBuffer( input ) )
+                _input = input;
+            else if ( Array.isArray )
+                _input = Buffer.from( input );
+            else
+                _input = Buffer.from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
+        }
+        else if ( typeof input === 'string' )
+            _input = Buffer.from( input, 'utf8' );
+
+        if ( typeof salt === 'object' ) {
+            if ( Buffer.isBuffer( salt ) )
+                _salt = salt;
+            else if ( Array.isArray )
+                _salt = Buffer.from( salt );
+            else
+                _salt = Buffer.from( salt, is_salt_hex === undefined ? 'utf8' : is_salt_hex ? 'hex' : 'base64' );
+        }
+        else if ( typeof salt === 'string' )
+            _salt = Buffer.from( salt, 'utf8' );
+
+        /* For function callbacks, use the async method else use the synchronous method. */
+        if ( typeof callback === 'function' )
+            crypto.pbkdf2( _input, _salt, iterations, key_length, algorithm, ( e, key ) => {
+                callback( e, !e ? key.toString( to_hex ? 'hex' : 'base64' ) : '' );
+            } );
+        else
+            try {
+                return crypto.pbkdf2Sync( _input, _salt, iterations, key_length, algorithm )
+                    .toString( to_hex ? 'hex' : 'base64' );
+            }
+            catch ( e ) {
+                throw e;
+            }
+    }
+
+    /**
+     * @public
+     * @desc Pads or un-pads the input message using the specified encoding format and block size.
+     * @param {string|Buffer|Array} message The input message to either pad or unpad.
+     * @param {string} padding_scheme The padding scheme used. This can be either: [ ISO1, ISO9, PKC7, ANS2 ]
+     * @param {int} block_size The block size that the padding scheme must align the message to.
+     * @param {boolean} [is_hex] Whether to treat the message as a hex or Base64 string.
+     *      If undefined, it is interpreted as a UTF-8 string.
+     * @param {boolean} [remove_padding] Whether to remove the padding applied to the message. If undefined, it is
+     *      treated as false.
+     * @returns {Buffer} Returns the padded or unpadded message as a Buffer object.
+     */
+    static __padMessage( message, padding_scheme, block_size, is_hex = undefined, remove_padding = undefined ) {
+        let _message, _padBytes;
+
+        /* Returns the number of bytes required to pad a message based on the block size. */
+        function __getPaddingLength( totalLength, blockSize ) {
+            return totalLength % blockSize === blockSize ? blockSize : blockSize - ( totalLength % blockSize );
+        }
+
+        /* Pads a message according to the PKCS #7 / PKCS #5 format. */
+        function __PKCS7( message, paddingBytes, remove ) {
+            if ( remove === undefined ) {
+                /* Allocate required padding length + message length. */
+                let padded = Buffer.alloc( message.length + paddingBytes );
+
+                /* Copy the message. */
+                message.copy( padded );
+
+                /* Append the number of padding bytes according to PKCS #7 / PKCS #5 format. */
+                Buffer.alloc( paddingBytes ).fill( paddingBytes ).copy( padded, message.length );
+
+                /* Return the result. */
+                return padded;
+            }
+            else {
+                /* Remove the padding indicated by the last byte. */
+                return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
+            }
+        }
+
+        /* Pads a message according to the ANSI X9.23 format. */
+        function __ANSIX923( message, paddingBytes, remove ) {
+            if ( remove === undefined ) {
+                /* Allocate required padding length + message length. */
+                let padded = Buffer.alloc( message.length + paddingBytes );
+
+                /* Copy the message. */
+                message.copy( padded );
+
+                /* Append null-bytes till the end of the message. */
+                Buffer.alloc( paddingBytes - 1 ).fill( 0x00 ).copy( padded, message.length );
+
+                /* Append the padding length as the final byte of the message. */
+                Buffer.alloc( 1 ).fill( paddingBytes ).copy( padded, message.length + paddingBytes - 1 );
+
+                /* Return the result. */
+                return padded;
+            }
+            else {
+                /* Remove the padding indicated by the last byte. */
+                return message.slice( 0, message.length - message.readInt8( message.length - 1 ) );
+            }
+        }
+
+        /* Pads a message according to the ISO 10126 format. */
+        function __ISO10126( message, paddingBytes, remove ) {
+            const crypto = require( 'crypto' );
+
+            if ( remove === undefined ) {
+                /* Allocate required padding length + message length. */
+                let padded = Buffer.alloc( message.length + paddingBytes );
+
+                /* Copy the message. */
+                message.copy( padded );
+
+                /* Copy random data to the end of the message. */
+                crypto.randomBytes( paddingBytes - 1 ).copy( padded, message.length );
+
+                /* Write the padding length at the last byte. */
+                padded.writeUInt8( paddingBytes, message.length + paddingBytes - 1 );
+
+                /* Return the result. */
+                return padded;
+            }
+            else {
+                /* Remove the padding indicated by the last byte. */
+                return message.slice( 0, message.length - message.readUInt8( message.length - 1 ) );
+            }
+        }
+
+        /* Pads a message according to the ISO 97971 format. */
+        function __ISO97971( message, paddingBytes, remove ) {
+            if ( remove === undefined ) {
+                /* Allocate required padding length + message length. */
+                let padded = Buffer.alloc( message.length + paddingBytes );
+
+                /* Copy the message. */
+                message.copy( padded );
+
+                /* Append the first byte as 0x80 */
+                Buffer.alloc( 1 ).fill( 0x80 ).copy( padded, message.length );
+
+                /* Fill the rest of the padding with zeros. */
+                Buffer.alloc( paddingBytes - 1 ).fill( 0x00 ).copy( message, message.length + 1 );
+
+                /* Return the result. */
+                return padded;
+            }
+            else {
+
+                /* Scan backwards. */
+                let lastIndex = message.length - 1;
+
+                /* Find the amount of null padding bytes. */
+                for ( ; lastIndex > 0; lastIndex-- )
+                    /* If a null byte is encountered, split at this index. */
+                    if ( message[ lastIndex ] !== 0x00 )
+                        break;
+
+                /* Remove the null-padding. */
+                let cleaned = message.slice( 0, lastIndex + 1 );
+
+                /* Remove the final byte which is 0x80. */
+                return cleaned.slice( 0, cleaned.length - 1 );
+            }
+        }
+
+        /* Convert the message to a Buffer object. */
+        _message = discordCrypt.__toBuffer( message, is_hex );
+
+        /* Get the number of bytes required to pad this message. */
+        _padBytes = remove_padding ? 0 : __getPaddingLength( _message.length, block_size / 8 );
+
+        /* Apply the message padding based on the format specified. */
+        switch ( padding_scheme.toUpperCase() ) {
+            case 'PKC7':
+                return __PKCS7( _message, _padBytes, remove_padding );
+            case 'ANS2':
+                return __ANSIX923( _message, _padBytes, remove_padding );
+            case 'ISO1':
+                return __ISO10126( _message, _padBytes, remove_padding );
+            case 'ISO9':
+                return __ISO97971( _message, _padBytes, remove_padding );
+            default:
+                return '';
+        }
+    }
+
+    /**
+     * @public
+     * @desc Determines whether the passed cipher name is valid.
+     * @param {string} cipher The name of the cipher to check.
+     * @returns {boolean} Returns true if the cipher name is valid.
+     * @example
+     * console.log( __isValidCipher( 'aes-256-cbc' ) ); // True
+     * @example
+     * console.log( __isValidCipher( 'aes-256-gcm' ) ); // True
+     * @example
+     * console.log( __isValidCipher( 'camellia-256-gcm' ) ); // False
+     */
+    static __isValidCipher( cipher ) {
+        const crypto = require( 'crypto' );
+        let isValid = false;
+
+        /* Iterate all valid Crypto ciphers and compare the name. */
+        let cipher_name = cipher.toLowerCase();
+        crypto.getCiphers().every( ( s ) => {
+            /* If the cipher matches, stop iterating. */
+            if ( s === cipher_name ) {
+                isValid = true;
+                return false;
+            }
+
+            /* Continue iterating. */
+            return true;
+        } );
+
+        /* Return the result. */
+        return isValid;
+    }
+
+    /**
+     * @public
+     * @desc Converts a given key or iv into a buffer object. Performs a hash of the key it doesn't match the blockSize.
+     * @param {string|Buffer|Array} key The key to perform validation on.
+     * @param {int} key_size_bits The bit length of the desired key.
+     * @param {boolean} [use_whirlpool] If the key length is 512-bits, use Whirlpool or SHA-512 hashing.
+     * @returns {Buffer} Returns a Buffer() object containing the key of the desired length.
+     */
+    static __validateKeyIV( key, key_size_bits = 256, use_whirlpool = undefined ) {
+        /* Get the designed hashing algorithm. */
+        let keyBytes = key_size_bits / 8;
+
+        /* If the length of the key isn't of the desired size, hash it. */
+        if ( key.length !== keyBytes ) {
+            let hash;
+
+            /* Get the appropriate hash algorithm for the key size. */
+            switch ( keyBytes ) {
+                case 8:
+                    hash = discordCrypt.whirlpool64;
+                    break;
+                case 16:
+                    hash = discordCrypt.sha512_128;
+                    break;
+                case 20:
+                    hash = discordCrypt.sha160;
+                    break;
+                case 24:
+                    hash = discordCrypt.whirlpool192;
+                    break;
+                case 32:
+                    hash = discordCrypt.sha256;
+                    break;
+                case 64:
+                    hash = use_whirlpool !== undefined ? discordCrypt.sha512 : discordCrypt.whirlpool;
+                    break;
+                default:
+                    throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys' +
+                    ' are supported.';
+            }
+            /* Hash the key and return it as a buffer. */
+            return Buffer.from( hash( key, true ), 'hex' );
+        }
+        else
+            return Buffer.from( key );
+    }
+
+    /**
+     * @public
+     * @desc Convert the message to a buffer object.
+     * @param {string|Buffer|Array} message The input message.
+     * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
+     *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
+     * @returns {Buffer} Returns a Buffer() object containing the message.
+     * @throws An exception indicating the input message type is neither an Array(), Buffer() or string.
+     */
+    static __validateMessage( message, is_message_hex = undefined ) {
+        /* Convert the message to a buffer. */
+        try {
+            return discordCrypt.__toBuffer( message, is_message_hex );
+        }
+        catch ( e ) {
+            throw 'exception - Invalid message type.';
+        }
+    }
 
     /**
      * @public
@@ -6296,10 +6291,6 @@ class discordCrypt {
             iterations
         );
     }
-
-    /* ============ END NODE CRYPTO HASH PRIMITIVES ============ */
-
-    /* ================ CRYPTO CIPHER FUNCTIONS ================ */
 
     /**
      * @public
@@ -7126,8 +7117,6 @@ class discordCrypt {
         );
     }
 
-    /* ============== END CRYPTO CIPHER FUNCTIONS ============== */
-
     /**
      * @public
      * @desc Converts a cipher string to its appropriate index number.
@@ -7858,7 +7847,8 @@ class discordCrypt {
         }
     }
 
-    /* ================ END CRYPTO CALLBACKS =================== */
+    /* ========================================================= */
+
 }
 
 /* Required for code coverage reports. */
