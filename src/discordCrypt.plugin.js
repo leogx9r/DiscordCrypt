@@ -1390,7 +1390,7 @@ class discordCrypt
                 return;
 
             /* Skip if autocomplete dialog is opened. */
-            if ( !!$( self.autoCompleteClass )[ 0 ] )
+            if ( $( self.autoCompleteClass )[ 0 ] )
                 return;
 
             /* Send the encrypted message. */
@@ -4703,7 +4703,7 @@ class discordCrypt
      */
     static __extractUrls( message ) {
         /* This regex only extracts HTTP/HTTPS/FTP and FILE URLs. */
-        let url_expr = new RegExp( /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig ),
+        let url_expr = new RegExp( /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig ),
             matched;
 
         /* Array to store all the extracted URLs in. */
