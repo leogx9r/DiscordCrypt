@@ -1,3 +1,9 @@
+Version 1.2.7
+
+- Added the ability to directly copy keys from the Database Management menu in settings.
+- Small improvement to Scrypt based function for faster execution.
+- Further reduced the plugin's file size.
+
 Version 1.2.6
 
 - Fixed a bug regarding detecting the update version.

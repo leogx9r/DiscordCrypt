@@ -320,7 +320,7 @@ class Compiler {
 
         /* Only do this if we're compressing the plugin. */
         if ( compress )
-            data = metadata + license + this.tryMinify( data, true );
+            data = license + this.tryMinify( data, true );
 
         try {
             /* Write the file to the output. */
