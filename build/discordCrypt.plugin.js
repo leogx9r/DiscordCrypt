@@ -758,10 +758,10 @@ class discordCrypt
         discordCrypt.log( 'Loading configuration file ...' );
 
         /* Attempt to parse the configuration file. */
-        let data = bdPluginStorage.get( this.getName(), 'config' );
+        let config = bdPluginStorage.get( this.getName(), 'config' );
 
         /* Check if the config file exists. */
-        if ( !data || data === null || data === '' ) {
+        if ( !config || config === null || config === '' ) {
             /* File doesn't exist, create a new one. */
             this.configFile = this.getDefaultConfig();
 
@@ -775,7 +775,11 @@ class discordCrypt
         try {
             /* Try parsing the decrypted data. */
             this.configFile = JSON.parse(
-                discordCrypt.aes256_decrypt_gcm( data.data, this.masterPassword, 'PKC7', 'utf8', false )
+                discordCrypt.__zlibDecompress(
+                    discordCrypt.aes256_decrypt_gcm( config.data, this.masterPassword, 'PKC7', 'base64', false ),
+                    'base64',
+                    'utf8'
+                )
             );
         }
         catch ( err ) {
@@ -861,7 +865,10 @@ class discordCrypt
         bdPluginStorage.set( this.getName(), 'config', {
             data:
                 discordCrypt.aes256_encrypt_gcm(
-                    JSON.stringify( this.configFile ),
+                    discordCrypt.__zlibCompress(
+                        JSON.stringify( this.configFile ),
+                        'utf8'
+                    ),
                     this.masterPassword,
                     'PKC7',
                     false
@@ -4363,18 +4370,42 @@ class discordCrypt
 
     /**
      * @public
+     * @desc Compresses the input data using ZLIB.
+     * @param {string|Buffer} data The input data to compress.
+     * @param {string} [format] The format of the input data.
+     * @param {string} [outForm] If specified, returns the compressed
+     *      data in this format otherwise it returns a Buffer.
+     *      Can be either hex, base64, latin1, utf8 or undefined.
+     * @return {string|Buffer} The compressed data.
+     */
+    static __zlibCompress( data, format = 'base64', outForm ) {
+        let v = require( 'zlib' ).deflateSync(
+            Buffer.isBuffer( data ) ? data : Buffer.from( data, format ),
+            { windowBits: 15 }
+        );
+
+        return outForm ? v.toString( outForm ) : v;
+    }
+
+    /**
+     * @public
      * @desc Decompresses an encoded ZLIB package.
-     * @param {string} data The input data to decompress.
+     * @param {string|Buffer} data The input data to decompress.
      * @param {string} [format] The format of the input data.
      *      Can be either hex, base64, latin1, utf8 or undefined.
      *      Defaults to Base64.
-     * @return {string} The original data.
+     * @param {string} [outForm] If specified, returns the decompressed
+     *      data in this format otherwise it returns a Buffer.
+     *      Can be either hex, base64, latin1, utf8 or undefined.
+     * @return {string|Buffer} The original data.
      */
-    static __zlibDecompress( data, format = 'base64' ) {
-        return require( 'zlib' ).inflateSync(
-            Buffer.from( data, format ),
+    static __zlibDecompress( data, format = 'base64', outForm = 'utf8' ) {
+        let v = require( 'zlib' ).inflateSync(
+            Buffer.isBuffer( data ) ? data : Buffer.from( data, format ),
             { windowBits: 15 }
-        ).toString( 'utf8' );
+        );
+
+        return outForm ? v.toString( outForm ) : v;
     }
 
     /**
