@@ -3883,6 +3883,21 @@ class discordCrypt
      * @returns {Array} Returns an array of all IDs and identifier callbacks.
      */
     static dumpWebpackModuleCallbacks( dump_actions = true ) {
+        const ignored = [
+            '_dependencies',
+            'initialize',
+            'initializeIfNeeded',
+            'syncWith',
+            'waitFor',
+            'hasChangeCallbacks',
+            'emitChange',
+            'addChangeListener',
+            'addConditionalChangeListener',
+            'removeChangeListener',
+            'getDispatchToken',
+            'mustEmitChanges'
+        ];
+
         /* Resolve the finder function. */
         let finder = discordCrypt.getWebpackModuleSearcher().findByDispatchToken;
 
@@ -3903,8 +3918,8 @@ class discordCrypt
 
             /* Loop over every property in the module. */
             for( let prop in module ) {
-                /* Skip dependencies. */
-                if( prop == '_dependencies' )
+                /* Skip ignored. */
+                if( ignored.indexOf( prop ) !== -1 )
                     continue;
 
                 /* Dump action handlers. */
