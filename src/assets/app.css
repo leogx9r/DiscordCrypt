@@ -97,6 +97,7 @@
     border-radius: 3px;
 }
 .dc-textarea {
+    background: transparent;
     font-family: monospace;
     font-size: 12px;
     color: #ffffff;
