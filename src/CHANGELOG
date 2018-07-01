@@ -1,3 +1,16 @@
+Version 1.2.8
+
+- NOTE: This update changes the database structure. You will need to delete your database file and restart Discord.
+- NOTE: Make sure you export your current entries in the Database Settings menu before applying this update.
+
+- Updated the embed warning message.
+- Bug fix in the Ed25519 signing process.
+- Added additional hints for each setting in the menu.
+- Fixed the text area background colors for some themes.
+- The database is now compressed before encrypting it to decrease storage space.
+- Future updates will only show the changes between the latest and current version.
+- Added buttons to join the support server or visit the repository from within the settings menu.
+
 Version 1.2.7
 
 - Added the ability to directly copy keys from the Database Management menu in settings.
