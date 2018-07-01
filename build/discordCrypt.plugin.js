@@ -1176,7 +1176,7 @@ class discordCrypt
                     let dc_changelog = $( '#dc-changelog' );
                     dc_changelog.val(
                         typeof full_changelog === "string" && full_changelog.length > 0 ?
-                            full_changelog :
+                            discordCrypt.__tryParseChangelog( full_changelog, self.getVersion() ) :
                             'N/A'
                     );
 
@@ -1197,7 +1197,7 @@ class discordCrypt
             catch ( ex ) {
                 discordCrypt.log( ex, 'warn' );
             }
-        }, 1000 );
+        }, 1 );
     }
 
     /**
@@ -5382,6 +5382,84 @@ class discordCrypt
             },
             randomize_file_name
         );
+    }
+
+    /**
+     * @private
+     * @desc Attempts to parse an input changelog and returns only the differences between
+     *      the current version and the latest version.
+     * @param {string} changelog_data The full changelog data.
+     * @param {string} current_version The current version currently installed.
+     * @return {string} Returns the differences or the full changelog on failure.
+     */
+    static __tryParseChangelog( changelog_data, current_version ) {
+        /**
+         * @protected
+         * @desc Compares two version numbers in the format x.y.z.
+         * @param {string} first The first version string to compare.
+         * @param {string} second The second version string to compare against.
+         * @return {number} Returns 0 if equal, > 0 if [first > second] and < 0 if [second > first].
+         */
+        const VersionCompare = ( first, second ) => {
+            /* Split the versions into segments. */
+            let _first = first.replace( /(\.0+)+$/, '' ).split( '.' );
+            let _second = second.replace( /(\.0+)+$/, '' ).split( '.' );
+
+            /* Iterate over the smallest version component lengths. */
+            for ( let i = 0; i < Math.min( _first.length, _second.length ); i++ ) {
+                /* Compare the first component to the second and check if it's larger. */
+                let delta = parseInt( _first[ i ], 10 ) - parseInt( _second[ i ], 10 );
+
+                /* Return a positive number indicating the length. */
+                if ( delta )
+                    return delta;
+            }
+
+            /* Return either 0 or negative indicating the second is equal or greater than the first. */
+            return _first.length - _second.length;
+        };
+
+        try {
+            let result = '';
+
+            /* Capture all versions and sort them from lowest to highest. */
+            let versions = changelog_data
+                .split( "\r" )
+                .join( "" )
+                .match( /((Version )(\d+\.)(\d+\.)(\*|\d+))/gm )
+                .sort( VersionCompare );
+
+            /* Iterate all versions from the most recent to the lowest. */
+            for ( let i = versions.length - 1; i > 0; i-- ) {
+                /* Compare the current version against this one. */
+                let r = VersionCompare( current_version, versions[ i ] );
+
+                /* Ignore if the current version is greater or equal to the one being checked. */
+                if( r > 0 || r === 0 )
+                    continue;
+
+                /* Get the full version changes block. */
+                let changes = changelog_data.slice(
+                    changelog_data.indexOf( versions[ i ] ),
+                    changelog_data.indexOf( versions[ i - 1 ] )
+                );
+
+                /* Insert the current version info into the changelog result. */
+                result += `${versions[ i ]}\n\n`;
+                result += changes
+                    .replace( versions[ i ], '' )
+                    .replace( "\n\n", '' );
+            }
+
+            /* Return the result. */
+            return result;
+        }
+        catch ( e ) {
+            discordCrypt.log( `Failed to parse the changelog: ${e}`, 'warn' );
+        }
+
+        /* Return the full changelog. */
+        return changelog_data;
     }
 
     /* ========================================================= */
