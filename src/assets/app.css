@@ -207,7 +207,7 @@ ul.dc-list-red { color: #ff0000; }
     background: rgba(0, 0, 0, 0.7) !important;
 }
 .dc-hint {
-    font-size: 9px;
+    font-size: 11px;
     display: block;
 }
 .dc-hint > p {
