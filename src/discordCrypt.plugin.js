@@ -34,6 +34,23 @@ class discordCrypt
     /* ========================================================= */
 
     /**
+     * @typedef {Object} WebpackModuleSearcher
+     * @desc Returns various functions that can scan for webpack modules.
+     * @property {function(function(module : Object))} find Recursively iterates all webpack modules to
+     *      the callback function.
+     * @property {function(Array<string>)} findByUniquePrototypes Iterates all modules looking for the
+     *      defined prototypes.
+     * @property {function(Array<string>)} findByUniqueProperties Iterates all modules look for the
+     *      defined properties.
+     * @property {function(string)} findByDisplayName Iterates all modules looking for the specified
+     *      display name.
+     * @property {function(id: int)} findByDispatchToken Iterates all modules looking for the specified dispatch
+     *      token by its ID.
+     * @property {function(Array<string>)} findByDispatchNames Iterates all modules looking for the specified
+     *      dispatch names.
+     */
+
+    /**
      * @typedef {Object} CachedModules
      * @desc Cached React and Discord modules for internal access.
      * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
@@ -3751,7 +3768,7 @@ class discordCrypt
     /**
      * @private
      * @desc Returns functions to locate exported webpack modules.
-     * @returns {{find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames}}
+     * @returns {WebpackModuleSearcher}
      */
     static getWebpackModuleSearcher() {
         /* [ Credits to the creator. ] */
@@ -3822,6 +3839,16 @@ class discordCrypt
 
         /**
          * @desc Look through all modules of internal Discord's Webpack and return first object that has all of
+         *      the following prototypes.
+         * @param {string[]} protoNames Array of all prototypes to search for.
+         * @param {boolean} [force_load] Whether to force load all modules if cached modules don't work.
+         * @return {object} First module that matches `protoNames` or `null` if none match.
+         */
+        const findByUniquePrototypes = ( protoNames, force_load = false ) =>
+            find( module => protoNames.every( proto => module.prototype && module.prototype[ proto ] ), force_load );
+
+        /**
+         * @desc Look through all modules of internal Discord's Webpack and return first object that has all of the
          *      following properties. You should be ready that in any moment, after Discord update,
          *      this function may start returning `null` (if no such object exists anymore) or even some
          *      different object with the same properties. So you should provide all property names that
@@ -3834,7 +3861,7 @@ class discordCrypt
             find( module => propNames.every( prop => module[ prop ] !== undefined ), force_load );
 
         /**
-         * @desc Look through all modules of internal Discord's Webpack and return first object that has
+         * @desc Look through all modules of internal Discord's Webpack and return first object that has the
          *      `displayName` property with following value. This is useful for searching for React components by
          *      name. Take into account that not all components are exported as modules. Also, there might be
          *      several components with the same name.
@@ -3879,7 +3906,14 @@ class discordCrypt
             return null;
         };
 
-        return { find, findByUniqueProperties, findByDisplayName, findByDispatchToken, findByDispatchNames };
+        return {
+            find,
+            findByUniqueProperties,
+            findByUniquePrototypes,
+            findByDisplayName,
+            findByDispatchToken,
+            findByDispatchNames
+        };
     }
 
     /**
