@@ -592,6 +592,9 @@ class discordCrypt
             } );
         }
 
+        /* Setup Voice. */
+        this.setupVoice();
+
         /* Process any blocks on an interval since Discord loves to throttle messages. */
         this.scanInterval = setInterval( () => {
             self.decodeMessages();
@@ -1915,6 +1918,47 @@ class discordCrypt
         this.saveConfig();
 
         return true;
+    }
+
+    /**
+     * @private
+     * @desc Sets up the plugin's voice hooks.
+     */
+    setupVoice() {
+        /**
+         * @protected
+         * @desc Patches a specific prototype with the new function.
+         * @param {Array<string>|string} name The name or names of prototypes to search for.
+         *      The first name will be patched if this is an array.
+         * @param {function} fn The function to override the call with.
+         * @param scanner
+         */
+        const patchPrototype = ( name, fn, scanner ) => {
+            try {
+                if( Array.isArray( name ) )
+                    scanner( name ).prototype[ name[ 0 ] ] = fn;
+                else
+                    scanner( [ name ] ).prototype[ name ] = fn;
+            }
+            catch( e ) {
+                discordCrypt.log(
+                    `Failed to patch prototype: ${Array.isArray( name ) ? name[ 0 ] : name}\n${e}`,
+                    'error'
+                );
+            }
+        };
+
+        /* Retrieve the scanner. */
+        let searcher = discordCrypt.getWebpackModuleSearcher();
+
+        /* Remove quality reports. */
+        patchPrototype(
+            '_sendQualityReports',
+            () => {
+                discordCrypt.log( 'Blocking voice quality report.', 'info' );
+            },
+            searcher.findByUniquePrototypes
+        );
     }
 
     /* ========================================================= */
