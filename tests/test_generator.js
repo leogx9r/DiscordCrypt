@@ -85,6 +85,8 @@ class testGenerator {
             'ISO9',
             'ISO1',
         ];
+
+        this.discordCrypt.__loadLibraries( this.discordCrypt_instance.libraries );
     }
 
     /* Generates individual tests for each cipher mode and padding scheme. */
