@@ -38,15 +38,15 @@ class discordCrypt
      * @desc Returns various functions that can scan for webpack modules.
      * @property {function(function(module : Object))} find Recursively iterates all webpack modules to
      *      the callback function.
-     * @property {function(Array<string>)} findByUniquePrototypes Iterates all modules looking for the
+     * @property {function(prototypes: string[])} findByUniquePrototypes Iterates all modules looking for the
      *      defined prototypes.
-     * @property {function(Array<string>)} findByUniqueProperties Iterates all modules look for the
+     * @property {function(properties: string[])} findByUniqueProperties Iterates all modules look for the
      *      defined properties.
-     * @property {function(string)} findByDisplayName Iterates all modules looking for the specified
+     * @property {function(displayName: string)} findByDisplayName Iterates all modules looking for the specified
      *      display name.
      * @property {function(id: int)} findByDispatchToken Iterates all modules looking for the specified dispatch
      *      token by its ID.
-     * @property {function(Array<string>)} findByDispatchNames Iterates all modules looking for the specified
+     * @property {function(dispatchNames: string[])} findByDispatchNames Iterates all modules looking for the specified
      *      dispatch names.
      */
 
@@ -497,7 +497,7 @@ class discordCrypt
      * @returns {string}
      */
     getVersion() {
-        return '1.2.9';
+        return '1.2.10';
     }
 
     /**
