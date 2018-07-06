@@ -1,3 +1,8 @@
+Version 1.2.9
+
+- Removed the quality feedback "feature" from Discord's voice chats.
+- Fixed a bug in the test generator.
+
 Version 1.2.8
 
 - NOTE: This update changes the database structure. You will need to delete your database file and restart Discord.
