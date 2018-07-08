@@ -4441,6 +4441,101 @@ class discordCrypt
     /* ======================= UTILITIES ======================= */
 
     /**
+     * @private
+     * @see https://github.com/signalapp/libsignal-protocol-javascript/blob/master/src/NumericFingerprint.js
+     * @desc Generates a 60-character numeric fingerprint for the identity of two pairs.
+     * @param {Buffer|Array|string} local_id The local ID.
+     * @param {Buffer|Array|string} local_pub_key The key linked to the local ID.
+     * @param {Buffer|Array|string} remote_id The remote ID.
+     * @param {Buffer|Array|string} remote_pub_key The key linked to the remote ID.
+     * @param {number} iterations The number of iterations to perform on each ID pair.
+     * @return {string} Returns a 60 character numeric representation of a fingerprint.
+     * @example
+     *      local_id = Buffer.from( "3d478a260e5d497441f1b61d321b138a", 'hex' );
+     *      local_pub_key = Buffer.from( "e77ef936546d73dc5a1c25c8267df649c935168f24827267b1328fd22789eca9", 'hex' );
+     *
+     *      remote_id = Buffer.from( "2c08a0666e937d115f8b05c82db8a6d0", 'hex' );
+     *      remote_pub_key = Buffer.from( "f2f10dc9d0770e3be28298c2d4ab7a856c92bafa99ff7377ec8cd538bd9481ae", 'hex' );
+     *
+     *      __generateFingerprint( local_id, local_pub_key, remote_id, remote_pub_key, 10000 )
+     *      > "22162 70964 05613 66992 07314 11169 62962 97838 72198 67786 04039 39461"
+     *
+     *      __generateFingerprint( local_id, local_pub_key, remote_id, remote_pub_key, 50000 )
+     *      > "30312 92326 56131 09531 10046 93930 82882 61321 64148 11774 32632 62322"
+     */
+    static __generateFingerprint( local_id, local_pub_key, remote_id, remote_pub_key, iterations = 2000 ) {
+        /* Ensures the input variable is a Buffer or can be converted to one else it throws an error. */
+        function ensure_buffer( name, variable ) {
+            /* Do a type check and throw if it isn't supported. */
+            if ( typeof( variable ) !== 'string' && !Buffer.isBuffer( variable ) && !Array.isArray( variable ) )
+                throw new Error( `Error for ${name}. Must be a string or buffer.` );
+
+            /* Convert to a buffer. */
+            return Buffer.from( variable );
+        }
+
+        /* Performs normal iterative hashing by joining an input and a key. */
+        function iterate_hash( input, key, count ) {
+            /* Loop while iteration count isn't 0. */
+            while ( count !== 0 ) {
+                /* Update the input with the concatenated hash of the old input + key. */
+                input = Buffer.from( discordCrypt.sha256( Buffer.concat( [ input, key ] ), true ), 'hex' );
+                count -= 1;
+            }
+
+            /* Return the result as a buffer. */
+            return input;
+        }
+
+        /* Converts a hash input into a 5-character numeric segment. */
+        function encode_chunk( hash, offset ) {
+            /* Converts 40 bits at once. */
+            let chunk = hash[ offset ] * Math.pow( 2, 32 );
+            chunk += hash[ offset + 1 ] * Math.pow( 2, 24 );
+            chunk += hash[ offset + 2 ] * Math.pow( 2, 16 );
+            chunk += hash[ offset + 3 ] * Math.pow( 2, 8 );
+            chunk += hash[ offset + 4 ];
+
+            /* Limit to a maximum of 99,999. */
+            chunk %= 100000;
+
+            /* Convert this to a string. */
+            let s = chunk.toString();
+
+            /* Left-pad with zeros if less than 5 characters. */
+            while ( s.length < 5 )
+                s = `0${s}`;
+
+            return s;
+        }
+
+        /* Converts a 256-bit input hash to a fingerprint identifier. Ignores the last 16 bits. */
+        function hash_to_fingerprint( hash ) {
+            return `${encode_chunk( hash, 0 )} ${encode_chunk( hash, 5 )} ${encode_chunk( hash, 10 )} ` +
+                `${encode_chunk( hash, 15 )} ${encode_chunk( hash, 20 )} ${encode_chunk( hash, 25 )} `;
+        }
+
+        /* Resolve both local and remote vars as buffers. */
+        local_id = ensure_buffer( 'local_id', local_id );
+        local_pub_key = ensure_buffer( 'local_pub_key', local_pub_key );
+        remote_id = ensure_buffer( 'remote_id', remote_id );
+        remote_pub_key = ensure_buffer( 'remote_pub_key', remote_pub_key );
+
+        /* Ensure the iteration count is valid. */
+        if ( typeof iterations !== 'number' )
+            throw new Error( 'Invalid value for iteration count.' );
+
+        /* Get the fingerprints for both pairs, sort them and join them all. */
+        return [
+            hash_to_fingerprint( iterate_hash( local_id, local_pub_key, iterations ) ),
+            hash_to_fingerprint( iterate_hash( remote_id, remote_pub_key, iterations ) )
+        ]
+            .sort()
+            .join( '' )
+            .trimRight();
+    }
+
+    /**
      * @public
      * @desc Compresses the input data using ZLIB.
      * @param {string|Buffer} data The input data to compress.
