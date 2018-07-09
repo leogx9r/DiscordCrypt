@@ -167,8 +167,9 @@ class Compiler {
                 continue;
             }
 
-            /* Try compressing the library. */
-            data = this.tryMinify( data );
+            /* Try minifying the library if required. */
+            if( library_info[ base ].minify )
+                data = this.tryMinify( data );
 
             /* Compress the data to a Base64 buffer and update the code in the library info. */
             library_info[ base ][ 'code' ] = this.compress( data );
@@ -401,11 +402,12 @@ class Compiler {
                     '/* ----- APPLICATION UNLOCKING GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
             },
             library_info: {
-                'sjcl.js': { requiresElectron: true, requiresBrowser: false },
-                'sha3.js': { requiresElectron: true, requiresBrowser: false },
-                'smalltalk.js': { requiresElectron: false, requiresBrowser: true },
-                'currify.js': { requiresElectron: false, requiresBrowser: true },
-                'curve25519.js': { requiresElectron: true, requiresBrowser: false },
+                'sjcl.js': { requiresElectron: true, requiresBrowser: false, minify: true },
+                'sha3.js': { requiresElectron: true, requiresBrowser: false, minify: true },
+                'smalltalk.js': { requiresElectron: false, requiresBrowser: true, minify: true },
+                'currify.js': { requiresElectron: false, requiresBrowser: true, minify: true },
+                'curve25519.js': { requiresElectron: true, requiresBrowser: false, minify: true },
+                'openpgp.js': { requiresElectron: true, requiresBrowser: true, minify: false },
             },
             compression: false,
             plugin: './src/discordCrypt.plugin.js',
