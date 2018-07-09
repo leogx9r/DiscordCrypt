@@ -132,6 +132,7 @@ class discordCrypt
      * @property {string} short_hash A 64-bit SHA-256 checksum of the new update.
      * @property {string} new_version The new version of the update.
      * @property {string} full_changelog The full changelog.
+     * @property {boolean} Whether the PGP signature is valid or not.
      */
 
     /**
@@ -1172,7 +1173,7 @@ class discordCrypt
         setTimeout( () => {
             /* Proxy call. */
             try {
-                discordCrypt.checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) => {
+                discordCrypt.checkForUpdate( ( file_data, short_hash, new_version, full_changelog, valid_sig ) => {
                     const replacePath = require( 'path' )
                         .join( discordCrypt.getPluginsPath(), discordCrypt.getPluginName() );
                     const fs = require( 'fs' );
@@ -1184,7 +1185,10 @@ class discordCrypt
                     /* Update the version info. */
                     $( '#dc-new-version' )
                         .text( `New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} )` );
-                    $( '#dc-old-version' ).text( `Old Version: ${self.getVersion()}` );
+                    $( '#dc-old-version' ).text(
+                        `Current Version: ${self.getVersion()} ` +
+                        `( Update ${valid_sig ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
+                    );
 
                     /* Update the changelog. */
                     let dc_changelog = $( '#dc-changelog' );
@@ -3671,15 +3675,19 @@ class discordCrypt
      * @param {UpdateCallback} on_update_callback
      * @returns {boolean}
      * @example
-     * checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) =>
+     * checkForUpdate( ( file_data, short_hash, new_version, full_changelog, validated ) => {
      *      console.log( `New Update Available: #${short_hash} - v${new_version}` );
+     *      console.log( `Signature is: ${validated ? valid' : 'invalid'}!` );
      *      console.log( `Changelog:\n${full_changelog}` );
      * } );
      */
     static checkForUpdate( on_update_callback ) {
         /* Update URL and request method. */
-        const update_url = `https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/${discordCrypt.getPluginName()}`;
-        const changelog_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/src/CHANGELOG';
+        const base_url = 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master';
+        const update_url = `${base_url}/build/${discordCrypt.getPluginName()}`;
+        const signing_key_url = `${base_url}/build/signing-key.pub`;
+        const changelog_url = `${base_url}/src/CHANGELOG`;
+        const signature_url = `${update_url}.sig`;
 
         /* Make sure the callback is a function. */
         if ( typeof on_update_callback !== 'function' )
@@ -3707,9 +3715,6 @@ class discordCrypt
                     return false;
                 }
 
-                /* Format properly. */
-                data = data.replace( '\r', '' );
-
                 /* Get the local file. */
                 let localFile = '//META{"name":"discordCrypt"}*//\n';
                 try {
@@ -3731,8 +3736,8 @@ class discordCrypt
                 }
 
                 /* Read the current hash of the plugin and compare them.. */
-                let currentHash = discordCrypt.sha256( localFile );
-                let hash = discordCrypt.sha256( data );
+                let currentHash = discordCrypt.sha256( localFile.replace( '\r', '' ) );
+                let hash = discordCrypt.sha256( data.replace( '\r', '' ) );
                 let shortHash = Buffer.from( hash, 'base64' )
                     .toString( 'hex' )
                     .slice( 0, 8 );
@@ -3755,21 +3760,50 @@ class discordCrypt
                     discordCrypt.log( 'Failed to locate the version number in the update ...', 'warn' );
                 }
 
-                /* Now get the changelog. */
+                /* Basically the finally step - resolve the changelog & call the callback function. */
+                let tryResolveChangelog = ( valid_signature ) => {
+                    /* Now get the changelog. */
+                    try {
+                        /* Fetch the changelog from the URL. */
+                        discordCrypt.__getRequest(
+                            changelog_url,
+                            ( statusCode, errorString, changelog ) => {
+                                /* Perform the callback. */
+                                on_update_callback(
+                                    data,
+                                    shortHash,
+                                    version_number,
+                                    statusCode == 200 ? changelog : '',
+                                    valid_signature
+                                );
+                            }
+                        );
+                    }
+                    catch ( e ) {
+                        discordCrypt.log( 'Error fetching the changelog.', 'warn' );
+
+                        /* Perform the callback without a changelog. */
+                        on_update_callback( data, shortHash, version_number, '', valid_signature );
+                    }
+                };
+
+                /* Try validating the signature. */
                 try {
-                    /* Fetch the changelog from the URL. */
-                    discordCrypt.__getRequest( changelog_url, ( statusCode, errorString, changelog ) => {
-                        /* Perform the callback. */
-                        on_update_callback( data, shortHash, version_number, statusCode == 200 ? changelog : '' );
+                    /* Fetch the signing key. */
+                    discordCrypt.__getRequest( signing_key_url, ( statusCode, errorString, signing_key ) => {
+                        /* Fetch the detached signature. */
+                        discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
+                            /* Validate the signature then continue. */
+                            discordCrypt.__validatePGPSignature( data, detached_sig, signing_key )
+                                .then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
+                        } );
                     } );
                 }
-                catch ( e ) {
-                    discordCrypt.log( 'Error fetching the changelog.', 'warn' );
+                catch( e ) {
+                    discordCrypt.log( `Unable to validate the update signature: ${e}`, 'warn' );
 
-                    /* Perform the callback without a changelog. */
-                    on_update_callback( data, shortHash, version_number, '' );
-
-                    return false;
+                    /* Resolve the changelog anyway even without a valid signature. */
+                    tryResolveChangelog( false );
                 }
 
                 return true;
@@ -4533,6 +4567,27 @@ class discordCrypt
             .sort()
             .join( '' )
             .trimRight();
+    }
+
+    /**
+     * @private
+     * @desc Verifies an OpenPGP signed message using the public key provided.
+     * @param {string} message The raw message.
+     * @param {string} signature The ASCII-armored signature in a detached form.
+     * @param {string} public_key The ASCII-armored public key.
+     * @return {boolean} Returns true if the message is valid.
+     */
+    static __validatePGPSignature( message, signature, public_key ) {
+        if( !window.openpgp )
+            return false;
+
+        let options = {
+            message: window.openpgp.message.fromText( message ),
+            signature: window.openpgp.signature.readArmored( signature ),
+            publicKeys: window.openpgp.key.readArmored( public_key ).keys
+        };
+
+        return openpgp.verify( options ).then( ( validity ) => validity.signatures[ 0 ].valid );
     }
 
     /**
