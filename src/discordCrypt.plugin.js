@@ -500,7 +500,7 @@ class discordCrypt
      * @returns {string}
      */
     getVersion() {
-        return '1.2.10';
+        return '1.3.0';
     }
 
     /**
