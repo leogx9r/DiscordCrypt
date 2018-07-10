@@ -1185,12 +1185,11 @@ class discordCrypt
                     $( '#dc-update-overlay' ).css( 'display', 'block' );
 
                     /* Update the version info. */
-                    $( '#dc-new-version' )
-                        .text( `New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} )` );
-                    $( '#dc-old-version' ).text(
-                        `Current Version: ${self.getVersion()} ` +
-                        `( Update ${valid_sig ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
+                    $( '#dc-new-version' ).text(
+                        `New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} - ` +
+                        `Update ${valid_sig ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
                     );
+                    $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
 
                     /* Update the changelog. */
                     let dc_changelog = $( '#dc-changelog' );
@@ -3796,8 +3795,13 @@ class discordCrypt
                         /* Fetch the detached signature. */
                         discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
                             /* Validate the signature then continue. */
-                            discordCrypt.__validatePGPSignature( data, detached_sig, signing_key )
-                                .then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
+                            let r = discordCrypt.__validatePGPSignature( data, detached_sig, signing_key );
+
+                            /* This returns a Promise if valid or false if invalid. */
+                            if( r )
+                                r.then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
+                            else
+                                tryResolveChangelog( false );
                         } );
                     } );
                 }
@@ -4580,16 +4584,16 @@ class discordCrypt
      * @return {boolean} Returns true if the message is valid.
      */
     static __validatePGPSignature( message, signature, public_key ) {
-        if( !window.openpgp )
+        if( typeof global === 'undefined' || !global.openpgp )
             return false;
 
         let options = {
-            message: window.openpgp.message.fromText( message ),
-            signature: window.openpgp.signature.readArmored( signature ),
-            publicKeys: window.openpgp.key.readArmored( public_key ).keys
+            message: global.openpgp.message.fromText( message ),
+            signature: global.openpgp.signature.readArmored( signature ),
+            publicKeys: global.openpgp.key.readArmored( public_key ).keys
         };
 
-        return openpgp.verify( options ).then( ( validity ) => validity.signatures[ 0 ].valid );
+        return global.openpgp.verify( options ).then( ( validity ) => validity.signatures[ 0 ].valid );
     }
 
     /**
