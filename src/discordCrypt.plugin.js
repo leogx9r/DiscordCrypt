@@ -106,6 +106,7 @@ class discordCrypt
      * @typedef {Object} Config
      * @desc Contains the configuration data used for the plugin.
      * @property {string} version The version of the configuration.
+     * @property {boolean} useEmbeds Whether to use embeds for dispatching encrypted messages.
      * @property {string} defaultPassword The default key to encrypt or decrypt message with,
      *      if not specifically defined.
      * @property {string} encodeMessageTrigger The suffix trigger which, once appended to the message,
@@ -123,6 +124,7 @@ class discordCrypt
      * @property {string} up1Host The full URI host of the Up1 service to use for encrypted file uploads.
      * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
      * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
+     * @property {number} timedMessageExpires How long after a message is sent should it be deleted in seconds.
      */
 
     /**
@@ -148,7 +150,7 @@ class discordCrypt
      * @property {int} statusCode The HTTP static code of the operation.
      * @property {string|null} The HTTP error string if an error occurred.
      * @property {string} data The returned data from the request.
-     * @return {boolean} Returns true if the data was parsed sucessfully.
+     * @return {boolean} Returns true if the data was parsed successfully.
      */
 
     /**
