@@ -6604,14 +6604,14 @@ class discordCrypt
      *      encoded result.
      */
     static pbkdf2_sha512(
-        /* Buffer|Array|string */   message,
-        /* Buffer|Array|string */   salt,
-        /* boolean */               to_hex,
-        /* boolean */               message_is_hex = undefined,
-        /* boolean */               salt_is_hex = undefined,
-        /* int */                   key_length = 32,
-        /* int */                   iterations = 5000,
-        /* function(err, hash) */   callback = undefined
+        message,
+        salt,
+        to_hex,
+        message_is_hex = undefined,
+        salt_is_hex = undefined,
+        key_length = 32,
+        iterations = 5000,
+        callback = undefined
     ) {
         return discordCrypt.__pbkdf2(
             message,
