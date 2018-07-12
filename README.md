@@ -229,6 +229,8 @@ lost so be sure to use a strong but memorable one. ( [Forgot Password?](#i-forgo
 If you wish to change your master password, you may do so in the `DiscordCrypt Settings` menu.
 ![settings](images/settings-menu.png)
 
+You can only do this however, after you unlock the database with your previous password.
+
 If you enter a password in the `New Master Database Password` field and save your settings, this key will be used to 
 encrypt the database in the future.
 
@@ -242,11 +244,11 @@ encrypt the database in the future.
 
 
 While we give users a choice regarding the options they want to use when originally setting up an encrypted 
-conversation, we offer a simple way to do it, using strong cryptography.
+conversation via manually setting passwords, we offer a simple way to do it, using strong cryptography.
 
 This involves using an 
 [asymmetric key exchange algorithm](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) which, while
-allowing you to post information on an insecure channel, allows a strong secret to be shared between parties.
+allowing you to post information on an insecure channel, allows a strong secret key to be shared between two parties.
 
 Advanced users are free to mess with the configuration, though be aware that we will only discuss the built-in key 
 exchange feature in this tutorial.
@@ -262,7 +264,7 @@ All it takes is three ( 3 ) clicks.
 * Once your partner's public key appears, click the `Perform Key Exchange` button in the message that just appeared
     at the bottom of the message.
 * After the passwords are generated and the progress bar fully fills, click the `Apply Generated Passwords` button 
-located at the bottom of the pop-up window.
+    located at the bottom of the pop-up window.
 
 
 ###### _Longer Explanation_
@@ -286,7 +288,7 @@ Voila, your conversation will now be encrypted using keys you've just created.
 
 #### _Group Conversations / Channels_
 
-Exchanging keys for a group conversation or a channel is a bit more complex and longer.
+Exchanging keys for a group conversation or a channel is a longer process and a bit more complex.
 
 You may want to leave your group chat unencrypted if you don't discuss anything sensitive.
 
@@ -340,21 +342,23 @@ If you are manually updating the passwords to be able to have an encrypted group
 The following tips should be adhered to for maximum privacy between users.
 
 * Change your master database password frequently.
-* Do **NOT** share passwords across unencrypted communications. Always establish a secure connection by means of a 
-key exchange before sending passwords.
-* Change your message keys on a frequent basis. This ensures that even if your current key is compromised that an 
-attacker will not be able to read any future messages.
+* **NEVER** share passwords across unencrypted communications. Always establish a secure connection by means of a 
+    key exchange before sending passwords.
+* Change your message keys on a frequent basis. This ensures that even if your current keys are compromised that an 
+    attacker will not be able to read any future messages.
 * Use large key sizes ( preferably the maximum ) when exchanging keys. For Diffie-Hellman, this is 8192 bits or for 
-Elliptic Curve Diffie-Hellman, this is 521/571 bits.
+    Elliptic Curve Diffie-Hellman, this is 521/571 bits.
 * Use strong passwords for encrypting your database. Passwords should be at least 8 characters long and contain a 
-combination of alphanumeric ( ***A-Z***, ***0-9*** ) and symbolic characters.
+    combination of alphanumeric ( ***A-Z***, ***0-9*** ) and symbolic characters.
     * We recommend using a [password manager](https://en.wikipedia.org/wiki/Password_manager) such as 
-    KeePass/KeePassXC, OnePass or LastPass to generate and safely store strong passwords.
+    [KeePassX](https://www.keepassx.org/)/[KeePassXC](https://keepassxc.org/), 
+    [OnePass](https://masterpassword.app/) or [LastPass](https://www.lastpass.com) to generate and 
+    safely store strong passwords though we strongly prefer the KeePass app variants ourselves.
 * Use AES as either the primary or secondary ciphers for encryption. AES is a cipher developed in 1998 and is still 
-considered one of the most secure methods of sending and receiving confidential information to this day.
+    considered one of the most secure methods of sending and receiving confidential information to this day.
 * If you require absolute secrecy which is not vulnerable to Discord's potential MiTM attacks, use a strong password 
-generator, encrypt these using PGP and send them to your partner over a non-Discord channel then manually apply these
- keys after you decrypt them.
+    generator, encrypt these using PGP and send them to your partner over a non-Discord channel then manually apply these
+    keys after you decrypt them.
 
 
 
