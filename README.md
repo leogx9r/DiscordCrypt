@@ -32,17 +32,17 @@
 **DiscordCrypt** is a plugin for Discord that uses BetterDiscord's internal structure to send and receive encrypted 
 messages between users and channels in a safe and secure manner.
 
-If you wish to use a web browser instead of Discord's native application, we recommend you use 
-[**SimpleDiscordCrypt**](https://gitlab.com/An0/SimpleDiscordCrypt) made by our friend An0.
-Please note, these two versions are incompatible with one another.
+The plugin achieves this by using [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) with 
+well known ciphers to ensure only the people you want to read your messages can read them and ***no one else***.
 
-It achieves this by using [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) using 
-well known ciphers to ensure only the people you want to read your messages can read them and no one else.
-
-The source code is completely free and open source ( [FOSS](https://en.wikipedia.org/wiki/Free_and_open-source_software) ) 
+The source code is completely free and open source ( [**FOSS**](https://en.wikipedia.org/wiki/Free_and_open-source_software) ) 
 and licensed under the [**MIT License**](LICENSE) so feel free to have a look or modify it as you see fit!
 
 If you'd like an in-depth explanation of its inner workings, click [here](TECHNICALITIES.md).
+
+If you wish to use a web browser instead of Discord's native application, we recommend you use 
+[**SimpleDiscordCrypt**](https://gitlab.com/An0/SimpleDiscordCrypt) made by our friend An0.
+Please note, these two versions are incompatible with one another.
 
 Contributions are welcome! Be sure to read [our guidelines](CONTRIBUTING.md) before submitting your changes.
 
@@ -62,7 +62,7 @@ happily accept.
 # Verifying Signatures
 
 For every release starting with version [`1.2.4`](https://gitlab.com/leogx9r/DiscordCrypt/tags/v1.2.4), 
-we [sign](https://www.gnupg.org/gph/en/manual/x135.html) the built file using 
+we [sign](https://www.gnupg.org/gph/en/manual/x135.html) the plugin using 
 [GPG](https://en.wikipedia.org/wiki/GNU_Privacy_Guard) for increased security.
  
 ***You should ALWAYS verify the signature of this plugin before using it to ensure it has not been maliciously 
@@ -83,7 +83,7 @@ gpg: Signature made Fri 1 Jun 2018 00:00:01 AM 00 using RSA key ID 3787CE3F
 gpg: Good signature from "DiscordCrypt (DiscordCrypt Signing Key)"
 ```
 
-The above depends on the client you use but you must always look for a "Good" or "Valid" signature.
+The above depends on the client you use but you must always look for a "*Good*", "*OK*" or "*Valid*" signature.
 
 Please note, you will need to import the signing key located [here](build/signing-key.pub) to verify signatures.
 
@@ -93,6 +93,9 @@ Finally, you should manually verify that the signing key you import above matche
 Key ID: 3787CE3F 
 Fingerprint: B8EC 0775 960A EB2E 4C11 F084 DA61 3E75 3787 CE3F 
 ```
+
+**N.B** The plugin self-verifies every update so you only ever need to verify these signatures upon your first 
+installation.
 
 
 
@@ -129,15 +132,16 @@ Click -> Save As )
 
 #### Linux
 
-*The following instructions are for **Discord Stable***.
+*The following instructions are for **Discord Stable/Canary***.
 ( Get it [here](https://discordapp.com/api/download?platform=linux&format=deb) for Debian/Ubuntu. )
 
-The *PTB* and *Canary* versions have **NOT** been tested.
+The *PTB* or *SNAP* versions have **NOT** been tested.
 
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) the plugin file. ( Right 
 Click -> Save As )
 * Save the plugin to the following path: **`~/.config/BetterDiscord/plugins`**.
     * *Example: `/home/jeremy/.config/BetterDiscord/plugins/discordCrypt.plugin.js`*
+    * If you use another version of Discord, install it to the designated BetterDiscord plugin path for your version.
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
@@ -157,33 +161,42 @@ Click -> Save As )
 These icons each offer a different functionality as follows:
 
 * **[1] Upload Encrypted Clipboard**
-    * This uploads your current clipboard an the Up1 service and sends an encrypted link to the file.
+    * This uploads your current clipboard to the Up1 file service and sends an encrypted link to the file to 
+        the current channel.
     * After uploading, this sets your clipboard to the deletion link for the uploaded file which you may use to 
-    either manually delete the file after your colleague has downloaded it or for later deletion.
+        either manually delete the file after your colleague has downloaded it or for later deletion.
+    * You are limited to a maximum of 50 MB just as the standard file upload.    
 * **[2] Upload Encrypted File**
-    * This opens a file upload menu that you may use to encrypt and upload a file less than 50 MB to an Up1 service.
+    * This opens the file upload menu that you may use to encrypt and upload a file less than 50 MB to an Up1 service.
     * You may choose whether to randomize the file name and whether to attach a deletion link to the message.
-    * You are also able to write a message prior to sending the file.
-    * Files are encrypted using AES-256 CCM.
+    * You are also able to write a message prior to sending the file which will be sent immediately.
+        * Standard message limits apply. Messages longer than the maximum length will be split into multiple messages.
+    * Files are encrypted using *AES-256* in [CCM](https://en.wikipedia.org/wiki/CCM_mode) mode as per Up1's protocol.
 * **[3] Plugin Settings**
     * This menu controls the settings for the plugin.
     * You can enable and disable each option here.
+    * This also contains a database management menu allowing you to import and export your current passwords.
+        * Note that exported entries are **NOT ENCRYPTED** and as such should be handled with caution.
 * **[4] Enable/Disable Message Encryption**
     * Clicking this button either enables or disables automatic encryption.
     * Automatic encryption will always encrypt any message sent if passwords are defined for the current channel.
     * Clicking this button changes the lock icon to an unlock icon indicating messages sent will not be automatically
      encrypted.
+        * Clicking this icon again re-enables automatic encryption and changes the lock icon back to the default 
+            seen above.
 * **[5] Password Settings**
-    * This menu allows you to set, change or reset the passwords applied to the current channel.
+    * This menu allows you to set, change, reset or copy the passwords applied to the current channel.
     * If you reset the current passwords, they will use the default passwords defined in `Plugin Settings`.
-    * You may also copy the current passwords using the `Copy Current Passwords` button to the clipboard for sharing.
+    * Using the `Copy Current Passwords` button to the clipboard for sharing.
 * **[6] Key Exchange Menu**
     * This allows you to manually generate and send public keys to your colleges.
     * This is also the menu responsible for performing key exchanges.
+    * This is further detailed below.
 * **[7] Generate & Send New Public Key**
     * This simplifies the key exchanging process by manually generating and sending a new public key to your current 
     channel.
     * This generates a public key according to the current algorithm and bit length defined in the `Key Exchange Menu`.
+    * This is further detailed below.
 
 
 ### Creating a new database
@@ -196,13 +209,14 @@ Every time Discord starts, you will be met with a prompt seen below:
 
 ---
 
-**DiscordCrypt** uses an AES-256 encrypted database file in GCM mode to store its information and uses a 
-***master password*** to unlock this file.
+**DiscordCrypt** uses an AES-256 encrypted database file in [GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode) 
+mode to store its information and uses a ***master password*** to unlock this file.
 
 The first time you use the plugin, you'll be prompted to input a new password that will be used to create the database.
 
-Every time you start or restart Discord, you'll be prompted with the above screen where you must enter the same 
-password as before. If you don't enter the same password, you will not be able to decrypt any messages.
+Every additional time you start or restart Discord, you'll be prompted with the above screen where you must enter the 
+same password as before. If you don't enter the same password, you will not be able to unlock your database and decrypt 
+any messages.
 
 All exchanged keys and passwords are saved to this database and **cannot be recovered** if the master password is 
 lost so be sure to use a strong but memorable one. ( [Forgot Password?](#i-forgot-my-master-password-what-do-i-do-) )
