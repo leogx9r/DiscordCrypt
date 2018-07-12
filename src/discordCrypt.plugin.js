@@ -1994,8 +1994,8 @@ class discordCrypt
             /* Get the password entered. */
             let password = pwd_field.val();
 
-            /* Validate the field entered contains some value. */
-            if ( password === null || password === '' ) {
+            /* Validate the field entered contains some value and meets the requirements. */
+            if ( password && !discordCrypt.__validatePasswordRequisites( password ) ) {
                 unlock_btn.text( action_msg );
                 unlock_btn.attr( 'disabled', false );
                 return;
@@ -2644,6 +2644,10 @@ class discordCrypt
             /* Handle master password updates if necessary. */
             if ( dc_master_password.val() !== '' ) {
                 let password = dc_master_password.val();
+
+                /* Ensure the password meets the requirements. */
+                if( !discordCrypt.__validatePasswordRequisites( password ) )
+                    return;
 
                 /* Reset the password field. */
                 dc_master_password.val( '' );
@@ -4482,6 +4486,32 @@ class discordCrypt
 
     /**
      * @private
+     * @desc Checks if the input password is at least 8 characters long,
+     *  is alpha-numeric with both upper and lowercase as well as contains at least one symbol.
+     *  Alerts the user if this is not the case.
+     * @param {string} input The input password to validate.
+     * @return {boolean} Returns true if the password is valid.
+     */
+    static __validatePasswordRequisites( input ) {
+        if(
+            !( new RegExp( /^(?=.{8,})(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*\W).*$/g ) )
+                .test( input )
+        ) {
+            _alert(
+                'Invalid Password Input',
+                'Your password <b>must be at least 8 characters</b> long and <u>must</u> contain ' +
+                'a combination of alpha-numeric characters both uppercase and lowercase ( A-Z, a-z, 0-9 ) ' +
+                'as well as at least one symbol for the best security.<br/><br/><br/>' +
+                'Please enter a password meeting these requirements.<br./>'
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @public
      * @see https://github.com/signalapp/libsignal-protocol-javascript/blob/master/src/NumericFingerprint.js
      * @desc Generates a 60-character numeric fingerprint for the identity of two pairs.
      * @param {Buffer|Array|string} local_id The local ID.
