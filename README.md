@@ -14,12 +14,13 @@
     * [***Changing The Database Password***](#changing-the-database-password)
     * [***Exchanging Keys***](#exchanging-keys)
         * [*Personal Conversations*](#personal-conversations)
-        * [*Group Conversations / Channels*](#group-conversations-channels)
+        * [*Group Conversations And Channels*](#group-conversations-and-channels)
             * [*Alternative Method*](#alternative-method)
-    * [***Resetting Or Updating Conversation Passwords Manually***](#resetting-or-updating-conversation-passwords-manually)
+    * [***Resetting Or Updating Conversation Passwords 
+        Manually***](#resetting-or-updating-conversation-passwords-manually)
 * [**Best Practices**](#best-practices)
 * [**Debugging**](#debugging)
-* [**Frequently Asked Questions ( FAQs )**](#frequently-asked-questions-faqs-)
+* [**Frequently Asked Questions ( FAQs )**](#frequently-asked-questions)
 * [**Known Limitations And Bugs**](#known-limitations-and-bugs)
 * [**Support And Discussion**](#support-and-discussion)
 
@@ -245,7 +246,7 @@ Every additional time you start or restart Discord, you'll be prompted with the 
 
 All exchanged keys and passwords are saved to this database and **cannot be recovered** 
     if the master password is lost so be sure to use a strong but memorable one. 
-    ( [Forgot Password?](#i-forgot-my-master-password-what-do-i-do-) )
+    ( [Forgot Password?](#forgotten-master-password) )
 
 **N.B. This password is the only thing protecting all others and as such, should be a very 
     strong and unpredictable.**
@@ -283,9 +284,9 @@ This involves using an
 Advanced users are free to mess with the configuration, though be aware that we will only 
     discuss the built-in key exchange feature in this tutorial.
 
-#### _Personal Conversations_
+#### Personal Conversations
 
-###### _Short Explanation_
+###### Short Explanation
 
 All it takes is three ( 3 ) clicks.
 
@@ -299,7 +300,7 @@ All it takes is three ( 3 ) clicks.
     `Apply Generated Passwords` button located at the bottom of the pop-up window.
 
 
-###### _Longer Explanation_
+###### Longer Explanation
 
 * Go in the channel or conversation you want to set a password for.
 * If you're not sure whether you've sent a key before, go to the `Key Exchange` menu 
@@ -320,7 +321,7 @@ All it takes is three ( 3 ) clicks.
 
 Voila, your conversation will now be encrypted using keys you've just created.
 
-#### _Group Conversations / Channels_
+#### Group Conversations And Channels
 
 Exchanging keys for a group conversation or a channel is a longer process and a bit more complex.
 
@@ -342,7 +343,7 @@ The process, however, is quite similar to generating keys for a personal convers
 * After the passwords have been shared ( securely ), every user must manually set the 
     passwords for the channel. ( More on that below. )
 
-###### _Alternative Method_
+###### Alternative Method
 
 There is an alternative process for sharing existing passwords with users but it is 
     **highly** ***unrecommended***.
@@ -435,7 +436,7 @@ Be sure to read the [contribution](CONTRIBUTING.md) guidelines before creating a
 
 
 
-# Frequently Asked Questions ( FAQs )
+# Frequently Asked Questions
 
 ### But why ? Isn't Discord already encrypted ?
 
@@ -481,9 +482,9 @@ If you however do know how to make an attractive UI, please do create a pull req
 
  
 
-### How do I tag users?
+### Tagging Users
 
-As we explained in the [Known Limitations](#known-limitations-bugs), tagging users 
+As we explained in the [Known Limitations](#known-limitations-and-bugs), tagging users 
     normally does not work because we cannot notify users of tags after messages 
     have been decrypted.
 
@@ -513,7 +514,7 @@ Here's how this looks:
 
  
 
-### The startup screen is annoying! How can I skip it?!
+### Skipping Startup Screen
 
 The screen prompting you to unlock your database is necessary for **DiscordCrypt** to 
     function. Without it, you won't be able to send or receive any encrypted messages.
@@ -523,7 +524,7 @@ If you wish to stop seeing it, you will simply have to disable the plugin option
 
  
 
-### I forgot my master password. What do I do ?
+### Forgotten Master Password
 
 You can reset your database ( and thus your configuration ) by deleting the file 
     `DiscordCrypt.config.json` located in the same directory as the plugin that you went to 
@@ -539,7 +540,7 @@ As a result, you will need need to perform a new key exchange with your friends.
 
  
 
-### We invited a new person in our conversation, how do we give him the passwords?
+### Sharing Passwords With New People
 
 While we do not recommend sharing passwords with newcomers, and instead suggest you generate 
     new keys whenever that happens, you can copy the passwords of the current channel and 
@@ -547,7 +548,7 @@ While we do not recommend sharing passwords with newcomers, and instead suggest 
 
  
 
-### DiscordCrypt uses so much CPU, what gives?!
+### DiscordCrypt CPU Usage
 
 Unless you're generating keys or performing encrypted file uploads, **DiscordCrypt** should not 
     be CPU heavy.
@@ -560,7 +561,7 @@ If you believe it is causing issues, you may want to try increasing the
 
  
 
-### This is too complicated to use!
+### This Is Complicated
 
 Unfortunately, implementing privacy and message encryption in this manner is difficult to do.
 
@@ -569,7 +570,7 @@ We've tried to simplify the process as much as possible but once you get used to
 
  
 
-### Why use embedded messages ?
+### Why Embedded Messages
 
 We wanted a way for users who both use and do not use the plugin to easily identify 
     encrypted messages.
@@ -634,7 +635,7 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
 * Tagging users works in a different way when using encrypted messages:
     * As we use embeds, tagging users in a message should result in them not being notified.
         * To fix this, every users tagged in a message will receive an unencrypted notification.
-            [Example here](#how-do-i-tag-users).
+            [Example here](#tagging-users).
 
  
 
