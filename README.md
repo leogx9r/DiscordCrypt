@@ -438,7 +438,7 @@ Be sure to read the [contribution](CONTRIBUTING.md) guidelines before creating a
 
 # Frequently Asked Questions
 
-### But why ? Isn't Discord already encrypted ?
+### Isn't Discord already encrypted or private ?
 
 Discord ***claims*** that all its messages are encrypted, and while that 
     **is** true ***to an extent*** as they are sent over an HTTPS connection, 
@@ -458,7 +458,54 @@ Various messenger applications ( Signal, Riot etc. ) have taken user's privacy s
     so that no one, not even the platform's owners, can see what users do.
 
 Discord has declined several suggestions to implement end-to-end encryption in the past and 
-    also constantly attempt to control what users can do or say.
+    also constantly attempt to control what users can do or say by censoring users or group 
+    chats that they otherwise do not agree with.
+     
+We do not mean to say that hate-speech, racism or other morally wrong topics are okay 
+    but rather it violates free-speech when Discord themselves are given the right to choose 
+    what can and cannot be said by users.    
+    
+This also includes the fact
+    that their system actively tracks users, their messages which they refuse to delete and 
+    generally, have been caught doing sneaky things in the past. See 
+    [here](https://tomsguide.com/us/help-me-toms-guide-discord-permissions,review-5104.html).
+    
+In addition to this, Discord's current CEO, [Jason Citron](https://twitter.com/jasoncitron) 
+    previously founded another application quite similar to Discord, 
+    [OpenFeint](https://en.wikipedia.org/wiki/OpenFeint) which had been caught harvesting and 
+    [illegally selling user data](https://courthousenews.com/gamers-say-openfeint-sold-them-out) 
+    to advertisers for profit which has since been shut down shortly after a class-action lawsuit 
+    was filed against them.
+    
+    The OpenFeint mobile gaming network collected data and personal information from its 
+    users’ cellphone-linked profiles and sold the information to Internet application developers, 
+    according to a federal class action.
+    
+    Lead plaintiff Matthew Hines claims Openfeint accessed, monitored and stored the unique 
+    device identifiers for mobile devices along with personally identifiable information such 
+    as a user’s exact GPS location, Internet browsing history and Facebook and Twitter profiles.
+    
+    OpenFeint’s business plan included accessing and disclosing personal information without 
+    authorization to mobile-device application developers, advertising networks and web-analytic 
+    vendors that market mobile applications, according to the complaint. 
+    
+    The company acquired such information covertly, without adequate notice or consent, 
+    involving 100 million consumer mobile devices.
+
+    After accessing one of OpenFeint’s applications, the company bypassed both the technical 
+    and code barriers designed to limit unauthorized access, as well as his mobile device’s 
+    privacy and security settings, Hines claims.
+    
+    OpenFeint used the data it collected to collaborate with application developers and create 
+    a database that further enabled the tracking scheme and conducted systematic and continuing 
+    surveillance of the class members’ mobile-device activity, which continues today.
+    
+    In spite of this activity, OpenFeint assures customers that its applications are all safe for 
+    downloading, according to the suit.
+    
+![Initial E2E Request Denied](images/discord-end-to-end-denied.png)
+![Refusal For User Data Deletion](images/discord-refuses-to-delete-user-data.png)
+![Requests For User Data](images/discord-requests-for-user-data.png)
 
 We highly disapprove of their ideals as we believe their actions violate every human's 
     right to privacy.
@@ -472,7 +519,7 @@ While this plugin does not support, nor plan to support end-to-end voice encrypt
 
  
 
-### The UI is clunky/unattractive. Why not make it better?
+### Unattractive UI
 
 Unfortunately, the core project members have never been good CSS designers as we 
     mainly specialize in internal application and system-level programming.
