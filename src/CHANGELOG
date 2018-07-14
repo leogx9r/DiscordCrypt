@@ -1,3 +1,10 @@
+Version 1.3.1
+
+- New master password requirements have been enforced. If your password does not meet this requirement, it will be rejected.
+- Minor grammar fixes in the user manual and added additional details of Discord's tracking capabilities.
+- Updated technical details information for users wondering about the internals of the plugin.
+- Internal code refactoring.
+
 Version 1.3.0
 
 - All future updates will now be self-verified via OpenPGP.js prior to updating.
