@@ -64,7 +64,8 @@ class Compiler {
          */
         this.defaultBuilderOptions = {
             parse: {
-                bare_returns: true
+                bare_returns: true,
+                toplevel: true
             },
             mangle: true,
             compress: {
