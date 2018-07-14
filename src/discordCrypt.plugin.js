@@ -6210,7 +6210,7 @@ class discordCrypt
 
         for ( k in h ) {
             let p = h[ k ] / len;
-            sum -= p * Math.log( p ) / Math.log( 2 );
+            sum -= p * Math.log2( p );
         }
 
         return parseInt( sum * len );
