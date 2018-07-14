@@ -463,12 +463,7 @@ Discord has declined several suggestions to implement end-to-end encryption in t
      
 We do not mean to say that hate-speech, racism or other morally wrong topics are okay 
     but rather it violates free-speech when Discord themselves are given the right to choose 
-    what can and cannot be said by users.    
-    
-This also includes the fact
-    that their system actively tracks users, their messages which they refuse to delete and 
-    generally, have been caught doing sneaky things in the past. See 
-    [here](https://tomsguide.com/us/help-me-toms-guide-discord-permissions,review-5104.html).
+    what can and cannot be said by users.
     
 In addition to this, Discord's current CEO, [Jason Citron](https://twitter.com/jasoncitron) 
     previously founded another application quite similar to Discord, 
@@ -476,7 +471,12 @@ In addition to this, Discord's current CEO, [Jason Citron](https://twitter.com/j
     [illegally selling user data](https://courthousenews.com/gamers-say-openfeint-sold-them-out) 
     to advertisers for profit which has since been shut down shortly after a class-action lawsuit 
     was filed against them.
-    
+
+This also includes the fact
+    that their system actively tracks users, their messages which they refuse to delete and 
+    generally, have been caught doing sneaky things in the past. See 
+    [here](https://tomsguide.com/us/help-me-toms-guide-discord-permissions,review-5104.html).
+
     The OpenFeint mobile gaming network collected data and personal information from its 
     users’ cellphone-linked profiles and sold the information to Internet application developers, 
     according to a federal class action.

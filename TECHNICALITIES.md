@@ -13,6 +13,9 @@
     * [***Key Exchanges***](#key-exchanges)
         * [*Diffie-Hellman*](#diffie-hellman)
         * [*Elliptic Curve Diffie-Hellman*](#elliptic-curve-diffie-hellman)
+    * [***Hash Algorithms***](#hash-algorithms)
+        * [*Native Hash Algorithms*](#native-hash-algorithms)
+        * [*Scrypt Hashing Algorithm*](#scrypt-hashing-algorithm)
 * [**Message Format**](#message-format)
     * [***Meta-Data Encoding***](#meta-data-encoding)
     * [***User Message Format***](#user-message-format)
@@ -45,11 +48,16 @@ Every algorithm used in this plugin is directly provided by NodeJS. The only thi
 
 The following ciphers are currently supported by **DiscordCrypt**.
 
- * [Camellia-256](https://en.wikipedia.org/wiki/Camellia_(cipher)) ( **Default Primary Cipher** )
+ * [Camellia-256](https://en.wikipedia.org/wiki/Camellia_(cipher)) ( **Default Primary Cipher** ) 
+    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-camellia256_encrypt)  ]
  * [AES-256 ( Rijndael )](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) ( **Default Secondary Cipher** )
+    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-aes256_encrypt)  ]
  * [TripleDES-192](https://en.wikipedia.org/wiki/Triple_DES)
+    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-tripledes192_encrypt)  ]
  * [IDEA-128](https://en.wikipedia.org/wiki/International_Data_Encryption_Algorithm)
+    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-idea128_encrypt) ]
  * [Blowfish-512](https://en.wikipedia.org/wiki/Blowfish_(cipher))
+    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-blowfish512_encrypt) ]
 
 ##### Cipher Modes
 
@@ -80,14 +88,16 @@ The following padding schemes are supported:
 * [ISO 10126](https://en.wikipedia.org/wiki/Padding_(cryptography)#ISO_10126)
 * [ISO 97971](https://en.wikipedia.org/wiki/Padding_(cryptography)#ISO/IEC_7816-4)
 
+These methods have all been manually implemented 
+    [here](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-__padMessage).
+
 #### Key Exchanges
 
 The following algorithms are used to exchange keys in a secure manner.
 
 * [Diffie-Hellman ( ***DH*** )](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) 
     ( **Default Exchange Algorithm** )
-* [Elliptic Curve Diffie-Hellman ( ***ECDH*** )
-    ](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman)
+* [Elliptic Curve Diffie-Hellman ( ***ECDH*** ) ](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman)
 
 ##### Diffie-Hellman
 
@@ -172,21 +182,118 @@ The following key sizes in bits are supported:
 
 Please see [here](http://www.secg.org/sec2-v2.pdf) for more information on curve parameters.
 
-## Message Format
 
-A message can consist in two forms.
+#### Hash Algorithms
 
-- User Encrypted Message
-- Public Key Message
+A variety of one-way hash functions are supported by **DiscordCrypt**. With the exception of 
+    the [Scrypt](#scrypt-hashing-algorithm), all  methods are implemented internally via NodeJS.
+    
+##### Native Hash Algorithms
 
-Each message can be determined by the first 4 characters which is a unique magic string 
-    indicating its type.
+The following algorithms are natively supported and used:
 
+* Whirlpool ( 512 Bits )
+* SHA2-160 ( 160 Bits )
+* SHA2-256 ( 256 Bits )
+* SHA2-512 ( 512 Bits )
+* HMAC ( SHA2-256, SHA2-512, Whirlpool )
 
-| **Type**             | **Magic**   |
-| -------------------- | ----------- |
-| `User Message`       | `⢷⢸⢹⢺`      |
-| `Public Key Message` | `⢻⢼⢽⢾`      |
+These algorithms are mainly used for compressing input entropy into sizes required by a cipher.
+
+##### Scrypt Hashing Algorithm
+
+The [Scrypt](https://en.wikipedia.org/wiki/Scrypt) algorithm is a key-derivative function that was 
+designed to be "memory hard" in such a way that it is dependant on access to fast memory. 
+    This design choice makes it desirable for use in password-based calculations.
+
+Due to Node's crypto module not natively supporting this, it was manually implemented for 
+    deriving an AES-256 bit key for encrypting the master database.
+
+The original source for this was taken from [here](https://github.com/ricmoo/scrypt-js) and was 
+    optimized for faster execution as well as tweaked to call the original SHA2-256 method provided 
+    natively by NodeJS. This method also supports async calls and was chosen mainly due to this.
+
+Scrypt uses a total of 6 parameters. Each of these will be described below.
+
+    # Taken from the blog: https://blog.filippo.io/the-scrypt-parameters/
+
+    > Parameter: 𝑟 - Memory Tuner
+        
+    BlockMix turns a hash function with 𝑘-bit long inputs and outputs into a hash function 
+    with 2𝑟𝑘-bit long inputs and outputs. That is, it makes the core hash function in 
+    scrypt 2𝑟 wider.
+    
+    It does that by iterating the hash function 2𝑟 times, so both memory 
+    usage (to store the hash values) and CPU time scale linearly with it. That is, 
+    if 𝑟 doubles the resources double.
+    
+    That's useful because scrypt applies the hash to "random" memory positions. 
+    CPUs load memory in fixed-size blocks called cache lines. If the hash block size is 
+    smaller than the cache line, all the rest of the loaded line will be wasted memory 
+    bandwidth. Also, it dilutes the memory latency cost. Percival predicted both cache line 
+    sizes and memory latencies would increase over time, so made the hash size tunable to 
+    prevent scrypt from becoming latency-bound.
+    
+    
+    > Parameter: N - Work Factor
+    
+    Memory and CPU usage scale linearly with 𝑁. The mixing function, ROMix, stores 𝑁 
+    sequential hash results in RAM, to then load them in a random order and sequentially 
+    xor and hash them.
+    
+    The reason 𝑁 must be a power of two is that to randomly select one of the 𝑁 memory 
+    slots at each iteration, scrypt converts the hash output to an integer and reduces 
+    it mod 𝑁. If 𝑁 is a power of two, that operation can be optimized into simple (and fast) 
+    binary masking.
+    
+    > Parameter: 𝑝 - Parallel Factor
+    
+    𝑝 is used in the outmost function, MFcrypt. It is a parallelization parameter. 
+    𝑝 instances of the mixing function are run independently and their outputs concatenated 
+    as salt for the final PBKDF2.
+    
+    𝑝 > 1 can be handled in two ways: sequentially, which does not increase memory usage but 
+    requires 𝑝 times the CPU and wall clock time; or parallelly, which requires 𝑝 times the 
+    memory and effective CPU time, but does not increase wall clock time.
+    
+    So 𝑝 can be used to increase CPU time without affecting memory requirements when handled 
+    sequentially, or without affecting wall clock time when handled parallelly. However, it 
+    offers attackers the same opportunity to optimize for processing or memory.
+    
+    > Parameter: dkLen - Length of output
+    
+    This parameter indicates the desired length of the output key derived from the input and 
+    salt. It should be at least 256 bits due to that being the minimum output of the SHA-256 
+    algorithm which is internally used for final compression.
+    
+    This must satisfy: dkLen ≤ (2^32− 1)
+    
+    > Parameter: input - The input value
+    
+    This parameter is self-explanatory. This is the input value which is used to derive the 
+    initial block data and also used in the final PBKDF2 compression operation.
+    
+    > Parameter: salt - The secret value
+    
+    This parameter is used as the initial secret for calculation of the initial state of the 
+    block along with the input value.
+    
+    Estimating Scrypt Memory Usage
+    
+    scrypt requires 𝑁 times the hash block size memory. Because of BlockMix, the hash block 
+    size is 2𝑟 the underlying hash output size. In scrypt, that hash is the Salsa20 core, 
+    which operates on 64-bytes blocks.
+    
+    So the minimum memory requirement of scrypt is:
+    
+    𝑁 × 2𝑟 × 64 = 128 × 𝑁 × 𝑟 bytes
+    
+    For 𝑁 = 16384 and 𝑟 = 8 that would be 16 MiB. It scales linearly with 𝑁 and 𝑟, and some 
+    implementations or APIs might cause internal copying doubling the requirement.
+
+You may find the actual implementation of it 
+    [here](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-scrypt).
+
 
 ### Meta Data Encoding
 
@@ -202,6 +309,22 @@ These decode to a 32-bit integer encoded in Little-Endian order whose byte posit
 | `1`               | Indicates the block operation mode of the symmetric cipher.                       |
 | `2`               | Contains the padding scheme used to align the message to the cipher's block size. |
 | `3`               | Contains a random byte. ( `Reserved For Future Use` )                             |
+
+## Message Format
+
+A message can consist in two forms.
+
+- User Encrypted Message
+- Public Key Message
+
+Each message can be determined by the first 4 characters which is a unique magic string 
+    indicating its type.
+
+
+| **Type**             | **Magic**   |
+| -------------------- | ----------- |
+| `User Message`       | `⢷⢸⢹⢺`      |
+| `Public Key Message` | `⢻⢼⢽⢾`      |
 
 ### User Message Format
 
@@ -449,16 +572,16 @@ The master database uses an AES-256 bit key for encryption and decryption in `GC
     derived from the password the user inputs. The database is first converted to a 
     string via `JSON.stringify` and then padded using the `PKCS #7` scheme.
 
-Its derivation is done by using the [Scrypt](https://en.wikipedia.org/wiki/Scrypt) 
+Its derivation is done by using the [Scrypt](#scrypt-hashing-algorithm) 
     hashing algorithm with the following parameters.
 
 
-| **Parameter** | **Description**                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------ |
-| `N`               | The work factor variable. Memory and CPU usage scale linearly with this.                   |
-| `r`               | The block size parameter. Memory usage scales to `2rK` bytes where K is 256 bits.          |
-| `p`               | Parallel run factor. Indicates the number of mixing functions to be run simultaneously.    |
-| `dkLen`           | The output size of the hash produced in bytes. Must satisfy `dkLen ≤ (2^32− 1) * 32`.      |
+| **Parameter** | **Value** |
+| ------------- | --------- |
+| `N`           | 4096      |
+| `r`           | 8         |
+| `p`           | 1         |
+| `dkLen`       | 32        |
 
 **N.B. Scrypt methods cannot be run in parallel in this implementation so they are run 
     single-threaded.**
@@ -610,6 +733,8 @@ A brief overview of the possible attack mechanisms we **ARE** aware of but unfor
 > compromise** these servers. It however cannot be done by a third party without 
 > breaking into or compromising Discord's SSL certificate.
 > 
+> A rather excellent resource explaining this process can be seen in the video below.
+>
 > [![https://i.imgur.com/Ti6BzSv.png](https://img.youtube.com/vi/vsXMMT2CqqE/0.jpg)](https://youtube.com/watch?v=vsXMMT2CqqE "MiTM Attacks") 
 >
 > **N.B. These attacks can only be performed during a key exchange as this is the only time 
