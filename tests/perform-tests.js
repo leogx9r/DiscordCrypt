@@ -703,8 +703,8 @@ class testRunner {
 
                     /* Convert the cipher index to a string for logging. */
                     let cipher_string =
-                        `${this.discordCrypt.cipherIndexToString( cipher_index )}-` +
-                        `${this.discordCrypt.cipherIndexToString( cipher_index, true )}`;
+                        `${this.discordCrypt.__cipherIndexToString( cipher_index )}-` +
+                        `${this.discordCrypt.__cipherIndexToString( cipher_index, true )}`;
 
                     /* Create the test class. */
                     let test_name = `encode-${cipher_string}-${block_mode}-${padding_scheme}`;
@@ -725,7 +725,7 @@ class testRunner {
                             /* Perform a decryption test. */
                             ut.equal(
                                 plaintext.toString( 'utf8' ),
-                                this.discordCrypt.symmetricDecrypt(
+                                this.discordCrypt.__symmetricDecrypt(
                                     ciphertext,
                                     primary_key,
                                     secondary_key,
@@ -740,8 +740,8 @@ class testRunner {
                             /* Perform an encryption/decryption test. */
                             ut.equal(
                                 plaintext.toString( 'utf8' ),
-                                this.discordCrypt.symmetricDecrypt(
-                                    this.discordCrypt.symmetricEncrypt(
+                                this.discordCrypt.__symmetricDecrypt(
+                                    this.discordCrypt.__symmetricEncrypt(
                                         plaintext,
                                         primary_key,
                                         secondary_key,
@@ -779,12 +779,12 @@ class testRunner {
             {
                 name: 'DH',
                 full_name: 'Diffie-Hellman',
-                key_lengths: this.discordCrypt.getDHBitSizes(),
+                key_lengths: this.discordCrypt.__getDHBitSizes(),
             },
             {
                 name: 'ECDH',
                 full_name: 'Elliptic Curve Diffie-Hellman',
-                key_lengths: this.discordCrypt.getECDHBitSizes()
+                key_lengths: this.discordCrypt.__getECDHBitSizes()
             }
         ];
 
@@ -794,8 +794,8 @@ class testRunner {
         for ( let i = 0; i < algorithms.length; i++ ) {
             /* Get the appropriate generator. */
             let generator = algorithms[ i ].name === 'DH' ?
-                this.discordCrypt.generateDH :
-                this.discordCrypt.generateECDH;
+                this.discordCrypt.__generateDH :
+                this.discordCrypt.__generateECDH;
 
             /* Loop over each key size. */
             for ( let j = 0; j < algorithms[ i ].key_lengths.length; j++ ) {
@@ -814,12 +814,12 @@ class testRunner {
                         /* Perform a key exchange and get the shared secret. */
                         let secretA =
                             this.discordCrypt
-                                .computeExchangeSharedSecret( keyA, keyB.getPublicKey( 'hex' ), false, true );
+                                .__computeExchangeSharedSecret( keyA, keyB.getPublicKey( 'hex' ), false, true );
 
                         /* Get the secret for both keys. */
                         let secretB =
                             this.discordCrypt
-                                .computeExchangeSharedSecret( keyB, keyA.getPublicKey( 'hex' ), false, true );
+                                .__computeExchangeSharedSecret( keyB, keyA.getPublicKey( 'hex' ), false, true );
 
                         /* Ensure the secrets match. */
                         ut.equal(
@@ -868,18 +868,21 @@ class testRunner {
             this.discordCrypt.log( `Author: ${this.discordCrypt_instance.getAuthor()}` );
             this.discordCrypt.log( `Description: ${this.discordCrypt_instance.getDescription()}` );
 
+            // noinspection JSAccessibilityCheck
             this.discordCrypt.log(
-                `Configuration:\n${JSON.stringify( this.discordCrypt_instance.getDefaultConfig(), undefined, ' ' )}`
+                `Configuration:\n${JSON.stringify( this.discordCrypt_instance._getDefaultConfig(), undefined, ' ' )}`
             );
 
-            this.discordCrypt.log( `Path: ${this.discordCrypt.getPluginsPath()}` );
+            // noinspection JSAccessibilityCheck
+            this.discordCrypt.log( `Path: ${this.discordCrypt._getPluginsPath()}` );
 
             ut.done();
         };
 
         /* Plugin update test.  */
         unit_tests.generic_tests[ 'Plugin Update' ] = ( ut ) => {
-            this.discordCrypt.checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) => {
+            // noinspection JSAccessibilityCheck
+            this.discordCrypt._checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) => {
                 /* Only called if the master branch's hash doesn't match this file's. */
                 ut.equal( file_data.length > 0, true, 'Failed to retrieve update file.' );
                 ut.equal( short_hash.length > 0, true, 'Failed to retrieve update file hash.' );
@@ -1104,13 +1107,13 @@ class testRunner {
 
                         /* Check decoding works. */
                         ut.equal(
-                            this.discordCrypt.metaDataEncode( i, j, k, 0 ),
+                            this.discordCrypt.__metaDataEncode( i, j, k, 0 ),
                             ids[ i ][ j ][ k ],
                             'Failed to encode metadata correctly.'
                         );
 
                         /* Encode the current index info. */
-                        let decoded = this.discordCrypt.metaDataDecode( ids[ i ][ j ][ k ] );
+                        let decoded = this.discordCrypt.__metaDataDecode( ids[ i ][ j ][ k ] );
 
                         /* Validate all info is correct. */
                         ut.equal( i, decoded[ 0 ], 'Failed decoding cipher index.' );

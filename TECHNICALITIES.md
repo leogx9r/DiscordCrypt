@@ -265,7 +265,7 @@ To combat this, a simple method of substitution is used to replace all character
 Discord itself treats both UTF-8 and UTF-16 characters as the same length ( character-limit-wise ) 
     meaning both a UTF-8 and UTF-16 messages are limited to 2000 characters each.
 
-This is handled by the methods `substituteMessage`, `metaDataEncode` and `metaDataDecode`.
+This is handled by the methods `__substituteMessage`, `__metaDataEncode` and `__metaDataDecode`.
 
 These methods do a 1-1 substitution as follows:
 
@@ -275,7 +275,7 @@ These methods do a 1-1 substitution as follows:
 | `Base 64`           | `000102030405060708` ... `F8F9FAFBFCFDFEFF` |
 | `Braille`           | `⠀⠁⠂⠃⠄⠅⠆⠇` ... `⣸⣹⣺⣻⣼⣽⣾⣿`                |
 
-The raw code for this is defined in the `getBraille()` function seen below.
+The raw code for this is defined in the `__getBraille()` function seen below.
 
 ```javascript
 return Array.from(
