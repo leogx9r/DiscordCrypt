@@ -63,6 +63,7 @@ Also, while this project is licensed under the MIT, if you feel generous and wis
 | Monero ( `XMR` )       | `83h2PKvpjx9dDK1VJ5B2h8ADbZZUcfEbwaQqqve8nmWv3VyvY7tNv5FLa3dUPwybJGZoGWCz5UDjfDYmKttQmChV2Wv9uiq`  |
 
 
+ 
 
 # Verifying Signatures
 
@@ -108,6 +109,7 @@ Fingerprint: B8EC 0775 960A EB2E 4C11 F084 DA61 3E75 3787 CE3F
     signatures once upon your first installation.
 
 
+ 
 
 # Installation
 
@@ -121,6 +123,7 @@ Fingerprint: B8EC 0775 960A EB2E 4C11 F084 DA61 3E75 3787 CE3F
 
 For installation on specific operating systems, see below:
 
+ 
 
 #### Windows
 
@@ -132,6 +135,8 @@ For installation on specific operating systems, see below:
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
+ 
+
 #### MacOS
 
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) 
@@ -141,6 +146,8 @@ For installation on specific operating systems, see below:
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
+
+ 
 
 #### Linux
 
@@ -222,6 +229,7 @@ These icons each offer a different functionality as follows:
         the `Key Exchange Menu`.
     * This is further detailed below.
 
+ 
 
 ### Creating a new database
 
@@ -284,6 +292,8 @@ This involves using an
 Advanced users are free to mess with the configuration, though be aware that we will only 
     discuss the built-in key exchange feature in this tutorial.
 
+ 
+
 #### Personal Conversations
 
 ###### Short Explanation
@@ -299,6 +309,7 @@ All it takes is three ( 3 ) clicks.
 * After the passwords are generated and the progress bar fully fills, click the 
     `Apply Generated Passwords` button located at the bottom of the pop-up window.
 
+ 
 
 ###### Longer Explanation
 
@@ -321,6 +332,8 @@ All it takes is three ( 3 ) clicks.
 
 Voila, your conversation will now be encrypted using keys you've just created.
 
+ 
+
 #### Group Conversations And Channels
 
 Exchanging keys for a group conversation or a channel is a longer process and a bit more complex.
@@ -342,6 +355,8 @@ The process, however, is quite similar to generating keys for a personal convers
     passwords in an encrypted message. 
 * After the passwords have been shared ( securely ), every user must manually set the 
     passwords for the channel. ( More on that below. )
+
+ 
 
 ###### Alternative Method
 
@@ -377,7 +392,7 @@ If you are manually updating the passwords to be able to have an encrypted group
     conversation, simply paste the "Primary Key" in the first field and the 
     "Secondary Key" in the second field, then press `Save Password`.
 
-
+ 
 
 # Best Practices
 
@@ -406,7 +421,7 @@ The following tips should be adhered to for maximum privacy between users.
     send them to your partner over a non-Discord channel then manually apply these
     keys after you decrypt them.
 
-
+ 
 
 # Debugging
 
@@ -434,7 +449,7 @@ In case there is an error caused by the plugin, create an issue ticket with the
 
 Be sure to read the [contribution](CONTRIBUTING.md) guidelines before creating an issue.
 
-
+ 
 
 # Frequently Asked Questions
 
@@ -503,9 +518,11 @@ This also includes the fact
     In spite of this activity, OpenFeint assures customers that its applications are all safe for 
     downloading, according to the suit.
     
-![Initial E2E Request Denied](images/discord-end-to-end-denied.png)
-![Refusal For User Data Deletion](images/discord-refuses-to-delete-user-data.png)
-![Requests For User Data](images/discord-requests-for-user-data.png)
+For visual proof of this, please see:
+
+* [Initial E2E Request Denied](images/discord-end-to-end-denied.png)
+* [Refusal For User Data Deletion](images/discord-refuses-to-delete-user-data.png)
+* [Government Requests For User Data](images/discord-requests-for-user-data.png)
 
 We highly disapprove of their ideals as we believe their actions violate every human's 
     right to privacy.
@@ -632,7 +649,7 @@ We however do support non-embedded messages as a means to avoid users having the
 
 By default, the plugin will NOT use embeds and warns users about this in the settings menu.
 
-
+ 
 
 # Known Limitations And Bugs
 
@@ -703,3 +720,5 @@ If you've discovered a bug in the plugin, feel free to create an issue after rea
 
 We also have a [Discord Server](https://discord.me/discordcrypt) for any discussion 
     related to **DiscordCrypt** and for general support.
+
+ 
