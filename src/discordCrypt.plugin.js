@@ -2305,7 +2305,7 @@ class discordCrypt
      */
     static _onDatabaseTabButtonClicked( self ) {
         return () => {
-            let users, guilds, channels, table;
+            let users, guilds, channels, remoteId, table;
 
             /* Cache the table. */
             table = $( '#dc-database-entries' );
@@ -2333,6 +2333,9 @@ class discordCrypt
 
                     /* Resolve the name as a "Guild @ #Channel" format. */
                     name = `${guild.name} @ #${channels[ id ].name}`;
+
+                    /* Set the remote ID to the Guild ID. */
+                    remoteId = channels[ id ].guild_id;
                 }
                 else if ( channels[ id ].type === 1 ) {
                     /* DM */
@@ -2340,6 +2343,9 @@ class discordCrypt
 
                     /* Indicate this is a DM and give the full user name. */
                     name = `DM @${user.username}#${user.discriminator}`;
+
+                    /* Set the remote ID to the current DM user's ID. */
+                    remoteId = user.id;
                 }
                 else
                     continue;
@@ -2352,7 +2358,10 @@ class discordCrypt
                         .text( 'Delete' ),
                     copy_btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                        .text( 'Copy' );
+                        .text( 'Copy' ),
+                    show_fingerprint_btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'Show Fingerprint' );
 
                 /* Handle deletion clicks. */
                 delete_btn.click( function () {
@@ -2383,11 +2392,39 @@ class discordCrypt
                     }, 1000 );
                 } );
 
+                /* Handle fingerprint calculation. */
+
+                /* Handle copy clicks. */
+                show_fingerprint_btn.click( function() {
+                    /* Resolve the entry. */
+                    let currentKeys = self.configFile.passList[ id ];
+
+                    /* Calculate the fingerprint using either the Guild ID & Channel or Channel & UserID. */
+                    let fingerprint = discordCrypt.__generateFingerprint(
+                        id,
+                        currentKeys.primary,
+                        remoteId,
+                        currentKeys.secondary,
+                        5000
+                    );
+
+                    _prompt(
+                        'Fingerprint',
+                        "<b>N.B. VERIFY THESE OVER A NON-TEXT COMMUNICATION METHOD!</b><br/><br/><br/>" +
+                        `Your Fingerprint: [ \`${id}\` ]:\n\n`,
+                        fingerprint,
+                        { button: [ 'OK' ] }
+                    );
+                } );
+
                 /* Append the button to the Options column. */
                 $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( copy_btn );
 
                 /* Append the button to the Options column. */
                 $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( delete_btn );
+
+                /* Append the button to the Options column. */
+                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( show_fingerprint_btn );
 
                 /* Append the entire entry to the table. */
                 table.append( element );
