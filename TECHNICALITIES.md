@@ -56,7 +56,16 @@ Every algorithm used in this plugin is directly provided by NodeJS. The only thi
 
 * [Cipher Padding Modes](#message-padding)
 * [Scrypt Hashing Algorithm](https://en.wikipedia.org/wiki/Scrypt)
-* [Curve25519 Exchanges & Ed25519 Signatures](https://en.wikipedia.org/wiki/Curve25519)
+
+**DiscordCrypt** also relies on several libraries which may or may not have been tweaked to work 
+    within the Discord client. These are indicated below.
+
+* [OpenPGP.js](https://openpgpjs.org) ( License: [LGPL](https://www.gnu.org/copyleft/lesser.html) )
+* [SJCL](https://crypto.stanford.edu/sjcl) ( License: [BSD](https://opensource.org/licenses/BSD-2-Clause) )
+* [Currify](https://www.npmjs.com/package/currify) ( License: [MIT](https://opensource.org/licenses/MIT) )
+* [JS-SHA3](https://www.npmjs.com/package/js-sha3) ( License: [MIT](https://opensource.org/licenses/MIT) )
+* [Smalltalk](https://www.npmjs.com/package/smalltalk) ( License: [MIT](https://opensource.org/licenses/MIT) )
+* [Curve25519-JS](https://github.com/wavesplatform/curve25519-js) ( License: [MIT](https://opensource.org/licenses/MIT) )
 
 #### Ciphers
 
