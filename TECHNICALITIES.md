@@ -159,11 +159,12 @@ The following algorithms are currently supported to exchange keys in a secure ma
     [Martin Hellman](https://en.wikipedia.org/wiki/Martin_Hellman "Martin Hellman").
 
 This exchange algorithm supports a large number of key sizes and operates on a similar 
-    principle of RSA, the asymmetric encryption algorithm.
+    principle to [RSA](https://en.wikipedia.org/wiki/RSA_(cryptosystem)), 
+    an asymmetric encryption algorithm.
 
-The main advantage of this algorithm is it is generally considered secure but its downside 
-    is as the key size increases, the time taken to generate a key pair increases 
-    proportionately.
+The main advantage of this algorithm is it is generally considered secure 
+    ( as long as the key size is sufficiently large ) but its downside is as the key size 
+    increases, the time taken to generate a key pair increases proportionately.
 
 One should generally choose the largest key size when exchanging keys for maximum privacy 
     at the expense of speed.
@@ -211,7 +212,10 @@ The main benefits of this algorithm is that it is much smaller in size in contra
 
 The downside, however, is that many consider it insecure as concerns of various 
     [backdoors](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography#Backdoors) 
-    have been brought forth.
+    have been brought forth. While these concerns relate to a random-bit generator 
+    ( [DUAL_EC_DRBG](https://en.wikipedia.org/wiki/Dual_EC_DRBG) ) which is not directly 
+    related to the general use of elliptic curves, there has been enough mistrust placed 
+    by prominent agencies to generally refrain from usage of these.
 
 Just as with Diffie-Hellman, one should choose the largest key size for key exchanges as 
     the security of the key size is equivalent to a Diffie-Hellman keys with a much faster 
