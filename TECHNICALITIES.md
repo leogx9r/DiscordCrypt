@@ -120,7 +120,20 @@ These methods have all been manually implemented
 
 #### Key Exchanges
 
-The following algorithms are used to exchange keys in a secure manner.
+    Key exchange (also key establishment) is any method in cryptography by which cryptographic 
+    keys are exchanged between two parties, allowing use of a cryptographic algorithm.
+    
+    If the sender and receiver wish to exchange encrypted messages, each must be equipped 
+    to encrypt messages to be sent and decrypt messages received. The nature of the equipping 
+    they require depends on the encryption technique they might use. If they use a code, both 
+    will require a copy of the same codebook. If they use a cipher, they will need appropriate 
+    keys. 
+    
+    If the cipher is a symmetric key cipher, both will need a copy of the same key. 
+    If an asymmetric key cipher with the public/private key property, both will need the 
+    other's public key. 
+
+The following algorithms are currently supported to exchange keys in a secure manner.
 
 * [Diffie-Hellman ( ***DH*** )](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) 
     ( **Default Exchange Algorithm** )
