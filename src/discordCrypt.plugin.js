@@ -280,22 +280,22 @@ class discordCrypt
          * @desc Used to scan each message for an embedded descriptor.
          * @type {string}
          */
-        this.messageMarkupClass = '.markup';
+        this._messageMarkupClass = '.markup';
         /**
          * @desc Used to find the search toolbar to inject all option buttons.
          * @type {string}
          */
-        this.searchUiClass = '.search .search-bar';
+        this._searchUiClass = '.search .search-bar';
         /**
          * @desc Used to hook messages being sent.
          * @type {string}
          */
-        this.channelTextAreaClass = '.content textarea';
+        this._channelTextAreaClass = '.content textarea';
         /**
          * @desc Used to detect if the autocomplete dialog is opened.
          * @type {string}
          */
-        this.autoCompleteClass = '.autocomplete-1vrmpx';
+        this._autoCompleteClass = '.autocomplete-1vrmpx';
 
         /* ============================================ */
 
@@ -303,75 +303,75 @@ class discordCrypt
          * @desc Defines what an encrypted message starts with. Must be 4x UTF-16 bytes.
          * @type {string}
          */
-        this.encodedMessageHeader = "⢷⢸⢹⢺";
+        this._encodedMessageHeader = "⢷⢸⢹⢺";
 
         /**
          * @desc Defines what a public key message starts with. Must be 4x UTF-16 bytes.
          * @type {string}
          */
-        this.encodedKeyHeader = "⢻⢼⢽⢾";
+        this._encodedKeyHeader = "⢻⢼⢽⢾";
 
         /**
          * @desc Defines what the header of an encrypted message says.
          * @type {string}
          */
-        this.messageHeader = '-----ENCRYPTED MESSAGE-----';
+        this._messageHeader = '-----ENCRYPTED MESSAGE-----';
 
         /**
          * @desc Master database password. This is a Buffer() containing a 256-bit key.
          * @type {Buffer|null}
          */
-        this.masterPassword = null;
+        this._masterPassword = null;
 
         /**
          * @desc Message scanning interval handler's index. Used to stop any running handler.
          *      Defined only if hooking of modules failed.
          * @type {int}
          */
-        this.scanInterval = undefined;
+        this._scanInterval = undefined;
 
         /**
          * @desc The index of the handler used to reload the toolbar.
          *      Defined only if hooking of modules failed.
          * @type {int}
          */
-        this.toolbarReloadInterval = undefined;
+        this._toolbarReloadInterval = undefined;
 
         /**
          * @desc The index of the handler used for automatic update checking.
          * @type {int}
          */
-        this.updateHandlerInterval = undefined;
+        this._updateHandlerInterval = undefined;
 
         /**
          * @desc The index of the handler used for timed message deletion.
          * @type {int}
          */
-        this.timedMessageInterval = undefined;
+        this._timedMessageInterval = undefined;
 
         /**
          * @desc The main message update event dispatcher used by Discord. Resolved upon startup.
          * @type {Object|null}
          */
-        this.messageUpdateDispatcher = null;
+        this._messageUpdateDispatcher = null;
 
         /**
          * @desc The configuration file currently in use. Only valid after decryption of the configuration database.
          * @type {Config|null}
          */
-        this.configFile = null;
+        this._configFile = null;
 
         /**
          * @desc Used to cache webpack modules.
          * @type {CachedModules} Object containing cached modules
          */
-        this.cachedModules = {};
+        this._cachedModules = {};
 
         /**
          * @desc Indexes of each dual-symmetric encryption mode.
          * @type {int[]}
          */
-        this.encryptModes = [
+        this._encryptModes = [
             /* Blowfish(Blowfish, AES, Camellia, IDEA, TripleDES) */
             0, 1, 2, 3, 4,
             /* AES(Blowfish, AES, Camellia, IDEA, TripleDES) */
@@ -388,7 +388,7 @@ class discordCrypt
          * @desc Symmetric block modes of operation.
          * @type {string[]}
          */
-        this.encryptBlockModes = [
+        this._encryptBlockModes = [
             'CBC', /* Cipher Block-Chaining */
             'CFB', /* Cipher Feedback Mode */
             'OFB', /* Output Feedback Mode */
@@ -398,7 +398,7 @@ class discordCrypt
          * @desc Shorthand padding modes for block ciphers referred to in the code.
          * @type {string[]}
          */
-        this.paddingModes = [
+        this._paddingModes = [
             'PKC7', /* PKCS #7 */
             'ANS2', /* ANSI X.923 */
             'ISO1', /* ISO-10126 */
@@ -409,14 +409,14 @@ class discordCrypt
          * @desc Defines the CSS for the application overlays.
          * @type {string}
          */
-        this.appCss =
+        this._appCss =
             `/* ----- APPLICATION CSS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
 
         /**
          * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
          * @type {string}
          */
-        this.toolbarHtml =
+        this._toolbarHtml =
             `/* ----- APPLICATION TOOLBAR GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
 
         /**
@@ -424,21 +424,21 @@ class discordCrypt
          *      unlocking.
          * @type {string}
          */
-        this.masterPasswordHtml =
+        this._masterPasswordHtml =
             `/* ----- APPLICATION UNLOCKING GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
 
         /**
          * @desc Defines the raw HTML used describing each option menu.
          * @type {string}
          */
-        this.settingsMenuHtml =
+        this._settingsMenuHtml =
             `/* ----- SETTINGS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
 
         /**
          * @desc The Base64 encoded SVG containing the unlocked status icon.
          * @type {string}
          */
-        this.unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0I" +
+        this._unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0I" +
             "DI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xIDAgMi0u" +
             "OSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgNyA2aDEuOWM" +
             "wLTEuNzEgMS4zOS0zLjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAydjEwYzAgMS4xLj" +
@@ -448,7 +448,7 @@ class discordCrypt
          * @desc The Base64 encoded SVG containing the locked status icon.
          * @type {string}
          */
-        this.lockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI" +
+        this._lockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI" +
             "0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI0djI0SD" +
             "BWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJlZj0iI2EiL" +
             "z48L2NsaXBQYXRoPjxwYXRoIGNsaXAtcGF0aD0idXJsKCNiKSIgZD0iTTEyIDE3YzEuMSAwIDItLjkgMi0ycy0uOS0yLTItMi0yIC45" +
@@ -457,12 +457,15 @@ class discordCrypt
             "4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlWNnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=";
 
         /**
-         * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
+         * @desc These contain all _libraries that will be loaded dynamically in the current JS VM.
          * @type {LibraryDefinition}
          */
-        this.libraries = {
+        this._libraries = {
             /* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */
         };
+
+        /* Freeze the class definition. */
+        Object.freeze( discordCrypt );
     }
 
     /* ==================== STANDARD CALLBACKS ================= */
@@ -525,7 +528,7 @@ class discordCrypt
         }
 
         /* Perform startup and load the config file if not already loaded. */
-        if ( !this.configFile ) {
+        if ( !this._configFile ) {
             /* Load the master password. */
             this._loadMasterPassword();
 
@@ -539,7 +542,7 @@ class discordCrypt
             this._checkForUpdates();
 
             /* Add an update handler to check for updates every 60 minutes. */
-            this.updateHandlerInterval = setInterval( () => {
+            this._updateHandlerInterval = setInterval( () => {
                 self._checkForUpdates();
             }, 3600000 );
         }
@@ -548,7 +551,7 @@ class discordCrypt
         const WebpackModules = discordCrypt._getWebpackModuleSearcher();
 
         /* Resolve and cache all modules needed. */
-        this.cachedModules = {
+        this._cachedModules = {
             MessageParser: WebpackModules
                 .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
             MessageController: WebpackModules
@@ -570,8 +573,8 @@ class discordCrypt
         };
 
         /* Throw an error if a cached module can't be found. */
-        for ( let prop in this.cachedModules ) {
-            if ( typeof this.cachedModules[ prop ] !== 'object' ) {
+        for ( let prop in this._cachedModules ) {
+            if ( typeof this._cachedModules[ prop ] !== 'object' ) {
                 _alert( 'Error Loading DiscordCrypt', `Could not find requisite module: ${prop}` );
                 return;
             }
@@ -580,7 +583,7 @@ class discordCrypt
         /* Hook switch events as the main event processor. */
         if ( !this._hookMessageCallbacks() ) {
             /* The toolbar fails to properly load on switches to the friends list. Create an interval to do this. */
-            this.toolbarReloadInterval = setInterval( () => {
+            this._toolbarReloadInterval = setInterval( () => {
                 self._loadToolbar();
                 self._attachHandler();
             }, 5000 );
@@ -599,21 +602,21 @@ class discordCrypt
         this._setupVoice();
 
         /* Process any blocks on an interval since Discord loves to throttle messages. */
-        this.scanInterval = setInterval( () => {
+        this._scanInterval = setInterval( () => {
             self._decodeMessages();
-        }, self.configFile.encryptScanDelay );
+        }, self._configFile.encryptScanDelay );
 
         /* Setup the timed message handler to trigger every 5 seconds. */
-        this.timedMessageInterval = setInterval( () => {
+        this._timedMessageInterval = setInterval( () => {
             /* Get the current time. */
             let n = Date.now();
 
             /* Loop over each message. */
-            self.configFile.timedMessages.forEach( ( e, i ) => {
+            self._configFile.timedMessages.forEach( ( e, i ) => {
                 /* Skip invalid elements. */
                 if ( !e || !e.expireTime ) {
                     /* Delete the index. */
-                    self.configFile.timedMessages.splice( i, 1 );
+                    self._configFile.timedMessages.splice( i, 1 );
 
                     /* Update the configuration to the disk. */
                     self._saveConfig();
@@ -622,11 +625,11 @@ class discordCrypt
                 /* Only continue if the message has been expired. */
                 if ( e.expireTime < n ) {
                     /* Quickly log. */
-                    discordCrypt.log( `Deleting timed message "${self.configFile.timedMessages[ i ].messageId}"` );
+                    discordCrypt.log( `Deleting timed message "${self._configFile.timedMessages[ i ].messageId}"` );
 
                     try {
                         /* Delete the message. This will be queued if a rate limit is in effect. */
-                        discordCrypt._deleteMessage( e.channelId, e.messageId, self.cachedModules );
+                        discordCrypt._deleteMessage( e.channelId, e.messageId, self._cachedModules );
                     }
                     catch ( e ) {
                         /* Log the error that occurred. */
@@ -634,7 +637,7 @@ class discordCrypt
                     }
 
                     /* Delete the index. */
-                    self.configFile.timedMessages.splice( i, 1 );
+                    self._configFile.timedMessages.splice( i, 1 );
 
                     /* Update the configuration to the disk. */
                     self._saveConfig();
@@ -659,22 +662,22 @@ class discordCrypt
             return;
 
         /* Remove onMessage event handler hook. */
-        $( this.channelTextAreaClass ).off( "keydown.dcrypt" );
+        $( this._channelTextAreaClass ).off( "keydown.dcrypt" );
 
         /* Unhook switch events if available or fallback to clearing timed handlers. */
         if ( !this._unhookMessageCallbacks() ) {
             /* Unload the toolbar reload interval. */
-            clearInterval( this.toolbarReloadInterval );
+            clearInterval( this._toolbarReloadInterval );
         }
 
         /* Unload the decryption interval. */
-        clearInterval( this.scanInterval );
+        clearInterval( this._scanInterval );
 
         /* Unload the timed message handler. */
-        clearInterval( this.timedMessageInterval );
+        clearInterval( this._timedMessageInterval );
 
         /* Unload the update handler. */
-        clearInterval( this.updateHandlerInterval );
+        clearInterval( this._updateHandlerInterval );
 
         /* Unload elements. */
         $( "#dc-overlay" ).remove();
@@ -687,7 +690,7 @@ class discordCrypt
         $( '#dc-clipboard-upload-btn' ).remove();
 
         /* Clear the configuration file. */
-        this.configFile = null;
+        this._configFile = null;
     }
 
     /**
@@ -695,11 +698,25 @@ class discordCrypt
      * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
      */
     load() {
-        /* Inject application CSS. */
-        discordCrypt._injectCSS( 'dc-css', discordCrypt.__zlibDecompress( this.appCss ) );
+//        /* Freeze the created instance. */
+//        if( bdplugins && bdplugins[ this.getName() ] && bdplugins[ this.getName() ].plugin ) {
+//            discordCrypt.log( 'Freezing instance ...', 'debug' );
+//
+//            /* Freeze the plugin definition. */
+//            Object.freeze( bdplugins[ this.getName() ] );
+//            /* Freeze the internal state. */
+//            Object.freeze( bdplugins[ this.getName() ].plugin );
+//        }
+//        else {
+//            discordCrypt.log( 'Attempting to call load() from a non-Discord instance.', 'error' );
+//            return;
+//        }
 
-        /* Load necessary libraries. */
-        discordCrypt.__loadLibraries( this.libraries );
+        /* Inject application CSS. */
+        discordCrypt._injectCSS( 'dc-css', discordCrypt.__zlibDecompress( this._appCss ) );
+
+        /* Load necessary _libraries. */
+        discordCrypt.__loadLibraries( this._libraries );
     }
 
     /**
@@ -780,7 +797,7 @@ class discordCrypt
         /* Check if the config file exists. */
         if ( !config || config === null || config === '' ) {
             /* File doesn't exist, create a new one. */
-            this.configFile = this._getDefaultConfig();
+            this._configFile = this._getDefaultConfig();
 
             /* Save the config. */
             this._saveConfig();
@@ -791,9 +808,9 @@ class discordCrypt
 
         try {
             /* Try parsing the decrypted data. */
-            this.configFile = JSON.parse(
+            this._configFile = JSON.parse(
                 discordCrypt.__zlibDecompress(
-                    discordCrypt.aes256_decrypt_gcm( config.data, this.masterPassword, 'PKC7', 'base64', false ),
+                    discordCrypt.aes256_decrypt_gcm( config.data, this._masterPassword, 'PKC7', 'base64', false ),
                     'base64',
                     'utf8'
                 )
@@ -805,7 +822,7 @@ class discordCrypt
         }
 
         /* If it fails, return an error. */
-        if ( !this.configFile || !this.configFile.version ) {
+        if ( !this._configFile || !this._configFile.version ) {
             discordCrypt.log( 'Decryption of configuration file failed.', 'error' );
             return false;
         }
@@ -816,9 +833,9 @@ class discordCrypt
         /* Iterate all defined properties in the default configuration file. */
         for ( let prop in defaultConfig ) {
             /* If the defined property doesn't exist in the current configuration file ... */
-            if ( !this.configFile.hasOwnProperty( prop ) ) {
+            if ( !this._configFile.hasOwnProperty( prop ) ) {
                 /* Use the default. */
-                this.configFile[ prop ] = defaultConfig[ prop ];
+                this._configFile[ prop ] = defaultConfig[ prop ];
 
                 /* Show a simple log. */
                 discordCrypt.log( `Default value added for missing property '${prop}' in the configuration file.` );
@@ -829,11 +846,11 @@ class discordCrypt
         }
 
         /* Iterate all defined properties in the current configuration file and remove any undefined ones. */
-        for ( let prop in this.configFile ) {
+        for ( let prop in this._configFile ) {
             /* If the default configuration doesn't contain this property, delete it as it's unnecessary. */
             if ( !defaultConfig.hasOwnProperty( prop ) ) {
                 /* Delete the property. */
-                delete this.configFile[ prop ];
+                delete this._configFile[ prop ];
 
                 /* Show a simple log. */
                 discordCrypt.log( `Removing unknown property '${prop}' from the configuration file.` );
@@ -844,18 +861,18 @@ class discordCrypt
         }
 
         /* Check for version mismatch. */
-        if ( this.configFile.version !== this.getVersion() ) {
+        if ( this._configFile.version !== this.getVersion() ) {
             /* Preserve the old version for logging. */
-            let oldVersion = this.configFile.version;
+            let oldVersion = this._configFile.version;
 
             /* Preserve the old password list before updating. */
-            let oldCache = this.configFile.passList;
+            let oldCache = this._configFile.passList;
 
             /* Get the most recent default configuration. */
-            this.configFile = this._getDefaultConfig();
+            this._configFile = this._getDefaultConfig();
 
             /* Now restore the password list. */
-            this.configFile.passList = oldCache;
+            this._configFile.passList = oldCache;
 
             /* Set the flag for saving. */
             needs_save = true;
@@ -868,7 +885,7 @@ class discordCrypt
         if ( needs_save )
             this._saveConfig();
 
-        discordCrypt.log( `Loaded configuration file! - v${this.configFile.version}` );
+        discordCrypt.log( `Loaded configuration file! - v${this._configFile.version}` );
 
         return true;
     }
@@ -883,10 +900,10 @@ class discordCrypt
             data:
                 discordCrypt.aes256_encrypt_gcm(
                     discordCrypt.__zlibCompress(
-                        JSON.stringify( this.configFile ),
+                        JSON.stringify( this._configFile ),
                         'utf8'
                     ),
-                    this.masterPassword,
+                    this._masterPassword,
                     'PKC7',
                     false
                 )
@@ -923,13 +940,13 @@ class discordCrypt
      */
     _resetSettings( btn ) {
         /* Preserve the old password list before resetting. */
-        let oldCache = this.configFile.passList;
+        let oldCache = this._configFile.passList;
 
         /* Retrieve the default configuration. */
-        this.configFile = this._getDefaultConfig();
+        this._configFile = this._getDefaultConfig();
 
         /* Restore the old passwords. */
-        this.configFile.passList = oldCache;
+        this._configFile.passList = oldCache;
 
         /* Save the configuration file to update any settings. */
         this._saveConfig();
@@ -962,15 +979,15 @@ class discordCrypt
 
         /* Check if a primary password has actually been entered. */
         if ( !( prim.val() !== '' && prim.val().length > 1 ) )
-            delete this.configFile.passList[ discordCrypt._getChannelId() ];
+            delete this._configFile.passList[ discordCrypt._getChannelId() ];
         else {
             /* Update the password field for this id. */
-            this.configFile.passList[ discordCrypt._getChannelId() ] =
+            this._configFile.passList[ discordCrypt._getChannelId() ] =
                 discordCrypt._createPassword( prim.val(), '' );
 
             /* Only check for a secondary password if the primary password has been entered. */
             if ( sec.val() !== '' && sec.val().length > 1 )
-                this.configFile.passList[ discordCrypt._getChannelId() ].secondary = sec.val();
+                this._configFile.passList[ discordCrypt._getChannelId() ].secondary = sec.val();
 
             /* Update the password toolbar. */
             prim.val( '' );
@@ -995,9 +1012,9 @@ class discordCrypt
      */
     _hookMessageCallbacks() {
         /* Find the main switch event dispatcher if not already found. */
-        if ( !this.messageUpdateDispatcher ) {
+        if ( !this._messageUpdateDispatcher ) {
             /* Usually ID_78. */
-            this.messageUpdateDispatcher = discordCrypt._getWebpackModuleSearcher().findByDispatchNames( [
+            this._messageUpdateDispatcher = discordCrypt._getWebpackModuleSearcher().findByDispatchNames( [
                 'LOAD_MESSAGES',
                 'LOAD_MESSAGES_SUCCESS',
                 'LOAD_MESSAGES_FAILURE',
@@ -1017,14 +1034,14 @@ class discordCrypt
         }
 
         /* Don't proceed if it failed. */
-        if ( !this.messageUpdateDispatcher ) {
+        if ( !this._messageUpdateDispatcher ) {
             discordCrypt.log( `Failed to locate the switch event dispatcher!`, 'error' );
             return false;
         }
 
         /* Hook the switch event dispatcher. */
         discordCrypt._hookDispatcher(
-            this.messageUpdateDispatcher,
+            this._messageUpdateDispatcher,
             'CHANNEL_SELECT',
             {
                 after: ( e ) => {
@@ -1070,8 +1087,8 @@ class discordCrypt
         };
 
         /* Hook incoming message creation dispatcher. */
-        discordCrypt._hookDispatcher( this.messageUpdateDispatcher, 'MESSAGE_CREATE', messageUpdateEvent );
-        discordCrypt._hookDispatcher( this.messageUpdateDispatcher, 'MESSAGE_UPDATE', messageUpdateEvent );
+        discordCrypt._hookDispatcher( this._messageUpdateDispatcher, 'MESSAGE_CREATE', messageUpdateEvent );
+        discordCrypt._hookDispatcher( this._messageUpdateDispatcher, 'MESSAGE_UPDATE', messageUpdateEvent );
 
         return true;
     }
@@ -1083,11 +1100,11 @@ class discordCrypt
      */
     _unhookMessageCallbacks() {
         /* Skip if no dispatcher was called. */
-        if ( !this.messageUpdateDispatcher )
+        if ( !this._messageUpdateDispatcher )
             return false;
 
         /* Iterate over every dispatcher. */
-        for ( let prop in this.messageUpdateDispatcher._actionHandlers ) {
+        for ( let prop in this._messageUpdateDispatcher._actionHandlers ) {
             /* Search for the hooked property and call it. */
             if ( prop.hasOwnProperty( '__cancel' ) )
                 prop.__cancel();
@@ -1112,7 +1129,7 @@ class discordCrypt
         const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
 
         /* Construct the password updating field. */
-        $( document.body ).prepend( discordCrypt.__zlibDecompress( this.masterPasswordHtml ) );
+        $( document.body ).prepend( discordCrypt.__zlibDecompress( this._masterPasswordHtml ) );
 
         const pwd_field = $( '#dc-db-password' );
         const cancel_btn = $( '#dc-cancel-btn' );
@@ -1225,7 +1242,7 @@ class discordCrypt
     _loadToolbar() {
 
         /* Skip if the configuration hasn't been loaded. */
-        if ( !this.configFile )
+        if ( !this._configFile )
             return;
 
         /* Skip if we're not in an active channel. */
@@ -1237,7 +1254,7 @@ class discordCrypt
             return;
 
         /* Inject the toolbar. */
-        $( this.searchUiClass ).parent().parent().parent().prepend( discordCrypt.__zlibDecompress( this.toolbarHtml ) );
+        $( this._searchUiClass ).parent().parent().parent().prepend( discordCrypt.__zlibDecompress( this._toolbarHtml ) );
 
         /* Cache jQuery results. */
         let dc_passwd_btn = $( '#dc-passwd-btn' ),
@@ -1249,13 +1266,13 @@ class discordCrypt
 
         /* Set the initial status icon. */
         if ( dc_lock_btn.length > 0 ) {
-            if ( this.configFile.encodeAll ) {
+            if ( this._configFile.encodeAll ) {
                 dc_lock_btn.attr( 'title', 'Disable Message Encryption' );
-                dc_lock_btn.html( Buffer.from( this.lockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.html( Buffer.from( this._lockIcon, 'base64' ).toString( 'utf8' ) );
             }
             else {
                 dc_lock_btn.attr( 'title', 'Enable Message Encryption' );
-                dc_lock_btn.html( Buffer.from( this.unlockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.html( Buffer.from( this._unlockIcon, 'base64' ).toString( 'utf8' ) );
             }
 
             /* Set the button class. */
@@ -1263,22 +1280,22 @@ class discordCrypt
         }
 
         /* Inject the settings. */
-        $( document.body ).prepend( discordCrypt.__zlibDecompress( this.settingsMenuHtml ) );
+        $( document.body ).prepend( discordCrypt.__zlibDecompress( this._settingsMenuHtml ) );
 
         /* Also by default, set the about tab to be shown. */
         discordCrypt._setActiveSettingsTab( 0 );
         discordCrypt._setActiveExchangeTab( 0 );
 
         /* Update all settings from the settings panel. */
-        $( '#dc-secondary-cipher' ).val( discordCrypt.__cipherIndexToString( this.configFile.encryptMode, true ) );
-        $( '#dc-primary-cipher' ).val( discordCrypt.__cipherIndexToString( this.configFile.encryptMode, false ) );
-        $( '#dc-settings-cipher-mode' ).val( this.configFile.encryptBlockMode.toLowerCase() );
-        $( '#dc-settings-padding-mode' ).val( this.configFile.paddingMode.toLowerCase() );
-        $( '#dc-settings-encrypt-trigger' ).val( this.configFile.encodeMessageTrigger );
-        $( '#dc-settings-timed-expire' ).val( this.configFile.timedMessageExpires );
-        $( '#dc-settings-default-pwd' ).val( this.configFile.defaultPassword );
-        $( '#dc-settings-scan-delay' ).val( this.configFile.encryptScanDelay );
-        $( '#dc-embed-enabled' ).prop( 'checked', this.configFile.useEmbeds );
+        $( '#dc-secondary-cipher' ).val( discordCrypt.__cipherIndexToString( this._configFile.encryptMode, true ) );
+        $( '#dc-primary-cipher' ).val( discordCrypt.__cipherIndexToString( this._configFile.encryptMode, false ) );
+        $( '#dc-settings-cipher-mode' ).val( this._configFile.encryptBlockMode.toLowerCase() );
+        $( '#dc-settings-padding-mode' ).val( this._configFile.paddingMode.toLowerCase() );
+        $( '#dc-settings-encrypt-trigger' ).val( this._configFile.encodeMessageTrigger );
+        $( '#dc-settings-timed-expire' ).val( this._configFile.timedMessageExpires );
+        $( '#dc-settings-default-pwd' ).val( this._configFile.defaultPassword );
+        $( '#dc-settings-scan-delay' ).val( this._configFile.encryptScanDelay );
+        $( '#dc-embed-enabled' ).prop( 'checked', this._configFile.useEmbeds );
 
         /* Handle clipboard upload button. */
         $( '#dc-clipboard-upload-btn' ).click( discordCrypt._onUploadEncryptedClipboardButtonClicked( this ) );
@@ -1397,7 +1414,7 @@ class discordCrypt
         const self = this;
 
         /* Get the text area. */
-        let textarea = $( this.channelTextAreaClass );
+        let textarea = $( this._channelTextAreaClass );
 
         /* Make sure we got one element. */
         if ( textarea.length !== 1 )
@@ -1408,7 +1425,7 @@ class discordCrypt
             let code = e.keyCode || e.which;
 
             /* Skip if we don't have a valid configuration. */
-            if ( !self.configFile )
+            if ( !self._configFile )
                 return;
 
             /* Execute on ENTER/RETURN only. */
@@ -1420,7 +1437,7 @@ class discordCrypt
                 return;
 
             /* Skip if autocomplete dialog is opened. */
-            if ( $( self.autoCompleteClass )[ 0 ] )
+            if ( $( self._autoCompleteClass )[ 0 ] )
                 return;
 
             /* Send the encrypted message. */
@@ -1574,11 +1591,11 @@ class discordCrypt
         let magic = message.text().slice( 0, 4 );
 
         /* If this is a public key, just add a button and continue. */
-        if ( magic === this.encodedKeyHeader )
+        if ( magic === this._encodedKeyHeader )
             return this._parseKeyMessage( message );
 
         /* Make sure it has the correct header. */
-        if ( magic !== this.encodedMessageHeader )
+        if ( magic !== this._encodedMessageHeader )
             return false;
 
         /* Try to deserialize the metadata. */
@@ -1586,15 +1603,15 @@ class discordCrypt
 
         /* Try looking for an algorithm, mode and padding type. */
         /* Algorithm first. */
-        if ( metadata[ 0 ] >= this.encryptModes.length )
+        if ( metadata[ 0 ] >= this._encryptModes.length )
             return false;
 
         /* Cipher mode next. */
-        if ( metadata[ 1 ] >= this.encryptBlockModes.length )
+        if ( metadata[ 1 ] >= this._encryptBlockModes.length )
             return false;
 
         /* Padding after. */
-        if ( metadata[ 2 ] >= this.paddingModes.length )
+        if ( metadata[ 2 ] >= this._paddingModes.length )
             return false;
 
         /* Decrypt the message. */
@@ -1610,7 +1627,7 @@ class discordCrypt
             }
 
             /* Process the message and apply all necessary element modifications. */
-            dataMsg = this._postProcessMessage( dataMsg, this.configFile.up1Host );
+            dataMsg = this._postProcessMessage( dataMsg, this._configFile.up1Host );
 
             /* Handle embeds and inline blocks differently. */
             if ( as_embed ) {
@@ -1700,7 +1717,7 @@ class discordCrypt
      */
     _decodeMessages() {
         /* Skip if a valid configuration file has not been loaded. */
-        if ( !this.configFile || !this.configFile.version )
+        if ( !this._configFile || !this._configFile.version )
             return;
 
         /* Save self. */
@@ -1711,19 +1728,19 @@ class discordCrypt
 
         /* Use the default password for decryption if one hasn't been defined for this channel. */
         let primary = Buffer.from(
-            this.configFile.passList[ id ] && this.configFile.passList[ id ].primary ?
-                this.configFile.passList[ id ].primary :
-                this.configFile.defaultPassword
+            this._configFile.passList[ id ] && this._configFile.passList[ id ].primary ?
+                this._configFile.passList[ id ].primary :
+                this._configFile.defaultPassword
         );
         let secondary = Buffer.from(
-            this.configFile.passList[ id ] && this.configFile.passList[ id ].secondary ?
-                this.configFile.passList[ id ].secondary :
-                this.configFile.defaultPassword
+            this._configFile.passList[ id ] && this._configFile.passList[ id ].secondary ?
+                this._configFile.passList[ id ].secondary :
+                this._configFile.defaultPassword
         );
 
         /* Look through each markup element to find an embedDescription. */
-        let React = discordCrypt._getReactModules( this.cachedModules );
-        $( this.messageMarkupClass ).each( ( function () {
+        let React = discordCrypt._getReactModules( this._cachedModules );
+        $( this._messageMarkupClass ).each( ( function () {
             /* Skip classes with no embeds. */
             if ( !this.className.includes( 'embedDescription' ) )
                 return;
@@ -1740,7 +1757,7 @@ class discordCrypt
         } ) );
 
         /* Look through markup classes for inline code blocks. */
-        $( `${this.messageMarkupClass} .inline` ).each( ( function () {
+        $( `${this._messageMarkupClass} .inline` ).each( ( function () {
             /* Skip parsed messages. */
             if ( $( this ).data( 'dc-parsed' ) !== undefined )
                 return;
@@ -1779,9 +1796,9 @@ class discordCrypt
 
         /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
         if ( force_send === false &&
-            ( !this.configFile.passList[ discordCrypt._getChannelId() ] ||
-                !this.configFile.passList[ discordCrypt._getChannelId() ].primary ||
-                !this.configFile.encodeAll )
+            ( !this._configFile.passList[ discordCrypt._getChannelId() ] ||
+                !this._configFile.passList[ discordCrypt._getChannelId() ].primary ||
+                !this._configFile.encodeAll )
         ) {
             /* Try splitting via the defined split-arg. */
             message = message.split( '|' );
@@ -1791,7 +1808,7 @@ class discordCrypt
                 return false;
 
             /* Check if it has the trigger. */
-            if ( message[ message.length - 1 ] !== this.configFile.encodeMessageTrigger )
+            if ( message[ message.length - 1 ] !== this._configFile.encodeMessageTrigger )
                 return false;
 
             /* Use the first part of the message. */
@@ -1821,15 +1838,15 @@ class discordCrypt
 
         /* Get the passwords. */
         let primaryPassword = Buffer.from(
-            this.configFile.passList[ discordCrypt._getChannelId() ] ?
-                this.configFile.passList[ discordCrypt._getChannelId() ].primary :
-                this.configFile.defaultPassword
+            this._configFile.passList[ discordCrypt._getChannelId() ] ?
+                this._configFile.passList[ discordCrypt._getChannelId() ].primary :
+                this._configFile.defaultPassword
         );
 
         let secondaryPassword = Buffer.from(
-            this.configFile.passList[ discordCrypt._getChannelId() ] ?
-                this.configFile.passList[ discordCrypt._getChannelId() ].secondary :
-                this.configFile.defaultPassword
+            this._configFile.passList[ discordCrypt._getChannelId() ] ?
+                this._configFile.passList[ discordCrypt._getChannelId() ].secondary :
+                this._configFile.defaultPassword
         );
 
         /* If the message length is less than the threshold, we can send it without splitting. */
@@ -1839,18 +1856,18 @@ class discordCrypt
                 cleaned,
                 primaryPassword,
                 secondaryPassword,
-                this.configFile.encryptMode,
-                this.configFile.encryptBlockMode,
-                this.configFile.paddingMode,
+                this._configFile.encryptMode,
+                this._configFile.encryptBlockMode,
+                this._configFile.paddingMode,
                 true
             );
 
             /* Append the header to the message normally. */
-            msg = this.encodedMessageHeader + discordCrypt.__metaDataEncode
+            msg = this._encodedMessageHeader + discordCrypt.__metaDataEncode
             (
-                this.configFile.encryptMode,
-                this.configFile.encryptBlockMode,
-                this.configFile.paddingMode,
+                this._configFile.encryptMode,
+                this._configFile.encryptBlockMode,
+                this._configFile.paddingMode,
                 parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
             ) + msg;
 
@@ -1861,16 +1878,16 @@ class discordCrypt
 
             /* Send the message. */
             discordCrypt._dispatchMessage(
-                this.configFile.useEmbeds,
+                this._configFile.useEmbeds,
                 msg,
-                this.messageHeader,
+                this._messageHeader,
                 `v${this.getVersion().replace( '-debug', '' )}`,
                 0x551A8B,
                 user_tags,
                 channel_id,
-                this.cachedModules,
-                this.configFile.timedMessages,
-                this.configFile.timedMessageExpires
+                this._cachedModules,
+                this._configFile.timedMessages,
+                this._configFile.timedMessageExpires
             );
         }
         else {
@@ -1882,18 +1899,18 @@ class discordCrypt
                     packets[ i ],
                     primaryPassword,
                     secondaryPassword,
-                    this.configFile.encryptMode,
-                    this.configFile.encryptBlockMode,
-                    this.configFile.paddingMode,
+                    this._configFile.encryptMode,
+                    this._configFile.encryptBlockMode,
+                    this._configFile.paddingMode,
                     true
                 );
 
                 /* Append the header to the message normally. */
-                msg = this.encodedMessageHeader + discordCrypt.__metaDataEncode
+                msg = this._encodedMessageHeader + discordCrypt.__metaDataEncode
                 (
-                    this.configFile.encryptMode,
-                    this.configFile.encryptBlockMode,
-                    this.configFile.paddingMode,
+                    this._configFile.encryptMode,
+                    this._configFile.encryptBlockMode,
+                    this._configFile.paddingMode,
                     parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
                 ) + msg;
 
@@ -1904,16 +1921,16 @@ class discordCrypt
 
                 /* Send the message. */
                 discordCrypt._dispatchMessage(
-                    this.configFile.useEmbeds,
+                    this._configFile.useEmbeds,
                     msg,
-                    this.messageHeader,
+                    this._messageHeader,
                     `v${this.getVersion().replace( '-debug', '' )}`,
                     0x551A8B,
                     i === 0 ? user_tags : '',
                     channel_id,
-                    this.cachedModules,
-                    this.configFile.timedMessages,
-                    this.configFile.timedMessageExpires
+                    this._cachedModules,
+                    this._configFile.timedMessages,
+                    this._configFile.timedMessageExpires
                 );
             }
         }
@@ -2037,11 +2054,11 @@ class discordCrypt
 
                     if ( pwd ) {
                         /* To test whether this is the correct password or not, we have to attempt to use it. */
-                        self.masterPassword = Buffer.from( pwd, 'hex' );
+                        self._masterPassword = Buffer.from( pwd, 'hex' );
 
                         /* Attempt to load the database with this password. */
                         if ( !self._loadConfig() ) {
-                            self.configFile = null;
+                            self._configFile = null;
 
                             /* Update the button's text. */
                             if ( cfg_exists )
@@ -2100,8 +2117,8 @@ class discordCrypt
                     $( '#dc-master-overlay' ).remove();
 
                     /* Do some quick cleanup. */
-                    self.masterPassword = null;
-                    self.configFile = null;
+                    self._masterPassword = null;
+                    self._configFile = null;
                 } ), 300
             );
         }
@@ -2153,8 +2170,8 @@ class discordCrypt
 
             /* Upload the clipboard. */
             discordCrypt.__up1UploadClipboard(
-                self.configFile.up1Host,
-                self.configFile.up1ApiKey,
+                self._configFile.up1Host,
+                self._configFile.up1ApiKey,
                 global.sjcl,
                 ( error_string, file_url, deletion_link ) => {
                     /* Do some sanity checking. */
@@ -2212,8 +2229,8 @@ class discordCrypt
             /* Upload the file. */
             discordCrypt.__up1UploadFile(
                 file_path_field.val(),
-                self.configFile.up1Host,
-                self.configFile.up1ApiKey,
+                self._configFile.up1Host,
+                self._configFile.up1ApiKey,
                 global.sjcl,
                 ( error_string, file_url, deletion_link ) => {
                     /* Do some sanity checking. */
@@ -2314,12 +2331,12 @@ class discordCrypt
             table.html( '' );
 
             /* Resolve all users, guilds and channels the current user is a part of. */
-            users = self.cachedModules.UserResolver.getUsers();
-            guilds = self.cachedModules.GuildResolver.getGuilds();
-            channels = self.cachedModules.ChannelResolver.getChannels();
+            users = self._cachedModules.UserResolver.getUsers();
+            guilds = self._cachedModules.GuildResolver.getGuilds();
+            channels = self._cachedModules.ChannelResolver.getChannels();
 
             /* Iterate over each password in the configuration. */
-            for ( let prop in self.configFile.passList ) {
+            for ( let prop in self._configFile.passList ) {
                 let name, id = prop;
 
                 /* Skip channels that don't have an ID. */
@@ -2366,7 +2383,7 @@ class discordCrypt
                 /* Handle deletion clicks. */
                 delete_btn.click( function () {
                     /* Delete the entry. */
-                    delete self.configFile.passList[ id ];
+                    delete self._configFile.passList[ id ];
 
                     /* Save the configuration. */
                     self._saveConfig();
@@ -2378,7 +2395,7 @@ class discordCrypt
                 /* Handle copy clicks. */
                 copy_btn.click( function() {
                     /* Resolve the entry. */
-                    let current_keys = self.configFile.passList[ id ];
+                    let current_keys = self._configFile.passList[ id ];
 
                     /* Write to the clipboard. */
                     require( 'electron' ).clipboard.writeText(
@@ -2397,7 +2414,7 @@ class discordCrypt
                 /* Handle copy clicks. */
                 show_fingerprint_btn.click( function() {
                     /* Resolve the entry. */
-                    let currentKeys = self.configFile.passList[ id ];
+                    let currentKeys = self._configFile.passList[ id ];
 
                     /* Calculate the fingerprint using either the Guild ID & Channel or Channel & UserID. */
                     let fingerprint = discordCrypt.__generateFingerprint(
@@ -2664,18 +2681,18 @@ class discordCrypt
                 dc_master_password = $( '#dc-master-password' );
 
             /* Update all settings from the settings panel. */
-            self.configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
-            self.configFile.timedMessageExpires = $( '#dc-settings-timed-expire' ).val();
-            self.configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
-            self.configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
-            self.configFile.encryptScanDelay = $( '#dc-settings-scan-delay' ).val();
-            self.configFile.paddingMode = $( '#dc-settings-padding-mode' ).val();
-            self.configFile.useEmbeds = $( '#dc-embed-enabled' ).is( ':checked' );
-            self.configFile.encryptMode = discordCrypt
+            self._configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
+            self._configFile.timedMessageExpires = $( '#dc-settings-timed-expire' ).val();
+            self._configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
+            self._configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
+            self._configFile.encryptScanDelay = $( '#dc-settings-scan-delay' ).val();
+            self._configFile.paddingMode = $( '#dc-settings-padding-mode' ).val();
+            self._configFile.useEmbeds = $( '#dc-embed-enabled' ).is( ':checked' );
+            self._configFile.encryptMode = discordCrypt
                 .__cipherStringToIndex( dc_primary_cipher.val(), dc_secondary_cipher.val() );
 
-            dc_primary_cipher.val( discordCrypt.__cipherIndexToString( self.configFile.encryptMode, false ) );
-            dc_secondary_cipher.val( discordCrypt.__cipherIndexToString( self.configFile.encryptMode, true ) );
+            dc_primary_cipher.val( discordCrypt.__cipherIndexToString( self._configFile.encryptMode, false ) );
+            dc_secondary_cipher.val( discordCrypt.__cipherIndexToString( self._configFile.encryptMode, true ) );
 
             /* Handle master password updates if necessary. */
             if ( dc_master_password.val() !== '' ) {
@@ -2711,7 +2728,7 @@ class discordCrypt
 
                         if ( pwd ) {
                             /* Now update the password. */
-                            self.masterPassword = Buffer.from( pwd, 'hex' );
+                            self._masterPassword = Buffer.from( pwd, 'hex' );
 
                             /* Save the configuration file and update the button text. */
                             self._saveSettings( $( '#dc-settings-save-btn' ) );
@@ -2740,15 +2757,15 @@ class discordCrypt
             self._resetSettings( $( '#dc-settings-reset-btn' ) );
 
             /* Update all settings from the settings panel. */
-            $( '#dc-secondary-cipher' ).val( discordCrypt.__cipherIndexToString( self.configFile.encryptMode, true ) );
-            $( '#dc-primary-cipher' ).val( discordCrypt.__cipherIndexToString( self.configFile.encryptMode, false ) );
-            $( '#dc-settings-cipher-mode' ).val( self.configFile.encryptBlockMode.toLowerCase() );
-            $( '#dc-settings-padding-mode' ).val( self.configFile.paddingMode.toLowerCase() );
-            $( '#dc-settings-encrypt-trigger' ).val( self.configFile.encodeMessageTrigger );
-            $( '#dc-settings-timed-expire' ).val( self.configFile.timedMessageExpires );
-            $( '#dc-settings-default-pwd' ).val( self.configFile.defaultPassword );
-            $( '#dc-settings-scan-delay' ).val( self.configFile.encryptScanDelay );
-            $( '#dc-embed-enabled' ).prop( 'checked', self.configFile.useEmbeds );
+            $( '#dc-secondary-cipher' ).val( discordCrypt.__cipherIndexToString( self._configFile.encryptMode, true ) );
+            $( '#dc-primary-cipher' ).val( discordCrypt.__cipherIndexToString( self._configFile.encryptMode, false ) );
+            $( '#dc-settings-cipher-mode' ).val( self._configFile.encryptBlockMode.toLowerCase() );
+            $( '#dc-settings-padding-mode' ).val( self._configFile.paddingMode.toLowerCase() );
+            $( '#dc-settings-encrypt-trigger' ).val( self._configFile.encodeMessageTrigger );
+            $( '#dc-settings-timed-expire' ).val( self._configFile.timedMessageExpires );
+            $( '#dc-settings-default-pwd' ).val( self._configFile.defaultPassword );
+            $( '#dc-settings-scan-delay' ).val( self._configFile.encryptScanDelay );
+            $( '#dc-embed-enabled' ).prop( 'checked', self._configFile.useEmbeds );
             $( '#dc-master-password' ).val( '' );
         };
     }
@@ -2992,7 +3009,7 @@ class discordCrypt
             let message = Buffer.from( dc_pub_key_ta.val(), 'hex' );
 
             /* Add the header to the message and encode it. */
-            message = self.encodedKeyHeader + discordCrypt.__substituteMessage( message, true );
+            message = self._encodedKeyHeader + discordCrypt.__substituteMessage( message, true );
 
             /* Split the message by adding a new line every 32 characters like a standard PGP message. */
             let formatted_message = message.replace( /(.{32})/g, ( e ) => {
@@ -3009,16 +3026,16 @@ class discordCrypt
 
             /* Send the message. */
             discordCrypt._dispatchMessage(
-                self.configFile.useEmbeds,
+                self._configFile.useEmbeds,
                 formatted_message,
                 header,
                 footer,
                 0x720000,
                 '',
                 undefined,
-                self.cachedModules,
-                self.configFile.timedMessages,
-                self.configFile.timedMessageExpires
+                self._cachedModules,
+                self._configFile.timedMessages,
+                self._configFile.timedMessageExpires
             );
 
             /* Save the configuration file and store the new message. */
@@ -3086,7 +3103,7 @@ class discordCrypt
             /* Check if the message header is valid. */
             if (
                 dc_handshake_ppk.val().replace( /\r?\n|\r/g, "" )
-                    .slice( 0, 4 ) !== self.encodedKeyHeader
+                    .slice( 0, 4 ) !== self._encodedKeyHeader
             )
                 return;
 
@@ -3413,7 +3430,7 @@ class discordCrypt
             dc_handshake_secondary_key.val( '' );
 
             /* Apply the passwords and save the config. */
-            self.configFile.passList[ discordCrypt._getChannelId() ] = pwd;
+            self._configFile.passList[ discordCrypt._getChannelId() ] = pwd;
             self._saveConfig();
 
             /* Update the text and reset it after 1 second. */
@@ -3489,7 +3506,7 @@ class discordCrypt
             let btn = $( '#dc-reset-pwd' );
 
             /* Reset the configuration for this user and save the file. */
-            delete self.configFile.passList[ discordCrypt._getChannelId() ];
+            delete self._configFile.passList[ discordCrypt._getChannelId() ];
             self._saveConfig();
 
             /* Update the text for the button. */
@@ -3535,11 +3552,11 @@ class discordCrypt
      */
     static _onCopyCurrentPasswordsButtonClicked( self ) {
         return () => {
-            let currentKeys = self.configFile.passList[ discordCrypt._getChannelId() ];
+            let currentKeys = self._configFile.passList[ discordCrypt._getChannelId() ];
 
             /* If no password is currently generated, write the default key. */
             if ( !currentKeys ) {
-                require( 'electron' ).clipboard.writeText( `Default Password: ${self.configFile.defaultPassword}` );
+                require( 'electron' ).clipboard.writeText( `Default Password: ${self._configFile.defaultPassword}` );
                 return;
             }
 
@@ -3575,15 +3592,15 @@ class discordCrypt
             let dc_lock_btn = $( '#dc-lock-btn' );
 
             /* Update the icon and toggle. */
-            if ( !self.configFile.encodeAll ) {
+            if ( !self._configFile.encodeAll ) {
                 dc_lock_btn.attr( 'title', 'Disable Message Encryption' );
-                dc_lock_btn.html( Buffer.from( self.lockIcon, 'base64' ).toString( 'utf8' ) );
-                self.configFile.encodeAll = true;
+                dc_lock_btn.html( Buffer.from( self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                self._configFile.encodeAll = true;
             }
             else {
                 dc_lock_btn.attr( 'title', 'Enable Message Encryption' );
-                dc_lock_btn.html( Buffer.from( self.unlockIcon, 'base64' ).toString( 'utf8' ) );
-                self.configFile.encodeAll = false;
+                dc_lock_btn.html( Buffer.from( self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                self._configFile.encodeAll = false;
             }
 
             /* Set the button class. */
@@ -4771,13 +4788,13 @@ class discordCrypt
 
     /**
      * @public
-     * @desc Loads all compiled libraries as needed.
-     * @param {LibraryDefinition} libraries A list of all libraries to load.
+     * @desc Loads all compiled _libraries as needed.
+     * @param {LibraryDefinition} libraries A list of all _libraries to load.
      */
     static __loadLibraries( libraries ) {
         const vm = require( 'vm' );
 
-        /* Inject all compiled libraries based on if they're needed */
+        /* Inject all compiled _libraries based on if they're needed */
         for ( let name in libraries ) {
             let libInfo = libraries[ name ];
 
