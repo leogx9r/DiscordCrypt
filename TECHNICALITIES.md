@@ -6,6 +6,7 @@
 </h1>
 
 
+* [**Preface**](#preface)
 * [**Supported Algorithms**](#supported-algorithms)
     * [***Ciphers***](#ciphers)
         * [*Cipher Modes*](#cipher-modes)
@@ -26,6 +27,19 @@
 * [**Master Database Encryption**](#master-database-encryption)
 * [**Key Exchange Process**](#key-exchange-process)
 * [**Known Vulnerabilities**](#known-vulnerabilities)
+
+# Preface
+
+This guide assumes the reader has basic knowledge of general cryptography including a top-level 
+    understanding of ***ciphers***, ***message padding***, ***hashing***, ***key exchanging*** and 
+    ***authentication*** processes.
+
+While this guide attempts to provide an overview of the processes involved in the plugin, it 
+    should not be relied on to reflect the **current implementation** of the cryptographic processes.
+
+A final note, this plugin was developed to be as secure as possible at the expense of speed and 
+    increased complexity. While multiple implementations of a given cryptographic suite may be 
+    supported, by default, the plugin chooses the maximum security-based options for operation.
 
 # Supported Algorithms
 
