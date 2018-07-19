@@ -378,7 +378,7 @@ class testGenerator {
                         unit_tests[ i ][ j ][ k ].r[ l ].primary_key = primary.toString( 'hex' );
                         unit_tests[ i ][ j ][ k ].r[ l ].secondary_key = secondary.toString( 'hex' );
                         unit_tests[ i ][ j ][ k ].r[ l ].plaintext = plaintext.toString( 'hex' );
-                        unit_tests[ i ][ j ][ k ].r[ l ].ciphertext = this.discordCrypt.symmetricEncrypt(
+                        unit_tests[ i ][ j ][ k ].r[ l ].ciphertext = this.discordCrypt.__symmetricEncrypt(
                             plaintext,
                             primary,
                             secondary,
