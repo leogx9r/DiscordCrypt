@@ -1,6 +1,6 @@
 /**
  * @public
- * @desc Compiles the plugin and adds all necessary libraries to it.
+ * @desc Compiles the plugin and adds all necessary _libraries to it.
  */
 class Compiler {
 
@@ -59,7 +59,7 @@ class Compiler {
         this.uglifyjs = require( 'uglify-es' );
 
         /**
-         * @desc Defines the default options applied to libraries and optionally the main module if enabled.
+         * @desc Defines the default options applied to _libraries and optionally the main module if enabled.
          * @type {Object}
          */
         this.defaultBuilderOptions = {
@@ -238,10 +238,10 @@ class Compiler {
 
     /**
      * @private
-     * @desc Compiles the plugin and adds all necessary libraries.
+     * @desc Compiles the plugin and adds all necessary _libraries.
      * @param {string} plugin_path The path to the plugin file used as the base.
-     * @param {string} tag_name The tag name to scan the [plugin] for to insert all libraries.
-     * @param {string} library_path The path to the libraries used to add to the base file.
+     * @param {string} tag_name The tag name to scan the [plugin] for to insert all _libraries.
+     * @param {string} library_path The path to the _libraries used to add to the base file.
      * @param {LibraryDefinition} library_info Required library info.
      * @param {string} output_dir The output directory to store the plugin.
      * @param {string} assets_path The path to the assets directory.
@@ -304,7 +304,7 @@ class Compiler {
             console.error( `Failed to locate the tag in the plugin file ...` );
             return false;
         }
-        /* Compile all libraries and replace the tag with them. */
+        /* Compile all _libraries and replace the tag with them. */
         data = data.split( tag_name ).join( this.readLibraries( library_path, library_info ) );
 
         /* Construct the output path and name. */
@@ -424,7 +424,7 @@ class Compiler {
             console.info(
                 "Usage:\n" +
                 "   --plugin-path|-p         -  Path to the base plugin file to use.\n" +
-                "   --tag-name|-t            -  The \"tag\" to use find and insert libraries in the plugin file.\n" +
+                "   --tag-name|-t            -  The \"tag\" to use find and insert _libraries in the plugin file.\n" +
                 "   --library-path|-l        -  The path to the library folder containing all needed files.\n" +
                 "   --assets-directory|-a    -  The path to the assets folder containing add-in assets.\n" +
                 "   --output-directory|-o    -  The output directory to store the compiled file in.\n" +

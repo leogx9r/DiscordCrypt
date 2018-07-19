@@ -24,7 +24,7 @@
 
 class testRunner {
     /**
-     * @desc Loads the dependency libraries and discordCrypt.
+     * @desc Loads the dependency _libraries and discordCrypt.
      */
     constructor() {
         /* Cache required modules. */
@@ -48,8 +48,8 @@ class testRunner {
             /* Create an instance. */
             this.discordCrypt_instance = new ( this.discordCrypt )();
 
-            /* Load all libraries required. */
-            this.discordCrypt.__loadLibraries( this.discordCrypt_instance.libraries );
+            /* Load all _libraries required. */
+            this.discordCrypt.__loadLibraries( this.discordCrypt_instance._libraries );
 
             /* Run the tests. */
             this.run();
@@ -730,8 +730,8 @@ class testRunner {
                                     primary_key,
                                     secondary_key,
                                     cipher_index,
-                                    this.discordCrypt_instance.encryptBlockModes.indexOf( block_mode.toUpperCase() ),
-                                    this.discordCrypt_instance.paddingModes.indexOf( padding_scheme.toUpperCase() ),
+                                    this.discordCrypt_instance._encryptBlockModes.indexOf( block_mode.toUpperCase() ),
+                                    this.discordCrypt_instance._paddingModes.indexOf( padding_scheme.toUpperCase() ),
                                     true
                                 ),
                                 `Encoding error during decryption of ${cipher_string}`
@@ -753,8 +753,8 @@ class testRunner {
                                     primary_key,
                                     secondary_key,
                                     cipher_index,
-                                    this.discordCrypt_instance.encryptBlockModes.indexOf( block_mode.toUpperCase() ),
-                                    this.discordCrypt_instance.paddingModes.indexOf( padding_scheme.toUpperCase() ),
+                                    this.discordCrypt_instance._encryptBlockModes.indexOf( block_mode.toUpperCase() ),
+                                    this.discordCrypt_instance._paddingModes.indexOf( padding_scheme.toUpperCase() ),
                                     true
                                 ),
                                 `Encoding error during encryption of ${cipher_string}`
@@ -847,15 +847,6 @@ class testRunner {
             this.discordCrypt.log( 'Error', 'error' );
             this.discordCrypt.log( 'Debug', 'debug' );
             this.discordCrypt.log( 'Warning', 'warn' );
-
-            this.discordCrypt.log = ( /* string */ message, /* string */ method = "info" ) => {
-                try {
-                    console[ method ]( `[DiscordCrypt] - ${message}` );
-                }
-                catch ( ex ) {
-                    console.error( `Failed to execute logger: ${ex}` );
-                }
-            };
 
             ut.done();
         };

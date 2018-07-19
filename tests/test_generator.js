@@ -30,7 +30,7 @@ class testGenerator {
         this.crypto = require( 'crypto' );
         this.discordCrypt = require( '../build/discordCrypt.plugin.js' ).discordCrypt;
         this.discordCrypt_instance = new ( this.discordCrypt )();
-        this.cipherModeCount = this.discordCrypt_instance.encryptModes.length;
+        this.cipherModeCount = this.discordCrypt_instance._encryptModes.length;
 
         this.ciphers = [
             {
@@ -86,7 +86,7 @@ class testGenerator {
             'ISO1',
         ];
 
-        this.discordCrypt.__loadLibraries( this.discordCrypt_instance.libraries );
+        this.discordCrypt.__loadLibraries( this.discordCrypt_instance._libraries );
     }
 
     /* Generates individual tests for each cipher mode and padding scheme. */
