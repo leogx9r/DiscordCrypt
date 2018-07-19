@@ -232,6 +232,9 @@ The following key sizes in bits are supported:
 
 Please see [here](http://www.secg.org/sec2-v2.pdf) for more information on curve parameters.
 
+For information regarding the specifics of Curve25519, see its introductory paper 
+    [here](https://cr.yp.to/ecdh/curve25519-20060209.pdf).
+
 
 #### Hash Algorithms
 
