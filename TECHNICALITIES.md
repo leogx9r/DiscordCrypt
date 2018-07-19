@@ -120,18 +120,24 @@ These methods have all been manually implemented
 
 #### Key Exchanges
 
-    Key exchange (also key establishment) is any method in cryptography by which cryptographic 
-    keys are exchanged between two parties, allowing use of a cryptographic algorithm.
-    
-    If the sender and receiver wish to exchange encrypted messages, each must be equipped 
+> Key exchange (also key establishment) is any method in 
+    [cryptography](https://en.wikipedia.org/wiki/Cryptography) by which 
+    [cryptographic keys](https://en.wikipedia.org/wiki/Cryptographic_keys) 
+    are exchanged between two parties, allowing use of a cryptographic 
+    [algorithm](https://en.wikipedia.org/wiki/Algorithm).
+>
+> If the sender and receiver wish to exchange encrypted messages, each must be equipped 
     to encrypt messages to be sent and decrypt messages received. The nature of the equipping 
-    they require depends on the encryption technique they might use. If they use a code, both 
-    will require a copy of the same codebook. If they use a cipher, they will need appropriate 
+    they require depends on the [encryption](https://en.wikipedia.org/wiki/Algorithm) technique 
+    they might use. If they use a [code](https://en.wikipedia.org/wiki/Code_(cryptography)), 
+    both will require a copy of the same [codebook](https://en.wikipedia.org/wiki/Codebook). 
+    If they use a [cipher](https://en.wikipedia.org/wiki/Cipher), they will need appropriate 
     keys. 
-    
-    If the cipher is a symmetric key cipher, both will need a copy of the same key. 
-    If an asymmetric key cipher with the public/private key property, both will need the 
-    other's public key. 
+>
+> If the cipher is a [symmetric key cipher](https://en.wikipedia.org/wiki/Symmetric_key), 
+    both will need a copy of the same key. If an 
+    [asymmetric key cipher](https://en.wikipedia.org/wiki/Public_key) with the public/private 
+    key property, both will need the other's public key. 
 
 The following algorithms are currently supported to exchange keys in a secure manner.
 
