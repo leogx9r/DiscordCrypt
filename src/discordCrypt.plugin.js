@@ -464,8 +464,15 @@ class discordCrypt
             /* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */
         };
 
+        /**
+         * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
+         *      So just backup the function code here in case it gets attacked in the future.
+         * @type {function}
+         */
+        this._freeze = Object.freeze;
+
         /* Freeze the class definition. */
-        Object.freeze( discordCrypt );
+        this._freeze( discordCrypt );
     }
 
     /* ==================== STANDARD CALLBACKS ================= */
@@ -516,7 +523,7 @@ class discordCrypt
 
         /* Perform idiot-proof check to make sure the user named the plugin `discordCrypt.plugin.js` */
         if ( !discordCrypt._validPluginName() ) {
-            _alert(
+            global.smalltalk.alert(
                 'Hi There! - DiscordCrypt',
                 "Oops!\r\n\r\n" +
                 "It seems you didn't read discordCrypt's usage guide. :(\r\n" +
@@ -575,7 +582,7 @@ class discordCrypt
         /* Throw an error if a cached module can't be found. */
         for ( let prop in this._cachedModules ) {
             if ( typeof this._cachedModules[ prop ] !== 'object' ) {
-                _alert( 'Error Loading DiscordCrypt', `Could not find requisite module: ${prop}` );
+                global.smalltalk.alert( 'Error Loading DiscordCrypt', `Could not find requisite module: ${prop}` );
                 return;
             }
         }
@@ -714,6 +721,9 @@ class discordCrypt
 
         /* Inject application CSS. */
         discordCrypt._injectCSS( 'dc-css', discordCrypt.__zlibDecompress( this._appCss ) );
+
+        /* Reapply the native code for Object.freeze() right before calling these as they freeze themselves. */
+        Object.freeze = this._freeze;
 
         /* Load necessary _libraries. */
         discordCrypt.__loadLibraries( this._libraries );
@@ -1224,7 +1234,7 @@ class discordCrypt
                             discordCrypt.log(
                                 `Unable to replace the target plugin. ( ${err} )\nDestination: ${replacePath}`, 'error'
                             );
-                            _alert( 'Error During Update', 'Failed to apply the update!' );
+                            global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
                         }
                     } );
                 } );
@@ -2176,7 +2186,7 @@ class discordCrypt
                 ( error_string, file_url, deletion_link ) => {
                     /* Do some sanity checking. */
                     if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
-                        _alert( 'Failed to upload the clipboard!', error_string );
+                        global.smalltalk.alert( 'Failed to upload the clipboard!', error_string );
                         return;
                     }
 
@@ -2425,7 +2435,7 @@ class discordCrypt
                         5000
                     );
 
-                    _prompt(
+                    global.smalltalk.prompt(
                         'Fingerprint',
                         "<b>N.B. VERIFY THESE OVER A NON-TEXT COMMUNICATION METHOD!</b><br/><br/><br/>" +
                         `Your Fingerprint: [ \`${id}\` ]:\n\n`,
@@ -2717,7 +2727,7 @@ class discordCrypt
                     ( error, progress, pwd ) => {
                         if ( error ) {
                             /* Alert the user. */
-                            _alert(
+                            global.smalltalk.alert(
                                 'DiscordCrypt Error',
                                 'Error setting the new database password. Check the console for more info.'
                             );
@@ -4615,7 +4625,7 @@ class discordCrypt
             input.length < 64 &&
             !( new RegExp( /^(?=.{8,})(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*\W).*$/g ) ).test( input )
         ) {
-            _alert(
+            global.smalltalk.alert(
                 'Invalid Password Input',
                 'Your password <b>must be at least 8 characters</b> long and <u>must</u> contain ' +
                 'a combination of alpha-numeric characters both uppercase and lowercase ( A-Z, a-z, 0-9 ) ' +
@@ -6875,7 +6885,7 @@ class discordCrypt
             throw `Unknown cipher selected: ${cipher_index}`;
 
         /* Get MAC tag as a hex string. */
-        let tag = kmac256(
+        let tag = sha3.kmac256(
             new Uint8Array( Buffer.concat( [ primary_key, secondary_key ] ) ),
             new Uint8Array( Buffer.from( msg, 'hex' ) ),
             256,
@@ -6973,7 +6983,7 @@ class discordCrypt
 
             /* Compute the HMAC-SHA3-256 of the cipher text as hex. */
             let computed_tag = Buffer.from(
-                kmac256(
+                sha3.kmac256(
                     new Uint8Array( Buffer.concat( [ primary_key, secondary_key ] ) ),
                     new Uint8Array( message ),
                     256,
