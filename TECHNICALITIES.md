@@ -37,6 +37,10 @@ This guide assumes the reader has basic knowledge of general cryptography includ
 While this guide attempts to provide an overview of the processes involved in the plugin, it 
     should not be relied on to reflect the **current implementation** of the cryptographic processes.
 
+Discord currently runs on an extremely outdated version of NodeJS ( `v7.4.0` ) which further limits 
+    implementation capabilities. While we have tried to get past this, the plugin is greatly limited 
+    by this factor and should be taken into account while evaluating these methods.
+
 A final note, this plugin was developed to be as secure as possible at the expense of speed and 
     increased complexity. While multiple implementations of a given cryptographic suite may be 
     supported, by default, the plugin chooses the maximum security-based options for operation.
@@ -87,7 +91,7 @@ The following ciphers are currently supported by **DiscordCrypt**.
 Each cipher can operate in a number of 
     [block operation modes](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation).
 
-The supported modes are:
+The currently supported modes are:
 
 - [Cipher Block Chaining](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_(CBC)) 
     ( **Default Block Mode** )
