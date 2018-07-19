@@ -403,7 +403,7 @@ Below indicates the current index assignment for each combination of ciphers.
  * @desc Indexes of each dual-symmetric encryption mode.
  * @type {int[]}
  */
-this.encryptModes = [
+this._encryptModes = [
     /* Blowfish(Blowfish, AES, Camellia, IDEA, TripleDES) */
     0, 1, 2, 3, 4,
     /* AES(Blowfish, AES, Camellia, IDEA, TripleDES) */
