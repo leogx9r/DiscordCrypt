@@ -1,3 +1,12 @@
+Version 1.4.0
+
+- This is a major security release. You should update immediately.
+- Hardened all libraries against prototype attacks.
+- Perform additional hardening on some libraries against function duplication errors.
+- Fixed some major vulnerabilities that exposed the plugin itself to prototype hijacking.
+- Encapsulated all variables requiring security from being exposed to anything with JS execution privileges.
+- Broke the plugin's documentation website due to these changes. It's a feature, we promise!
+
 Version 1.3.1
 
 - New master password requirements have been enforced. If your password does not meet this requirement, it will be rejected.
