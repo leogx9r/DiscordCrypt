@@ -17,6 +17,7 @@
     * [***Hash Algorithms***](#hash-algorithms)
         * [*Native Hash Algorithms*](#native-hash-algorithms)
         * [*Scrypt Hashing Algorithm*](#scrypt-hashing-algorithm)
+        * [*SHA3 Hashing Algorithm*](#sha3-hashing-algorithm)
 * [**Message Format**](#message-format)
     * [***Meta-Data Encoding***](#meta-data-encoding)
     * [***User Message Format***](#user-message-format)
@@ -239,7 +240,8 @@ For information regarding the specifics of Curve25519, see its introductory pape
 #### Hash Algorithms
 
 A variety of one-way hash functions are supported by **DiscordCrypt**. With the exception of 
-    the [Scrypt](#scrypt-hashing-algorithm), all  methods are implemented internally via NodeJS.
+    the [Scrypt](#scrypt-hashing-algorithm) and [SHA3](https://en.wikipedia.org/wiki/SHA-3) methods, 
+    all functions are implemented internally via NodeJS.
     
 ##### Native Hash Algorithms
 
@@ -346,6 +348,29 @@ Scrypt uses a total of 6 parameters. Each of these will be described below.
 
 You may find the actual implementation of it 
     [here](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-scrypt).
+
+##### SHA3 Hashing Algorithm
+
+The general implementation for SHA3 was implemented via the JS-SHA3 library which can be found 
+    [here](https://github.com/emn178/js-sha3).
+
+In particular, the following methods have been implemented whose demos are below:
+
+- [SHA3-512](http://emn178.github.io/online-tools/sha3_512.html)  
+- [SHA3-384](http://emn178.github.io/online-tools/sha3_384.html)  
+- [SHA3-256](http://emn178.github.io/online-tools/sha3_256.html)  
+- [SHA3-224](http://emn178.github.io/online-tools/sha3_224.html)  
+- [Keccak-512](http://emn178.github.io/online-tools/keccak_512.html)  
+- [Keccak-384](http://emn178.github.io/online-tools/keccak_384.html)  
+- [Keccak-256](http://emn178.github.io/online-tools/keccak_256.html)  
+- [Keccak-224](http://emn178.github.io/online-tools/keccak_224.html)  
+- [Shake128](http://emn178.github.io/online-tools/shake_128.html)  
+- [Shake256](http://emn178.github.io/online-tools/shake_256.html)  
+
+Additionally, the Keccak ( SHA3 ) family also has a 
+    [MAC](https://en.wikipedia.org/wiki/Message_authentication_code) function implemented in 
+    this library under the name of KMAC ( Keccak-MAC ) providing authentication tags of either 
+    128 bits or 256-bits.
 
 
 ### Meta Data Encoding
