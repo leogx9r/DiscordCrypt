@@ -388,6 +388,35 @@ These decode to a 32-bit integer encoded in Little-Endian order whose byte posit
 | `2`               | Contains the padding scheme used to align the message to the cipher's block size. |
 | `3`               | Contains a random byte. ( `Reserved For Future Use` )                             |
 
+##### Cipher Indexing
+
+Cipher indexes are based on the combination of ciphers used for encrypting a message.
+
+Since each message undergoes two encryption or decryption processes, an index is assigned 
+    to indicate which combination of ciphers are used. This index is attached to the metadata in 
+    each encrypted message payload in the form of an 8-bit word.
+
+Below indicates the current index assignment for each combination of ciphers.  
+
+```javascript
+/**
+ * @desc Indexes of each dual-symmetric encryption mode.
+ * @type {int[]}
+ */
+this.encryptModes = [
+    /* Blowfish(Blowfish, AES, Camellia, IDEA, TripleDES) */
+    0, 1, 2, 3, 4,
+    /* AES(Blowfish, AES, Camellia, IDEA, TripleDES) */
+    5, 6, 7, 8, 9,
+    /* Camellia(Blowfish, AES, Camellia, IDEA, TripleDES) */
+    10, 11, 12, 13, 14,
+    /* IDEA(Blowfish, AES, Camellia, IDEA, TripleDES) */
+    15, 16, 17, 18, 19,
+    /* TripleDES(Blowfish, AES, Camellia, IDEA, TripleDES) */
+    20, 21, 22, 23, 24
+];
+```
+
 ## Message Format
 
 A message can consist in two forms.
