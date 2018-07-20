@@ -512,7 +512,7 @@ let discordCrypt = ( function() {
          * @returns {string}
          */
         getVersion() {
-            return '1.4.0';
+            return '1.4.1';
         }
 
         /**
@@ -4215,11 +4215,17 @@ let discordCrypt = ( function() {
             ];
 
             if ( cached_modules ) {
+                let channelProps = null;
+
+                if( blacklisted_channel_props.indexOf( discordCrypt._getChannelId() ) !== -1 ) {
+                    let elementOwner = discordCrypt._getElementReactOwner( $( 'form' )[ 0 ] );
+
+                    if( elementOwner[ 'props' ] && elelementOwner.props[ 'channel' ] )
+                        channelProps = elementOwner.props.channel;
+                }
+
                 return {
-                    ChannelProps:
-                        blacklisted_channel_props.indexOf( discordCrypt._getChannelId() ) !== -1 ?
-                            null :
-                            discordCrypt._getElementReactOwner( $( 'form' )[ 0 ] ).props.channel,
+                    ChannelProps: channelProps,
                     MessageParser: cached_modules.MessageParser,
                     MessageController: cached_modules.MessageController,
                     MessageActionTypes: cached_modules.MessageActionTypes,
@@ -8313,6 +8319,9 @@ let discordCrypt = ( function() {
 
         /* ========================================================= */
     }
+
+    /* Freeze the prototype. */
+    Object.freeze( discordCrypt.prototype );
 
     /* Freeze the class definition. */
     Object.freeze( discordCrypt );
