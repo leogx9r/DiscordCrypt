@@ -1,3 +1,8 @@
+Version 1.4.1
+
+- A minor security fix from the last version.
+- Fixed yet another regression in retrieval of ChannelProps.
+
 Version 1.4.0
 
 - This is a major security release. You should update immediately.
