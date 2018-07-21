@@ -336,6 +336,12 @@ let discordCrypt = ( function() {
     let _cachedModules = {};
 
     /**
+     * @desc Stores the private key object used in key exchanges.
+     * @type {Object}
+     */
+    let _privateExchangeKey;
+
+    /**
      * @public
      * @desc Main plugin prototype.
      */
@@ -2983,7 +2989,7 @@ let discordCrypt = ( function() {
                 return;
 
             /* Copy the private key to this instance. */
-            _discordCrypt.privateExchangeKey = key;
+            _privateExchangeKey = key;
 
             /*****************************************************************************************
              *   [ PUBLIC PAYLOAD STRUCTURE ]
@@ -3240,8 +3246,8 @@ let discordCrypt = ( function() {
                 payload = Buffer.from( value.subarray( 2 + salt_len ) ).toString( 'hex' );
 
                 /* Return if invalid. */
-                if ( !_discordCrypt.privateExchangeKey || _discordCrypt.privateExchangeKey === undefined ||
-                    typeof _discordCrypt.privateExchangeKey.computeSecret === 'undefined' ) {
+                if ( !_privateExchangeKey || _privateExchangeKey === undefined ||
+                    typeof _privateExchangeKey.computeSecret === 'undefined' ) {
                     /* Update the text. */
                     dc_handshake_compute_btn.text( 'Failed To Calculate Private Key!' );
                     setTimeout( ( function () {
@@ -3252,7 +3258,7 @@ let discordCrypt = ( function() {
 
                 /* Compute the local secret as a hex string. */
                 let derived_secret = _discordCrypt.__computeExchangeSharedSecret(
-                    _discordCrypt.privateExchangeKey,
+                    _privateExchangeKey,
                     payload,
                     false,
                     false
@@ -3413,7 +3419,7 @@ let discordCrypt = ( function() {
                 dc_handshake_compute_btn.text( 'Generating Keys ...' );
 
                 /* Finally clear all volatile information. */
-                _discordCrypt.privateExchangeKey = undefined;
+                _privateExchangeKey = undefined;
                 dc_handshake_ppk.val( '' );
                 dc_priv_key_ta.val( '' );
                 dc_pub_key_ta.val( '' );
