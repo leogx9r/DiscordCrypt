@@ -513,7 +513,7 @@ let discordCrypt = ( function() {
          * @returns {string}
          */
         getName() {
-            return 'discordCrypt';
+            return 'DiscordCrypt';
         }
 
         /**
