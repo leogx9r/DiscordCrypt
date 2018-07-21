@@ -77,15 +77,15 @@ Every algorithm used in this plugin is directly provided by NodeJS. The only thi
 The following ciphers are currently supported by **DiscordCrypt**.
 
  * [Camellia-256](https://en.wikipedia.org/wiki/Camellia_(cipher)) ( **Default Primary Cipher** ) 
-    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-camellia256_encrypt)  ]
+    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.camellia256_encrypt)  ]
  * [AES-256 ( Rijndael )](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) ( **Default Secondary Cipher** )
-    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-aes256_encrypt)  ]
+    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.aes256_encrypt)  ]
  * [TripleDES-192](https://en.wikipedia.org/wiki/Triple_DES)
-    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-tripledes192_encrypt)  ]
+    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.tripledes192_encrypt)  ]
  * [IDEA-128](https://en.wikipedia.org/wiki/International_Data_Encryption_Algorithm)
-    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-idea128_encrypt) ]
+    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.idea128_encrypt) ]
  * [Blowfish-512](https://en.wikipedia.org/wiki/Blowfish_(cipher))
-    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-blowfish512_encrypt) ]
+    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.blowfish512_encrypt) ]
 
 ##### Cipher Modes
 
@@ -117,7 +117,7 @@ The following padding schemes are supported:
 * [ISO 97971](https://en.wikipedia.org/wiki/Padding_(cryptography)#ISO/IEC_7816-4)
 
 These methods have all been manually implemented 
-    [here](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-__padMessage).
+    [here](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.__padMessage).
 
 #### Key Exchanges
 
@@ -347,7 +347,7 @@ Scrypt uses a total of 6 parameters. Each of these will be described below.
     implementations or APIs might cause internal copying doubling the requirement.
 
 You may find the actual implementation of it 
-    [here](https://leogx9r.gitlab.io/DiscordCrypt/class/src/discordCrypt.plugin.js~discordCrypt.html#static-method-scrypt).
+    [here](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.scrypt).
 
 ##### SHA3 Hashing Algorithm
 
@@ -403,7 +403,7 @@ Below indicates the current index assignment for each combination of ciphers.
  * @desc Indexes of each dual-symmetric encryption mode.
  * @type {int[]}
  */
-this._encryptModes = [
+discordCrypt.prototype._encryptModes = [
     /* Blowfish(Blowfish, AES, Camellia, IDEA, TripleDES) */
     0, 1, 2, 3, 4,
     /* AES(Blowfish, AES, Camellia, IDEA, TripleDES) */
