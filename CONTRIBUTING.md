@@ -43,5 +43,5 @@ Merge requests **not following** these guidelines will be **ignored**.
     [perform_tests.js](tests/perform-tests.js). 
     Be sure to follow the above guidelines when adding them.
 * If your tests require generation of test vectors, write them in 
-    [test_generator.js](tests/test_generator.js). 
+    [test-generator.js](tests/test-generator.js). 
     These test vectors SHOULD be added as JSON files within the `tests` folder.

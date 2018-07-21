@@ -25,6 +25,7 @@
 class testRunner {
     /**
      * @desc Loads the dependency _libraries and discordCrypt.
+     * @constructor
      */
     constructor() {
         /* Cache required modules. */
@@ -894,7 +895,7 @@ class testRunner {
         /* File upload test. */
         unit_tests.generic_tests[ 'Encrypted File Upload' ] = ( ut ) => {
             this.discordCrypt.__up1UploadFile(
-                './tests/test_generator.js',
+                './tests/test-generator.js',
                 'https://share.riseup.net',
                 '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
                 global.sjcl,
