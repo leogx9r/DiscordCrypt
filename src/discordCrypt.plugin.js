@@ -2378,7 +2378,7 @@ let discordCrypt = ( function() {
          */
         static _onDatabaseTabButtonClicked( self ) {
             return () => {
-                let users, guilds, channels, remoteId, table;
+                let users, guilds, channels, table;
 
                 /* Cache the table. */
                 table = $( '#dc-database-entries' );
@@ -2406,9 +2406,6 @@ let discordCrypt = ( function() {
 
                         /* Resolve the name as a "Guild @ #Channel" format. */
                         name = `${guild.name} @ #${channels[ id ].name}`;
-
-                        /* Set the remote ID to the Guild ID. */
-                        remoteId = channels[ id ].guild_id;
                     }
                     else if ( channels[ id ].type === 1 ) {
                         /* DM */
@@ -2416,9 +2413,6 @@ let discordCrypt = ( function() {
 
                         /* Indicate this is a DM and give the full user name. */
                         name = `DM @${user.username}#${user.discriminator}`;
-
-                        /* Set the remote ID to the current DM user's ID. */
-                        remoteId = user.id;
                     }
                     else
                         continue;
@@ -2476,7 +2470,7 @@ let discordCrypt = ( function() {
                         let fingerprint = _discordCrypt.__generateFingerprint(
                             id,
                             currentKeys.primary,
-                            remoteId,
+                            id,
                             currentKeys.secondary,
                             5000
                         );
