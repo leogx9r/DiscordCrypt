@@ -471,23 +471,24 @@ let discordCrypt = ( function() {
              * @desc The Base64 encoded SVG containing the unlocked status icon.
              * @type {string}
              */
-            this._unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0I" +
-                "DI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xIDAgMi0u" +
-                "OSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgNyA2aDEuOWM" +
-                "wLTEuNzEgMS4zOS0zLjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAydjEwYzAgMS4xLj" +
-                "kgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6bTAgMTJINlYxMGgxMnYxMHoiPjwvcGF0aD48L3N2Zz4=";
+            this._unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwI" +
+                "DI0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xI" +
+                "DAgMi0uOSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgN" +
+                "yA2aDEuOWMwLTEuNzEgMS4zOS0zLjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAyd" +
+                "jEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6bTAgMTJINlYxMGgxMnYxMHoiPjwvc" +
+                "GF0aD48L3N2Zz4=";
 
             /**
              * @desc The Base64 encoded SVG containing the locked status icon.
              * @type {string}
              */
-            this._lockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI0IDI" +
-                "0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI0djI0SD" +
-                "BWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJlZj0iI2EiL" +
-                "z48L2NsaXBQYXRoPjxwYXRoIGNsaXAtcGF0aD0idXJsKCNiKSIgZD0iTTEyIDE3YzEuMSAwIDItLjkgMi0ycy0uOS0yLTItMi0yIC45" +
-                "LTIgMiAuOSAyIDIgMnptNi05aC0xVjZjMC0yLjc2LTIuMjQtNS01LTVTNyAzLjI0IDcgNnYySDZjLTEuMSAwLTIgLjktMiAydjEwYzA" +
-                "gMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6TTguOSA2YzAtMS43MSAxLjM5LTMuMSAzLjEtMy" +
-                "4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlWNnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=";
+            this._lockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI" +
+                "0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI" +
+                "0djI0SDBWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJ" +
+                "lZj0iI2EiLz48L2NsaXBQYXRoPjxwYXRoIGNsaXAtcGF0aD0idXJsKCNiKSIgZD0iTTEyIDE3YzEuMSAwIDItLjkgMi0ycy0uOS0" +
+                "yLTItMi0yIC45LTIgMiAuOSAyIDIgMnptNi05aC0xVjZjMC0yLjc2LTIuMjQtNS01LTVTNyAzLjI0IDcgNnYySDZjLTEuMSAwLTI" +
+                "gLjktMiAydjEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6TTguOSA2YzAtMS43MSA" +
+                "xLjM5LTMuMSAzLjEtMy4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlWNnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=";
 
             /**
              * @desc These contain all _libraries that will be loaded dynamically in the current JS VM.
@@ -691,7 +692,8 @@ let discordCrypt = ( function() {
 
         /**
          * @public
-         * @desc Stops the script execution. This is called by BetterDiscord if the plugin is disabled or during shutdown.
+         * @desc Stops the script execution.
+         *      This is called by BetterDiscord if the plugin is disabled or during shutdown.
          */
         stop() {
             /* Nothing needs to be done since start() wouldn't have triggered. */
@@ -822,7 +824,8 @@ let discordCrypt = ( function() {
 
         /**
          * @private
-         * @desc Loads the configuration file from `_discordCrypt.config.json` and adds or removes any properties required.
+         * @desc Loads the configuration file from `DiscordCrypt.config.json` and
+         *      adds or removes any properties required.
          * @returns {boolean}
          */
         _loadConfig() {
@@ -875,7 +878,9 @@ let discordCrypt = ( function() {
                     _configFile[ prop ] = defaultConfig[ prop ];
 
                     /* Show a simple log. */
-                    _discordCrypt.log( `Default value added for missing property '${prop}' in the configuration file.` );
+                    _discordCrypt.log(
+                        `Default value added for missing property '${prop}' in the configuration file.`
+                    );
 
                     /* Set the flag for saving. */
                     needs_save = true;
@@ -1228,43 +1233,47 @@ let discordCrypt = ( function() {
             setTimeout( () => {
                 /* Proxy call. */
                 try {
-                    _discordCrypt._checkForUpdate( ( file_data, short_hash, new_version, full_changelog, valid_sig ) => {
-                        const replacePath = require( 'path' )
-                            .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
-                        const fs = require( 'fs' );
+                    _discordCrypt._checkForUpdate(
+                        ( file_data, short_hash, new_version, full_changelog, valid_sig ) => {
+                            const replacePath = require( 'path' )
+                                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
+                            const fs = require( 'fs' );
 
-                        /* Alert the user of the update and changelog. */
-                        $( '#dc-overlay' ).css( 'display', 'block' );
-                        $( '#dc-update-overlay' ).css( 'display', 'block' );
+                            /* Alert the user of the update and changelog. */
+                            $( '#dc-overlay' ).css( 'display', 'block' );
+                            $( '#dc-update-overlay' ).css( 'display', 'block' );
 
-                        /* Update the version info. */
-                        $( '#dc-new-version' ).text(
-                            `New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} - ` +
-                            `Update ${valid_sig ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
-                        );
-                        $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
+                            /* Update the version info. */
+                            $( '#dc-new-version' ).text(
+                                `New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} - ` +
+                                `Update ${valid_sig ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
+                            );
+                            $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
 
-                        /* Update the changelog. */
-                        let dc_changelog = $( '#dc-changelog' );
-                        dc_changelog.val(
-                            typeof full_changelog === "string" && full_changelog.length > 0 ?
-                                _discordCrypt.__tryParseChangelog( full_changelog, self.getVersion() ) :
-                                'N/A'
-                        );
+                            /* Update the changelog. */
+                            let dc_changelog = $( '#dc-changelog' );
+                            dc_changelog.val(
+                                typeof full_changelog === "string" && full_changelog.length > 0 ?
+                                    _discordCrypt.__tryParseChangelog( full_changelog, self.getVersion() ) :
+                                    'N/A'
+                            );
 
-                        /* Scroll to the top of the changelog. */
-                        dc_changelog.scrollTop( 0 );
+                            /* Scroll to the top of the changelog. */
+                            dc_changelog.scrollTop( 0 );
 
-                        /* Replace the file. */
-                        fs.writeFile( replacePath, file_data, ( err ) => {
-                            if ( err ) {
-                                _discordCrypt.log(
-                                    `Unable to replace the target plugin. ( ${err} )\nDestination: ${replacePath}`, 'error'
-                                );
-                                global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
-                            }
-                        } );
-                    } );
+                            /* Replace the file. */
+                            fs.writeFile( replacePath, file_data, ( err ) => {
+                                if ( err ) {
+                                    _discordCrypt.log(
+                                        "Unable to replace the target plugin. " +
+                                            `( ${err} )\nDestination: ${replacePath}`,
+                                        'error'
+                                    );
+                                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
+                                }
+                            } );
+                        }
+                    );
                 }
                 catch ( ex ) {
                     _discordCrypt.log( ex, 'warn' );
@@ -1291,7 +1300,11 @@ let discordCrypt = ( function() {
                 return;
 
             /* Inject the toolbar. */
-            $( this._searchUiClass ).parent().parent().parent().prepend( _discordCrypt.__zlibDecompress( this._toolbarHtml ) );
+            $( this._searchUiClass )
+                .parent()
+                .parent()
+                .parent()
+                .prepend( _discordCrypt.__zlibDecompress( this._toolbarHtml ) );
 
             /* Cache jQuery results. */
             let dc_passwd_btn = $( '#dc-passwd-btn' ),
@@ -1600,7 +1613,7 @@ let discordCrypt = ( function() {
             let message = $( obj );
             let dataMsg;
 
-            /**************************************************************************************************************
+            /**********************************************************************************************************
              *  MESSAGE FORMAT:
              *
              *  + 0x0000 [ 4        Chars ] - Message Magic | Key Magic
@@ -1613,12 +1626,12 @@ let discordCrypt = ( function() {
              *      [ 15 ... 08 ] - Padding Mode ( #2 )
              *      [ 07 ... 00 ] - Random Padding Byte
              *
-             *  #1 - Substitute( Base64( Encryption Algorithm << 24 | Padding Mode << 16 | Block Mode << 8 | RandomByte ) )
+             *  #1 - Encode( Base64( Encryption Algorithm << 24 | Padding Mode << 16 | Block Mode << 8 | Reserved ) )
              *  #2 - ( 0 - PKCS #7 | 1 = ANSI X9.23 | 2 = ISO 10126 | 3 = ISO97971 )
              *  #3 - Substitute( Base64( ( Key Algorithm Type & 0xff ) + Public Key ) )
              *  #4 - 8 Byte Metadata For Messages Only
              *
-             **************************************************************************************************************/
+             **********************************************************************************************************/
 
             /* Skip if the message is <= size of the total header. */
             if ( message.text().length <= 12 )
@@ -1704,7 +1717,7 @@ let discordCrypt = ( function() {
                 message.css( 'color', 'green' );
             }
             else {
-                /* If it failed, set a red foreground and set a decryption failure message to prevent further retries. */
+                /* If it failed, set a red foreground and set a failure message to prevent further retries. */
                 if ( dataMsg === 1 )
                     message.text( '[ ERROR ] AUTHENTICATION OF CIPHER TEXT FAILED !!!' );
                 else if ( dataMsg === 2 )
@@ -1811,7 +1824,8 @@ let discordCrypt = ( function() {
          * @private
          * @desc Sends an encrypted message to the current channel.
          * @param {string} message The unencrypted message to send.
-         * @param {boolean} [force_send] Whether to ignore checking for the encryption trigger and always encrypt and send.
+         * @param {boolean} [force_send] Whether to ignore checking for the encryption trigger and
+         *      always encrypt and send.
          * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the current
          *      channel.
          * @returns {boolean} Returns false if the message failed to be parsed correctly and 0 on success.
@@ -2209,7 +2223,11 @@ let discordCrypt = ( function() {
                     global.sjcl,
                     ( error_string, file_url, deletion_link ) => {
                         /* Do some sanity checking. */
-                        if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
+                        if (
+                            error_string !== null ||
+                            typeof file_url !== 'string' ||
+                            typeof deletion_link !== 'string'
+                        ) {
                             global.smalltalk.alert( 'Failed to upload the clipboard!', error_string );
                             return;
                         }
@@ -2268,7 +2286,11 @@ let discordCrypt = ( function() {
                     global.sjcl,
                     ( error_string, file_url, deletion_link ) => {
                         /* Do some sanity checking. */
-                        if ( error_string !== null || typeof file_url !== 'string' || typeof deletion_link !== 'string' ) {
+                        if (
+                            error_string !== null ||
+                            typeof file_url !== 'string' ||
+                            typeof deletion_link !== 'string'
+                        ) {
                             /* Set the status text. */
                             file_upload_btn.text( 'Failed to upload the file!' );
                             _discordCrypt.log( error_string, 'error' );
@@ -3235,8 +3257,12 @@ let discordCrypt = ( function() {
                 }
 
                 /* Compute the local secret as a hex string. */
-                let derived_secret =
-                    _discordCrypt.__computeExchangeSharedSecret( _discordCrypt.privateExchangeKey, payload, false, false );
+                let derived_secret = _discordCrypt.__computeExchangeSharedSecret(
+                    _discordCrypt.privateExchangeKey,
+                    payload,
+                    false,
+                    false
+                );
 
                 /* Show error and quit if derivation fails. */
                 if ( !derived_secret || !derived_secret.length ) {
@@ -3374,7 +3400,8 @@ let discordCrypt = ( function() {
 
                     if ( progress ) {
                         secondary_progress = progress * 50;
-                        $( '#dc-exchange-status' ).css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
+                        $( '#dc-exchange-status' )
+                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
                     }
 
                     if ( key ) {
@@ -3832,12 +3859,18 @@ let discordCrypt = ( function() {
                         ).toString().replace( '\r', '' );
                     }
                     catch ( e ) {
-                        _discordCrypt.log( 'Plugin file could not be locally read. Assuming testing version ...', 'warn' );
+                        _discordCrypt.log(
+                            'Plugin file could not be locally read. Assuming testing version ...',
+                            'warn'
+                        );
                     }
 
                     /* Check the first line which contains the metadata to make sure that they're equal. */
                     if ( data.split( '\n' )[ 0 ] !== localFile.split( '\n' )[ 0 ] ) {
-                        _discordCrypt.log( 'Plugin metadata is missing from either the local or update file.', 'error' );
+                        _discordCrypt.log(
+                            'Plugin metadata is missing from either the local or update file.',
+                            'error'
+                        );
                         return false;
                     }
 
@@ -4034,7 +4067,10 @@ let discordCrypt = ( function() {
              * @return {object} First module that matches `protoNames` or `null` if none match.
              */
             const findByUniquePrototypes = ( protoNames, force_load = false ) =>
-                find( module => protoNames.every( proto => module.prototype && module.prototype[ proto ] ), force_load );
+                find(
+                    module => protoNames.every( proto => module.prototype && module.prototype[ proto ] ),
+                    force_load
+                );
 
             /**
              * @desc Look through all modules of internal Discord's Webpack and return first object that has all of the
@@ -4210,7 +4246,8 @@ let discordCrypt = ( function() {
              * @param {Element} e DOM element to get React Internal Instance from
              * @return {object|null} Returns React Internal Instance mounted to this element if exists
              */
-            const getOwnerReactInstance = e => e[ Object.keys( e ).find( k => k.startsWith( "__reactInternalInstance" ) ) ];
+            const getOwnerReactInstance = e => e[ Object.keys( e )
+                .find( k => k.startsWith( "__reactInternalInstance" ) ) ];
             const excluding = include === undefined;
             const filter = excluding ? exclude : include;
 
@@ -4424,19 +4461,20 @@ let discordCrypt = ( function() {
                             tts: false,
                             embed: {
                                 type: "rich",
-                                url: "https://gitlab.com/leogx9r/_discordCrypt",
+                                url: "https://gitlab.com/leogx9r/DiscordCrypt",
                                 color: embedded_color || 0x551A8B,
                                 output_mime_type: "text/x-html",
                                 timestamp: ( new Date() ).toISOString(),
                                 encoding: "utf-16",
                                 author: {
                                     name: message_header || '-----MESSAGE-----',
-                                    icon_url: 'https://gitlab.com/leogx9r/_discordCrypt/raw/master/images/encode-logo.png',
+                                    icon_url:
+                                        'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png',
                                     url: 'https://discord.me/_discordCrypt'
                                 },
                                 footer: {
                                     text: message_footer || 'discordCrypt',
-                                    icon_url: 'https://gitlab.com/leogx9r/_discordCrypt/raw/master/images/app-logo.png',
+                                    icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/app-logo.png',
                                 },
                                 description: main_message,
                             }
@@ -4516,7 +4554,8 @@ let discordCrypt = ( function() {
          * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
          * @param {string} method_name The name of the method to hook.
          * @param {string} options The type of hook to apply. [ 'before', 'after', 'instead', 'revert' ]
-         * @param {boolean} [options.once=false] Set to `true` if you want to automatically unhook method after first call.
+         * @param {boolean} [options.once=false] Set to `true` if you want to automatically unhook
+         *      method after first call.
          * @param {boolean} [options.silent=false] Set to `true` if you want to suppress log messages about patching and
          *      unhooking. Useful to avoid clogging the console in case of frequent conditional hooking/unhooking, for
          *      example from another monkeyPatch callback.
@@ -4551,19 +4590,20 @@ let discordCrypt = ( function() {
                      * @interface
                      * @name PatchData
                      * @property {object} thisObject Original `this` value in current call of patched method.
-                     * @property {Arguments} methodArguments Original `arguments` object in current call of patched method.
+                     * @property {Arguments} methodArguments Original `arguments` object in current call of patched
+                     *      method.
                      *      Please, never change function signatures, as it may cause a lot of problems in future.
-                     * @property {cancelPatch} cancelPatch Function with no arguments and no return value that may be called
-                     *      to reverse patching of current method. Calling this function prevents running of this callback
-                     *      on further original method calls.
-                     * @property {function} originalMethod Reference to the original method that is patched. You can use it
-                     *      if you need some special usage. You should explicitly provide a value for `this` and any method
-                     *      arguments when you call this function.
-                     * @property {function} callOriginalMethod This is a shortcut for calling original method using `this`
-                     *      and `arguments` from original call.
+                     * @property {cancelPatch} cancelPatch Function with no arguments and no return value that may be
+                     *      called to reverse patching of current method. Calling this function prevents running of this
+                     *      callback on further original method calls.
+                     * @property {function} originalMethod Reference to the original method that is patched. You can use
+                     *      it if you need some special usage. You should explicitly provide a value for `this` and any
+                     *      method arguments when you call this function.
+                     * @property {function} callOriginalMethod This is a shortcut for calling original method using
+                     *      `this` and `arguments` from original call.
                      * @property {*} returnValue This is a value returned from original function call. This property is
-                     *      available only in `after` callback or in `instead` callback after calling `callOriginalMethod`
-                     *      function.
+                     *      available only in `after` callback or in `instead` callback after calling
+                     *      `callOriginalMethod` function.
                      */
                     const data = {
                         thisObject: this,
@@ -4679,10 +4719,14 @@ let discordCrypt = ( function() {
          * @return {string} Returns a 60 character numeric representation of a fingerprint.
          * @example
          *      local_id = Buffer.from( "3d478a260e5d497441f1b61d321b138a", 'hex' );
-         *      local_pub_key = Buffer.from( "e77ef936546d73dc5a1c25c8267df649c935168f24827267b1328fd22789eca9", 'hex' );
+         *      local_pub_key = Buffer.from(
+         *          "e77ef936546d73dc5a1c25c8267df649c935168f24827267b1328fd22789eca9", 'hex'
+         *      );
          *
          *      remote_id = Buffer.from( "2c08a0666e937d115f8b05c82db8a6d0", 'hex' );
-         *      remote_pub_key = Buffer.from( "f2f10dc9d0770e3be28298c2d4ab7a856c92bafa99ff7377ec8cd538bd9481ae", 'hex' );
+         *      remote_pub_key = Buffer.from(
+         *          "f2f10dc9d0770e3be28298c2d4ab7a856c92bafa99ff7377ec8cd538bd9481ae", 'hex'
+         *      );
          *
          *      __generateFingerprint( local_id, local_pub_key, remote_id, remote_pub_key, 10000 )
          *      > "22162 70964 05613 66992 07314 11169 62962 97838 72198 67786 04039 39461"
@@ -5241,7 +5285,8 @@ let discordCrypt = ( function() {
                         join = `<iframe src=${_extracted[ i ]} width="100%" height="400px"></iframe><br/><br/>`;
 
                     /* Join the message together. */
-                    message = message.join( `${join}<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
+                    message = message
+                        .join( `${join}<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
                 }
 
                 /* Wrap the message in span tags. */
@@ -5263,8 +5308,8 @@ let discordCrypt = ( function() {
          * @public
          * @desc Returns a string, Buffer() or Array() as a buffered object.
          * @param {string|Buffer|Array} input The input variable.
-         * @param {boolean|undefined} [is_input_hex] If set to true, the input is parsed as a hex string. If false, it is
-         *      parsed as a Base64 string. If this value is undefined, it is parsed as a UTF-8 string.
+         * @param {boolean|undefined} [is_input_hex] If set to true, the input is parsed as a hex string. If false, it
+         *      is parsed as a Base64 string. If this value is undefined, it is parsed as a UTF-8 string.
          * @returns {Buffer} Returns a Buffer object.
          * @throws {string} Thrown an unsupported type error if the input is neither a string, Buffer or Array.
          */
@@ -5484,7 +5529,8 @@ let discordCrypt = ( function() {
          * @param {string} file_path The path to the file to encrypt.
          * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
          * @param {EncryptedFileCallback} callback The callback function for when the file has been encrypted.
-         * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+         * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata.
+         *      Default: False.
          */
         static __up1EncryptFile( file_path, sjcl, callback, randomize_file_name = false ) {
             const crypto = require( 'crypto' );
@@ -5679,7 +5725,8 @@ let discordCrypt = ( function() {
          * @param {string} [up1_api_key] The optional API key used for the service.
          * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
          * @param {UploadedFileCallback} callback The callback function called on success or failure.
-         * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata. Default: False.
+         * @param {boolean} [randomize_file_name] Whether to randomize the name of the file in the metadata.
+         *      Default: False.
          */
         static __up1UploadFile( file_path, up1_host, up1_api_key, sjcl, callback, randomize_file_name = false ) {
             /* Encrypt the file data first. */
@@ -5887,7 +5934,8 @@ let discordCrypt = ( function() {
                 else if ( Array.isArray )
                     _input = Buffer.from( input );
                 else
-                    _input = Buffer.from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
+                    _input = Buffer
+                        .from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
             }
             else if ( typeof input === 'string' )
                 _input = Buffer.from( input, 'utf8' );
@@ -6104,7 +6152,8 @@ let discordCrypt = ( function() {
 
         /**
          * @public
-         * @desc Converts a given key or iv into a buffer object. Performs a hash of the key it doesn't match the blockSize.
+         * @desc Converts a given key or iv into a buffer object. Performs a hash of the key it doesn't match the
+         *      blockSize.
          * @param {string|Buffer|Array} key The key to perform validation on.
          * @param {int} key_size_bits The bit length of the desired key.
          * @param {boolean} [use_whirlpool] If the key length is 512-bits, use Whirlpool or SHA-512 hashing.
@@ -6601,7 +6650,8 @@ let discordCrypt = ( function() {
          * @param {int} cipher_mode_index The index of the cipher block mode used for the message.
          * @param {int} padding_scheme_index The index of the padding scheme for the message.
          * @param {int} pad_byte The padding byte to use.
-         * @returns {string} Returns a substituted UTF-16 string of a braille encoded 32-bit word containing these options.
+         * @returns {string} Returns a substituted UTF-16 string of a braille encoded 32-bit word containing these
+         *      options.
          */
         static __metaDataEncode( cipher_index, cipher_mode_index, padding_scheme_index, pad_byte ) {
 
@@ -6740,7 +6790,8 @@ let discordCrypt = ( function() {
          *      This must be supported by NodeJS's crypto module.
          * @param {string} block_mode The block operation mode of the cipher.
          *      This can be either [ 'CBC', 'CFB', 'OFB' ].
-         * @param {string} padding_scheme The padding scheme used to unpad the message from the block length of the cipher.
+         * @param {string} padding_scheme The padding scheme used to unpad the message from the block length of the
+         *      cipher.
          *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
          * @param {string|Buffer|Array} message The input ciphertext message to decrypt.
          * @param {string|Buffer|Array} key The key used with the decryption cipher.
