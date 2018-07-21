@@ -541,7 +541,7 @@ let discordCrypt = ( function() {
          * @returns {string}
          */
         getVersion() {
-            return '1.4.1';
+            return '1.4.2';
         }
 
         /**

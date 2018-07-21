@@ -1,3 +1,9 @@
+Version 1.4.2
+
+- Fixed some formatting errors in logging due to 1.4.0 update.
+- Fixed yet another bug in ChannelProps resolving.
+- Updated documentation to use JSDoc thanks to Zerebos's hint.
+
 Version 1.4.1
 
 - A minor security fix from the last version.
