@@ -17,7 +17,7 @@ docs_gen:
   stage: build
   script:
    - npm install
-   - node node_modules/.bin/esdoc
+   - node node_modules/.bin/jsdoc -c ./.jsdoc.conf.json
   allow_failure: false
   artifacts:
    name: plugin-documentation
