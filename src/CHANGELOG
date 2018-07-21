@@ -1,3 +1,7 @@
+Version 1.4.3
+
+- Fixed a bug caused by v1.4.0 protections that restricted key generation.
+
 Version 1.4.2
 
 - Fixed some formatting errors in logging due to 1.4.0 update.
