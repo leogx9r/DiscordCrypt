@@ -3789,7 +3789,7 @@ let discordCrypt = ( function() {
          */
         static _checkForUpdate( on_update_callback ) {
             /* Update URL and request method. */
-            const base_url = 'https://gitlab.com/leogx9r/_discordCrypt/raw/master';
+            const base_url = 'https://gitlab.com/leogx9r/discordCrypt/raw/master';
             const update_url = `${base_url}/build/${_discordCrypt._getPluginName()}`;
             const signing_key_url = `${base_url}/build/signing-key.pub`;
             const changelog_url = `${base_url}/src/CHANGELOG`;
