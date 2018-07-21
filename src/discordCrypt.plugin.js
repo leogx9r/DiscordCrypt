@@ -4282,10 +4282,10 @@ let discordCrypt = ( function() {
             if ( cached_modules ) {
                 let channelProps = null;
 
-                if( blacklisted_channel_props.indexOf( _discordCrypt._getChannelId() ) !== -1 ) {
+                if( blacklisted_channel_props.indexOf( _discordCrypt._getChannelId() ) === -1 ) {
                     let elementOwner = _discordCrypt._getElementReactOwner( $( 'form' )[ 0 ] );
 
-                    if( elementOwner[ 'props' ] && elelementOwner.props[ 'channel' ] )
+                    if( elementOwner[ 'props' ] && elementOwner.props[ 'channel' ] )
                         channelProps = elementOwner.props.channel;
                 }
 
