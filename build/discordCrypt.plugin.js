@@ -520,7 +520,7 @@ let discordCrypt = ( function() {
          * @returns {string}
          */
         getName() {
-            return 'discordCrypt';
+            return 'DiscordCrypt';
         }
 
         /**
@@ -4634,10 +4634,10 @@ let discordCrypt = ( function() {
          */
         static log( message, method = "info" ) {
             try {
-                console[ method ]( `%c[_discordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
+                console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
             }
             catch ( ex ) {
-                console.error( '[_discordCrypt] - Error logging message ...' );
+                console.error( '[DiscordCrypt] - Error logging message ...' );
             }
         }
 
