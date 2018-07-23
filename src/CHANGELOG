@@ -1,3 +1,10 @@
+Version 1.4.4
+
+- Added the ability to send emojis in encrypted messages. These include standard and global ones.
+- Added the ability to send Nitro-based emojis for non-nitro users in encrypted messages.
+- Nitro emojis still need to have their snowflakes resolved manually.
+- Updated the technical documentation and user guide.
+
 Version 1.4.3
 
 - Fixed a bug caused by v1.4.0 protections that restricted key generation.
