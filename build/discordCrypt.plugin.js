@@ -76,6 +76,7 @@
 /**
  * @typedef {Object} CachedModules
  * @desc Cached React and Discord modules for internal access.
+ * @property {Object} EmojiParser Internal emoji parser that's used to translate emojis sent in messages.
  * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
  * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
  * @property {Object} MessageActionTypes Internal message action types and constants for events.
@@ -91,6 +92,7 @@
  * @typedef {Object} ReactModules
  * @desc Contains all React and Discord modules including the channel's properties for internal access.
  * @property {Object} ChannelProps Retrieved channel properties object for the current channel.
+ * @property {Object} EmojiParser Internal emoji parser that's used to translate emojis sent in messages.
  * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
  * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
  * @property {Object} MessageActionTypes Internal message action types and constants for events.
@@ -626,6 +628,8 @@ let discordCrypt = ( function() {
 
             /* Resolve and cache all modules needed. */
             _cachedModules = {
+                EmojiParser: WebpackModules
+                    .findByUniqueProperties( [ 'translateSurrogatesToInlineEmoji', 'getCategories' ] ),
                 MessageParser: WebpackModules
                     .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
                 MessageController: WebpackModules
@@ -1801,7 +1805,11 @@ let discordCrypt = ( function() {
             let hasUrl = processed.url;
 
             /* Extract any Emojis. */
-            processed = _discordCrypt.__buildEmojiMessage( processed.html, this._emojisClass );
+            processed = _discordCrypt.__buildEmojiMessage(
+                processed.html,
+                this._emojisClass,
+                _cachedModules.EmojiParser
+            );
             let hasEmojis = processed.emoji;
 
             /* Return the raw HTML. */
@@ -4337,6 +4345,7 @@ let discordCrypt = ( function() {
 
                 return {
                     ChannelProps: channelProps,
+                    EmojiParser: cached_modules.EmojiParser,
                     MessageParser: cached_modules.MessageParser,
                     MessageController: cached_modules.MessageController,
                     MessageActionTypes: cached_modules.MessageActionTypes,
@@ -5394,11 +5403,22 @@ let discordCrypt = ( function() {
          *          <img src="##URI##" class="emoji da-emoji jumboable da-jumboable" alt=":#EMOJI NAME##:">
          * @param {string} message The message to format.
          * @param {string} emoji_class The class used for constructing the emoji image.
+         * @param {Object} emoji_ctx The internal context for parsing emoji surrogates.
          * @return {EmojiInfo} Returns whether the message contains Emojis and the formatted HTML.
          */
-        static __buildEmojiMessage( message, emoji_class ) {
+        static __buildEmojiMessage( message, emoji_class, emoji_ctx ) {
             /* Get all emojis in the message. */
             let emojis = _discordCrypt.__extractEmojis( message, true );
+
+            /* Parse any default-emojis. */
+            typeof emoji_ctx !== 'undefined' && emoji_ctx.forEach( ( item ) => {
+                if( !item.surrogates.length )
+                    return;
+
+                message = message
+                    .split( item.surrogates )
+                    .join( `<img src="${item.defaultUrl}" class="${emoji_class}" alt=":${item.names[ 0 ]}:">` );
+            } );
 
             /* Return the default if no emojis are defined. */
             if( !emojis.length ) {
