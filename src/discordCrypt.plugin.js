@@ -74,6 +74,7 @@
 /**
  * @typedef {Object} CachedModules
  * @desc Cached React and Discord modules for internal access.
+ * @property {Object} EmojiParser Internal emoji parser that's used to translate emojis sent in messages.
  * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
  * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
  * @property {Object} MessageActionTypes Internal message action types and constants for events.
@@ -89,6 +90,7 @@
  * @typedef {Object} ReactModules
  * @desc Contains all React and Discord modules including the channel's properties for internal access.
  * @property {Object} ChannelProps Retrieved channel properties object for the current channel.
+ * @property {Object} EmojiParser Internal emoji parser that's used to translate emojis sent in messages.
  * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
  * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
  * @property {Object} MessageActionTypes Internal message action types and constants for events.
@@ -185,6 +187,14 @@
  */
 
 /**
+ * @typedef {Object} EmojiDescriptor
+ * @desc Indicates an emoji's name and snowflake ID.
+ * @property {string} formatted The full formatted string for the emoji. ( <:# NAME #:# SNOWFLAKE #> )
+ * @property {string} name The actual name of the emoji. Example: "thonk"
+ * @property {string} snowflake The integer snowflake ID for this emoji.
+ */
+
+/**
  * @typedef {Object} PBKDF2Callback
  * @desc The function to execute after an async request for PBKDF2 is completed containing the result or error.
  * @property {string} error The error that occurred during processing or null on success.
@@ -241,6 +251,7 @@
  * @desc Contains a processed message with additional data.
  * @property {boolean} url Whether the message has any parsed URLs within it.
  * @property {boolean} code Whether the message has any parsed code blocks within it.
+ * @property {boolean} emoji Whether the message has any parsed emojis within it.
  * @property {string} html The raw message's HTML.
  */
 
@@ -266,6 +277,13 @@
  */
 
 /**
+ * @typedef {Object} EmojiInfo
+ * @desc Contains information of a message containing emojis.
+ * @property {boolean} emoji Whether the input message contained any parsed emojis.
+ * @property {string} html The raw formatted HTML containing any parsed emoji images.
+ */
+
+/**
  * @typedef {Object} LibraryInfo
  * @desc Contains the library and necessary information.
  * @property {boolean} requiresElectron Whether this library relies on Electron's internal support.
@@ -281,6 +299,7 @@
  */
 
 /**
+ * @module discordCrypt
  * @desc Use a scoped variable to protect the internal state of the plugin.
  * @type {_discordCrypt}
  */
@@ -342,7 +361,8 @@ let discordCrypt = ( function() {
     let _privateExchangeKey;
 
     /**
-     * @public
+     * @protected
+     * @class
      * @desc Main plugin prototype.
      */
     class _discordCrypt
@@ -380,6 +400,13 @@ let discordCrypt = ( function() {
              * @type {string}
              */
             this._channelTextAreaClass = '.content textarea';
+
+            /**
+             * @desc Used to assign the correct image class to parsed emojis.
+             * @type {string}
+             */
+            this._emojisClass = 'emoji jumboable da-emoji da-jumboable';
+
             /**
              * @desc Used to detect if the autocomplete dialog is opened.
              * @type {string}
@@ -547,7 +574,7 @@ let discordCrypt = ( function() {
          * @returns {string}
          */
         getVersion() {
-            return '1.4.3';
+            return '1.4.4';
         }
 
         /**
@@ -596,6 +623,8 @@ let discordCrypt = ( function() {
 
             /* Resolve and cache all modules needed. */
             _cachedModules = {
+                EmojiParser: WebpackModules
+                    .findByUniqueProperties( [ 'translateSurrogatesToInlineEmoji', 'getCategories' ] ),
                 MessageParser: WebpackModules
                     .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
                 MessageController: WebpackModules
@@ -1496,8 +1525,13 @@ let discordCrypt = ( function() {
                 if ( $( self._autoCompleteClass )[ 0 ] )
                     return;
 
-                /* Send the encrypted message. */
-                if ( !self._sendEncryptedMessage( $( this ).val() ) )
+                /* Retrieve the channel props for message parsing. */
+                let modules = _discordCrypt._getReactModules( _cachedModules );
+
+                /* Encrypt the parsed message and send it. */
+                if ( !self._sendEncryptedMessage(
+                    modules.MessageParser.parse( modules.ChannelProps, $( this ).val() ).content
+                ) )
                     return;
 
                 /* Clear text field. */
@@ -1746,10 +1780,16 @@ let discordCrypt = ( function() {
          */
         _postProcessMessage( message, embed_link_prefix ) {
             /* HTML escape characters. */
-            const html_escape_characters = { '&': '&amp;', '<': '&lt', '>': '&gt;' };
+            const html_escape_characters = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
 
             /* Remove any injected HTML. */
-            message = message.replace( /[&<>]/g, x => html_escape_characters[ x ] );
+            message = message.replace( /[&<>"']/g, x => html_escape_characters[ x ] );
 
             /* Extract any code blocks from the message. */
             let processed = _discordCrypt.__buildCodeBlockMessage( message );
@@ -1759,10 +1799,19 @@ let discordCrypt = ( function() {
             processed = _discordCrypt.__buildUrlMessage( processed.html, embed_link_prefix );
             let hasUrl = processed.url;
 
+            /* Extract any Emojis. */
+            processed = _discordCrypt.__buildEmojiMessage(
+                processed.html,
+                this._emojisClass,
+                _cachedModules.EmojiParser
+            );
+            let hasEmojis = processed.emoji;
+
             /* Return the raw HTML. */
             return {
                 url: hasUrl,
                 code: hasCode,
+                emoji: hasEmojis,
                 html: processed.html,
             };
         }
@@ -1842,7 +1891,7 @@ let discordCrypt = ( function() {
             const maximum_encoded_data = 1820;
 
             /* Add the message signal handler. */
-            const escapeCharacters = [ "#", "/", ":" ];
+            const escapeCharacters = [ "#", "/" ];
             const crypto = require( 'crypto' );
 
             let cleaned;
@@ -2044,6 +2093,7 @@ let discordCrypt = ( function() {
         /* ================== UI HANDLE CALLBACKS ================== */
 
         /**
+         * @private
          * @desc Attempts to unlock the database upon startup.
          * @param {_discordCrypt} self
          * @param {Object} unlock_btn
@@ -2161,6 +2211,7 @@ let discordCrypt = ( function() {
         }
 
         /**
+         * @private
          * @desc Cancels loading the plugin when the unlocking cancel button is pressed.
          * @return {Function}
          */
@@ -4291,6 +4342,7 @@ let discordCrypt = ( function() {
 
                 return {
                     ChannelProps: channelProps,
+                    EmojiParser: cached_modules.EmojiParser,
                     MessageParser: cached_modules.MessageParser,
                     MessageController: cached_modules.MessageController,
                     MessageActionTypes: cached_modules.MessageActionTypes,
@@ -5143,6 +5195,37 @@ let discordCrypt = ( function() {
 
         /**
          * @public
+         * @desc Detects and extracts all formatted emojis in a message.
+         * @param {string} message The message to extract all emojis from.
+         * @param {boolean} as_html Whether to interpret anchor brackets as HTML.
+         * @return {Array<EmojiDescriptor>} Returns an array of EmojiDescriptor objects.
+         */
+        static __extractEmojis( message, as_html = false ) {
+            let _emojis = [], _matched;
+
+            /* Execute the regex for finding emojis on the message. */
+            let emoji_expr = new RegExp(
+                as_html ?
+                    /((&lt;)(:(?![\n])[-\w]+:)([0-9]{14,22})(&gt;))/gm :
+                    /((<)(:(?![\n])[-\w]+:)([0-9]{14,22})(>))/gm
+            );
+
+            /* Iterate over each matched emoji. */
+            while ( ( _matched = emoji_expr.exec( message ) ) ) {
+                /* Insert the emoji's snowflake and name. */
+                _emojis.push( {
+                    formatted: _matched[ 0 ],
+                    name: _matched[ 3 ],
+                    snowflake: _matched[ 4 ]
+                } );
+            }
+
+            /* Return the results. */
+            return _emojis;
+        }
+
+        /**
+         * @public
          * @desc Extracts raw URLs from a message.
          *      N.B. This does not remove the URLs from the message.
          * @param {string} message The message to extract the URLs from.
@@ -5301,6 +5384,62 @@ let discordCrypt = ( function() {
                     url: false,
                     html: message
                 };
+            }
+        }
+
+        /**
+         * @public
+         * @desc Extracts emojis from a message and formats them as IMG embeds.
+         *      Basically, all emojis are formatted as follows:
+         *          <:##EMOJI NAME##:##SNOWFLAKE##>
+         *
+         *      This translates to a valid URI always:
+         *          https://cdn.discordapp.com/emojis/##SNOWFLAKE##.png
+         *
+         *      This means it's a simple matter of extracting these from a message and building an image embed.
+         *          <img src="##URI##" class="emoji da-emoji jumboable da-jumboable" alt=":#EMOJI NAME##:">
+         * @param {string} message The message to format.
+         * @param {string} emoji_class The class used for constructing the emoji image.
+         * @param {Object} emoji_ctx The internal context for parsing emoji surrogates.
+         * @return {EmojiInfo} Returns whether the message contains Emojis and the formatted HTML.
+         */
+        static __buildEmojiMessage( message, emoji_class, emoji_ctx ) {
+            /* Get all emojis in the message. */
+            let emojis = _discordCrypt.__extractEmojis( message, true );
+
+            /* Parse any default-emojis. */
+            typeof emoji_ctx !== 'undefined' && emoji_ctx.forEach( ( item ) => {
+                if( !item.surrogates.length )
+                    return;
+
+                message = message
+                    .split( item.surrogates )
+                    .join( `<img src="${item.defaultUrl}" class="${emoji_class}" alt=":${item.names[ 0 ]}:">` );
+            } );
+
+            /* Return the default if no emojis are defined. */
+            if( !emojis.length ) {
+                return {
+                    emoji: false,
+                    html: message
+                }
+            }
+
+            /* Loop over every emoji and format them in the message.. */
+            for( let i = 0; i < emojis.length; i++ ) {
+                /* Get the URI for this. */
+                let URI = `https://cdn.discordapp.com/emojis/${emojis[ i ].snowflake}.png`;
+
+                /* Replace the message with a link. */
+                message = message
+                    .split( emojis[ i ].formatted )
+                    .join( `<img src="${URI}" class="${emoji_class}" alt=":${emojis[ i ].name}:">` );
+            }
+
+            /* Return the result. */
+            return {
+                emoji: true,
+                html: message
             }
         }
 

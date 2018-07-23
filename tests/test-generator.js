@@ -22,9 +22,11 @@
  * SOFTWARE.
  ******************************************************************************/
 
-/* Generates test vectors. */
 class testGenerator {
-    /* Loads required modules. */
+    /**
+     * @constructor
+     * @desc Loads required modules for test generation.
+     */
     constructor() {
         this.fs = require( 'fs' );
         this.crypto = require( 'crypto' );
@@ -89,7 +91,14 @@ class testGenerator {
         this.discordCrypt.__loadLibraries( this.discordCrypt_instance._libraries );
     }
 
-    /* Generates individual tests for each cipher mode and padding scheme. */
+    /**
+     * @desc Generates individual tests for each cipher mode and padding scheme.
+     * @param {int} num_tests The number of tests to generate.
+     * @param {Array<Object>} unit_tests The output array to store the generated tests.
+     * @param {int} i The index of ciphers used for this test.
+     * @param {int} j The block operation mode of the ciphers.
+     * @param {int} k The padding scheme for the ciphers.
+     */
     addCipherTest( /* int */ num_tests = 25, /* Array */ unit_tests, /* int */ i, /* int */ j, /* int */ k ) {
         /* Loop for the number of tests desired. */
         for ( let l = 0; l < num_tests; l++ ) {
@@ -139,7 +148,11 @@ class testGenerator {
         }
     }
 
-    /* Generates cipher test vectors. */
+    /**
+     * @desc Generates cipher test vectors.
+     * @param {int} num_tests The number of tests to generate PER cipher-combo PER block mode PER padding scheme.
+     * @param {string} output_path The output path of the JSON file containing the generated test vectors.
+     */
     generateCipherTests( /* int */ num_tests = 25, /* string */ output_path = './tests/cipher-test-vectors.json' ) {
 
         let unit_tests = [];
@@ -240,7 +253,11 @@ class testGenerator {
         this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
     }
 
-    /* Generate hash test vectors. */
+    /**
+     * @desc Generate hash test vectors.
+     * @param {int} num_tests The number of tests to generate.
+     * @param {string} output_path The output path of the JSON file containing the generated test vectors.
+     */
     generateHashTests( /* int */ num_tests = 25, /* string */ output_path = './tests/hash-test-vectors.json' ) {
         let unit_tests = [];
         const hash_list = [
@@ -300,7 +317,11 @@ class testGenerator {
         this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
     }
 
-    /* Generate HMAC test vectors. */
+    /**
+     * @desc Generate HMAC test vectors.
+     * @param {int} num_tests The number of tests to generate.
+     * @param {string} output_path The output path of the JSON file containing the generated test vectors.
+     */
     generateHMACTests( /* int */ num_tests = 25, /* string */ output_path = './tests/hmac-test-vectors.json' ) {
         let unit_tests = [];
         const hmac_list = [
@@ -342,7 +363,11 @@ class testGenerator {
         this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
     }
 
-    /* Generate symmetric encryption/decryption tests. */
+    /**
+     * @desc Generate symmetric encryption & decryption tests which includes encoding.
+     * @param {int} num_tests The number of tests to generate.
+     * @param {string} output_path The output path of the JSON file containing the generated test vectors.
+     */
     generateFullEncryptionTests(
         /* int */ num_tests = 5,
         /* string */ output_path = './tests/encode-test-vectors.json'
