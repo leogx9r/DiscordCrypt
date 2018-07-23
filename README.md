@@ -657,42 +657,33 @@ By default, the plugin will NOT use embeds and warns users about this in the set
     of features it can provide.
 
 Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messages cannot 
-    undergo the standard post-processing that Discord itself does. Some examples of these 
-    would be emojis and link previews etc.
+    undergo the standard post-processing that Discord itself does. An example of this would be 
+    link previews.
 
  
 
 * ***DiscordCrypt's key exchange is vulnerable to Discord's servers being used for 
-[Man-in-The-Middle attacks](https://en.wikipedia.org/wiki/Man-in-the-middle_attack).***
+    [Man-in-The-Middle attacks](https://en.wikipedia.org/wiki/Man-in-the-middle_attack).***
     * While an attacker would need access to Discord's infrastructure as the data is 
         encrypted in transit using TLS, it is in theory possible for an attacker, 
         the government or Discord's administrators to sit in the middle of the 
         key exchange.
         * We discussed this in greater details in the [TECHNICALITIES.md](TECHNICALITIES.md) file.
 
- 
+
 
 * Messages are limited to 1820 characters each.
     * Due to additional costs of encryption, messages at maximum size will only be able to 
         display 1820 characters of text..
         * If your message is longer than this, it will be split and sent in multiple messages.
-
  
+
 
 * Only text channels are end-to-end encrypted. Voice channels cannot be secured, so what you 
     verbally say in them could still be recorded by Discord.
     * Support for encrypted file uploads was added in `v1.0.5`. However we still recommend using 
         [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) to encrypt especially sensitive 
         files before sending them.
-
- 
-
-* Emojis are not visible in an encrypted message: As we encrypt messages, sending emojis in a 
-    message will result in them not being visible.
-    * As a workaround for this, messages starting with the character `:` will be not be encrypted. 
-        This means you can send your message, then an emoji in a second, unencrypted message.
-    * This will also happen if your messages start with `#` ( For convenience, to quickly 
-        send an unencrypted message. ) or `/`. ( For commands. )
 
 
 
@@ -701,7 +692,18 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
         * To fix this, every users tagged in a message will receive an unencrypted notification.
             [Example here](#tagging-users).
 
+
+
+* Searching past messages is impossible.
+    * Since messages are encrypted and the search feature relies 
+        on the ability for Discord's servers to read past messages, the search functionality will 
+        always be unavailable.
+    * If you require searching, you may send your messages in an unencrypted format by making 
+        them start with the hash ( `#` ) character.
+    * Messages also will be sent unencrypted if they begin with the forward-slash ( `/` ) character 
+        as these are also used for commands.
  
+
 
 * Some third-party plugins may conflict with **DiscordCrypt**.
     * One such example discovered so far is the plugin `OldTitleBar` by DevilBro. This plugin 
