@@ -3,15 +3,25 @@
     "include": [ "./src", "./tests" ],
     "includePattern": ".+\\.js(doc|x)?$"
   },
+  "sourceType": "module",
   "opts": {
+    "access": "all",
     "template": "node_modules/tui-jsdoc-template",
     "encoding": "utf8",
     "destination": "./docs/",
     "recurse": true
   },
+  "plugins": [
+    "plugins/summarize"
+  ],
   "templates": {
     "name": "DiscordCrypt Docs",
     "footer": "End-To-End Message Encryption For Discord",
+    "cleverLinks": true,
+    "monospaceLinks": true,
+    "default": {
+      "outputSourceFiles": true
+    },
     "logo": {
       "url": "https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/discordCrypt-mini.png",
       "width": "50px",
