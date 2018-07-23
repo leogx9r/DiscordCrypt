@@ -55,12 +55,12 @@ Also, while this project is licensed under the MIT, if you feel generous and wis
     creators coffee, we'll happily accept.
 
 
-| **Name**               | **Address**                                                                                        |
-| ---------------------- | -------------------------------------------------------------------------------------------------- |
-| Bitcoin ( `BTC` )      | `1NYCgcr6JXkX5TZUJcjQYJmeuPxBQ48tTo`                                                               |
-| Bitcoin Cash ( `BCH` ) | `qrscw5y3h478whz2zd6fluacmadmkrdca5zghfsw23`                                                       |
-| Ethereum ( `ETH` )     | `0x36e89B89f565C6F5E36988Ee5B7DC00cC4Bfda31`                                                       |
-| Monero ( `XMR` )       | `83h2PKvpjx9dDK1VJ5B2h8ADbZZUcfEbwaQqqve8nmWv3VyvY7tNv5FLa3dUPwybJGZoGWCz5UDjfDYmKttQmChV2Wv9uiq`  |
+| **Name**     | **Address**                                                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------- |
+| Bitcoin      | `1NYCgcr6JXkX5TZUJcjQYJmeuPxBQ48tTo`                                                               |
+| Bitcoin Cash | `qrscw5y3h478whz2zd6fluacmadmkrdca5zghfsw23`                                                       |
+| Ethereum     | `0x36e89B89f565C6F5E36988Ee5B7DC00cC4Bfda31`                                                       |
+| Monero       | `83h2PKvpjx9dDK1VJ5B2h8ADbZZUcfEbwaQqqve8nmWv3VyvY7tNv5FLa3dUPwybJGZoGWCz5UDjfDYmKttQmChV2Wv9uiq`  |
 
 
  
