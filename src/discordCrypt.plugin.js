@@ -1779,14 +1779,11 @@ let discordCrypt = ( function() {
                 '<': '&lt;',
                 '>': '&gt;',
                 '"': '&quot;',
-                "'": '&#39;',
-                '/': '&#x2F;',
-                '`': '&#x60;',
-                '=': '&#x3D;'
+                "'": '&#39;'
             };
 
             /* Remove any injected HTML. */
-            message = message.replace( /[&<>"'/`=]/g, x => html_escape_characters[ x ] );
+            message = message.replace( /[&<>"']/g, x => html_escape_characters[ x ] );
 
             /* Extract any code blocks from the message. */
             let processed = _discordCrypt.__buildCodeBlockMessage( message );
@@ -1884,7 +1881,7 @@ let discordCrypt = ( function() {
             const maximum_encoded_data = 1820;
 
             /* Add the message signal handler. */
-            const escapeCharacters = [ "#", "/", ":" ];
+            const escapeCharacters = [ "#", "/" ];
             const crypto = require( 'crypto' );
 
             let cleaned;
