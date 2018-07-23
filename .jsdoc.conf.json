@@ -9,7 +9,8 @@
     "template": "node_modules/tui-jsdoc-template",
     "encoding": "utf8",
     "destination": "./docs/",
-    "recurse": true
+    "recurse": true,
+    "readme": "./TECHNICALITIES.md"
   },
   "plugins": [
     "plugins/summarize"
