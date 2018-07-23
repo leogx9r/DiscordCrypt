@@ -189,6 +189,7 @@
 /**
  * @typedef {Object} EmojiDescriptor
  * @desc Indicates an emoji's name and snowflake ID.
+ * @property {boolean} animated Whether this emoji is animated.
  * @property {string} formatted The full formatted string for the emoji. ( <:# NAME #:# SNOWFLAKE #> )
  * @property {string} name The actual name of the emoji. Example: "thonk"
  * @property {string} snowflake The integer snowflake ID for this emoji.
@@ -5196,6 +5197,19 @@ let discordCrypt = ( function() {
         /**
          * @public
          * @desc Detects and extracts all formatted emojis in a message.
+         *      Basically, all emojis are formatted as follows:
+         *          <:##EMOJI NAME##:##SNOWFLAKE##>
+         *
+         *      Animated emojis have the format:
+         *          <a:##EMOJI NAME##:##SNOWFLAKE##>
+         *
+         *      This translates to a valid URI always:
+         *          https://cdn.discordapp.com/emojis/##SNOWFLAKE##.png
+         *      Or:
+         *          https://cdn.discordapp.com/emojis/##SNOWFLAKE##.gif
+         *
+         *      This means it's a simple matter of extracting these from a message and building an image embed.
+         *          <img src="##URI##" class="emoji da-emoji jumboable da-jumboable" alt=":#EMOJI NAME##:">
          * @param {string} message The message to extract all emojis from.
          * @param {boolean} as_html Whether to interpret anchor brackets as HTML.
          * @return {Array<EmojiDescriptor>} Returns an array of EmojiDescriptor objects.
@@ -5206,14 +5220,15 @@ let discordCrypt = ( function() {
             /* Execute the regex for finding emojis on the message. */
             let emoji_expr = new RegExp(
                 as_html ?
-                    /((&lt;)(:(?![\n])[-\w]+:)([0-9]{14,22})(&gt;))/gm :
-                    /((<)(:(?![\n])[-\w]+:)([0-9]{14,22})(>))/gm
+                    /((&lt;[a]*)(:(?![\n])[-\w]+:)([0-9]{14,22})(&gt;))/gm :
+                    /((<[a]*)(:(?![\n])[-\w]+:)([0-9]{14,22})(>))/gm
             );
 
             /* Iterate over each matched emoji. */
             while ( ( _matched = emoji_expr.exec( message ) ) ) {
                 /* Insert the emoji's snowflake and name. */
                 _emojis.push( {
+                    animated: _matched[ 2 ].indexOf( 'a' ) !== -1,
                     formatted: _matched[ 0 ],
                     name: _matched[ 3 ],
                     snowflake: _matched[ 4 ]
@@ -5390,14 +5405,6 @@ let discordCrypt = ( function() {
         /**
          * @public
          * @desc Extracts emojis from a message and formats them as IMG embeds.
-         *      Basically, all emojis are formatted as follows:
-         *          <:##EMOJI NAME##:##SNOWFLAKE##>
-         *
-         *      This translates to a valid URI always:
-         *          https://cdn.discordapp.com/emojis/##SNOWFLAKE##.png
-         *
-         *      This means it's a simple matter of extracting these from a message and building an image embed.
-         *          <img src="##URI##" class="emoji da-emoji jumboable da-jumboable" alt=":#EMOJI NAME##:">
          * @param {string} message The message to format.
          * @param {string} emoji_class The class used for constructing the emoji image.
          * @param {Object} emoji_ctx The internal context for parsing emoji surrogates.
@@ -5427,13 +5434,15 @@ let discordCrypt = ( function() {
 
             /* Loop over every emoji and format them in the message.. */
             for( let i = 0; i < emojis.length; i++ ) {
+                let e = emojis[ i ];
+
                 /* Get the URI for this. */
-                let URI = `https://cdn.discordapp.com/emojis/${emojis[ i ].snowflake}.png`;
+                let URI = `https://cdn.discordapp.com/emojis/${e.snowflake}.${e.animated ? 'gif' : 'png'}`;
 
                 /* Replace the message with a link. */
                 message = message
                     .split( emojis[ i ].formatted )
-                    .join( `<img src="${URI}" class="${emoji_class}" alt=":${emojis[ i ].name}:">` );
+                    .join( `<img src="${URI}" class="${emoji_class}" alt=":${e.name}:">` );
             }
 
             /* Return the result. */
