@@ -2093,6 +2093,7 @@ let discordCrypt = ( function() {
         /* ================== UI HANDLE CALLBACKS ================== */
 
         /**
+         * @private
          * @desc Attempts to unlock the database upon startup.
          * @param {_discordCrypt} self
          * @param {Object} unlock_btn
@@ -2210,6 +2211,7 @@ let discordCrypt = ( function() {
         }
 
         /**
+         * @private
          * @desc Cancels loading the plugin when the unlocking cancel button is pressed.
          * @return {Function}
          */
