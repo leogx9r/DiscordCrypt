@@ -300,10 +300,6 @@
 
 /**
  * @module discordCrypt
- */
-
-
-/**
  * @desc Use a scoped variable to protect the internal state of the plugin.
  * @type {_discordCrypt}
  */
@@ -365,7 +361,8 @@ let discordCrypt = ( function() {
     let _privateExchangeKey;
 
     /**
-     * @public
+     * @protected
+     * @class
      * @desc Main plugin prototype.
      */
     class _discordCrypt
