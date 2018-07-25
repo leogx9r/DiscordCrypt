@@ -777,11 +777,11 @@ let discordCrypt = ( function() {
             /* Freeze the plugin instance if required. */
             if(
                 global.bdplugins &&
-                global.bdplugins[ '_discordCrypt' ] &&
-                global.bdplugins[ '_discordCrypt' ].plugin
+                global.bdplugins[ this.getName() ] &&
+                global.bdplugins[ this.getName() ].plugin
             ) {
-                Object.freeze( bdplugins[ '_discordCrypt' ] );
-                Object.freeze( bdplugins[ '_discordCrypt' ].plugin );
+                Object.freeze( bdplugins[ this.getName() ] );
+                Object.freeze( bdplugins[ this.getName() ].plugin );
             }
 
             /* Inject application CSS. */
@@ -2826,7 +2826,7 @@ let discordCrypt = ( function() {
                             if ( error ) {
                                 /* Alert the user. */
                                 global.smalltalk.alert(
-                                    '_discordCrypt Error',
+                                    'DiscordCrypt Error',
                                     'Error setting the new database password. Check the console for more info.'
                                 );
 
