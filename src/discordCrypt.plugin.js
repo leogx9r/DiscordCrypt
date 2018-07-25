@@ -1263,7 +1263,7 @@ const discordCrypt = ( () => {
             );
 
             /* Handle cancel button presses. */
-            cancel_btn.click( _discordCrypt._onMasterCancelButtonClicked );
+            cancel_btn.click( _discordCrypt._onMasterCancelButtonClicked( self ) );
         }
 
         /**
@@ -1339,7 +1339,7 @@ const discordCrypt = ( () => {
                 return;
 
             /* Add toolbar buttons and their icons if it doesn't exist. */
-            if ( $( '#dc-passwd-btn' ).length !== 0 )
+            if ( $( '#dc-toolbar' ).length !== 0 )
                 return;
 
             /* Inject the toolbar. */
@@ -2129,7 +2129,7 @@ const discordCrypt = ( () => {
                 }
 
                 /* Hash the password. */
-                _discordCrypt.scrypt
+                _discordCrypt.__scrypt
                 (
                     Buffer.from( password ),
                     Buffer.from( _discordCrypt.whirlpool( password, true ), 'hex' ),
@@ -2217,20 +2217,73 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Cancels loading the plugin when the unlocking cancel button is pressed.
+         * @param {_discordCrypt} self
          * @return {Function}
          */
-        static _onMasterCancelButtonClicked() {
-            /* Use a 300 millisecond delay. */
-            setTimeout(
-                ( function () {
-                    /* Remove the prompt overlay. */
-                    $( '#dc-master-overlay' ).remove();
+        static _onMasterCancelButtonClicked( self ) {
+            return () => {
+                /* Basically we remove the prompt overlay and load the toolbar but set every element to hidden except
+                    the button to reopen the menu. */
 
-                    /* Do some quick cleanup. */
-                    _masterPassword = null;
-                    _configFile = null;
-                } ), 300
-            );
+                /* These are all buttons we'll be targeting for hiding. */
+                let target_btns = [
+                    '#dc-clipboard-upload-btn',
+                    '#dc-file-btn',
+                    '#dc-settings-btn',
+                    '#dc-lock-btn',
+                    '#dc-passwd-btn',
+                    '#dc-exchange-btn',
+                    '#dc-quick-exchange-btn'
+                ];
+
+                /* Remove the prompt overlay. */
+                $( '#dc-master-overlay' ).remove();
+
+                /* Do some quick cleanup. */
+                _masterPassword = null;
+                _configFile = null;
+
+                /* Inject the toolbar immediately. */
+                $( self._searchUiClass )
+                    .parent()
+                    .parent()
+                    .parent()
+                    .prepend( _discordCrypt.__zlibDecompress( self._toolbarHtml ) );
+
+                /* Handle this on an interval for switching channels. */
+                let injectedInterval = setInterval( () => {
+                    /* Skip if the toolbar has already been injected. */
+                    if( $( '#dc-toolbar' ).length )
+                        return;
+
+                    /* Inject the toolbar. */
+                    $( self._searchUiClass )
+                        .parent()
+                        .parent()
+                        .parent()
+                        .prepend( _discordCrypt.__zlibDecompress( self._toolbarHtml ) );
+                }, 1000 );
+
+                let dc_db_prompt_btn = $( '#dc-db-prompt-btn' );
+
+                /* Set the Unlock DB Prompt button to visible. */
+                dc_db_prompt_btn.css( 'display', 'inline' );
+
+                /* Hide every other button. */
+                target_btns.forEach( id => $( id ).css( 'display', 'none' ) );
+
+                /* Add the button click event to reopen the menu. */
+                dc_db_prompt_btn.click( function() {
+                    /* Clear the interval. */
+                    clearInterval( injectedInterval );
+
+                    /* Remove the toolbar. */
+                    $( '#dc-toolbar' ).remove();
+
+                    /* Reopen the prompt. */
+                    self._loadMasterPassword();
+                } );
+            };
         }
 
         /**
@@ -5212,7 +5265,7 @@ const discordCrypt = ( () => {
          *          https://cdn.discordapp.com/emojis/##SNOWFLAKE##.gif
          *
          *      This means it's a simple matter of extracting these from a message and building an image embed.
-         *          <img src="##URI##" class="emoji da-emoji jumboable da-jumboable" alt=":#EMOJI NAME##:">
+         *          <img src="##URI##" class="##EMOJI CLASS##" alt=":#EMOJI NAME##:">
          * @param {string} message The message to extract all emojis from.
          * @param {boolean} as_html Whether to interpret anchor brackets as HTML.
          * @return {Array<EmojiDescriptor>} Returns an array of EmojiDescriptor objects.
@@ -7296,7 +7349,7 @@ const discordCrypt = ( () => {
          * @param {ScryptCallback} cb Callback function for progress updates.
          * @returns {boolean} Returns true if successful.
          */
-        static scrypt( input, salt, output_length, N = 16384, r = 8, p = 1, cb = null ) {
+        static __scrypt( input, salt, output_length, N = 16384, r = 8, p = 1, cb = null ) {
             let crypto = require( 'crypto' );
             let _in, _salt;
 
