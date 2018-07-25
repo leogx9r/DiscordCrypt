@@ -100,7 +100,7 @@
 .dc-password-field {
     width: 95%;
     margin: 10px;
-    color: #ffffff;
+    color: #fff;
     height: 10px;
     padding: 5px;
     background: rgba(0, 0, 0, 0.1);
@@ -131,7 +131,7 @@
     background: transparent;
     font-family: monospace;
     font-size: 12px;
-    color: #ffffff;
+    color: #fff;
     overflow: auto;
     padding: 5px;
     resize: none;
@@ -274,7 +274,7 @@ ul.dc-list-red { color: #ff0000; }
     font-size: 10px;
 }
 .dc-button:hover{ background-color: var(--hover-color, #677bc4) !important; }
-.dc-button:active{ background-color: #5b6eae !important; }
+.dc-button:active{ background-color: var(--main-color, #5b6eae) !important; }
 .dc-button-inverse{
     color: #f04747;
     background: transparent !important;
@@ -311,10 +311,9 @@ ul.dc-list-red { color: #ff0000; }
     float: left;
     height: 100%;
     font-size: 12px;
-    color: #ffffff;
+    color: #fff;
     text-align: center;
     text-indent: -9999px;
     background-color: var(--main-color, #3a71c1);
     box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
-.stat-bar-rating { @include stat-bar(#cf3a02, #ff4500, top, bottom); }
