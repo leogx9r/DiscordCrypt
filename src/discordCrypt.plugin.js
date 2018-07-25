@@ -5514,7 +5514,12 @@ const discordCrypt = ( () => {
 
                 message = message
                     .split( item.surrogates )
-                    .join( `<img src="${item.defaultUrl}" class="${emoji_class}" alt=":${item.names[ 0 ]}:">` );
+                    .join(
+                        '<span class="dc-tooltip dc-tooltip-delayed">' +
+                        `<img src="${item.defaultUrl}" class="${emoji_class}">` +
+                        `<span class="dc-tooltip-text" style="font-size: 12px">:${item.names[ 0 ]}:</span>` +
+                        '</span>'
+                    );
             } );
 
             /* Return the default if no emojis are defined. */
@@ -5535,7 +5540,12 @@ const discordCrypt = ( () => {
                 /* Replace the message with a link. */
                 message = message
                     .split( emojis[ i ].formatted )
-                    .join( `<img src="${URI}" class="${emoji_class}" alt="${e.name}">` );
+                    .join(
+                        '<span class="dc-tooltip dc-tooltip-delayed">' +
+                        `<img src="${URI}" class="${emoji_class}">` +
+                        `<span class="dc-tooltip-text" style="font-size: 12px">${e.name}</span>` +
+                        '</span>'
+                    );
             }
 
             /* Return the result. */

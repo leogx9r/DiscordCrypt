@@ -493,7 +493,7 @@ const discordCrypt = ( () => {
              * @type {string}
              */
             this._appCss =
-                `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`;
+                `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`;
 
             /**
              * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
@@ -5521,7 +5521,12 @@ const discordCrypt = ( () => {
 
                 message = message
                     .split( item.surrogates )
-                    .join( `<img src="${item.defaultUrl}" class="${emoji_class}" alt=":${item.names[ 0 ]}:">` );
+                    .join(
+                        '<span class="dc-tooltip dc-tooltip-delayed">' +
+                        `<img src="${item.defaultUrl}" class="${emoji_class}">` +
+                        `<span class="dc-tooltip-text" style="font-size: 12px">:${item.names[ 0 ]}:</span>` +
+                        '</span>'
+                    );
             } );
 
             /* Return the default if no emojis are defined. */
@@ -5542,7 +5547,12 @@ const discordCrypt = ( () => {
                 /* Replace the message with a link. */
                 message = message
                     .split( emojis[ i ].formatted )
-                    .join( `<img src="${URI}" class="${emoji_class}" alt="${e.name}">` );
+                    .join(
+                        '<span class="dc-tooltip dc-tooltip-delayed">' +
+                        `<img src="${URI}" class="${emoji_class}">` +
+                        `<span class="dc-tooltip-text" style="font-size: 12px">${e.name}</span>` +
+                        '</span>'
+                    );
             }
 
             /* Return the result. */
