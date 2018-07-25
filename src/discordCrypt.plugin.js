@@ -5506,7 +5506,7 @@ const discordCrypt = ( () => {
                 /* Replace the message with a link. */
                 message = message
                     .split( emojis[ i ].formatted )
-                    .join( `<img src="${URI}" class="${emoji_class}" alt=":${e.name}:">` );
+                    .join( `<img src="${URI}" class="${emoji_class}" alt="${e.name}">` );
             }
 
             /* Return the result. */
