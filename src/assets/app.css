@@ -11,6 +11,37 @@
     z-index: 1000;
     cursor: default;
 }
+.dc-tooltip {
+    display: inline-block;
+    position: relative;
+}
+.dc-tooltip .dc-tooltip-text {
+    visibility: hidden;
+    font-size: 11px;
+    width: 120px;
+    background-color: #7289da;
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px 0;
+    position: absolute;
+    top: 125%;
+    left: 50%;
+    margin-left: -60px;
+    z-index: 10;
+}
+.dc-tooltip .dc-tooltip-text::after {
+    position: absolute;
+    content: "";
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border: 5px solid transparent;
+    border-bottom-color: #7289da;
+}
+.dc-tooltip:hover .dc-tooltip-text {
+    visibility: visible;
+}
 .dc-scroll-table {
     overflow: auto;
     max-height: 50%;

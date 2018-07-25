@@ -1352,7 +1352,8 @@ const discordCrypt = ( () => {
             /* Cache jQuery results. */
             let dc_passwd_btn = $( '#dc-passwd-btn' ),
                 dc_lock_btn = $( '#dc-lock-btn' ),
-                dc_svg = $( '.dc-svg' );
+                dc_svg = $( '.dc-svg' ),
+                lock_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
             /* Set the SVG button class. */
             dc_svg.attr( 'class', 'dc-svg' );
@@ -1360,12 +1361,12 @@ const discordCrypt = ( () => {
             /* Set the initial status icon. */
             if ( dc_lock_btn.length > 0 ) {
                 if ( _configFile.encodeAll ) {
-                    dc_lock_btn.attr( 'title', 'Disable Message Encryption' );
                     dc_lock_btn.html( Buffer.from( this._lockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( lock_tooltip.text( 'Disable Message Encryption' ) );
                 }
                 else {
-                    dc_lock_btn.attr( 'title', 'Enable Message Encryption' );
                     dc_lock_btn.html( Buffer.from( this._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( lock_tooltip.text( 'Enable Message Encryption' ) );
                 }
 
                 /* Set the button class. */
@@ -3759,17 +3760,17 @@ const discordCrypt = ( () => {
             return () => {
 
                 /* Cache jQuery results. */
-                let dc_lock_btn = $( '#dc-lock-btn' );
+                let dc_lock_btn = $( '#dc-lock-btn' ), new_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
                 /* Update the icon and toggle. */
                 if ( !_configFile.encodeAll ) {
-                    dc_lock_btn.attr( 'title', 'Disable Message Encryption' );
                     dc_lock_btn.html( Buffer.from( self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( new_tooltip.text( 'Disable Message Encryption' ) );
                     _configFile.encodeAll = true;
                 }
                 else {
-                    dc_lock_btn.attr( 'title', 'Enable Message Encryption' );
                     dc_lock_btn.html( Buffer.from( self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( new_tooltip.text( 'Enable Message Encryption' ) );
                     _configFile.encodeAll = false;
                 }
 
