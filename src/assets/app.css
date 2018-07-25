@@ -39,7 +39,11 @@
     border: 5px solid transparent;
     border-bottom-color: var(--main-color, #7289da);
 }
-.dc-tooltip:hover .dc-tooltip-text {
+.dc-tooltip:not(.dc-tooltip-delayed):hover .dc-tooltip-text {
+    visibility: visible;
+}
+.dc-tooltip-delayed:hover .dc-tooltip-text {
+    transition: 0s all 1s;
     visibility: visible;
 }
 .dc-scroll-table {
