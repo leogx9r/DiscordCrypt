@@ -893,7 +893,7 @@ const discordCrypt = ( () => {
                 /* Try parsing the decrypted data. */
                 _configFile = JSON.parse(
                     _discordCrypt.__zlibDecompress(
-                        _discordCrypt.aes256_decrypt_gcm( config.data, _masterPassword, 'PKC7', 'base64', false ),
+                        _discordCrypt.__aes256_decrypt_gcm( config.data, _masterPassword, 'PKC7', 'base64', false ),
                         'base64',
                         'utf8'
                     )
@@ -983,7 +983,7 @@ const discordCrypt = ( () => {
             /* Encrypt the message using the master password and save the encrypted data. */
             bdPluginStorage.set( this.getName(), 'config', {
                 data:
-                    _discordCrypt.aes256_encrypt_gcm(
+                    _discordCrypt.__aes256_encrypt_gcm(
                         _discordCrypt.__zlibCompress(
                             JSON.stringify( _configFile ),
                             'utf8'
@@ -1566,7 +1566,7 @@ const discordCrypt = ( () => {
                 return true;
 
             /* Compute the fingerprint of our currently known public key if any to determine if to proceed. */
-            let local_fingerprint = _discordCrypt.sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
+            let local_fingerprint = _discordCrypt.__sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
 
             /* Skip if this is our current public key. */
             if ( metadata[ 'fingerprint' ] === local_fingerprint ) {
@@ -2132,7 +2132,7 @@ const discordCrypt = ( () => {
                 _discordCrypt.__scrypt
                 (
                     Buffer.from( password ),
-                    Buffer.from( _discordCrypt.whirlpool( password, true ), 'hex' ),
+                    Buffer.from( _discordCrypt.__whirlpool( password, true ), 'hex' ),
                     32,
                     4096,
                     8,
@@ -2870,10 +2870,10 @@ const discordCrypt = ( () => {
                     dc_master_password.val( '' );
 
                     /* Hash the password. */
-                    _discordCrypt.scrypt
+                    _discordCrypt.__scrypt
                     (
                         Buffer.from( password ),
-                        Buffer.from( _discordCrypt.whirlpool( password, true ), 'hex' ),
+                        Buffer.from( _discordCrypt.__whirlpool( password, true ), 'hex' ),
                         32,
                         4096,
                         8,
@@ -3433,7 +3433,7 @@ const discordCrypt = ( () => {
                 let primary_progress = 0, secondary_progress = 0;
 
                 /* Calculate the primary key. */
-                _discordCrypt.scrypt(
+                _discordCrypt.__scrypt(
                     Buffer.from( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
                     primary_hash,
                     256,
@@ -3493,35 +3493,43 @@ const discordCrypt = ( () => {
                 );
 
                 /* Calculate the secondary key. */
-                _discordCrypt.scrypt( secondary_password, secondary_hash, 256, 3072, 8, 1, ( error, progress, key ) => {
-                    if ( error ) {
-                        /* Update the text. */
-                        dc_handshake_compute_btn.text( 'Failed Generating Secondary Key!' );
-                        setTimeout(
-                            ( function () {
-                                dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                            } ),
-                            1000
-                        );
-                        return true;
-                    }
+                _discordCrypt.__scrypt(
+                    secondary_password,
+                    secondary_hash,
+                    256,
+                    3072,
+                    8,
+                    1,
+                    ( error, progress, key ) => {
+                        if ( error ) {
+                            /* Update the text. */
+                            dc_handshake_compute_btn.text( 'Failed Generating Secondary Key!' );
+                            setTimeout(
+                                ( function () {
+                                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                                } ),
+                                1000
+                            );
+                            return true;
+                        }
 
-                    if ( progress ) {
-                        secondary_progress = progress * 50;
-                        $( '#dc-exchange-status' )
-                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
-                    }
+                        if ( progress ) {
+                            secondary_progress = progress * 50;
+                            $( '#dc-exchange-status' )
+                                .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
+                        }
 
-                    if ( key ) {
-                        /* Generate a quality report and apply the password. */
-                        $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
-                            _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
-                        } Bits )` );
-                        $( '#dc-handshake-secondary-key' ).val( key.toString( 'base64' ) );
-                    }
+                        if ( key ) {
+                            /* Generate a quality report and apply the password. */
+                            $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
+                                _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
+                            } Bits )` );
+                            $( '#dc-handshake-secondary-key' ).val( key.toString( 'base64' ) );
+                        }
 
-                    return false;
-                } );
+                        return false;
+                    }
+                );
 
                 /* Update the text. */
                 dc_handshake_compute_btn.text( 'Generating Keys ...' );
@@ -3983,8 +3991,8 @@ const discordCrypt = ( () => {
                     }
 
                     /* Read the current hash of the plugin and compare them.. */
-                    let currentHash = _discordCrypt.sha256( localFile.replace( '\r', '' ) );
-                    let hash = _discordCrypt.sha256( data.replace( '\r', '' ) );
+                    let currentHash = _discordCrypt.__sha256( localFile.replace( '\r', '' ) );
+                    let hash = _discordCrypt.__sha256( data.replace( '\r', '' ) );
                     let shortHash = Buffer.from( hash, 'base64' )
                         .toString( 'hex' )
                         .slice( 0, 8 );
@@ -4859,7 +4867,7 @@ const discordCrypt = ( () => {
                 /* Loop while iteration count isn't 0. */
                 while ( count !== 0 ) {
                     /* Update the input with the concatenated hash of the old input + key. */
-                    input = Buffer.from( _discordCrypt.sha256( Buffer.concat( [ input, key ] ), true ), 'hex' );
+                    input = Buffer.from( _discordCrypt.__sha256( Buffer.concat( [ input, key ] ), true ), 'hex' );
                     count -= 1;
                 }
 
@@ -5082,7 +5090,7 @@ const discordCrypt = ( () => {
                     return null;
 
                 /* Create a fingerprint for the blob. */
-                output[ 'fingerprint' ] = _discordCrypt.sha256( msg, true );
+                output[ 'fingerprint' ] = _discordCrypt.__sha256( msg, true );
 
                 /* Buffer[0] contains the algorithm type. Reverse it. */
                 output[ 'bit_length' ] = _discordCrypt.__indexToAlgorithmBitLength( msg[ 0 ] );
@@ -5332,15 +5340,15 @@ const discordCrypt = ( () => {
          * __buildCodeBlockMessage('```\nHello World!\n```');
          * //
          * {
-     *      "code": true,
-     *      "html": "<div class=\"markup line-scanned\" data-colour=\"true\" style=\"color: rgb(111, 0, 0);\">
-     *                  <pre class=\"hljs\">
-     *                      <code class=\"dc-code-block hljs\" style=\"position: relative;\">
-     *                          <ol><li>Hello World!</li></ol>
-     *                      </code>
-     *                  </pre>
-     *              </div>"
-     * }
+         *      "code": true,
+         *      "html": "<div class=\"markup line-scanned\" data-colour=\"true\" style=\"color: rgb(111, 0, 0);\">
+         *                  <pre class=\"hljs\">
+         *                      <code class=\"dc-code-block hljs\" style=\"position: relative;\">
+         *                          <ol><li>Hello World!</li></ol>
+         *                      </code>
+         *                  </pre>
+         *              </div>"
+         * }
          */
         static __buildCodeBlockMessage( message ) {
             try {
@@ -5785,7 +5793,7 @@ const discordCrypt = ( () => {
         static __constructRandomArtImage( data, width, height, html_encode ) {
             /* Construct a random color array from the input data and use the width + height as a salt. */
             const colors = Buffer.from(
-                _discordCrypt.pbkdf2_sha160(
+                _discordCrypt.__pbkdf2_sha160(
                     data,
                     Buffer.alloc( width + height ).fill( 0 ),
                     true,
@@ -6374,22 +6382,22 @@ const discordCrypt = ( () => {
                 /* Get the appropriate hash algorithm for the key size. */
                 switch ( keyBytes ) {
                 case 8:
-                    hash = _discordCrypt.whirlpool64;
+                    hash = _discordCrypt.__whirlpool64;
                     break;
                 case 16:
-                    hash = _discordCrypt.sha512_128;
+                    hash = _discordCrypt.__sha512_128;
                     break;
                 case 20:
-                    hash = _discordCrypt.sha160;
+                    hash = _discordCrypt.__sha160;
                     break;
                 case 24:
-                    hash = _discordCrypt.whirlpool192;
+                    hash = _discordCrypt.__whirlpool192;
                     break;
                 case 32:
-                    hash = _discordCrypt.sha256;
+                    hash = _discordCrypt.__sha256;
                     break;
                 case 64:
-                    hash = use_whirlpool !== undefined ? _discordCrypt.sha512 : _discordCrypt.whirlpool;
+                    hash = use_whirlpool !== undefined ? _discordCrypt.__sha512 : _discordCrypt.__whirlpool;
                     break;
                 default:
                     throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys' +
@@ -6956,7 +6964,7 @@ const discordCrypt = ( () => {
 
                 /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
                 if ( _salt.length !== 8 )
-                    _salt = Buffer.from( _discordCrypt.whirlpool64( _salt, true ), 'hex' );
+                    _salt = Buffer.from( _discordCrypt.__whirlpool64( _salt, true ), 'hex' );
             }
             else {
                 /* Generate a random salt to derive the key and IV. */
@@ -6964,7 +6972,7 @@ const discordCrypt = ( () => {
             }
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
                 ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
             /* Slice off the IV. */
@@ -7043,7 +7051,7 @@ const discordCrypt = ( () => {
             _salt = _message.slice( 0, 8 );
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
                 ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
             /* Slice off the IV. */
@@ -7094,15 +7102,15 @@ const discordCrypt = ( () => {
             function handleEncodeSegment( message, key, cipher, mode, pad ) {
                 switch ( cipher ) {
                 case 0:
-                    return _discordCrypt.blowfish512_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__blowfish512_encrypt( message, key, mode, pad );
                 case 1:
-                    return _discordCrypt.aes256_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__aes256_encrypt( message, key, mode, pad );
                 case 2:
-                    return _discordCrypt.camellia256_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__camellia256_encrypt( message, key, mode, pad );
                 case 3:
-                    return _discordCrypt.idea128_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__idea128_encrypt( message, key, mode, pad );
                 case 4:
-                    return _discordCrypt.tripledes192_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__tripledes192_encrypt( message, key, mode, pad );
                 default:
                     return null;
                 }
@@ -7119,7 +7127,7 @@ const discordCrypt = ( () => {
 
             /* Dual-encrypt the segment. */
             if ( cipher_index >= 0 && cipher_index <= 4 )
-                msg = _discordCrypt.blowfish512_encrypt(
+                msg = _discordCrypt.__blowfish512_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index, mode, pad ),
                     secondary_key,
                     mode,
@@ -7128,7 +7136,7 @@ const discordCrypt = ( () => {
                     false
                 );
             else if ( cipher_index >= 5 && cipher_index <= 9 )
-                msg = _discordCrypt.aes256_encrypt(
+                msg = _discordCrypt.__aes256_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index - 5, mode, pad ),
                     secondary_key,
                     mode,
@@ -7137,7 +7145,7 @@ const discordCrypt = ( () => {
                     false
                 );
             else if ( cipher_index >= 10 && cipher_index <= 14 )
-                msg = _discordCrypt.camellia256_encrypt(
+                msg = _discordCrypt.__camellia256_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index - 10, mode, pad ),
                     secondary_key,
                     mode,
@@ -7146,7 +7154,7 @@ const discordCrypt = ( () => {
                     false
                 );
             else if ( cipher_index >= 15 && cipher_index <= 19 )
-                msg = _discordCrypt.idea128_encrypt(
+                msg = _discordCrypt.__idea128_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index - 15, mode, pad ),
                     secondary_key,
                     mode,
@@ -7155,7 +7163,7 @@ const discordCrypt = ( () => {
                     false
                 );
             else if ( cipher_index >= 20 && cipher_index <= 24 )
-                msg = _discordCrypt.tripledes192_encrypt(
+                msg = _discordCrypt.__tripledes192_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index - 20, mode, pad ),
                     secondary_key,
                     mode,
@@ -7213,15 +7221,35 @@ const discordCrypt = ( () => {
             ) {
                 switch ( cipher ) {
                 case 0:
-                    return _discordCrypt.blowfish512_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__blowfish512_decrypt(
+                        message,
+                        key,
+                        mode,
+                        pad,
+                        output_format,
+                        is_message_hex
+                    );
                 case 1:
-                    return _discordCrypt.aes256_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__aes256_decrypt( message, key, mode, pad, output_format, is_message_hex );
                 case 2:
-                    return _discordCrypt.camellia256_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__camellia256_decrypt(
+                        message,
+                        key,
+                        mode,
+                        pad,
+                        output_format,
+                        is_message_hex
+                    );
                 case 3:
-                    return _discordCrypt.idea128_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__idea128_decrypt( message, key, mode, pad, output_format, is_message_hex );
                 case 4:
-                    return _discordCrypt.tripledes192_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__tripledes192_decrypt( message,
+                        key,
+                        mode,
+                        pad,
+                        output_format,
+                        is_message_hex
+                    );
                 default:
                     return null;
                 }
@@ -7281,7 +7309,7 @@ const discordCrypt = ( () => {
                 /* Dual decrypt the segment. */
                 if ( cipher_index >= 0 && cipher_index <= 4 )
                     return handleDecodeSegment(
-                        _discordCrypt.blowfish512_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__blowfish512_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index,
                         mode,
@@ -7291,7 +7319,7 @@ const discordCrypt = ( () => {
                     );
                 else if ( cipher_index >= 5 && cipher_index <= 9 )
                     return handleDecodeSegment(
-                        _discordCrypt.aes256_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__aes256_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index - 5,
                         mode,
@@ -7301,7 +7329,7 @@ const discordCrypt = ( () => {
                     );
                 else if ( cipher_index >= 10 && cipher_index <= 14 )
                     return handleDecodeSegment(
-                        _discordCrypt.camellia256_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__camellia256_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index - 10,
                         mode,
@@ -7311,7 +7339,7 @@ const discordCrypt = ( () => {
                     );
                 else if ( cipher_index >= 15 && cipher_index <= 19 )
                     return handleDecodeSegment(
-                        _discordCrypt.idea128_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__idea128_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index - 15,
                         mode,
@@ -7321,7 +7349,7 @@ const discordCrypt = ( () => {
                     );
                 else if ( cipher_index >= 20 && cipher_index <= 24 )
                     return handleDecodeSegment(
-                        _discordCrypt.tripledes192_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__tripledes192_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index - 20,
                         mode,
@@ -7688,8 +7716,8 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static whirlpool64( message, to_hex ) {
-            return Buffer.from( _discordCrypt.whirlpool( message, true ), 'hex' )
+        static __whirlpool64( message, to_hex ) {
+            return Buffer.from( _discordCrypt.__whirlpool( message, true ), 'hex' )
                 .slice( 0, 8 ).toString( to_hex ? 'hex' : 'base64' );
         }
 
@@ -7700,8 +7728,8 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static sha512_128( message, to_hex ) {
-            return Buffer.from( _discordCrypt.sha512( message, true ), 'hex' )
+        static __sha512_128( message, to_hex ) {
+            return Buffer.from( _discordCrypt.__sha512( message, true ), 'hex' )
                 .slice( 0, 16 ).toString( to_hex ? 'hex' : 'base64' );
         }
 
@@ -7712,8 +7740,8 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static whirlpool192( message, to_hex ) {
-            return Buffer.from( _discordCrypt.sha512( message, true ), 'hex' )
+        static __whirlpool192( message, to_hex ) {
+            return Buffer.from( _discordCrypt.__sha512( message, true ), 'hex' )
                 .slice( 0, 24 ).toString( to_hex ? 'hex' : 'base64' );
         }
 
@@ -7724,7 +7752,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static sha160( message, to_hex ) {
+        static __sha160( message, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha1', to_hex );
         }
 
@@ -7735,7 +7763,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static sha256( message, to_hex ) {
+        static __sha256( message, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha256', to_hex );
         }
 
@@ -7746,7 +7774,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static sha512( message, to_hex ) {
+        static __sha512( message, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha512', to_hex );
         }
 
@@ -7757,7 +7785,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static whirlpool( message, to_hex ) {
+        static __whirlpool( message, to_hex ) {
             return _discordCrypt.__createHash( message, 'whirlpool', to_hex );
         }
 
@@ -7769,7 +7797,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static hmac_sha256( message, secret, to_hex ) {
+        static __hmac_sha256( message, secret, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha256', to_hex, true, secret );
         }
 
@@ -7781,7 +7809,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static hmac_sha512( message, secret, to_hex ) {
+        static __hmac_sha512( message, secret, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha512', to_hex, true, secret );
         }
 
@@ -7793,7 +7821,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static hmac_whirlpool( message, secret, to_hex ) {
+        static __hmac_whirlpool( message, secret, to_hex ) {
             return _discordCrypt.__createHash( message, 'whirlpool', to_hex, true, secret );
         }
 
@@ -7814,7 +7842,7 @@ const discordCrypt = ( () => {
          * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
          *      encoded result.
          */
-        static pbkdf2_sha160(
+        static __pbkdf2_sha160(
             message,
             salt,
             to_hex,
@@ -7854,7 +7882,7 @@ const discordCrypt = ( () => {
          * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
          *      encoded result.
          */
-        static pbkdf2_sha256(
+        static __pbkdf2_sha256(
             message,
             salt,
             to_hex,
@@ -7894,7 +7922,7 @@ const discordCrypt = ( () => {
          * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
          *      encoded result.
          */
-        static pbkdf2_sha512(
+        static __pbkdf2_sha512(
             message,
             salt,
             to_hex,
@@ -7934,7 +7962,7 @@ const discordCrypt = ( () => {
          * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
          *      encoded result.
          */
-        static pbkdf2_whirlpool(
+        static __pbkdf2_whirlpool(
             message,
             salt,
             to_hex,
@@ -7977,7 +8005,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static blowfish512_encrypt(
+        static __blowfish512_encrypt(
             message,
             key,
             cipher_mode,
@@ -8024,7 +8052,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static blowfish512_decrypt(
+        static __blowfish512_decrypt(
             message,
             key,
             cipher_mode,
@@ -8070,7 +8098,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static aes256_encrypt(
+        static __aes256_encrypt(
             message,
             key,
             cipher_mode,
@@ -8117,7 +8145,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static aes256_decrypt(
+        static __aes256_decrypt(
             message,
             key,
             cipher_mode,
@@ -8164,7 +8192,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static aes256_encrypt_gcm(
+        static __aes256_encrypt_gcm(
             message,
             key,
             padding_mode,
@@ -8197,7 +8225,7 @@ const discordCrypt = ( () => {
 
                 /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
                 if ( _salt.length !== 8 )
-                    _salt = Buffer.from( _discordCrypt.whirlpool64( _salt, true ), 'hex' );
+                    _salt = Buffer.from( _discordCrypt.__whirlpool64( _salt, true ), 'hex' );
             }
             else {
                 /* Generate a random salt to derive the key and IV. */
@@ -8205,7 +8233,7 @@ const discordCrypt = ( () => {
             }
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
                 ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
             /* Slice off the IV. */
@@ -8253,7 +8281,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static aes256_decrypt_gcm(
+        static __aes256_decrypt_gcm(
             message,
             key,
             padding_mode,
@@ -8288,7 +8316,7 @@ const discordCrypt = ( () => {
             _message = _message.slice( 8 );
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
                 ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
             /* Slice off the IV. */
@@ -8340,7 +8368,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static camellia256_encrypt(
+        static __camellia256_encrypt(
             message,
             key,
             cipher_mode,
@@ -8387,7 +8415,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static camellia256_decrypt(
+        static __camellia256_decrypt(
             message,
             key,
             cipher_mode,
@@ -8433,7 +8461,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static tripledes192_encrypt(
+        static __tripledes192_encrypt(
             message,
             key,
             cipher_mode,
@@ -8480,7 +8508,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static tripledes192_decrypt(
+        static __tripledes192_decrypt(
             message,
             key,
             cipher_mode,
@@ -8526,7 +8554,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static idea128_encrypt(
+        static __idea128_encrypt(
             message,
             key,
             cipher_mode,
@@ -8573,7 +8601,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static idea128_decrypt(
+        static __idea128_decrypt(
             message,
             key,
             cipher_mode,
