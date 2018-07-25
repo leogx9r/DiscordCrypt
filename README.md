@@ -29,21 +29,19 @@
 
 # Features
  
-* Supports Windows, MAC and Linux.
-* All messages are encrypted using the most secure methods available.
-* Emojis ( Animated, Nitro ) are supported even if you're not a nitro user.
-* Encrypted database with a password of your choosing protects all passwords.
-* Supports timed messages which are removed after a set period.
-* Ability to backup and restore all passwords.
-* Dual encryption mode with multiple ciphers supported.
-* Strong key exchange for easily exchanging keys.
-* Supports encrypted file uploads up to 50 MB.
-* File uploads are automatically deleted after 7 days.
-* Supports embedded encrypted messages or normal messages.
-* Automatic updates to ensure you always get the latest features.
-* Updates are manually verified to ensure authenticity.
-* Designed to provide the maximum security and privacy.
-* Extensively tested for reliability and stability.
+- Supports Windows, MAC and Linux. ( No mobile support, sorry! )
+- All messages in DMs, group DMs and channels are end-to-end encrypted.
+- Uses a dual encryption mode with multiple ciphers. ( Defaults to AES-256 and Camellia-256 )
+- Supports embedded messages for extra spice if you want to look unique.
+- Optional timed messages which are deleted after a certain period passes.
+- Emojis ( including animated ) are supported even if you're not a nitro user.
+- Encrypted database with a password of your choosing protects all your keys.
+- Ability to backup and restore all passwords in the database.
+- Strong key exchange for easily exchanging keys with your friends.
+- Supports encrypted file uploads up to 50 MB which are automatically deleted after 7 days.
+- Automatic updates which are verified ensures you always get the latest features.
+- Designed to provide the maximum security and privacy.
+- Extensively tested for reliability and stability.
 
 # Introduction
 
