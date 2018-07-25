@@ -5103,7 +5103,8 @@ const discordCrypt = ( () => {
 
         /**
          * @public
-         * @desc Splits the input text into chunks according to the specified length.
+         * @desc Smartly splits the input text into chunks according to the specified length while
+         *      attempting to preserve word spaces unless they exceed the limit.
          * @param {string} input_string The input string.
          * @param {int} max_length The maximum length of the string before splitting.
          * @returns {Array} An array of split strings.
@@ -5111,16 +5112,47 @@ const discordCrypt = ( () => {
          */
         static __splitStringChunks( input_string, max_length ) {
             /* Sanity check. */
-            if ( !max_length || max_length < 0 )
+            if ( !max_length || max_length <= 1 )
                 return input_string;
 
-            /* Calculate the maximum number of chunks this can be split into. */
-            const num_chunks = Math.ceil( input_string.length / max_length );
-            const ret = new Array( num_chunks );
+            /* Split the string into words. */
+            const words = input_string.split( ' ' );
 
-            /* Split each chunk and add it to the output array. */
-            for ( let i = 0, offset = 0; i < num_chunks; ++i, offset += max_length )
-                ret[ i ] = input_string.substr( offset, max_length );
+            /* Create vars for storing the result, current string and first-word flag. */
+            let ret = [], current = '', first = true;
+
+            /* Iterate over all words. */
+            words.forEach( word => {
+                /* Check if the current string would overflow if the word was added. */
+                if( ( current.length + word.length ) > max_length && current.length ) {
+                    /* Insert the string into the array and reset it. */
+                    ret.push( current );
+
+                    /* Reset the sentence. */
+                    current = '';
+                }
+
+                /* Add the current word to the sentence without a space only if it's the first word. */
+                if( first ) {
+                    current += word;
+                    first = false;
+                }
+                else
+                    current += ` ${word}`;
+
+                /* If the current sentence is longer than the maximum, split it and add to the result repeatedly. */
+                while( current.length > max_length ) {
+                    /* Add it to the array. */
+                    ret.push( current.substr( 0, max_length ) );
+
+                    /* Get the remaining. */
+                    current = current.substr( max_length );
+                }
+            } );
+
+            /* If the current sentence has something, add it to the array. */
+            if( current.length )
+                ret.push( current );
 
             return ret;
         }
