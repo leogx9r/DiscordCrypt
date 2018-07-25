@@ -173,7 +173,7 @@ ul.dc-list-red { color: #ff0000; }
     color: #fff;
 }
 .dc-input-field {
-    font-family: monospace !important;
+    font-family: sans-serif !important;
     background: #000 !important;
     color: #fff !important;
     font-size: 12px;
