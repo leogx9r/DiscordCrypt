@@ -2236,6 +2236,9 @@ const discordCrypt = ( () => {
                     '#dc-quick-exchange-btn'
                 ];
 
+                /* Handles reloading of the injected toolbar on switching channels. */
+                let injectedInterval;
+
                 /* Remove the prompt overlay. */
                 $( '#dc-master-overlay' ).remove();
 
@@ -2243,15 +2246,8 @@ const discordCrypt = ( () => {
                 _masterPassword = null;
                 _configFile = null;
 
-                /* Inject the toolbar immediately. */
-                $( self._searchUiClass )
-                    .parent()
-                    .parent()
-                    .parent()
-                    .prepend( _discordCrypt.__zlibDecompress( self._toolbarHtml ) );
-
                 /* Handle this on an interval for switching channels. */
-                let injectedInterval = setInterval( () => {
+                injectedInterval = setInterval( () => {
                     /* Skip if the toolbar has already been injected. */
                     if( $( '#dc-toolbar' ).length )
                         return;
@@ -2262,27 +2258,27 @@ const discordCrypt = ( () => {
                         .parent()
                         .parent()
                         .prepend( _discordCrypt.__zlibDecompress( self._toolbarHtml ) );
+
+                    let dc_db_prompt_btn = $( '#dc-db-prompt-btn' );
+
+                    /* Set the Unlock DB Prompt button to visible. */
+                    dc_db_prompt_btn.css( 'display', 'inline' );
+
+                    /* Hide every other button. */
+                    target_btns.forEach( id => $( id ).css( 'display', 'none' ) );
+
+                    /* Add the button click event to reopen the menu. */
+                    dc_db_prompt_btn.click( function() {
+                        /* Clear the interval. */
+                        clearInterval( injectedInterval );
+
+                        /* Remove the toolbar. */
+                        $( '#dc-toolbar' ).remove();
+
+                        /* Reopen the prompt. */
+                        self._loadMasterPassword();
+                    } );
                 }, 1000 );
-
-                let dc_db_prompt_btn = $( '#dc-db-prompt-btn' );
-
-                /* Set the Unlock DB Prompt button to visible. */
-                dc_db_prompt_btn.css( 'display', 'inline' );
-
-                /* Hide every other button. */
-                target_btns.forEach( id => $( id ).css( 'display', 'none' ) );
-
-                /* Add the button click event to reopen the menu. */
-                dc_db_prompt_btn.click( function() {
-                    /* Clear the interval. */
-                    clearInterval( injectedInterval );
-
-                    /* Remove the toolbar. */
-                    $( '#dc-toolbar' ).remove();
-
-                    /* Reopen the prompt. */
-                    self._loadMasterPassword();
-                } );
             };
         }
 
