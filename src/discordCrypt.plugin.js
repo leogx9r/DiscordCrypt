@@ -3365,11 +3365,11 @@ const discordCrypt = ( () => {
 
                 /* Create hashed salt from the two user-generated salts. */
                 let primary_hash = Buffer.from(
-                    _discordCrypt.sha512( isUserSaltPrimary ? user_salt : salt, true ),
+                    global.sha3.sha3_256( isUserSaltPrimary ? user_salt : salt, true ),
                     'hex'
                 );
                 let secondary_hash = Buffer.from(
-                    _discordCrypt.whirlpool( isUserSaltPrimary ? salt : user_salt, true ),
+                    global.sha3.sha3_512( isUserSaltPrimary ? salt : user_salt, true ),
                     'hex'
                 );
 
