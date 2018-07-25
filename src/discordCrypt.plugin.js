@@ -304,7 +304,7 @@
  * @desc Use a scoped variable to protect the internal state of the plugin.
  * @type {_discordCrypt}
  */
-let discordCrypt = ( function() {
+const discordCrypt = ( () => {
     /**
      * @desc Master database password. This is a Buffer() containing a 256-bit key.
      * @type {Buffer|null}
