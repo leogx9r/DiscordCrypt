@@ -397,7 +397,7 @@ const discordCrypt = ( () => {
              * @desc Used to scan each message for an embedded descriptor.
              * @type {string}
              */
-            this._messageMarkupClass = '.markup';
+            this._messageMarkupClass = '.markup-2BOw-j';
             /**
              * @desc Used to find the search toolbar to inject all option buttons.
              * @type {string}
