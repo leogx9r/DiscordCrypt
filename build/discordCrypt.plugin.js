@@ -396,10 +396,17 @@ const discordCrypt = ( () => {
              */
 
             /**
-             * @desc Used to scan each message for an embedded descriptor.
+             * @desc Used to scan each message for an encrypted message.
              * @type {string}
              */
-            this._messageMarkupClass = '.markup-2BOw-j';
+            this._messageMarkupClass = '.markup-2BOw-j .inline';
+
+            /**
+             * @desc Used to scan each message for an embedded encrypted message.
+             * @type {string}
+             */
+            this._embedDescriptionClass = '.embedDescription-1Cuq9a';
+
             /**
              * @desc Used to find the search toolbar to inject all option buttons.
              * @type {string}
@@ -1853,11 +1860,7 @@ const discordCrypt = ( () => {
 
             /* Look through each markup element to find an embedDescription. */
             let React = _discordCrypt._getReactModules( _cachedModules );
-            $( this._messageMarkupClass ).each( ( function () {
-                /* Skip classes with no embeds. */
-                if ( !this.className.includes( 'embedDescription' ) )
-                    return;
-
+            $( this._embedDescriptionClass ).each( ( function () {
                 /* Skip parsed messages. */
                 if ( $( this ).data( 'dc-parsed' ) !== undefined )
                     return;
@@ -1870,7 +1873,7 @@ const discordCrypt = ( () => {
             } ) );
 
             /* Look through markup classes for inline code blocks. */
-            $( `${this._messageMarkupClass} .inline` ).each( ( function () {
+            $( this._messageMarkupClass ).each( ( function () {
                 /* Skip parsed messages. */
                 if ( $( this ).data( 'dc-parsed' ) !== undefined )
                     return;
