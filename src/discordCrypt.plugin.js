@@ -362,6 +362,13 @@ const discordCrypt = ( () => {
     let _privateExchangeKey;
 
     /**
+     * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
+     *      So just backup the function code here in case it gets attacked in the future.
+     * @type {function}
+     */
+    let _freeze = Object.freeze;
+
+    /**
      * @protected
      * @class
      * @desc Main plugin prototype.
@@ -531,13 +538,6 @@ const discordCrypt = ( () => {
             this._libraries = {
                 /* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */
             };
-
-            /**
-             * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
-             *      So just backup the function code here in case it gets attacked in the future.
-             * @type {function}
-             */
-            this._freeze = Object.freeze;
         }
 
         /* ==================== STANDARD CALLBACKS ================= */
@@ -788,7 +788,7 @@ const discordCrypt = ( () => {
             _discordCrypt._injectCSS( 'dc-css', _discordCrypt.__zlibDecompress( this._appCss ) );
 
             /* Reapply the native code for Object.freeze() right before calling these as they freeze themselves. */
-            Object.freeze = this._freeze;
+            Object.freeze = _freeze;
 
             /* Load necessary _libraries. */
             _discordCrypt.__loadLibraries( this._libraries );
@@ -8548,10 +8548,10 @@ const discordCrypt = ( () => {
     }
 
     /* Freeze the prototype. */
-    Object.freeze( _discordCrypt.prototype );
+    _freeze( _discordCrypt.prototype );
 
     /* Freeze the class definition. */
-    Object.freeze( _discordCrypt );
+    _freeze( _discordCrypt );
 
     return _discordCrypt;
 } )();
