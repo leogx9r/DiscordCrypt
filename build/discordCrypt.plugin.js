@@ -493,7 +493,7 @@ const discordCrypt = ( () => {
              * @type {string}
              */
             this._appCss =
-                `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`;
+                `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`;
 
             /**
              * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
@@ -5121,13 +5121,44 @@ const discordCrypt = ( () => {
             if ( !max_length || max_length < 0 )
                 return input_string;
 
-            /* Calculate the maximum number of chunks this can be split into. */
-            const num_chunks = Math.ceil( input_string.length / max_length );
-            const ret = new Array( num_chunks );
+            /* Split the string into words. */
+            const words = input_string.split( ' ' );
 
-            /* Split each chunk and add it to the output array. */
-            for ( let i = 0, offset = 0; i < num_chunks; ++i, offset += max_length )
-                ret[ i ] = input_string.substr( offset, max_length );
+            /* Create vars for storing the result, current string and first-word flag. */
+            let ret = [], current = '', first = true;
+
+            /* Iterate over all words. */
+            words.forEach( word => {
+                /* Check if the current string would overflow if the word was added. */
+                if( ( current.length + word.length ) > max_length && current.length ) {
+                    /* Insert the string into the array and reset it. */
+                    ret.push( current );
+
+                    /* Reset the sentence. */
+                    current = '';
+                }
+
+                /* Add the current word to the sentence without a space only if it's the first word. */
+                if( first ) {
+                    current += word;
+                    first = false;
+                }
+                else
+                    current += ` ${word}`;
+
+                /* If the current sentence is longer than the maximum, split it and add to the result repeatedly. */
+                while( current.length > max_length ) {
+                    /* Add it to the array. */
+                    ret.push( current.substr( 0, max_length ) );
+
+                    /* Get the remaining. */
+                    current = current.substr( max_length );
+                }
+            } );
+
+            /* If the current sentence has something, add it to the array. */
+            if( current.length )
+                ret.push( current );
 
             return ret;
         }
