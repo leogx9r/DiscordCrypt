@@ -304,7 +304,7 @@
  * @desc Use a scoped variable to protect the internal state of the plugin.
  * @type {_discordCrypt}
  */
-let discordCrypt = ( function() {
+const discordCrypt = ( () => {
     /**
      * @desc Master database password. This is a Buffer() containing a 256-bit key.
      * @type {Buffer|null}
@@ -362,6 +362,13 @@ let discordCrypt = ( function() {
     let _privateExchangeKey;
 
     /**
+     * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
+     *      So just backup the function code here in case it gets attacked in the future.
+     * @type {function}
+     */
+    let _freeze = Object.freeze;
+
+    /**
      * @protected
      * @class
      * @desc Main plugin prototype.
@@ -387,10 +394,17 @@ let discordCrypt = ( function() {
              */
 
             /**
-             * @desc Used to scan each message for an embedded descriptor.
+             * @desc Used to scan each message for an encrypted message.
              * @type {string}
              */
-            this._messageMarkupClass = '.markup';
+            this._messageMarkupClass = '.markup-2BOw-j .inline';
+
+            /**
+             * @desc Used to scan each message for an embedded encrypted message.
+             * @type {string}
+             */
+            this._embedDescriptionClass = '.embedDescription-1Cuq9a';
+
             /**
              * @desc Used to find the search toolbar to inject all option buttons.
              * @type {string}
@@ -531,13 +545,6 @@ let discordCrypt = ( function() {
             this._libraries = {
                 /* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */
             };
-
-            /**
-             * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
-             *      So just backup the function code here in case it gets attacked in the future.
-             * @type {function}
-             */
-            this._freeze = Object.freeze;
         }
 
         /* ==================== STANDARD CALLBACKS ================= */
@@ -575,7 +582,7 @@ let discordCrypt = ( function() {
          * @returns {string}
          */
         getVersion() {
-            return '1.4.5';
+            return '1.4.6';
         }
 
         /**
@@ -777,18 +784,18 @@ let discordCrypt = ( function() {
             /* Freeze the plugin instance if required. */
             if(
                 global.bdplugins &&
-                global.bdplugins[ '_discordCrypt' ] &&
-                global.bdplugins[ '_discordCrypt' ].plugin
+                global.bdplugins[ this.getName() ] &&
+                global.bdplugins[ this.getName() ].plugin
             ) {
-                Object.freeze( bdplugins[ '_discordCrypt' ] );
-                Object.freeze( bdplugins[ '_discordCrypt' ].plugin );
+                Object.freeze( bdplugins[ this.getName() ] );
+                Object.freeze( bdplugins[ this.getName() ].plugin );
             }
 
             /* Inject application CSS. */
             _discordCrypt._injectCSS( 'dc-css', _discordCrypt.__zlibDecompress( this._appCss ) );
 
             /* Reapply the native code for Object.freeze() right before calling these as they freeze themselves. */
-            Object.freeze = this._freeze;
+            Object.freeze = _freeze;
 
             /* Load necessary _libraries. */
             _discordCrypt.__loadLibraries( this._libraries );
@@ -1846,11 +1853,7 @@ let discordCrypt = ( function() {
 
             /* Look through each markup element to find an embedDescription. */
             let React = _discordCrypt._getReactModules( _cachedModules );
-            $( this._messageMarkupClass ).each( ( function () {
-                /* Skip classes with no embeds. */
-                if ( !this.className.includes( 'embedDescription' ) )
-                    return;
-
+            $( this._embedDescriptionClass ).each( ( function () {
                 /* Skip parsed messages. */
                 if ( $( this ).data( 'dc-parsed' ) !== undefined )
                     return;
@@ -1863,7 +1866,7 @@ let discordCrypt = ( function() {
             } ) );
 
             /* Look through markup classes for inline code blocks. */
-            $( `${this._messageMarkupClass} .inline` ).each( ( function () {
+            $( this._messageMarkupClass ).each( ( function () {
                 /* Skip parsed messages. */
                 if ( $( this ).data( 'dc-parsed' ) !== undefined )
                     return;
@@ -2826,7 +2829,7 @@ let discordCrypt = ( function() {
                             if ( error ) {
                                 /* Alert the user. */
                                 global.smalltalk.alert(
-                                    '_discordCrypt Error',
+                                    'DiscordCrypt Error',
                                     'Error setting the new database password. Check the console for more info.'
                                 );
 
@@ -3365,11 +3368,11 @@ let discordCrypt = ( function() {
 
                 /* Create hashed salt from the two user-generated salts. */
                 let primary_hash = Buffer.from(
-                    _discordCrypt.sha512( isUserSaltPrimary ? user_salt : salt, true ),
+                    global.sha3.sha3_256( isUserSaltPrimary ? user_salt : salt, true ),
                     'hex'
                 );
                 let secondary_hash = Buffer.from(
-                    _discordCrypt.whirlpool( isUserSaltPrimary ? salt : user_salt, true ),
+                    global.sha3.sha3_512( isUserSaltPrimary ? salt : user_salt, true ),
                     'hex'
                 );
 
@@ -8548,10 +8551,10 @@ let discordCrypt = ( function() {
     }
 
     /* Freeze the prototype. */
-    Object.freeze( _discordCrypt.prototype );
+    _freeze( _discordCrypt.prototype );
 
     /* Freeze the class definition. */
-    Object.freeze( _discordCrypt );
+    _freeze( _discordCrypt );
 
     return _discordCrypt;
 } )();

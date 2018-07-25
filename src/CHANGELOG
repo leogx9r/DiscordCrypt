@@ -1,3 +1,11 @@
+Version 1.4.6
+
+- Simplified warning message about using embeds.
+- Update for Discord changing their class names yet again.
+- Moved from SHA2 to SHA3 ( Keccak-256 & Keccak-512 ) for key exchanges.
+- Updated the alerts to match the theme used internally.
+- Fixed a naming regression that allowed assignments to protected variables within the plugin.
+
 Version 1.4.5
 
 - Added support for animated emojis.

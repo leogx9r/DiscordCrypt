@@ -204,11 +204,11 @@
                 <p>If enabled, send all encrypted messages using embeds.</p>
                 <p>
                     <b style="color: #f00">WARNING:</b>
-                    <b>Server admins may discourage the use of embedded messaging resulting in a ban.</b>
+                    <b>By using embedded messages, you may be flagged by Discord and
+                        have your embed permissions globally revoked.</b>
                     <br/>
-                    <b>Discord staff may possibly restrict (
-                        <a href="https://i.imgur.com/6oiQBBC.png" target="_blank">?</a>
-                        ) your account upon seeing these embedded messaging.</b>
+                    <b>Enable this option at your own digression.
+                       The plugin's authors will not be held liable for any potential consequences.</b>
                 </p>
             </div>
 
@@ -280,18 +280,21 @@
 
             <strong>What is this used for?</strong>
             <ul class="dc-list">
-                <li>Simplifying the process or generating strong passwords for each user of DiscordCrypt
-                    requires a secure channel to exchange these keys.</li>
+                <li>This simplifies the process or generating secure keys for each conversation.</li>
                 <li>Using this generator, you may create new keys using standard algorithms such as
-                    DH or ECDH for manual handshaking.</li>
-                <li>Follow the steps below and you can generate a password between channels or users
+                    DH or ECDH for manual handshakes.</li>
+                <li>Follow the steps below to generate a password between channels or users
                     while being able to publicly post the messages.</li>
-                <li>This generator uses secure hash algorithms ( SHA-256 and SHA-512 ) in tandem with
+                <li>This generator uses secure hash algorithms ( SHA3-256 and SHA3-512 ) in tandem with
                     the Scrypt KDF function to derive two keys.</li>
             </ul>
             <br/>
 
             <strong>How do I use this?</strong>
+            <p class="dc-hint">
+                A more detailed guide for this is available
+                <a href="https://gitlab.com/leogx9r/DiscordCrypt#exchanging-keys" target="_blank">here</a>.
+            </p>
             <ul class="dc-list">
                 <li>Generate a key pair using the specified algorithm and key size on the
                     "Key Generation" tab.</li>
@@ -307,7 +310,7 @@
                     the current user or channel.</li>
             </ul>
 
-            <strong>Algorithms Supported:</strong>
+            <strong>Exchange Algorithms Supported:</strong>
             <ul class="dc-list">
                 <li>
                     <a title="Diffie–Hellman key exchange"
