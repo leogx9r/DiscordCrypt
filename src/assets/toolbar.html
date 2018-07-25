@@ -1,5 +1,6 @@
 <div id="dc-toolbar">
-    <button type="button" id="dc-db-prompt-btn" style="background: transparent; display: none;" title="Unlock Database">
+    <button type="button" id="dc-db-prompt-btn" style="background: transparent; display: none;" class="dc-tooltip">
+        <span class="dc-tooltip-text">Unlock Master Database</span>
         <img class="dc-svg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAMAAADDpiTIAAAAt1BMVEUAAAAvXHEY
         f7INjs4be6kJldkThr8Jk9cMkNEce60RicMIlNkPjMkYfq8KktY3NzUAofEzMzM0NDQEl98lUWcDmuUDmeMAoO8Cm+kaaI8bZosoSVojVGwyNTY
         lT2QFlt4GktcvO0IwODwBnuwxNjkqRlQLh8UIjtEEmOIJisodYIEhWHQRe7AUc6ICmuYNg74Sd6kTdaYPfrUcZIgOgLkWb5sfXHosQk0sP0gYa5
@@ -91,13 +92,19 @@
         LnGT6EncF3jzmH92a4dGgEAAjEQNBRA/9WimUEi8pM9eZJzT/bNynu/cZvAl8veV+Tuv4Zuwjj9OTdhTn9Of05/Tn9Of05/Tn9Of05/rmITxunP
         NW8CufZNIGcTxunPlW8COZtAziaM059zE+b05/Tn9Of05z7/CXJlDgAAAABQxAFwWJtRbq0iNQAAAABJRU5ErkJggg==" />
     </button>
-    <button type="button" id="dc-clipboard-upload-btn" style="background-color: transparent;" title="Upload Encrypted Clipboard">
+    <button type="button" id="dc-clipboard-upload-btn" style="background-color: transparent;" class="dc-tooltip">
+        <span class="dc-tooltip-text">
+            Upload Encrypted Clipboard
+            <br/><br/>
+            <u><b>N.B.</b></u> This copies a deletion link to your clipboard afterwards.
+        </span>
         <svg x="0px" y="0px" width="30" height="30" viewBox="0 0 18 18" class="dc-svg">
             <path fill="lightgrey" d="M13 4h-3v-4h-10v14h6v2h10v-9l-3-3zM3 1h4v1h-4v-1zM15
             15h-8v-10h5v3h3v7zM13 7v-2l2 2h-2z"/>
         </svg>
     </button>
-    <button type="button" id="dc-file-btn" style="background-color: transparent;" title="Upload Encrypted File">
+    <button type="button" id="dc-file-btn" style="background-color: transparent;" class="dc-tooltip">
+        <span class="dc-tooltip-text">Encrypted File Upload Menu</span>
         <svg class="dc-svg" width="24" height="24" viewBox="0 0 1792 1792" fill="lightgrey">
             <path d="M768 384v-128h-128v128h128zm128 128v-128h-128v128h128zm-128
             128v-128h-128v128h128zm128 128v-128h-128v128h128zm700-388q28 28 48
@@ -109,7 +116,8 @@
             </path>
         </svg>
     </button>
-    <button type="button" id="dc-settings-btn" style="background-color: transparent;" title="DiscordCrypt Settings">
+    <button type="button" id="dc-settings-btn" style="background-color: transparent;" class="dc-tooltip">
+        <span class="dc-tooltip-text">DiscordCrypt Settings</span>
         <svg class="dc-svg" enable-background="new 0 0 32 32" version="1.1" viewBox="0 0 32 32"
         width="20px" height="20px" xml:space="preserve">
         <path style="fill:#d3d3d3;"
@@ -137,8 +145,11 @@
             c0.829,0.003,1.498,0.672,1.5,1.501C24.497,23.828,23.828,24.497,22.999,24.499z"/>
     </svg>
     </button>
-    <button type="button" id="dc-lock-btn" style="background-color: transparent;"/>
-    <button type="button" id="dc-passwd-btn" style="background-color: transparent;" title="Password Settings">
+    <button type="button" id="dc-lock-btn" style="background-color: transparent;" class="dc-tooltip">
+        <span id="dc-lock-btn-tooltip" class="dc-tooltip-text"/>
+    </button>
+    <button type="button" id="dc-passwd-btn" style="background-color: transparent;" class="dc-tooltip">
+        <span class="dc-tooltip-text">Channel Password Settings</span>
         <svg class="dc-svg" version="1.1" viewBox="0 0 32 32" width="20px" height="20px">
             <path style="fill:#d3d3d3;"
                   d="M13.008518,22 L11.508518,23.5 L11.508518,23.5 L14.008518,26 L11.008518,
@@ -156,7 +167,8 @@
             19.7993789,14 22.008518,14 L22.008518,14 Z" id="key"/>
         </svg>
     </button>
-    <button type="button" id="dc-exchange-btn" style="background-color: transparent;" title="Key Exchange Menu">
+    <button type="button" id="dc-exchange-btn" style="background-color: transparent;" class="dc-tooltip">
+        <span class="dc-tooltip-text">Key Exchange Menu</span>
         <svg class="dc-svg" version="1.1" viewBox="0 0 78 78" width="20px" height="20px">
             <path style="fill:#d3d3d3;"
                   d="M72,4.5H6c-3.299,0-6,2.699-6,6V55.5c0,3.301,2.701,6,6,6h66c3.301,0,6-2.699,6-6V10.5
@@ -166,8 +178,8 @@
             M50.836,43.228L62.563,30.5L50.836,17.771V24.5h-9.009v12  h9.009V43.228z"/>
         </svg>
     </button>
-    <button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;"
-            title="Generate & Send New Public Key">
+    <button type="button" id="dc-quick-exchange-btn" style="background-color: transparent;" class="dc-tooltip">
+        <span class="dc-tooltip-text">Generate & Send New Public Key</span>
         <svg class="dc-svg iconActive-AKd_jq icon-1R19_H iconMargin-2YXk4F"
              x="0px" y="0px" viewBox="0 0 58 58" width="20px" height="20px">
             <path style="fill:#d3d3d3;"

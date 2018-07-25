@@ -4,7 +4,12 @@
             <input type="text" class="dc-input-field" id="dc-file-path"
                    style="width: 100%;padding: 2px;margin-left: 4px;" readonly title="File Path"/>
             <button class="dc-button dc-button-inverse" type="button" id="dc-select-file-path-btn"
-                    style="top: -8px;"> . . .</button>
+                    style="top: -8px;">
+                <span class="dc-tooltip">
+                    <span class="dc-tooltip-text">Select A File To Upload</span>
+                    . . .
+                </span>
+            </button>
         </div>
 
         <textarea class="dc-textarea" rows="20" cols="128" id="dc-file-message-textarea"
@@ -12,13 +17,24 @@
 
         <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
             <input id="dc-file-deletion-checkbox" class="dc-checkbox" type="checkbox"
-                   style="margin-left: 0;" title="Add Deletion Link">
-            <span style="margin-top: 5px;">Send Deletion Link</span>
+                   style="margin-left: 0;">
+            <span style="margin-top: 5px;" class="dc-tooltip">
+                <span class="dc-tooltip-text">
+                    If enabled, a deletion link will be sent along with the file link that can be used
+                    to delete the file immediately.
+                </span>
+                Send Deletion Link
+            </span>
         </div>
         <div class="dc-ruler-align" style="font-size:14px; padding-bottom:10px;">
-            <input id="dc-file-name-random-checkbox" class="dc-checkbox" type="checkbox" checked
-                   style="margin-left: 0;" title="Use Random File Name">
-            <span style="margin-top: 5px;">Randomize File Name</span>
+            <input id="dc-file-name-random-checkbox" class="dc-checkbox" type="checkbox"
+                   style="margin-left: 0;">
+            <span style="margin-top: 5px;" class="dc-tooltip">
+                <span class="dc-tooltip-text">
+                    If enabled, the upload file's name will be randomized but extension will be kept.
+                </span>
+                Randomize File Name
+            </span>
         </div>
 
         <div class="stat stat-bar">
@@ -62,7 +78,8 @@
         <div class="dc-ruler-align">
             <strong class="dc-update-field">Changelog:</strong></div>
         <div class="dc-ruler-align">
-            <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly title="Update Changes ..."/>
+            <textarea class="dc-textarea" rows="20" cols="128" id="dc-changelog" readonly
+                      placeholder="Update Changes ..."/>
         </div>
         <br>
         <div class="dc-ruler-align">
