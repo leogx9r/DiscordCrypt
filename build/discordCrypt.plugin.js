@@ -5110,7 +5110,8 @@ const discordCrypt = ( () => {
 
         /**
          * @public
-         * @desc Splits the input text into chunks according to the specified length.
+         * @desc Smartly splits the input text into chunks according to the specified length while
+         *      attempting to preserve word spaces unless they exceed the limit.
          * @param {string} input_string The input string.
          * @param {int} max_length The maximum length of the string before splitting.
          * @returns {Array} An array of split strings.
@@ -5118,7 +5119,7 @@ const discordCrypt = ( () => {
          */
         static __splitStringChunks( input_string, max_length ) {
             /* Sanity check. */
-            if ( !max_length || max_length < 0 )
+            if ( !max_length || max_length <= 1 )
                 return input_string;
 
             /* Split the string into words. */
