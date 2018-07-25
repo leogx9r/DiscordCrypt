@@ -3992,7 +3992,7 @@ const discordCrypt = ( () => {
                     let hash = _discordCrypt.__sha256( data.replace( '\r', '' ) );
                     let shortHash = Buffer.from( hash, 'base64' )
                         .toString( 'hex' )
-                        .slice( 0, 8 );
+                        .slice( 0, 16 );
 
                     /* If the hash equals the retrieved one, no update is needed. */
                     if ( hash === currentHash ) {
