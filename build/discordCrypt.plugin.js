@@ -829,12 +829,6 @@ const discordCrypt = ( () => {
          */
         _getDefaultConfig() {
             return {
-                /* Current Version. */
-                version: this.getVersion(),
-                /* Whether to send messages using embedded objects. */
-                useEmbeds: false,
-                /* Default password for servers not set. */
-                defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* How often to scan for encrypted messages. */
@@ -845,18 +839,24 @@ const discordCrypt = ( () => {
                 encryptBlockMode: 'CBC',
                 /* Encode all messages automatically when a password has been set. */
                 encodeAll: true,
+                /* Default password for servers not set. */
+                defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Default padding mode for blocks. */
                 paddingMode: 'PKC7',
                 /* Password array of objects for users or channels. */
                 passList: {},
+                /* Internal message list for time expiration. */
+                timedMessages: [],
+                /* How long after a message is sent to remove it. */
+                timedMessageExpires: 0,
+                /* Whether to send messages using embedded objects. */
+                useEmbeds: false,
                 /* Contains the URL of the Up1 client. */
                 up1Host: 'https://share.riseup.net',
                 /* Contains the API key used for transactions with the Up1 host. */
                 up1ApiKey: '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
-                /* Internal message list for time expiration. */
-                timedMessages: [],
-                /* How long after a message is sent to remove it. */
-                timedMessageExpires: 0
+                /* Current Version. */
+                version: this.getVersion(),
             };
         }
 
