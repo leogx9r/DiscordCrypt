@@ -2632,7 +2632,7 @@ const discordCrypt = ( () => {
                             `Primary Key: ${current_keys.primary}\n\nSecondary Key: ${current_keys.secondary}`
                         );
 
-                        copy_btn.text( 'Copied' );
+                        copy_btn.text( 'Copied Keys' );
 
                         setTimeout( () => {
                             copy_btn.text( 'Copy' );
@@ -2658,7 +2658,7 @@ const discordCrypt = ( () => {
                         global.smalltalk.prompt(
                             'Fingerprint',
                             "<b>N.B. VERIFY THESE OVER A NON-TEXT COMMUNICATION METHOD!</b><br/><br/><br/>" +
-                            `Your Fingerprint: [ \`${id}\` ]:\n\n`,
+                            `Your Fingerprint: [ \`${name}\` ]:\n\n`,
                             fingerprint,
                             { button: [ 'OK' ] }
                         );
