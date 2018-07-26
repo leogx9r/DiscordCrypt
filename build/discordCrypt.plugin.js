@@ -307,6 +307,7 @@
  * @type {_discordCrypt}
  */
 const discordCrypt = ( () => {
+
     /**
      * @desc Master database password. This is a Buffer() containing a 256-bit key.
      * @type {Buffer|null}
@@ -686,8 +687,8 @@ const discordCrypt = ( () => {
                 } );
             }
 
-            /* Setup Voice. */
-            this._setupVoice();
+            /* Block tracking and analytics. */
+            this._blockTracking();
 
             /* Process any blocks on an interval since Discord loves to throttle messages. */
             _scanInterval = setInterval( () => {
@@ -2061,9 +2062,9 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Sets up the plugin's voice hooks.
+         * @desc Block all forms of tracking.
          */
-        _setupVoice() {
+        _blockTracking() {
             /**
              * @protected
              * @desc Patches a specific prototype with the new function.
@@ -2074,10 +2075,14 @@ const discordCrypt = ( () => {
              */
             const patchPrototype = ( name, fn, scanner ) => {
                 try {
+                    let obj = scanner( Array.isArray( name ) ? name : [ name ] );
+
                     if( Array.isArray( name ) )
-                        scanner( name ).prototype[ name[ 0 ] ] = fn;
+                        obj.prototype[ name[ 0 ] ] = fn;
                     else
-                        scanner( [ name ] ).prototype[ name ] = fn;
+                        obj.prototype[ name ] = fn;
+
+                    _freeze( obj.prototype );
                 }
                 catch( e ) {
                     _discordCrypt.log(
@@ -2086,18 +2091,82 @@ const discordCrypt = ( () => {
                     );
                 }
             };
+            /**
+             * @protected
+             * @desc Patches a specific property with the new function.
+             * @param {Array<string>|string} name The name or names of properties to search for.
+             *      The first name will be patched if this is an array.
+             * @param {function} fn The function to override the call with.
+             * @param scanner
+             */
+            const patchProperty = ( name, fn, scanner ) => {
+                try {
+                    let obj = scanner( Array.isArray( name ) ? name : [ name ] );
+
+                    if( Array.isArray( name ) )
+                        obj[ name[ 0 ] ] = fn;
+                    else
+                        obj[ name ] = fn;
+
+                    _freeze( obj );
+                }
+                catch( e ) {
+                    _discordCrypt.log(
+                        `Failed to patch property: ${Array.isArray( name ) ? name[ 0 ] : name}\n${e}`,
+                        'error'
+                    );
+                }
+            };
 
             /* Retrieve the scanner. */
             let searcher = _discordCrypt._getWebpackModuleSearcher();
 
+            /**
+             * @desc Patches a prototype to replace it then seals the object.
+             * @param {string} name The name of the prototype to patch.
+             * @param {string} message The message to log when the patched method is called.
+             */
+            const blockPrototype = ( name, message ) => {
+                /* Remove quality reports. */
+                patchPrototype(
+                    name,
+                    () => _discordCrypt.log( message, 'info' ),
+                    searcher.findByUniquePrototypes
+                );
+            };
+
+            /**
+             * @desc Patches a property to replace it then seals the object.
+             * @param {string} name The name of the property to patch.
+             * @param {string} message The message to log when the patched method is called.
+             * @param {function} fn The optional function to replace with.
+             */
+            const blockProperty = ( name, message, fn ) => {
+                /* Remove quality reports. */
+                patchProperty(
+                    name,
+                    fn ? fn : () => _discordCrypt.log( message, 'info' ),
+                    searcher.findByUniqueProperties
+                );
+            };
+
             /* Remove quality reports. */
-            patchPrototype(
-                '_sendQualityReports',
-                () => {
-                    _discordCrypt.log( 'Blocking voice quality report.', 'info' );
-                },
-                searcher.findByUniquePrototypes
-            );
+            blockPrototype( '_sendQualityReports', 'Blocked a voice quality report.' );
+
+            /* Remove Raven/Sentry tracking. */
+            blockPrototype( '_sendProcessedPayload', 'Blocked a Sentry tracking report.' );
+
+            /* Block retrieval of analytics token. */
+            blockProperty( 'getAnalyticsToken', '', () => {
+                _discordCrypt.log( 'Blocked retrieval of analytics token.', 'info' );
+                return '';
+            } );
+
+            /* Block sending of BrainTree's analytics. */
+            blockProperty( 'sendEvent', '', () => {
+                _discordCrypt.log( 'Blocked BrainTree from sending analytics.', 'info' );
+                return '';
+            } );
         }
 
         /* ========================================================= */
@@ -3999,7 +4068,7 @@ const discordCrypt = ( () => {
                     let hash = _discordCrypt.__sha256( data.replace( '\r', '' ) );
                     let shortHash = Buffer.from( hash, 'base64' )
                         .toString( 'hex' )
-                        .slice( 0, 8 );
+                        .slice( 0, 16 );
 
                     /* If the hash equals the retrieved one, no update is needed. */
                     if ( hash === currentHash ) {
