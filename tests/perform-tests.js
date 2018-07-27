@@ -874,12 +874,12 @@ class testRunner {
         /* Plugin update test.  */
         unit_tests.generic_tests[ 'Plugin Update' ] = ( ut ) => {
             // noinspection JSAccessibilityCheck
-            this.discordCrypt._checkForUpdate( ( file_data, short_hash, new_version, full_changelog ) => {
+            this.discordCrypt._checkForUpdate( ( info ) => {
                 /* Only called if the master branch's hash doesn't match this file's. */
-                ut.equal( file_data.length > 0, true, 'Failed to retrieve update file.' );
-                ut.equal( short_hash.length > 0, true, 'Failed to retrieve update file hash.' );
-                ut.equal( new_version.length > 0, true, 'Failed to retrieve the update version.' );
-                ut.equal( full_changelog.length > 0, true, 'Failed to retrieve the changelog.' );
+                ut.equal( info.payload.length > 0, true, 'Failed to retrieve update file.' );
+                ut.equal( info.hash.length > 0, true, 'Failed to retrieve update file hash.' );
+                ut.equal( info.version.length > 0, true, 'Failed to retrieve the update version.' );
+                ut.equal( info.changelog.length > 0, true, 'Failed to retrieve the changelog.' );
             } );
 
             /* Test will be completed regardless of if an update is found. */
