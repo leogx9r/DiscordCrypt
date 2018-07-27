@@ -2756,13 +2756,13 @@ const discordCrypt = ( () => {
                             continue;
 
                         /* Determine if to count this as an import or an update which aren't counted. */
-                        if ( !self.configFile.passList.hasOwnProperty( e.id ) ) {
+                        if ( !_configFile.passList.hasOwnProperty( e.id ) ) {
                             /* Update the number imported. */
                             imported++;
                         }
 
                         /* Add it to the configuration file. */
-                        self.configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
+                        _configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
                     }
                 }
 
@@ -2822,8 +2822,8 @@ const discordCrypt = ( () => {
                     entries;
 
                 /* Iterate each entry in the configuration file. */
-                for ( let prop in self.configFile.passList ) {
-                    let e = self.configFile.passList[ prop ];
+                for ( let prop in _configFile.passList ) {
+                    let e = _configFile.passList[ prop ];
 
                     /* Insert the entry to the list. */
                     data._discordCrypt_entries.push( {
@@ -2870,7 +2870,7 @@ const discordCrypt = ( () => {
                 let erase_entries_btn = $( '#dc-erase-entries-btn' );
 
                 /* Remove all entries. */
-                self.configFile.passList = {};
+                _configFile.passList = {};
 
                 /* Clear the table. */
                 $( '#dc-database-entries' ).html( '' );
