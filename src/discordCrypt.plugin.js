@@ -2794,68 +2794,65 @@ const discordCrypt = ( () => {
          * @param self
          * @return {Function}
          */
-        static _onExportDatabaseButtonClicked( self ) {
-            return () => {
-                /* Create an input element. */
-                let file = require( 'electron' ).remote.dialog.showSaveDialog( {
-                    title: 'Export Database',
-                    message: 'Select the destination file',
-                    buttonLabel: 'Export',
-                    filters: [ {
-                        name: 'Database Entries ( *.json )',
-                        extensions: [ 'json' ]
-                    } ]
+        static _onExportDatabaseButtonClicked() {/* Create an input element. */
+            let file = require( 'electron' ).remote.dialog.showSaveDialog( {
+                title: 'Export Database',
+                message: 'Select the destination file',
+                buttonLabel: 'Export',
+                filters: [ {
+                    name: 'Database Entries ( *.json )',
+                    extensions: [ 'json' ]
+                } ]
+            } );
+
+            /* Ignore if no files was selected. */
+            if ( !file.length )
+                return;
+
+            /* Get the FS module. */
+            const fs = require( 'fs' );
+
+            /* Cache the button. */
+            let export_btn = $( '#dc-export-database-btn' );
+
+            /* Create the main object for exporting. */
+            let data = { _discordCrypt_entries: [] },
+                entries;
+
+            /* Iterate each entry in the configuration file. */
+            for ( let prop in _configFile.passList ) {
+                let e = _configFile.passList[ prop ];
+
+                /* Insert the entry to the list. */
+                data._discordCrypt_entries.push( {
+                    id: prop,
+                    primary: e.primary,
+                    secondary: e.secondary
                 } );
+            }
 
-                /* Ignore if no files was selected. */
-                if ( !file.length )
-                    return;
+            /* Update the entry count. */
+            entries = data._discordCrypt_entries.length;
 
-                /* Get the FS module. */
-                const fs = require( 'fs' );
+            try {
+                /* Try writing the file. */
+                fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
 
-                /* Cache the button. */
-                let export_btn = $( '#dc-export-database-btn' );
+                /* Update the button's text. */
+                export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
+            }
+            catch ( e ) {
+                /* Log an error. */
+                _discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
 
-                /* Create the main object for exporting. */
-                let data = { _discordCrypt_entries: [] },
-                    entries;
+                /* Update the button's text. */
+                export_btn.text( 'Error: See Console' );
+            }
 
-                /* Iterate each entry in the configuration file. */
-                for ( let prop in _configFile.passList ) {
-                    let e = _configFile.passList[ prop ];
-
-                    /* Insert the entry to the list. */
-                    data._discordCrypt_entries.push( {
-                        id: prop,
-                        primary: e.primary,
-                        secondary: e.secondary
-                    } );
-                }
-
-                /* Update the entry count. */
-                entries = data._discordCrypt_entries.length;
-
-                try {
-                    /* Try writing the file. */
-                    fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
-
-                    /* Update the button's text. */
-                    export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
-                }
-                catch ( e ) {
-                    /* Log an error. */
-                    _discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
-
-                    /* Update the button's text. */
-                    export_btn.text( 'Error: See Console' );
-                }
-
-                /* Reset the button's text. */
-                setTimeout( () => {
-                    export_btn.text( 'Export Database' );
-                }, 1000 );
-            };
+            /* Reset the button's text. */
+            setTimeout( () => {
+                export_btn.text( 'Export Database' );
+            }, 1000 );
         }
 
         /**
