@@ -363,6 +363,13 @@ const discordCrypt = ( () => {
     let _privateExchangeKey;
 
     /**
+     * @private
+     * @desc Stores the compressed PGP public key used for update verification.
+     * @type {string}
+     */
+    let _signingKey = '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */';
+
+    /**
      * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
      *      So just backup the function code here in case it gets attacked in the future.
      * @type {function}
@@ -4000,7 +4007,6 @@ const discordCrypt = ( () => {
             /* Update URL and request method. */
             const base_url = 'https://gitlab.com/leogx9r/discordCrypt/raw/master';
             const update_url = `${base_url}/build/${_discordCrypt._getPluginName()}`;
-            const signing_key_url = `${base_url}/build/signing-key.pub`;
             const changelog_url = `${base_url}/src/CHANGELOG`;
             const signature_url = `${update_url}.sig`;
 
@@ -4110,19 +4116,16 @@ const discordCrypt = ( () => {
 
                     /* Try validating the signature. */
                     try {
-                        /* Fetch the signing key. */
-                        _discordCrypt.__getRequest( signing_key_url, ( statusCode, errorString, signing_key ) => {
-                            /* Fetch the detached signature. */
-                            _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
-                                /* Validate the signature then continue. */
-                                let r = _discordCrypt.__validatePGPSignature( data, detached_sig, signing_key );
+                        /* Fetch the detached signature. */
+                        _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
+                            /* Validate the signature then continue. */
+                            let r = _discordCrypt.__validatePGPSignature( data, detached_sig, _signingKey );
 
-                                /* This returns a Promise if valid or false if invalid. */
-                                if( r )
-                                    r.then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
-                                else
-                                    tryResolveChangelog( false );
-                            } );
+                            /* This returns a Promise if valid or false if invalid. */
+                            if( r )
+                                r.then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
+                            else
+                                tryResolveChangelog( false );
                         } );
                     }
                     catch( e ) {
