@@ -694,7 +694,7 @@ Its derivation is done by using the [Scrypt](#scrypt-hashing-algorithm)
     single-threaded.**
 
 This derives a 256-bit key which is used in conjunction with the 
-    `aes256_encrypt_gcm`/`aes256_decrypt_gcm` functions.
+    `__aes256_encrypt_gcm`/`__aes256_decrypt_gcm` functions.
 
 Please note that this AES-256 bit key also undergoes the OpenSSL process of derived key stretching.
 

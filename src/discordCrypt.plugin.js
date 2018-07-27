@@ -126,6 +126,17 @@
  */
 
 /**
+ * @typedef {Object} UpdateInfo
+ * @desc Contains information regarding a blacklisted update.
+ * @property {string} version Reported version of the blacklisted update.
+ * @property {string} payload The raw update payload.
+ * @property {boolean} valid The signature was marked as valid.
+ * @property {string} hash Checksum of the update data.
+ * @property {string} signature The signed PGP signature for the update payload.
+ * @property {string} changelog Reported changes that occurred during this update.
+ */
+
+/**
  * @typedef {Object} Config
  * @desc Contains the configuration data used for the plugin.
  * @property {string} version The version of the configuration.
@@ -148,16 +159,14 @@
  * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
  * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
  * @property {number} timedMessageExpires How long after a message is sent should it be deleted in seconds.
+ * @property {boolean} automaticUpdates Whether to automatically check for updates.
+ * @property {Array<UpdateInfo>} blacklistedUpdates Updates to ignore due to being blacklisted.
  */
 
 /**
  * @typedef {Object} UpdateCallback
  * @desc The function to execute after an update has been retrieved.
- * @property {string} file_data The update file's data.
- * @property {string} short_hash A 64-bit SHA-256 checksum of the new update.
- * @property {string} new_version The new version of the update.
- * @property {string} full_changelog The full changelog.
- * @property {boolean} Whether the PGP signature is valid or not.
+ * @property {UpdateInfo} info The update's information.
  */
 
 /**
@@ -305,6 +314,7 @@
  * @type {_discordCrypt}
  */
 const discordCrypt = ( () => {
+
     /**
      * @desc Master database password. This is a Buffer() containing a 256-bit key.
      * @type {Buffer|null}
@@ -360,6 +370,20 @@ const discordCrypt = ( () => {
      * @type {Object}
      */
     let _privateExchangeKey;
+
+    /**
+     * @private
+     * @desc Stores the compressed PGP public key used for update verification.
+     * @type {string}
+     */
+    let _signingKey = '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */';
+
+    /**
+     * @private
+     * @desc Stores the update data for applying later on.
+     * @type {UpdateInfo}}
+     */
+    let _updateData = {};
 
     /**
      * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
@@ -582,7 +606,7 @@ const discordCrypt = ( () => {
          * @returns {string}
          */
         getVersion() {
-            return '1.4.6';
+            return '1.5.0';
         }
 
         /**
@@ -616,7 +640,7 @@ const discordCrypt = ( () => {
             }
 
             /* Don't check for updates if running a debug version. */
-            if ( !_discordCrypt._shouldIgnoreUpdates( this.getVersion() ) ) {
+            if ( !_discordCrypt._shouldIgnoreUpdates( this.getVersion() ) && _configFile.automaticUpdates ) {
                 /* Check for any new updates. */
                 this._checkForUpdates();
 
@@ -679,8 +703,8 @@ const discordCrypt = ( () => {
                 } );
             }
 
-            /* Setup Voice. */
-            this._setupVoice();
+            /* Block tracking and analytics. */
+            this._blockTracking();
 
             /* Process any blocks on an interval since Discord loves to throttle messages. */
             _scanInterval = setInterval( () => {
@@ -821,12 +845,10 @@ const discordCrypt = ( () => {
          */
         _getDefaultConfig() {
             return {
-                /* Current Version. */
-                version: this.getVersion(),
-                /* Whether to send messages using embedded objects. */
-                useEmbeds: false,
-                /* Default password for servers not set. */
-                defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
+                /* Automatically check for updates. */
+                automaticUpdates: true,
+                /* Blacklisted updates. */
+                blacklistedUpdates: [],
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* How often to scan for encrypted messages. */
@@ -837,18 +859,24 @@ const discordCrypt = ( () => {
                 encryptBlockMode: 'CBC',
                 /* Encode all messages automatically when a password has been set. */
                 encodeAll: true,
+                /* Default password for servers not set. */
+                defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Default padding mode for blocks. */
                 paddingMode: 'PKC7',
                 /* Password array of objects for users or channels. */
                 passList: {},
+                /* Internal message list for time expiration. */
+                timedMessages: [],
+                /* How long after a message is sent to remove it. */
+                timedMessageExpires: 0,
+                /* Whether to send messages using embedded objects. */
+                useEmbeds: false,
                 /* Contains the URL of the Up1 client. */
                 up1Host: 'https://share.riseup.net',
                 /* Contains the API key used for transactions with the Up1 host. */
                 up1ApiKey: '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
-                /* Internal message list for time expiration. */
-                timedMessages: [],
-                /* How long after a message is sent to remove it. */
-                timedMessageExpires: 0
+                /* Current Version. */
+                version: this.getVersion(),
             };
         }
 
@@ -893,7 +921,7 @@ const discordCrypt = ( () => {
                 /* Try parsing the decrypted data. */
                 _configFile = JSON.parse(
                     _discordCrypt.__zlibDecompress(
-                        _discordCrypt.aes256_decrypt_gcm( config.data, _masterPassword, 'PKC7', 'base64', false ),
+                        _discordCrypt.__aes256_decrypt_gcm( config.data, _masterPassword, 'PKC7', 'base64', false ),
                         'base64',
                         'utf8'
                     )
@@ -916,7 +944,13 @@ const discordCrypt = ( () => {
             /* Iterate all defined properties in the default configuration file. */
             for ( let prop in defaultConfig ) {
                 /* If the defined property doesn't exist in the current configuration file ... */
-                if ( !_configFile.hasOwnProperty( prop ) ) {
+                if (
+                    !_configFile.hasOwnProperty( prop ) ||
+                    (
+                        typeof _configFile[ prop ] !== typeof defaultConfig[ prop ] &&
+                        !Array.isArray( defaultConfig[ prop ] )
+                    )
+                ) {
                     /* Use the default. */
                     _configFile[ prop ] = defaultConfig[ prop ];
 
@@ -983,7 +1017,7 @@ const discordCrypt = ( () => {
             /* Encrypt the message using the master password and save the encrypted data. */
             bdPluginStorage.set( this.getName(), 'config', {
                 data:
-                    _discordCrypt.aes256_encrypt_gcm(
+                    _discordCrypt.__aes256_encrypt_gcm(
                         _discordCrypt.__zlibCompress(
                             JSON.stringify( _configFile ),
                             'utf8'
@@ -1263,7 +1297,7 @@ const discordCrypt = ( () => {
             );
 
             /* Handle cancel button presses. */
-            cancel_btn.click( _discordCrypt._onMasterCancelButtonClicked );
+            cancel_btn.click( _discordCrypt._onMasterCancelButtonClicked( self ) );
         }
 
         /**
@@ -1273,55 +1307,41 @@ const discordCrypt = ( () => {
         _checkForUpdates() {
             const self = this;
 
-            setTimeout( () => {
-                /* Proxy call. */
-                try {
-                    _discordCrypt._checkForUpdate(
-                        ( file_data, short_hash, new_version, full_changelog, valid_sig ) => {
-                            const replacePath = require( 'path' )
-                                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
-                            const fs = require( 'fs' );
+            try {
+                _discordCrypt._checkForUpdate(
+                    ( info ) => {
+                        /* Alert the user of the update and changelog. */
+                        $( '#dc-overlay' ).css( 'display', 'block' );
+                        $( '#dc-update-overlay' ).css( 'display', 'block' );
 
-                            /* Alert the user of the update and changelog. */
-                            $( '#dc-overlay' ).css( 'display', 'block' );
-                            $( '#dc-update-overlay' ).css( 'display', 'block' );
+                        /* Update the version info. */
+                        $( '#dc-new-version' ).text(
+                            `New Version: ${info.version === '' ? 'N/A' : info.version} ` +
+                            `( #${info.hash.slice( 0, 16 )} - ` +
+                            `Update ${info.valid ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
+                        );
+                        $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
 
-                            /* Update the version info. */
-                            $( '#dc-new-version' ).text(
-                                `New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} - ` +
-                                `Update ${valid_sig ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
-                            );
-                            $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
+                        /* Update the changelog. */
+                        let dc_changelog = $( '#dc-changelog' );
+                        dc_changelog.val(
+                            typeof info.changelog === "string" && info.changelog.length > 0 ?
+                                _discordCrypt.__tryParseChangelog( info.changelog, self.getVersion() ) :
+                                'N/A'
+                        );
 
-                            /* Update the changelog. */
-                            let dc_changelog = $( '#dc-changelog' );
-                            dc_changelog.val(
-                                typeof full_changelog === "string" && full_changelog.length > 0 ?
-                                    _discordCrypt.__tryParseChangelog( full_changelog, self.getVersion() ) :
-                                    'N/A'
-                            );
+                        /* Scroll to the top of the changelog. */
+                        dc_changelog.scrollTop( 0 );
 
-                            /* Scroll to the top of the changelog. */
-                            dc_changelog.scrollTop( 0 );
-
-                            /* Replace the file. */
-                            fs.writeFile( replacePath, file_data, ( err ) => {
-                                if ( err ) {
-                                    _discordCrypt.log(
-                                        "Unable to replace the target plugin. " +
-                                            `( ${err} )\nDestination: ${replacePath}`,
-                                        'error'
-                                    );
-                                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
-                                }
-                            } );
-                        }
-                    );
-                }
-                catch ( ex ) {
-                    _discordCrypt.log( ex, 'warn' );
-                }
-            }, 1 );
+                        /* Store the update information in the upper scope. */
+                        _updateData = info;
+                    },
+                    _configFile.blacklistedUpdates
+                );
+            }
+            catch ( ex ) {
+                _discordCrypt.log( ex, 'warn' );
+            }
         }
 
         /**
@@ -1339,7 +1359,7 @@ const discordCrypt = ( () => {
                 return;
 
             /* Add toolbar buttons and their icons if it doesn't exist. */
-            if ( $( '#dc-passwd-btn' ).length !== 0 )
+            if ( $( '#dc-toolbar' ).length !== 0 )
                 return;
 
             /* Inject the toolbar. */
@@ -1352,7 +1372,8 @@ const discordCrypt = ( () => {
             /* Cache jQuery results. */
             let dc_passwd_btn = $( '#dc-passwd-btn' ),
                 dc_lock_btn = $( '#dc-lock-btn' ),
-                dc_svg = $( '.dc-svg' );
+                dc_svg = $( '.dc-svg' ),
+                lock_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
             /* Set the SVG button class. */
             dc_svg.attr( 'class', 'dc-svg' );
@@ -1360,12 +1381,12 @@ const discordCrypt = ( () => {
             /* Set the initial status icon. */
             if ( dc_lock_btn.length > 0 ) {
                 if ( _configFile.encodeAll ) {
-                    dc_lock_btn.attr( 'title', 'Disable Message Encryption' );
                     dc_lock_btn.html( Buffer.from( this._lockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( lock_tooltip.text( 'Disable Message Encryption' ) );
                 }
                 else {
-                    dc_lock_btn.attr( 'title', 'Enable Message Encryption' );
                     dc_lock_btn.html( Buffer.from( this._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( lock_tooltip.text( 'Enable Message Encryption' ) );
                 }
 
                 /* Set the button class. */
@@ -1414,11 +1435,20 @@ const discordCrypt = ( () => {
             /* Handle Database Settings tab selected. */
             $( '#dc-database-settings-btn' ).click( _discordCrypt._onDatabaseTabButtonClicked( this ) );
 
+            /* Handle Security Settings tab selected. */
+            $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked( this ) );
+
+            /* Handle Automatic Updates button clicked. */
+            $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged( this ) );
+
+            /* Handle checking for updates. */
+            $( '#dc-update-check-btn' ).click( _discordCrypt._onCheckForUpdatesButtonClicked( this ) );
+
             /* Handle Database Import button. */
             $( '#dc-import-database-btn' ).click( _discordCrypt._onImportDatabaseButtonClicked( this ) );
 
             /* Handle Database Export button. */
-            $( '#dc-export-database-btn' ).click( _discordCrypt._onExportDatabaseButtonClicked( this ) );
+            $( '#dc-export-database-btn' ).click( _discordCrypt._onExportDatabaseButtonClicked );
 
             /* Handle Clear Database Entries button. */
             $( '#dc-erase-entries-btn' ).click( _discordCrypt._onClearDatabaseEntriesButtonClicked( this ) );
@@ -1437,6 +1467,9 @@ const discordCrypt = ( () => {
 
             /* Handle Restart-Later button clicking. */
             $( '#dc-restart-later-btn' ).click( _discordCrypt._onUpdateRestartLaterButtonClicked );
+
+            /* Handle Ignore-Update button clicking. */
+            $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked( this ) );
 
             /* Handle Info tab switch. */
             $( '#dc-tab-info-btn' ).click( _discordCrypt._onExchangeInfoTabButtonClicked );
@@ -1566,7 +1599,7 @@ const discordCrypt = ( () => {
                 return true;
 
             /* Compute the fingerprint of our currently known public key if any to determine if to proceed. */
-            let local_fingerprint = _discordCrypt.sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
+            let local_fingerprint = _discordCrypt.__sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
 
             /* Skip if this is our current public key. */
             if ( metadata[ 'fingerprint' ] === local_fingerprint ) {
@@ -2053,9 +2086,9 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Sets up the plugin's voice hooks.
+         * @desc Block all forms of tracking.
          */
-        _setupVoice() {
+        _blockTracking() {
             /**
              * @protected
              * @desc Patches a specific prototype with the new function.
@@ -2066,10 +2099,14 @@ const discordCrypt = ( () => {
              */
             const patchPrototype = ( name, fn, scanner ) => {
                 try {
+                    let obj = scanner( Array.isArray( name ) ? name : [ name ] );
+
                     if( Array.isArray( name ) )
-                        scanner( name ).prototype[ name[ 0 ] ] = fn;
+                        obj.prototype[ name[ 0 ] ] = fn;
                     else
-                        scanner( [ name ] ).prototype[ name ] = fn;
+                        obj.prototype[ name ] = fn;
+
+                    _freeze( obj.prototype );
                 }
                 catch( e ) {
                     _discordCrypt.log(
@@ -2078,18 +2115,82 @@ const discordCrypt = ( () => {
                     );
                 }
             };
+            /**
+             * @protected
+             * @desc Patches a specific property with the new function.
+             * @param {Array<string>|string} name The name or names of properties to search for.
+             *      The first name will be patched if this is an array.
+             * @param {function} fn The function to override the call with.
+             * @param scanner
+             */
+            const patchProperty = ( name, fn, scanner ) => {
+                try {
+                    let obj = scanner( Array.isArray( name ) ? name : [ name ] );
+
+                    if( Array.isArray( name ) )
+                        obj[ name[ 0 ] ] = fn;
+                    else
+                        obj[ name ] = fn;
+
+                    _freeze( obj );
+                }
+                catch( e ) {
+                    _discordCrypt.log(
+                        `Failed to patch property: ${Array.isArray( name ) ? name[ 0 ] : name}\n${e}`,
+                        'error'
+                    );
+                }
+            };
 
             /* Retrieve the scanner. */
             let searcher = _discordCrypt._getWebpackModuleSearcher();
 
+            /**
+             * @desc Patches a prototype to replace it then seals the object.
+             * @param {string} name The name of the prototype to patch.
+             * @param {string} message The message to log when the patched method is called.
+             */
+            const blockPrototype = ( name, message ) => {
+                /* Remove quality reports. */
+                patchPrototype(
+                    name,
+                    () => _discordCrypt.log( message, 'info' ),
+                    searcher.findByUniquePrototypes
+                );
+            };
+
+            /**
+             * @desc Patches a property to replace it then seals the object.
+             * @param {string} name The name of the property to patch.
+             * @param {string} message The message to log when the patched method is called.
+             * @param {function} fn The optional function to replace with.
+             */
+            const blockProperty = ( name, message, fn ) => {
+                /* Remove quality reports. */
+                patchProperty(
+                    name,
+                    fn ? fn : () => _discordCrypt.log( message, 'info' ),
+                    searcher.findByUniqueProperties
+                );
+            };
+
             /* Remove quality reports. */
-            patchPrototype(
-                '_sendQualityReports',
-                () => {
-                    _discordCrypt.log( 'Blocking voice quality report.', 'info' );
-                },
-                searcher.findByUniquePrototypes
-            );
+            blockPrototype( '_sendQualityReports', 'Blocked a voice quality report.' );
+
+            /* Remove Raven/Sentry tracking. */
+            blockPrototype( '_sendProcessedPayload', 'Blocked a Sentry tracking report.' );
+
+            /* Block retrieval of analytics token. */
+            blockProperty( 'getAnalyticsToken', '', () => {
+                _discordCrypt.log( 'Blocked retrieval of analytics token.', 'info' );
+                return '';
+            } );
+
+            /* Block sending of BrainTree's analytics. */
+            blockProperty( 'sendEvent', '', () => {
+                _discordCrypt.log( 'Blocked BrainTree from sending analytics.', 'info' );
+                return '';
+            } );
         }
 
         /* ========================================================= */
@@ -2129,10 +2230,10 @@ const discordCrypt = ( () => {
                 }
 
                 /* Hash the password. */
-                _discordCrypt.scrypt
+                _discordCrypt.__scrypt
                 (
                     Buffer.from( password ),
-                    Buffer.from( _discordCrypt.whirlpool( password, true ), 'hex' ),
+                    Buffer.from( _discordCrypt.__whirlpool( password, true ), 'hex' ),
                     32,
                     4096,
                     8,
@@ -2217,20 +2318,69 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Cancels loading the plugin when the unlocking cancel button is pressed.
+         * @param {_discordCrypt} self
          * @return {Function}
          */
-        static _onMasterCancelButtonClicked() {
-            /* Use a 300 millisecond delay. */
-            setTimeout(
-                ( function () {
-                    /* Remove the prompt overlay. */
-                    $( '#dc-master-overlay' ).remove();
+        static _onMasterCancelButtonClicked( self ) {
+            return () => {
+                /* Basically we remove the prompt overlay and load the toolbar but set every element to hidden except
+                    the button to reopen the menu. */
 
-                    /* Do some quick cleanup. */
-                    _masterPassword = null;
-                    _configFile = null;
-                } ), 300
-            );
+                /* These are all buttons we'll be targeting for hiding. */
+                let target_btns = [
+                    '#dc-clipboard-upload-btn',
+                    '#dc-file-btn',
+                    '#dc-settings-btn',
+                    '#dc-lock-btn',
+                    '#dc-passwd-btn',
+                    '#dc-exchange-btn',
+                    '#dc-quick-exchange-btn'
+                ];
+
+                /* Handles reloading of the injected toolbar on switching channels. */
+                let injectedInterval;
+
+                /* Remove the prompt overlay. */
+                $( '#dc-master-overlay' ).remove();
+
+                /* Do some quick cleanup. */
+                _masterPassword = null;
+                _configFile = null;
+
+                /* Handle this on an interval for switching channels. */
+                injectedInterval = setInterval( () => {
+                    /* Skip if the toolbar has already been injected. */
+                    if( $( '#dc-toolbar' ).length )
+                        return;
+
+                    /* Inject the toolbar. */
+                    $( self._searchUiClass )
+                        .parent()
+                        .parent()
+                        .parent()
+                        .prepend( _discordCrypt.__zlibDecompress( self._toolbarHtml ) );
+
+                    let dc_db_prompt_btn = $( '#dc-db-prompt-btn' );
+
+                    /* Set the Unlock DB Prompt button to visible. */
+                    dc_db_prompt_btn.css( 'display', 'inline' );
+
+                    /* Hide every other button. */
+                    target_btns.forEach( id => $( id ).css( 'display', 'none' ) );
+
+                    /* Add the button click event to reopen the menu. */
+                    dc_db_prompt_btn.click( function() {
+                        /* Clear the interval. */
+                        clearInterval( injectedInterval );
+
+                        /* Remove the toolbar. */
+                        $( '#dc-toolbar' ).remove();
+
+                        /* Reopen the prompt. */
+                        self._loadMasterPassword();
+                    } );
+                }, 1000 );
+            };
         }
 
         /**
@@ -2513,7 +2663,7 @@ const discordCrypt = ( () => {
                             `Primary Key: ${current_keys.primary}\n\nSecondary Key: ${current_keys.secondary}`
                         );
 
-                        copy_btn.text( 'Copied' );
+                        copy_btn.text( 'Copied Keys' );
 
                         setTimeout( () => {
                             copy_btn.text( 'Copy' );
@@ -2539,7 +2689,7 @@ const discordCrypt = ( () => {
                         global.smalltalk.prompt(
                             'Fingerprint',
                             "<b>N.B. VERIFY THESE OVER A NON-TEXT COMMUNICATION METHOD!</b><br/><br/><br/>" +
-                            `Your Fingerprint: [ \`${id}\` ]:\n\n`,
+                            `Your Fingerprint: [ \`${name}\` ]:\n\n`,
                             fingerprint,
                             { button: [ 'OK' ] }
                         );
@@ -2561,6 +2711,150 @@ const discordCrypt = ( () => {
                 /* Select the database settings. */
                 _discordCrypt._setActiveSettingsTab( 1 );
             };
+        }
+
+        /**
+         * @private
+         * @desc Selects the Security Settings tab and loads all blacklisted updates.
+         * @param {_discordCrypt} self
+         * @return {Function}
+         */
+        static _onSecurityTabButtonClicked( self ) {
+            return () => {
+                /* Get the table to show blacklisted updates. */
+                let table = $( '#dc-update-blacklist-entries' );
+
+                /* Iterate over all entries. */
+                for ( let i = 0; i < _configFile.blacklistedUpdates.length; i++ ) {
+                    /* Get the update info. */
+                    let updateInfo = _configFile.blacklistedUpdates[ i ];
+
+                    /* Skip empty values.*/
+                    if( !updateInfo )
+                        continue;
+
+                    /* Create the elements needed for building the row. */
+                    let element =
+                            $( `<tr><td>${updateInfo.version}</td><td><div style="display:flex;"></div></td></tr>` ),
+                        remove_btn = $( '<button>' )
+                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                            .text( 'Remove' ),
+                        changelog_btn = $( '<button>' )
+                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                            .text( 'View Changelog' ),
+                        info_btn = $( '<button>' )
+                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                            .text( 'Info' );
+
+                    /* Handle the remove entry button clicked. */
+                    remove_btn.click( function () {
+                        /* Delete the entry. */
+                        delete _configFile.blacklistedUpdates[ i ];
+                        _configFile.blacklistedUpdates = _configFile.blacklistedUpdates.filter( e => e );
+
+                        /* Save the configuration. */
+                        self._saveConfig();
+
+                        /* Remove the entire row. */
+                        remove_btn.parent().parent().parent().remove();
+                    } );
+
+                    /* Handle the changelog button clicked. */
+                    changelog_btn.click( function() {
+                        global.smalltalk.alert(
+                            `Changes`,
+                            _discordCrypt.__tryParseChangelog( updateInfo.changelog, self.getVersion() )
+                        );
+                    } );
+
+                    /* Handle the signatures button clicked. */
+                    info_btn.click( function() {
+                        let size = parseFloat( updateInfo.payload.length / 1024.0 ).toFixed( 3 );
+
+                        global.smalltalk.alert(
+                            'Update Info',
+                            `<strong>Version</strong>: ${updateInfo.version}\n\n` +
+                            `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
+                            `<strong>Size</strong>: ${size} KB\n\n` +
+                            `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
+                            '<code class="hljs dc-code-block" style="background: none !important;">' +
+                            `${updateInfo.signature}</code>`
+                        );
+                    } );
+
+                    /* Add all option buttons to the Options column. */
+                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( changelog_btn );
+                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( info_btn );
+                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( remove_btn );
+
+                    /* Add the row to the table. */
+                    table.append( element );
+                }
+
+                /* Set the current state of automatic updates. */
+                $( '#dc-automatic-updates-enabled' ).prop( 'checked', _configFile.automaticUpdates );
+
+                /* Select the security settings. */
+                _discordCrypt._setActiveSettingsTab( 2 );
+            };
+        }
+
+        /**
+         * @private
+         * @desc Toggles the automatic update checking function.
+         * @param self
+         * @return {Function}
+         */
+        static _onAutomaticUpdateCheckboxChanged( self ) {
+            return () => {
+                /* Set the state. */
+                _configFile.automaticUpdates = $( '#dc-automatic-updates-enabled' )
+                    .is( ':checked' );
+
+                /* Save the configuration. */
+                self._saveConfig();
+
+                /* Log. */
+                _discordCrypt.log( `${_configFile.automaticUpdates ? 'En' : 'Dis'}abled automatic updates.`, 'debug' );
+
+                /* If we're doing automatic updates, make sure an interval is set. */
+                if( _configFile.automaticUpdates ) {
+                    /* Only do this if none is defined. */
+                    if( !_updateHandlerInterval ) {
+                        /* Add an update handler to check for updates every 60 minutes. */
+                        _updateHandlerInterval = setInterval( () => {
+                            self._checkForUpdates();
+                        }, 3600000 );
+                    }
+                }
+                /* Make sure no interval is defined. */
+                else if( _updateHandlerInterval ) {
+                    /* Make sure to clear all intervals. */
+                    clearInterval( _updateHandlerInterval );
+                    _updateHandlerInterval = null;
+                }
+            }
+        }
+
+        /**
+         * @private
+         * @desc Checks for updates immediately.
+         * @param self
+         * @return {Function}
+         */
+        static _onCheckForUpdatesButtonClicked( self ) {
+            return () => {
+                /* Simply call the wrapper, everything else will be handled by this. */
+                self._checkForUpdates();
+
+                /* Update the text. */
+                $( '#dc-update-check-btn' ).text( 'Checking For Updates ...' );
+
+                /* Reset the text after 1 second. */
+                setTimeout( () => {
+                    $( '#dc-update-check-btn' ).text( 'Check For Updates' );
+                }, 1000 );
+            }
         }
 
         /**
@@ -2630,13 +2924,13 @@ const discordCrypt = ( () => {
                             continue;
 
                         /* Determine if to count this as an import or an update which aren't counted. */
-                        if ( !self.configFile.passList.hasOwnProperty( e.id ) ) {
+                        if ( !_configFile.passList.hasOwnProperty( e.id ) ) {
                             /* Update the number imported. */
                             imported++;
                         }
 
                         /* Add it to the configuration file. */
-                        self.configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
+                        _configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
                     }
                 }
 
@@ -2665,71 +2959,67 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Opens a file dialog to import a JSON encoded entries file.
-         * @param self
-         * @return {Function}
          */
-        static _onExportDatabaseButtonClicked( self ) {
-            return () => {
-                /* Create an input element. */
-                let file = require( 'electron' ).remote.dialog.showSaveDialog( {
-                    title: 'Export Database',
-                    message: 'Select the destination file',
-                    buttonLabel: 'Export',
-                    filters: [ {
-                        name: 'Database Entries ( *.json )',
-                        extensions: [ 'json' ]
-                    } ]
+        static _onExportDatabaseButtonClicked() {
+            /* Create an input element. */
+            let file = require( 'electron' ).remote.dialog.showSaveDialog( {
+                title: 'Export Database',
+                message: 'Select the destination file',
+                buttonLabel: 'Export',
+                filters: [ {
+                    name: 'Database Entries ( *.json )',
+                    extensions: [ 'json' ]
+                } ]
+            } );
+
+            /* Ignore if no files was selected. */
+            if ( !file.length )
+                return;
+
+            /* Get the FS module. */
+            const fs = require( 'fs' );
+
+            /* Cache the button. */
+            let export_btn = $( '#dc-export-database-btn' );
+
+            /* Create the main object for exporting. */
+            let data = { _discordCrypt_entries: [] },
+                entries;
+
+            /* Iterate each entry in the configuration file. */
+            for ( let prop in _configFile.passList ) {
+                let e = _configFile.passList[ prop ];
+
+                /* Insert the entry to the list. */
+                data._discordCrypt_entries.push( {
+                    id: prop,
+                    primary: e.primary,
+                    secondary: e.secondary
                 } );
+            }
 
-                /* Ignore if no files was selected. */
-                if ( !file.length )
-                    return;
+            /* Update the entry count. */
+            entries = data._discordCrypt_entries.length;
 
-                /* Get the FS module. */
-                const fs = require( 'fs' );
+            try {
+                /* Try writing the file. */
+                fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
 
-                /* Cache the button. */
-                let export_btn = $( '#dc-export-database-btn' );
+                /* Update the button's text. */
+                export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
+            }
+            catch ( e ) {
+                /* Log an error. */
+                _discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
 
-                /* Create the main object for exporting. */
-                let data = { _discordCrypt_entries: [] },
-                    entries;
+                /* Update the button's text. */
+                export_btn.text( 'Error: See Console' );
+            }
 
-                /* Iterate each entry in the configuration file. */
-                for ( let prop in self.configFile.passList ) {
-                    let e = self.configFile.passList[ prop ];
-
-                    /* Insert the entry to the list. */
-                    data._discordCrypt_entries.push( {
-                        id: prop,
-                        primary: e.primary,
-                        secondary: e.secondary
-                    } );
-                }
-
-                /* Update the entry count. */
-                entries = data._discordCrypt_entries.length;
-
-                try {
-                    /* Try writing the file. */
-                    fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
-
-                    /* Update the button's text. */
-                    export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
-                }
-                catch ( e ) {
-                    /* Log an error. */
-                    _discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
-
-                    /* Update the button's text. */
-                    export_btn.text( 'Error: See Console' );
-                }
-
-                /* Reset the button's text. */
-                setTimeout( () => {
-                    export_btn.text( 'Export Database' );
-                }, 1000 );
-            };
+            /* Reset the button's text. */
+            setTimeout( () => {
+                export_btn.text( 'Export Database' );
+            }, 1000 );
         }
 
         /**
@@ -2744,7 +3034,7 @@ const discordCrypt = ( () => {
                 let erase_entries_btn = $( '#dc-erase-entries-btn' );
 
                 /* Remove all entries. */
-                self.configFile.passList = {};
+                _configFile.passList = {};
 
                 /* Clear the table. */
                 $( '#dc-database-entries' ).html( '' );
@@ -2817,10 +3107,10 @@ const discordCrypt = ( () => {
                     dc_master_password.val( '' );
 
                     /* Hash the password. */
-                    _discordCrypt.scrypt
+                    _discordCrypt.__scrypt
                     (
                         Buffer.from( password ),
-                        Buffer.from( _discordCrypt.whirlpool( password, true ), 'hex' ),
+                        Buffer.from( _discordCrypt.__whirlpool( password, true ), 'hex' ),
                         32,
                         4096,
                         8,
@@ -2883,21 +3173,82 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Restarts the app by performing a window.location.reload()
+         * @desc Applies the update & restarts the app by performing a window.location.reload()
          */
         static _onUpdateRestartNowButtonClicked() {
+            const replacePath = require( 'path' )
+                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
+            const fs = require( 'fs' );
+
+            /* Replace the file. */
+            fs.writeFile( replacePath, _updateData.payload, ( err ) => {
+                if ( err ) {
+                    _discordCrypt.log(
+                        "Unable to replace the target plugin. " +
+                        `( ${err} )\nDestination: ${replacePath}`,
+                        'error'
+                    );
+                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
+                }
+            } );
+
             /* Window reload is simple enough. */
             location.reload();
         }
 
         /**
          * @private
-         * @desc Closes the upload available panel.
+         * @desc Applies the update & closes the upload available panel.
          */
         static _onUpdateRestartLaterButtonClicked() {
+            const replacePath = require( 'path' )
+                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
+            const fs = require( 'fs' );
+
+            /* Replace the file. */
+            fs.writeFile( replacePath, _updateData.payload, ( err ) => {
+                if ( err ) {
+                    _discordCrypt.log(
+                        "Unable to replace the target plugin. " +
+                        `( ${err} )\nDestination: ${replacePath}`,
+                        'error'
+                    );
+                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
+                }
+            } );
+
+            /* Also reset any opened tabs. */
+            _discordCrypt._setActiveSettingsTab( 0 );
+            _discordCrypt._setActiveExchangeTab( 0 );
+
             /* Hide the update and changelog. */
             $( '#dc-overlay' ).css( 'display', 'none' );
             $( '#dc-update-overlay' ).css( 'display', 'none' );
+        }
+
+        /**
+         * @private
+         * @desc Adds the upper scoped update info to the blacklist, saves the configuration file and
+         *      closes the update window.
+         * @param self
+         * @return {Function}
+         */
+        static _onUpdateIgnoreButtonClicked( self ) {
+            return () => {
+                /* Add the blacklist to the configuration file. */
+                _configFile.blacklistedUpdates.push( _updateData );
+
+                /* Save the configuration. */
+                self._saveConfig();
+
+                /* Also reset any opened tabs. */
+                _discordCrypt._setActiveSettingsTab( 0 );
+                _discordCrypt._setActiveExchangeTab( 0 );
+
+                /* Hide the update and changelog. */
+                $( '#dc-overlay' ).css( 'display', 'none' );
+                $( '#dc-update-overlay' ).css( 'display', 'none' );
+            };
         }
 
         /**
@@ -3123,9 +3474,7 @@ const discordCrypt = ( () => {
                 message = self._encodedKeyHeader + _discordCrypt.__substituteMessage( message, true );
 
                 /* Split the message by adding a new line every 32 characters like a standard PGP message. */
-                let formatted_message = message.replace( /(.{32})/g, ( e ) => {
-                    return `${e}\n`
-                } );
+                let formatted_message = message.replace( /(.{32})/g, e => `${e}\n` );
 
                 /* Calculate the algorithm string. */
                 let algo_str = `${$( '#dc-keygen-method' ).val() !== 'ecdh' ? 'DH-' : 'ECDH-'}` +
@@ -3380,7 +3729,7 @@ const discordCrypt = ( () => {
                 let primary_progress = 0, secondary_progress = 0;
 
                 /* Calculate the primary key. */
-                _discordCrypt.scrypt(
+                _discordCrypt.__scrypt(
                     Buffer.from( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
                     primary_hash,
                     256,
@@ -3440,35 +3789,43 @@ const discordCrypt = ( () => {
                 );
 
                 /* Calculate the secondary key. */
-                _discordCrypt.scrypt( secondary_password, secondary_hash, 256, 3072, 8, 1, ( error, progress, key ) => {
-                    if ( error ) {
-                        /* Update the text. */
-                        dc_handshake_compute_btn.text( 'Failed Generating Secondary Key!' );
-                        setTimeout(
-                            ( function () {
-                                dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                            } ),
-                            1000
-                        );
-                        return true;
-                    }
+                _discordCrypt.__scrypt(
+                    secondary_password,
+                    secondary_hash,
+                    256,
+                    3072,
+                    8,
+                    1,
+                    ( error, progress, key ) => {
+                        if ( error ) {
+                            /* Update the text. */
+                            dc_handshake_compute_btn.text( 'Failed Generating Secondary Key!' );
+                            setTimeout(
+                                ( function () {
+                                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                                } ),
+                                1000
+                            );
+                            return true;
+                        }
 
-                    if ( progress ) {
-                        secondary_progress = progress * 50;
-                        $( '#dc-exchange-status' )
-                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
-                    }
+                        if ( progress ) {
+                            secondary_progress = progress * 50;
+                            $( '#dc-exchange-status' )
+                                .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
+                        }
 
-                    if ( key ) {
-                        /* Generate a quality report and apply the password. */
-                        $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
-                            _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
-                        } Bits )` );
-                        $( '#dc-handshake-secondary-key' ).val( key.toString( 'base64' ) );
-                    }
+                        if ( key ) {
+                            /* Generate a quality report and apply the password. */
+                            $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
+                                _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
+                            } Bits )` );
+                            $( '#dc-handshake-secondary-key' ).val( key.toString( 'base64' ) );
+                        }
 
-                    return false;
-                } );
+                        return false;
+                    }
+                );
 
                 /* Update the text. */
                 dc_handshake_compute_btn.text( 'Generating Keys ...' );
@@ -3702,17 +4059,17 @@ const discordCrypt = ( () => {
             return () => {
 
                 /* Cache jQuery results. */
-                let dc_lock_btn = $( '#dc-lock-btn' );
+                let dc_lock_btn = $( '#dc-lock-btn' ), new_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
                 /* Update the icon and toggle. */
                 if ( !_configFile.encodeAll ) {
-                    dc_lock_btn.attr( 'title', 'Disable Message Encryption' );
                     dc_lock_btn.html( Buffer.from( self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( new_tooltip.text( 'Disable Message Encryption' ) );
                     _configFile.encodeAll = true;
                 }
                 else {
-                    dc_lock_btn.attr( 'title', 'Enable Message Encryption' );
                     dc_lock_btn.html( Buffer.from( self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( new_tooltip.text( 'Enable Message Encryption' ) );
                     _configFile.encodeAll = false;
                 }
 
@@ -3732,7 +4089,7 @@ const discordCrypt = ( () => {
          * setActiveTab( 1 );
          */
         static _setActiveSettingsTab( index ) {
-            let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab' ];
+            let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab', 'dc-security-settings-tab' ];
             let tabs = $( '#dc-settings-tab .dc-tab-link' );
 
             /* Hide all tabs. */
@@ -3750,6 +4107,10 @@ const discordCrypt = ( () => {
             case 1:
                 $( '#dc-database-settings-btn' ).addClass( 'active' );
                 $( '#dc-database-settings-tab' ).css( 'display', 'block' );
+                break;
+            case 2:
+                $( '#dc-security-settings-btn' ).addClass( 'active' );
+                $( '#dc-security-settings-tab' ).css( 'display', 'block' );
                 break;
             default:
                 break;
@@ -3860,22 +4221,35 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Checks the update server for an encrypted update.
-         * @param {UpdateCallback} on_update_callback
+         * @param {UpdateCallback} on_update_callback Callback to execute when an update is found.
+         * @param {Array<UpdateInfo>} [blacklisted_updates] Optional list of blacklisted updates to ignore.
          * @returns {boolean}
          * @example
-         * _checkForUpdate( ( file_data, short_hash, new_version, full_changelog, validated ) => {
-     *      console.log( `New Update Available: #${short_hash} - v${new_version}` );
-     *      console.log( `Signature is: ${validated ? valid' : 'invalid'}!` );
-     *      console.log( `Changelog:\n${full_changelog}` );
-     * } );
+         * _checkForUpdate( ( info ) => {
+         *      console.log( `New Update Available: #${info.hash} - v${info.version}` );
+         *      console.log( `Signature is: ${info.valid ? valid' : 'invalid'}!` );
+         *      console.log( `Changelog:\n${info.changelog}` );
+         * } );
          */
-        static _checkForUpdate( on_update_callback ) {
+        static _checkForUpdate( on_update_callback, blacklisted_updates ) {
             /* Update URL and request method. */
             const base_url = 'https://gitlab.com/leogx9r/discordCrypt/raw/master';
             const update_url = `${base_url}/build/${_discordCrypt._getPluginName()}`;
-            const signing_key_url = `${base_url}/build/signing-key.pub`;
             const changelog_url = `${base_url}/src/CHANGELOG`;
             const signature_url = `${update_url}.sig`;
+
+            /**
+             * @desc Local update information.
+             * @type {UpdateInfo}
+             */
+            let updateInfo = {
+                version: '',
+                payload: '',
+                valid: false,
+                hash: '',
+                signature: '',
+                changelog: ''
+            };
 
             /* Make sure the callback is a function. */
             if ( typeof on_update_callback !== 'function' )
@@ -3930,46 +4304,52 @@ const discordCrypt = ( () => {
                     }
 
                     /* Read the current hash of the plugin and compare them.. */
-                    let currentHash = _discordCrypt.sha256( localFile.replace( '\r', '' ) );
-                    let hash = _discordCrypt.sha256( data.replace( '\r', '' ) );
-                    let shortHash = Buffer.from( hash, 'base64' )
-                        .toString( 'hex' )
-                        .slice( 0, 8 );
+                    let currentHash = _discordCrypt.__sha256( localFile.replace( '\r', '' ) );
+                    updateInfo.hash = _discordCrypt.__sha256( data.replace( '\r', '' ), true );
 
                     /* If the hash equals the retrieved one, no update is needed. */
-                    if ( hash === currentHash ) {
-                        _discordCrypt.log( `No Update Needed - #${shortHash}` );
+                    if ( updateInfo.hash === currentHash ) {
+                        _discordCrypt.log( `No Update Needed - #${updateInfo.hash.slice( 0, 16 )}` );
+                        return true;
+                    }
+
+                    /* Check if the hash matches a blacklisted update. */
+                    if(
+                        blacklisted_updates &&
+                        blacklisted_updates.length &&
+                        blacklisted_updates.filter( e => e && e.hash === updateInfo.hash ).length !== 0
+                    ) {
+                        _discordCrypt.log( `Ignoring update - #${updateInfo.hash.slice( 0, 16 )}` );
                         return true;
                     }
 
                     /* Try parsing a version number. */
-                    let version_number = '';
                     try {
-                        version_number = data
+                        updateInfo.version = data
                             .match( /((["'])(\d+\.)(\d+\.)(\*|\d+)(["']))/gi )
                             .toString()
                             .replace( /(['|"]*['|"])/g, '' );
                     }
                     catch ( e ) {
+                        updateInfo.version = '?.?.?';
                         _discordCrypt.log( 'Failed to locate the version number in the update ...', 'warn' );
                     }
 
                     /* Basically the finally step - resolve the changelog & call the callback function. */
                     let tryResolveChangelog = ( valid_signature ) => {
+                        /* Store the validity. */
+                        updateInfo.valid = valid_signature;
+
                         /* Now get the changelog. */
                         try {
                             /* Fetch the changelog from the URL. */
                             _discordCrypt.__getRequest(
                                 changelog_url,
                                 ( statusCode, errorString, changelog ) => {
+                                    updateInfo.changelog = statusCode == 200 ? changelog : '';
+
                                     /* Perform the callback. */
-                                    on_update_callback(
-                                        data,
-                                        shortHash,
-                                        version_number,
-                                        statusCode == 200 ? changelog : '',
-                                        valid_signature
-                                    );
+                                    on_update_callback( updateInfo );
                                 }
                             );
                         }
@@ -3977,25 +4357,33 @@ const discordCrypt = ( () => {
                             _discordCrypt.log( 'Error fetching the changelog.', 'warn' );
 
                             /* Perform the callback without a changelog. */
-                            on_update_callback( data, shortHash, version_number, '', valid_signature );
+                            updateInfo.changelog = '';
+                            on_update_callback( updateInfo );
                         }
                     };
 
+                    /* Store the update. */
+                    updateInfo.payload = data;
+
                     /* Try validating the signature. */
                     try {
-                        /* Fetch the signing key. */
-                        _discordCrypt.__getRequest( signing_key_url, ( statusCode, errorString, signing_key ) => {
-                            /* Fetch the detached signature. */
-                            _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
-                                /* Validate the signature then continue. */
-                                let r = _discordCrypt.__validatePGPSignature( data, detached_sig, signing_key );
+                        /* Fetch the detached signature. */
+                        _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
+                            /* Store the signature. */
+                            updateInfo.signature = detached_sig;
 
-                                /* This returns a Promise if valid or false if invalid. */
-                                if( r )
-                                    r.then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
-                                else
-                                    tryResolveChangelog( false );
-                            } );
+                            /* Validate the signature then continue. */
+                            let r = _discordCrypt.__validatePGPSignature(
+                                updateInfo.payload,
+                                updateInfo.signature,
+                                _discordCrypt.__zlibDecompress( _signingKey )
+                            );
+
+                            /* This returns a Promise if valid or false if invalid. */
+                            if( r )
+                                r.then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
+                            else
+                                tryResolveChangelog( false );
                         } );
                     }
                     catch( e ) {
@@ -4723,7 +5111,11 @@ const discordCrypt = ( () => {
          */
         static log( message, method = "info" ) {
             try {
-                console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
+                console[ method ](
+                    `%c[DiscordCrypt]%c - ${message}`,
+                    "color: #7f007f; font-weight: bold; text-shadow: 0 0 1px #f00, 0 0 2px #f0f, 0 0 3px #00f;",
+                    ""
+                );
             }
             catch ( ex ) {
                 console.error( '[DiscordCrypt] - Error logging message ...' );
@@ -4806,7 +5198,7 @@ const discordCrypt = ( () => {
                 /* Loop while iteration count isn't 0. */
                 while ( count !== 0 ) {
                     /* Update the input with the concatenated hash of the old input + key. */
-                    input = Buffer.from( _discordCrypt.sha256( Buffer.concat( [ input, key ] ), true ), 'hex' );
+                    input = Buffer.from( _discordCrypt.__sha256( Buffer.concat( [ input, key ] ), true ), 'hex' );
                     count -= 1;
                 }
 
@@ -5029,7 +5421,7 @@ const discordCrypt = ( () => {
                     return null;
 
                 /* Create a fingerprint for the blob. */
-                output[ 'fingerprint' ] = _discordCrypt.sha256( msg, true );
+                output[ 'fingerprint' ] = _discordCrypt.__sha256( msg, true );
 
                 /* Buffer[0] contains the algorithm type. Reverse it. */
                 output[ 'bit_length' ] = _discordCrypt.__indexToAlgorithmBitLength( msg[ 0 ] );
@@ -5045,7 +5437,8 @@ const discordCrypt = ( () => {
 
         /**
          * @public
-         * @desc Splits the input text into chunks according to the specified length.
+         * @desc Smartly splits the input text into chunks according to the specified length while
+         *      attempting to preserve word spaces unless they exceed the limit.
          * @param {string} input_string The input string.
          * @param {int} max_length The maximum length of the string before splitting.
          * @returns {Array} An array of split strings.
@@ -5053,16 +5446,47 @@ const discordCrypt = ( () => {
          */
         static __splitStringChunks( input_string, max_length ) {
             /* Sanity check. */
-            if ( !max_length || max_length < 0 )
+            if ( !max_length || max_length <= 1 )
                 return input_string;
 
-            /* Calculate the maximum number of chunks this can be split into. */
-            const num_chunks = Math.ceil( input_string.length / max_length );
-            const ret = new Array( num_chunks );
+            /* Split the string into words. */
+            const words = input_string.split( ' ' );
 
-            /* Split each chunk and add it to the output array. */
-            for ( let i = 0, offset = 0; i < num_chunks; ++i, offset += max_length )
-                ret[ i ] = input_string.substr( offset, max_length );
+            /* Create vars for storing the result, current string and first-word flag. */
+            let ret = [], current = '', first = true;
+
+            /* Iterate over all words. */
+            words.forEach( word => {
+                /* Check if the current string would overflow if the word was added. */
+                if( ( current.length + word.length ) > max_length && current.length ) {
+                    /* Insert the string into the array and reset it. */
+                    ret.push( current );
+
+                    /* Reset the sentence. */
+                    current = '';
+                }
+
+                /* Add the current word to the sentence without a space only if it's the first word. */
+                if( first ) {
+                    current += word;
+                    first = false;
+                }
+                else
+                    current += ` ${word}`;
+
+                /* If the current sentence is longer than the maximum, split it and add to the result repeatedly. */
+                while( current.length > max_length ) {
+                    /* Add it to the array. */
+                    ret.push( current.substr( 0, max_length ) );
+
+                    /* Get the remaining. */
+                    current = current.substr( max_length );
+                }
+            } );
+
+            /* If the current sentence has something, add it to the array. */
+            if( current.length )
+                ret.push( current );
 
             return ret;
         }
@@ -5212,7 +5636,7 @@ const discordCrypt = ( () => {
          *          https://cdn.discordapp.com/emojis/##SNOWFLAKE##.gif
          *
          *      This means it's a simple matter of extracting these from a message and building an image embed.
-         *          <img src="##URI##" class="emoji da-emoji jumboable da-jumboable" alt=":#EMOJI NAME##:">
+         *          <img src="##URI##" class="##EMOJI CLASS##" alt=":#EMOJI NAME##:">
          * @param {string} message The message to extract all emojis from.
          * @param {boolean} as_html Whether to interpret anchor brackets as HTML.
          * @return {Array<EmojiDescriptor>} Returns an array of EmojiDescriptor objects.
@@ -5279,15 +5703,15 @@ const discordCrypt = ( () => {
          * __buildCodeBlockMessage('```\nHello World!\n```');
          * //
          * {
-     *      "code": true,
-     *      "html": "<div class=\"markup line-scanned\" data-colour=\"true\" style=\"color: rgb(111, 0, 0);\">
-     *                  <pre class=\"hljs\">
-     *                      <code class=\"dc-code-block hljs\" style=\"position: relative;\">
-     *                          <ol><li>Hello World!</li></ol>
-     *                      </code>
-     *                  </pre>
-     *              </div>"
-     * }
+         *      "code": true,
+         *      "html": "<div class=\"markup line-scanned\" data-colour=\"true\" style=\"color: rgb(111, 0, 0);\">
+         *                  <pre class=\"hljs\">
+         *                      <code class=\"dc-code-block hljs\" style=\"position: relative;\">
+         *                          <ol><li>Hello World!</li></ol>
+         *                      </code>
+         *                  </pre>
+         *              </div>"
+         * }
          */
         static __buildCodeBlockMessage( message ) {
             try {
@@ -5424,7 +5848,12 @@ const discordCrypt = ( () => {
 
                 message = message
                     .split( item.surrogates )
-                    .join( `<img src="${item.defaultUrl}" class="${emoji_class}" alt=":${item.names[ 0 ]}:">` );
+                    .join(
+                        '<span class="dc-tooltip dc-tooltip-delayed">' +
+                        `<img src="${item.defaultUrl}" class="${emoji_class}">` +
+                        `<span class="dc-tooltip-text" style="font-size: 12px">:${item.names[ 0 ]}:</span>` +
+                        '</span>'
+                    );
             } );
 
             /* Return the default if no emojis are defined. */
@@ -5445,7 +5874,12 @@ const discordCrypt = ( () => {
                 /* Replace the message with a link. */
                 message = message
                     .split( emojis[ i ].formatted )
-                    .join( `<img src="${URI}" class="${emoji_class}" alt=":${e.name}:">` );
+                    .join(
+                        '<span class="dc-tooltip dc-tooltip-delayed">' +
+                        `<img src="${URI}" class="${emoji_class}">` +
+                        `<span class="dc-tooltip-text" style="font-size: 12px">${e.name}</span>` +
+                        '</span>'
+                    );
             }
 
             /* Return the result. */
@@ -5732,7 +6166,7 @@ const discordCrypt = ( () => {
         static __constructRandomArtImage( data, width, height, html_encode ) {
             /* Construct a random color array from the input data and use the width + height as a salt. */
             const colors = Buffer.from(
-                _discordCrypt.pbkdf2_sha160(
+                _discordCrypt.__pbkdf2_sha160(
                     data,
                     Buffer.alloc( width + height ).fill( 0 ),
                     true,
@@ -6321,22 +6755,22 @@ const discordCrypt = ( () => {
                 /* Get the appropriate hash algorithm for the key size. */
                 switch ( keyBytes ) {
                 case 8:
-                    hash = _discordCrypt.whirlpool64;
+                    hash = _discordCrypt.__whirlpool64;
                     break;
                 case 16:
-                    hash = _discordCrypt.sha512_128;
+                    hash = _discordCrypt.__sha512_128;
                     break;
                 case 20:
-                    hash = _discordCrypt.sha160;
+                    hash = _discordCrypt.__sha160;
                     break;
                 case 24:
-                    hash = _discordCrypt.whirlpool192;
+                    hash = _discordCrypt.__whirlpool192;
                     break;
                 case 32:
-                    hash = _discordCrypt.sha256;
+                    hash = _discordCrypt.__sha256;
                     break;
                 case 64:
-                    hash = use_whirlpool !== undefined ? _discordCrypt.sha512 : _discordCrypt.whirlpool;
+                    hash = use_whirlpool !== undefined ? _discordCrypt.__sha512 : _discordCrypt.__whirlpool;
                     break;
                 default:
                     throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys' +
@@ -6903,7 +7337,7 @@ const discordCrypt = ( () => {
 
                 /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
                 if ( _salt.length !== 8 )
-                    _salt = Buffer.from( _discordCrypt.whirlpool64( _salt, true ), 'hex' );
+                    _salt = Buffer.from( _discordCrypt.__whirlpool64( _salt, true ), 'hex' );
             }
             else {
                 /* Generate a random salt to derive the key and IV. */
@@ -6911,7 +7345,7 @@ const discordCrypt = ( () => {
             }
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
                 ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
             /* Slice off the IV. */
@@ -6990,7 +7424,7 @@ const discordCrypt = ( () => {
             _salt = _message.slice( 0, 8 );
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
                 ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
             /* Slice off the IV. */
@@ -7041,15 +7475,15 @@ const discordCrypt = ( () => {
             function handleEncodeSegment( message, key, cipher, mode, pad ) {
                 switch ( cipher ) {
                 case 0:
-                    return _discordCrypt.blowfish512_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__blowfish512_encrypt( message, key, mode, pad );
                 case 1:
-                    return _discordCrypt.aes256_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__aes256_encrypt( message, key, mode, pad );
                 case 2:
-                    return _discordCrypt.camellia256_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__camellia256_encrypt( message, key, mode, pad );
                 case 3:
-                    return _discordCrypt.idea128_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__idea128_encrypt( message, key, mode, pad );
                 case 4:
-                    return _discordCrypt.tripledes192_encrypt( message, key, mode, pad );
+                    return _discordCrypt.__tripledes192_encrypt( message, key, mode, pad );
                 default:
                     return null;
                 }
@@ -7066,7 +7500,7 @@ const discordCrypt = ( () => {
 
             /* Dual-encrypt the segment. */
             if ( cipher_index >= 0 && cipher_index <= 4 )
-                msg = _discordCrypt.blowfish512_encrypt(
+                msg = _discordCrypt.__blowfish512_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index, mode, pad ),
                     secondary_key,
                     mode,
@@ -7075,7 +7509,7 @@ const discordCrypt = ( () => {
                     false
                 );
             else if ( cipher_index >= 5 && cipher_index <= 9 )
-                msg = _discordCrypt.aes256_encrypt(
+                msg = _discordCrypt.__aes256_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index - 5, mode, pad ),
                     secondary_key,
                     mode,
@@ -7084,7 +7518,7 @@ const discordCrypt = ( () => {
                     false
                 );
             else if ( cipher_index >= 10 && cipher_index <= 14 )
-                msg = _discordCrypt.camellia256_encrypt(
+                msg = _discordCrypt.__camellia256_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index - 10, mode, pad ),
                     secondary_key,
                     mode,
@@ -7093,7 +7527,7 @@ const discordCrypt = ( () => {
                     false
                 );
             else if ( cipher_index >= 15 && cipher_index <= 19 )
-                msg = _discordCrypt.idea128_encrypt(
+                msg = _discordCrypt.__idea128_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index - 15, mode, pad ),
                     secondary_key,
                     mode,
@@ -7102,7 +7536,7 @@ const discordCrypt = ( () => {
                     false
                 );
             else if ( cipher_index >= 20 && cipher_index <= 24 )
-                msg = _discordCrypt.tripledes192_encrypt(
+                msg = _discordCrypt.__tripledes192_encrypt(
                     handleEncodeSegment( message, primary_key, cipher_index - 20, mode, pad ),
                     secondary_key,
                     mode,
@@ -7160,15 +7594,35 @@ const discordCrypt = ( () => {
             ) {
                 switch ( cipher ) {
                 case 0:
-                    return _discordCrypt.blowfish512_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__blowfish512_decrypt(
+                        message,
+                        key,
+                        mode,
+                        pad,
+                        output_format,
+                        is_message_hex
+                    );
                 case 1:
-                    return _discordCrypt.aes256_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__aes256_decrypt( message, key, mode, pad, output_format, is_message_hex );
                 case 2:
-                    return _discordCrypt.camellia256_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__camellia256_decrypt(
+                        message,
+                        key,
+                        mode,
+                        pad,
+                        output_format,
+                        is_message_hex
+                    );
                 case 3:
-                    return _discordCrypt.idea128_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__idea128_decrypt( message, key, mode, pad, output_format, is_message_hex );
                 case 4:
-                    return _discordCrypt.tripledes192_decrypt( message, key, mode, pad, output_format, is_message_hex );
+                    return _discordCrypt.__tripledes192_decrypt( message,
+                        key,
+                        mode,
+                        pad,
+                        output_format,
+                        is_message_hex
+                    );
                 default:
                     return null;
                 }
@@ -7228,7 +7682,7 @@ const discordCrypt = ( () => {
                 /* Dual decrypt the segment. */
                 if ( cipher_index >= 0 && cipher_index <= 4 )
                     return handleDecodeSegment(
-                        _discordCrypt.blowfish512_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__blowfish512_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index,
                         mode,
@@ -7238,7 +7692,7 @@ const discordCrypt = ( () => {
                     );
                 else if ( cipher_index >= 5 && cipher_index <= 9 )
                     return handleDecodeSegment(
-                        _discordCrypt.aes256_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__aes256_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index - 5,
                         mode,
@@ -7248,7 +7702,7 @@ const discordCrypt = ( () => {
                     );
                 else if ( cipher_index >= 10 && cipher_index <= 14 )
                     return handleDecodeSegment(
-                        _discordCrypt.camellia256_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__camellia256_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index - 10,
                         mode,
@@ -7258,7 +7712,7 @@ const discordCrypt = ( () => {
                     );
                 else if ( cipher_index >= 15 && cipher_index <= 19 )
                     return handleDecodeSegment(
-                        _discordCrypt.idea128_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__idea128_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index - 15,
                         mode,
@@ -7268,7 +7722,7 @@ const discordCrypt = ( () => {
                     );
                 else if ( cipher_index >= 20 && cipher_index <= 24 )
                     return handleDecodeSegment(
-                        _discordCrypt.tripledes192_decrypt( message, secondary_key, mode, pad, 'base64' ),
+                        _discordCrypt.__tripledes192_decrypt( message, secondary_key, mode, pad, 'base64' ),
                         primary_key,
                         cipher_index - 20,
                         mode,
@@ -7296,7 +7750,7 @@ const discordCrypt = ( () => {
          * @param {ScryptCallback} cb Callback function for progress updates.
          * @returns {boolean} Returns true if successful.
          */
-        static scrypt( input, salt, output_length, N = 16384, r = 8, p = 1, cb = null ) {
+        static __scrypt( input, salt, output_length, N = 16384, r = 8, p = 1, cb = null ) {
             let crypto = require( 'crypto' );
             let _in, _salt;
 
@@ -7635,8 +8089,8 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static whirlpool64( message, to_hex ) {
-            return Buffer.from( _discordCrypt.whirlpool( message, true ), 'hex' )
+        static __whirlpool64( message, to_hex ) {
+            return Buffer.from( _discordCrypt.__whirlpool( message, true ), 'hex' )
                 .slice( 0, 8 ).toString( to_hex ? 'hex' : 'base64' );
         }
 
@@ -7647,8 +8101,8 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static sha512_128( message, to_hex ) {
-            return Buffer.from( _discordCrypt.sha512( message, true ), 'hex' )
+        static __sha512_128( message, to_hex ) {
+            return Buffer.from( _discordCrypt.__sha512( message, true ), 'hex' )
                 .slice( 0, 16 ).toString( to_hex ? 'hex' : 'base64' );
         }
 
@@ -7659,8 +8113,8 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static whirlpool192( message, to_hex ) {
-            return Buffer.from( _discordCrypt.sha512( message, true ), 'hex' )
+        static __whirlpool192( message, to_hex ) {
+            return Buffer.from( _discordCrypt.__sha512( message, true ), 'hex' )
                 .slice( 0, 24 ).toString( to_hex ? 'hex' : 'base64' );
         }
 
@@ -7671,7 +8125,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static sha160( message, to_hex ) {
+        static __sha160( message, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha1', to_hex );
         }
 
@@ -7682,7 +8136,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static sha256( message, to_hex ) {
+        static __sha256( message, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha256', to_hex );
         }
 
@@ -7693,7 +8147,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static sha512( message, to_hex ) {
+        static __sha512( message, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha512', to_hex );
         }
 
@@ -7704,7 +8158,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static whirlpool( message, to_hex ) {
+        static __whirlpool( message, to_hex ) {
             return _discordCrypt.__createHash( message, 'whirlpool', to_hex );
         }
 
@@ -7716,7 +8170,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static hmac_sha256( message, secret, to_hex ) {
+        static __hmac_sha256( message, secret, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha256', to_hex, true, secret );
         }
 
@@ -7728,7 +8182,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static hmac_sha512( message, secret, to_hex ) {
+        static __hmac_sha512( message, secret, to_hex ) {
             return _discordCrypt.__createHash( message, 'sha512', to_hex, true, secret );
         }
 
@@ -7740,7 +8194,7 @@ const discordCrypt = ( () => {
          * @param {boolean} to_hex Whether to convert the result to hex or Base64.
          * @returns {string} Returns the hex or Base64 encoded result.
          */
-        static hmac_whirlpool( message, secret, to_hex ) {
+        static __hmac_whirlpool( message, secret, to_hex ) {
             return _discordCrypt.__createHash( message, 'whirlpool', to_hex, true, secret );
         }
 
@@ -7761,7 +8215,7 @@ const discordCrypt = ( () => {
          * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
          *      encoded result.
          */
-        static pbkdf2_sha160(
+        static __pbkdf2_sha160(
             message,
             salt,
             to_hex,
@@ -7801,7 +8255,7 @@ const discordCrypt = ( () => {
          * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
          *      encoded result.
          */
-        static pbkdf2_sha256(
+        static __pbkdf2_sha256(
             message,
             salt,
             to_hex,
@@ -7841,7 +8295,7 @@ const discordCrypt = ( () => {
          * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
          *      encoded result.
          */
-        static pbkdf2_sha512(
+        static __pbkdf2_sha512(
             message,
             salt,
             to_hex,
@@ -7881,7 +8335,7 @@ const discordCrypt = ( () => {
          * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
          *      encoded result.
          */
-        static pbkdf2_whirlpool(
+        static __pbkdf2_whirlpool(
             message,
             salt,
             to_hex,
@@ -7924,7 +8378,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static blowfish512_encrypt(
+        static __blowfish512_encrypt(
             message,
             key,
             cipher_mode,
@@ -7971,7 +8425,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static blowfish512_decrypt(
+        static __blowfish512_decrypt(
             message,
             key,
             cipher_mode,
@@ -8017,7 +8471,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static aes256_encrypt(
+        static __aes256_encrypt(
             message,
             key,
             cipher_mode,
@@ -8064,7 +8518,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static aes256_decrypt(
+        static __aes256_decrypt(
             message,
             key,
             cipher_mode,
@@ -8111,7 +8565,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static aes256_encrypt_gcm(
+        static __aes256_encrypt_gcm(
             message,
             key,
             padding_mode,
@@ -8144,7 +8598,7 @@ const discordCrypt = ( () => {
 
                 /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
                 if ( _salt.length !== 8 )
-                    _salt = Buffer.from( _discordCrypt.whirlpool64( _salt, true ), 'hex' );
+                    _salt = Buffer.from( _discordCrypt.__whirlpool64( _salt, true ), 'hex' );
             }
             else {
                 /* Generate a random salt to derive the key and IV. */
@@ -8152,7 +8606,7 @@ const discordCrypt = ( () => {
             }
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
                 ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
             /* Slice off the IV. */
@@ -8200,7 +8654,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static aes256_decrypt_gcm(
+        static __aes256_decrypt_gcm(
             message,
             key,
             padding_mode,
@@ -8235,7 +8689,7 @@ const discordCrypt = ( () => {
             _message = _message.slice( 8 );
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
+            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
                 ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
 
             /* Slice off the IV. */
@@ -8287,7 +8741,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static camellia256_encrypt(
+        static __camellia256_encrypt(
             message,
             key,
             cipher_mode,
@@ -8334,7 +8788,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static camellia256_decrypt(
+        static __camellia256_decrypt(
             message,
             key,
             cipher_mode,
@@ -8380,7 +8834,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static tripledes192_encrypt(
+        static __tripledes192_encrypt(
             message,
             key,
             cipher_mode,
@@ -8427,7 +8881,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static tripledes192_decrypt(
+        static __tripledes192_decrypt(
             message,
             key,
             cipher_mode,
@@ -8473,7 +8927,7 @@ const discordCrypt = ( () => {
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
-        static idea128_encrypt(
+        static __idea128_encrypt(
             message,
             key,
             cipher_mode,
@@ -8520,7 +8974,7 @@ const discordCrypt = ( () => {
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
          */
-        static idea128_decrypt(
+        static __idea128_decrypt(
             message,
             key,
             cipher_mode,
