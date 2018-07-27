@@ -2778,7 +2778,10 @@ const discordCrypt = ( () => {
                     info_btn.click( function() {
                         let size = parseFloat( updateInfo.payload.length / 1024.0 ).toFixed( 3 );
                         let key_id = Buffer.from(
-                            openpgp.key.readArmored( _discordCrypt.__zlibDecompress( _signingKey ) )
+                            global
+                                .openpgp
+                                .key
+                                .readArmored( _discordCrypt.__zlibDecompress( _signingKey ) )
                                 .keys[ 0 ]
                                 .primaryKey
                                 .fingerprint
