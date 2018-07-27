@@ -3,6 +3,7 @@
     DiscordCrypt <h3>End-To-End File & Message Encryption For Discord</h3>
 </h1>
 
+* [**Features**](#features)
 * [**Introduction**](#introduction)
 * [**Verifying Signatures**](#verifying-signatures)
 * [**Installation**](#installation)
@@ -25,6 +26,22 @@
 * [**Support And Discussion**](#support-and-discussion)
 
  
+
+# Features
+ 
+- Supports Windows, MAC and Linux. ( No mobile support, sorry! )
+- All messages in DMs, group DMs and channels are end-to-end encrypted.
+- Uses a dual encryption mode with multiple ciphers. ( Defaults to AES-256 and Camellia-256 )
+- Supports embedded messages for extra spice if you want to look unique.
+- Optional timed messages which are deleted after a certain period passes.
+- Emojis ( including animated ) are supported even if you're not a nitro user.
+- Encrypted database with a password of your choosing protects all your keys.
+- Ability to backup and restore all passwords in the database.
+- Strong key exchange for easily exchanging keys with your friends.
+- Supports encrypted file uploads up to 50 MB which are automatically deleted after 7 days.
+- Automatic updates which are verified ensures you always get the latest features.
+- Designed to provide the maximum security and privacy.
+- Extensively tested for reliability and stability.
 
 # Introduction
 

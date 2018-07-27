@@ -40,40 +40,40 @@ class testGenerator {
                 name: 'aes-256',
                 block_size: 16,
                 key_size: 32,
-                encrypt: this.discordCrypt.aes256_encrypt,
-                decrypt: this.discordCrypt.aes256_decrypt,
+                encrypt: this.discordCrypt.__aes256_encrypt,
+                decrypt: this.discordCrypt.__aes256_decrypt,
             },
             {
                 full_name: 'Camellia-256',
                 name: 'camellia-256',
                 block_size: 16,
                 key_size: 32,
-                encrypt: this.discordCrypt.camellia256_encrypt,
-                decrypt: this.discordCrypt.camellia256_decrypt,
+                encrypt: this.discordCrypt.__camellia256_encrypt,
+                decrypt: this.discordCrypt.__camellia256_decrypt,
             },
             {
                 full_name: 'TripleDES-192',
                 name: 'tripledes-192',
                 block_size: 8,
                 key_size: 24,
-                encrypt: this.discordCrypt.tripledes192_encrypt,
-                decrypt: this.discordCrypt.tripledes192_decrypt,
+                encrypt: this.discordCrypt.__tripledes192_encrypt,
+                decrypt: this.discordCrypt.__tripledes192_decrypt,
             },
             {
                 full_name: 'IDEA-128',
                 name: 'idea-128',
                 block_size: 8,
                 key_size: 16,
-                encrypt: this.discordCrypt.idea128_encrypt,
-                decrypt: this.discordCrypt.idea128_decrypt,
+                encrypt: this.discordCrypt.__idea128_encrypt,
+                decrypt: this.discordCrypt.__idea128_decrypt,
             },
             {
                 full_name: 'Blowfish-512',
                 name: 'blowfish-512',
                 block_size: 8,
                 key_size: 64,
-                encrypt: this.discordCrypt.blowfish512_encrypt,
-                decrypt: this.discordCrypt.blowfish512_decrypt
+                encrypt: this.discordCrypt.__blowfish512_encrypt,
+                decrypt: this.discordCrypt.__blowfish512_decrypt
             }
         ];
         this.block_modes = [
@@ -211,7 +211,7 @@ class testGenerator {
                 let salt = this.crypto.randomBytes( 8 );
 
                 /* Perform a round of encryption. */
-                let ciphertext = this.discordCrypt.aes256_encrypt_gcm(
+                let ciphertext = this.discordCrypt.__aes256_encrypt_gcm(
                     plaintext,
                     key,
                     this.padding_schemes[ k ],
@@ -222,7 +222,7 @@ class testGenerator {
                 );
 
                 /* Perform a round of decryption. */
-                let _plaintext = this.discordCrypt.aes256_decrypt_gcm(
+                let _plaintext = this.discordCrypt.__aes256_decrypt_gcm(
                     ciphertext,
                     key,
                     this.padding_schemes[ k ],
@@ -264,37 +264,37 @@ class testGenerator {
             {
                 name: 'sha1',
                 length: 20,
-                hash: this.discordCrypt.sha160,
+                hash: this.discordCrypt.__sha160,
             },
             {
                 name: 'sha256',
                 length: 32,
-                hash: this.discordCrypt.sha256,
+                hash: this.discordCrypt.__sha256,
             },
             {
                 name: 'sha512',
                 length: 64,
-                hash: this.discordCrypt.sha512,
+                hash: this.discordCrypt.__sha512,
             },
             {
                 name: 'sha512_128',
                 length: 16,
-                hash: this.discordCrypt.sha512_128,
+                hash: this.discordCrypt.__sha512_128,
             },
             {
                 name: 'whirlpool',
                 length: 64,
-                hash: this.discordCrypt.whirlpool,
+                hash: this.discordCrypt.__whirlpool,
             },
             {
                 name: 'whirlpool64',
                 length: 8,
-                hash: this.discordCrypt.whirlpool64,
+                hash: this.discordCrypt.__whirlpool64,
             },
             {
                 name: 'whirlpool192',
                 length: 24,
-                hash: this.discordCrypt.whirlpool192,
+                hash: this.discordCrypt.__whirlpool192,
             }
         ];
 
@@ -328,17 +328,17 @@ class testGenerator {
             {
                 name: 'hmac_sha256',
                 length: 32,
-                hash: this.discordCrypt.hmac_sha256,
+                hash: this.discordCrypt.__hmac_sha256,
             },
             {
                 name: 'hmac_sha512',
                 length: 64,
-                hash: this.discordCrypt.hmac_sha512,
+                hash: this.discordCrypt.__hmac_sha512,
             },
             {
                 name: 'hmac_whirlpool',
                 length: 64,
-                hash: this.discordCrypt.hmac_whirlpool,
+                hash: this.discordCrypt.__hmac_whirlpool,
             }
         ];
 

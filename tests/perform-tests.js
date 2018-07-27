@@ -188,7 +188,7 @@ class testRunner {
                 let derivedKey = v.derivedKey;
 
                 /* Passed from the loaded class file. */
-                this.discordCrypt.scrypt( password, salt, v.dkLen, v.N, v.r, v.p, ( error, progress, key ) => {
+                this.discordCrypt.__scrypt( password, salt, v.dkLen, v.N, v.r, v.p, ( error, progress, key ) => {
                     /* On errors, let the user know. */
                     if ( error ) {
                         this.discordCrypt.log( error );
@@ -218,22 +218,22 @@ class testRunner {
             {
                 name: 'sha1',
                 length: 20,
-                fn: this.discordCrypt.pbkdf2_sha160
+                fn: this.discordCrypt.__pbkdf2_sha160
             },
             {
                 name: 'sha256',
                 length: 32,
-                fn: this.discordCrypt.pbkdf2_sha256
+                fn: this.discordCrypt.__pbkdf2_sha256
             },
             {
                 name: 'sha512',
                 length: 64,
-                fn: this.discordCrypt.pbkdf2_sha512
+                fn: this.discordCrypt.__pbkdf2_sha512
             },
             {
                 name: 'whirlpool',
                 length: 64,
-                fn: this.discordCrypt.pbkdf2_whirlpool
+                fn: this.discordCrypt.__pbkdf2_whirlpool
             }
         ];
 
@@ -288,37 +288,37 @@ class testRunner {
             {
                 name: 'sha1',
                 length: 20,
-                hash: this.discordCrypt.sha160,
+                hash: this.discordCrypt.__sha160,
             },
             {
                 name: 'sha256',
                 length: 32,
-                hash: this.discordCrypt.sha256,
+                hash: this.discordCrypt.__sha256,
             },
             {
                 name: 'sha512',
                 length: 64,
-                hash: this.discordCrypt.sha512,
+                hash: this.discordCrypt.__sha512,
             },
             {
                 name: 'sha512_128',
                 length: 16,
-                hash: this.discordCrypt.sha512_128,
+                hash: this.discordCrypt.__sha512_128,
             },
             {
                 name: 'whirlpool',
                 length: 64,
-                hash: this.discordCrypt.whirlpool,
+                hash: this.discordCrypt.__whirlpool,
             },
             {
                 name: 'whirlpool64',
                 length: 8,
-                hash: this.discordCrypt.whirlpool64,
+                hash: this.discordCrypt.__whirlpool64,
             },
             {
                 name: 'whirlpool192',
                 length: 24,
-                hash: this.discordCrypt.whirlpool192,
+                hash: this.discordCrypt.__whirlpool192,
             }
         ];
 
@@ -374,17 +374,17 @@ class testRunner {
             {
                 name: 'hmac_sha256',
                 length: 32,
-                hash: this.discordCrypt.hmac_sha256,
+                hash: this.discordCrypt.__hmac_sha256,
             },
             {
                 name: 'hmac_sha512',
                 length: 64,
-                hash: this.discordCrypt.hmac_sha512,
+                hash: this.discordCrypt.__hmac_sha512,
             },
             {
                 name: 'hmac_whirlpool',
                 length: 64,
-                hash: this.discordCrypt.hmac_whirlpool,
+                hash: this.discordCrypt.__hmac_whirlpool,
             }
         ];
 
@@ -579,15 +579,15 @@ class testRunner {
                 unit_tests,
                 aes_vectors.full_name,
                 aes_vectors.tests,
-                this.discordCrypt.aes256_encrypt,
-                this.discordCrypt.aes256_decrypt
+                this.discordCrypt.__aes256_encrypt,
+                this.discordCrypt.__aes256_decrypt
             );
             addCipherTest(
                 unit_tests,
                 aes_gcm_vectors.full_name,
                 aes_gcm_vectors.tests,
-                this.discordCrypt.aes256_encrypt_gcm,
-                this.discordCrypt.aes256_decrypt_gcm
+                this.discordCrypt.__aes256_encrypt_gcm,
+                this.discordCrypt.__aes256_decrypt_gcm
             );
             break;
         case 'camellia':
@@ -597,8 +597,8 @@ class testRunner {
                 unit_tests,
                 camellia_vectors.full_name,
                 camellia_vectors.tests,
-                this.discordCrypt.camellia256_encrypt,
-                this.discordCrypt.camellia256_decrypt
+                this.discordCrypt.__camellia256_encrypt,
+                this.discordCrypt.__camellia256_decrypt
             );
             break;
         case 'tripledes':
@@ -608,8 +608,8 @@ class testRunner {
                 unit_tests,
                 tripledes_vectors.full_name,
                 tripledes_vectors.tests,
-                this.discordCrypt.tripledes192_encrypt,
-                this.discordCrypt.tripledes192_decrypt
+                this.discordCrypt.__tripledes192_encrypt,
+                this.discordCrypt.__tripledes192_decrypt
             );
             break;
         case 'idea':
@@ -619,8 +619,8 @@ class testRunner {
                 unit_tests,
                 idea_vectors.full_name,
                 idea_vectors.tests,
-                this.discordCrypt.idea128_encrypt,
-                this.discordCrypt.idea128_decrypt
+                this.discordCrypt.__idea128_encrypt,
+                this.discordCrypt.__idea128_decrypt
             );
             break;
         case 'blowfish':
@@ -630,8 +630,8 @@ class testRunner {
                 unit_tests,
                 blowfish_vectors.full_name,
                 blowfish_vectors.tests,
-                this.discordCrypt.blowfish512_encrypt,
-                this.discordCrypt.blowfish512_decrypt
+                this.discordCrypt.__blowfish512_encrypt,
+                this.discordCrypt.__blowfish512_decrypt
             );
             break;
         default:
@@ -639,43 +639,43 @@ class testRunner {
                 unit_tests,
                 aes_vectors.full_name,
                 aes_vectors.tests,
-                this.discordCrypt.aes256_encrypt,
-                this.discordCrypt.aes256_decrypt
+                this.discordCrypt.__aes256_encrypt,
+                this.discordCrypt.__aes256_decrypt
             );
             addCipherTest(
                 unit_tests,
                 aes_gcm_vectors.full_name,
                 aes_gcm_vectors.tests,
-                this.discordCrypt.aes256_encrypt_gcm,
-                this.discordCrypt.aes256_decrypt_gcm
+                this.discordCrypt.__aes256_encrypt_gcm,
+                this.discordCrypt.__aes256_decrypt_gcm
             );
             addCipherTest(
                 unit_tests,
                 camellia_vectors.full_name,
                 camellia_vectors.tests,
-                this.discordCrypt.camellia256_encrypt,
-                this.discordCrypt.camellia256_decrypt
+                this.discordCrypt.__camellia256_encrypt,
+                this.discordCrypt.__camellia256_decrypt
             );
             addCipherTest(
                 unit_tests,
                 tripledes_vectors.full_name,
                 tripledes_vectors.tests,
-                this.discordCrypt.tripledes192_encrypt,
-                this.discordCrypt.tripledes192_decrypt
+                this.discordCrypt.__tripledes192_encrypt,
+                this.discordCrypt.__tripledes192_decrypt
             );
             addCipherTest(
                 unit_tests,
                 idea_vectors.full_name,
                 idea_vectors.tests,
-                this.discordCrypt.idea128_encrypt,
-                this.discordCrypt.idea128_decrypt
+                this.discordCrypt.__idea128_encrypt,
+                this.discordCrypt.__idea128_decrypt
             );
             addCipherTest(
                 unit_tests,
                 blowfish_vectors.full_name,
                 blowfish_vectors.tests,
-                this.discordCrypt.blowfish512_encrypt,
-                this.discordCrypt.blowfish512_decrypt
+                this.discordCrypt.__blowfish512_encrypt,
+                this.discordCrypt.__blowfish512_decrypt
             );
             break;
         }

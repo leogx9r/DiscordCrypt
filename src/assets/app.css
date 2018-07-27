@@ -11,6 +11,41 @@
     z-index: 1000;
     cursor: default;
 }
+.dc-tooltip {
+    display: inline-block;
+    position: relative;
+}
+.dc-tooltip .dc-tooltip-text {
+    visibility: hidden;
+    font-size: 11px;
+    width: 120px;
+    background-color: var(--main-color, #7289da);
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 5px 0;
+    position: absolute;
+    top: 125%;
+    left: 50%;
+    margin-left: -60px;
+    z-index: 10;
+}
+.dc-tooltip .dc-tooltip-text::after {
+    position: absolute;
+    content: "";
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border: 5px solid transparent;
+    border-bottom-color: var(--main-color, #7289da);
+}
+.dc-tooltip:not(.dc-tooltip-delayed):hover .dc-tooltip-text {
+    visibility: visible;
+}
+.dc-tooltip-delayed:hover .dc-tooltip-text {
+    transition: 0s all 1s;
+    visibility: visible;
+}
 .dc-scroll-table {
     overflow: auto;
     max-height: 50%;
@@ -42,25 +77,27 @@
     -webkit-appearance: none;
     outline: none;
     width: 50px;
-    height: 30px;
+    height: 25px;
     background-color: #fff;
     border: 1px solid #a9a9a9;
     border-radius: 50px;
-    box-shadow: inset -20px 0 0 0 #a9a9a9;
+    box-shadow: inset -22px 0 0 0 #a9a9a9;
     -webkit-transition-duration: 200ms;
 }
 .dc-checkbox:after {
     content: "";
     position: absolute;
-    top: 1px; left: 1px;
-    width: 26px; height: 26px;
+    top: 1px;
+    left: 1px;
+    width: 25px;
+    height: 25px;
     background-color: transparent;
     border-radius: 50%;
     box-shadow: 2px 4px 6px rgba(0,0,0,0.2);
 }
 .dc-checkbox:checked {
-    border-color: #3a71c1;
-    box-shadow: inset 20px 0 0 0 #3a71c1;
+    border-color: var(--main-color, #3a71c1);
+    box-shadow: inset 22px 0 0 0 var(--hover-color, #3a71c1);
 }
 .dc-checkbox:checked:after {
     left: 20px;
@@ -69,11 +106,11 @@
 .dc-password-field {
     width: 95%;
     margin: 10px;
-    color: #ffffff;
+    color: #fff;
     height: 10px;
     padding: 5px;
     background: rgba(0, 0, 0, 0.1);
-    border: 2px solid #3a71c1;
+    border: 2px solid var(--main-color, #3a71c1);
 }
 .dc-overlay-centerfield {
     font-size: 20px;
@@ -100,7 +137,7 @@
     background: transparent;
     font-family: monospace;
     font-size: 12px;
-    color: #ffffff;
+    color: #fff;
     overflow: auto;
     padding: 5px;
     resize: none;
@@ -137,12 +174,8 @@ ul.dc-list-red { color: #ff0000; }
     font-size: 12px;
     color: #fff;
 }
-.dc-overlay-main select:hover {
-    background-color: #000 !important;
-    color: #fff;
-}
 .dc-input-field {
-    font-family: monospace !important;
+    font-family: sans-serif !important;
     background: #000 !important;
     color: #fff !important;
     font-size: 12px;
@@ -181,7 +214,7 @@ ul.dc-list-red { color: #ff0000; }
     border-bottom: 3px solid #23272a;
 }
 .dc-overlay-main .tab button {
-    color: #a9a9a9;
+    color: #fff;
     background-color: transparent;
     cursor: pointer;
     padding: 14px 14px;
@@ -191,12 +224,8 @@ ul.dc-list-red { color: #ff0000; }
     border-radius: 3px;
     margin: 3px;
 }
-.dc-overlay-main .tab button:hover {
-    background-color: #2c2f33;
-}
-.dc-overlay-main .tab button.active {
-    background-color: #23272a;
-}
+.dc-overlay-main .tab button:hover { background-color: #2c2f33; }
+.dc-overlay-main .tab button.active { background-color: #23272a; }
 .dc-overlay-main .tab-content {
     display: none;
     height: 95%;
@@ -221,12 +250,13 @@ ul.dc-list-red { color: #ff0000; }
     height: 24px;
 }
 .dc-svg:hover {
-    color: #fff; opacity: .8;
+    color: var(--hover-color, #fff);
+    opacity: .8;
 }
 .dc-button{
     margin-right: 5px;
     margin-left: 5px;
-    background-color: #7289da;
+    background-color: var(--main-color, #7289da);
     color: #fff;
     align-items: center;
     border-radius: 3px;
@@ -249,8 +279,8 @@ ul.dc-list-red { color: #ff0000; }
     min-height: 20px !important;
     font-size: 10px;
 }
-.dc-button:hover{ background-color: #677bc4 !important; }
-.dc-button:active{ background-color: #5b6eae !important; }
+.dc-button:hover{ background-color: var(--hover-color, #677bc4) !important; }
+.dc-button:active{ background-color: var(--main-color, #5b6eae) !important; }
 .dc-button-inverse{
     color: #f04747;
     background: transparent !important;
@@ -287,10 +317,9 @@ ul.dc-list-red { color: #ff0000; }
     float: left;
     height: 100%;
     font-size: 12px;
-    color: #ffffff;
+    color: #fff;
     text-align: center;
     text-indent: -9999px;
-    background-color: #3a71c1;
+    background-color: var(--main-color, #3a71c1);
     box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
-.stat-bar-rating { @include stat-bar(#cf3a02, #ff4500, top, bottom); }

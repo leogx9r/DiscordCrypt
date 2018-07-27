@@ -1,3 +1,19 @@
+Version 1.5.0
+
+- Added an update manager with the ability to blacklist updates.
+- Added the option to enable or disable automatic updates.
+- Added the ability to re-open the master database unlocking prompt if it was closed.
+- Added proper menu tooltips to match Discord's style.
+- Added support for theme colors to style buttons if using some popular themes.
+- Added delayed tooltips for emojis like Discord.
+- Added more features to disable Discord's tracking..
+- Fixed an issue with alert button's background when being clicked.
+- Fixed an issue with settings' text being cut off if using certain fonts.
+- Fixed a bug with copying emoji names to the clipboard making them have additional colons.
+- Fixed a bug when exporting or importing database entries making them fail.
+- Hardened signature verification by directly adding the PGP key to the plugin
+- Updated the user guide.
+
 Version 1.4.6
 
 - Simplified warning message about using embeds.
