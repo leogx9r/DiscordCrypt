@@ -128,6 +128,17 @@
  */
 
 /**
+ * @typedef {Object} UpdateInfo
+ * @desc Contains information regarding a blacklisted update.
+ * @property {string} version Reported version of the blacklisted update.
+ * @property {string} payload The raw update payload.
+ * @property {boolean} valid The signature was marked as valid.
+ * @property {string} hash Checksum of the update data.
+ * @property {string} signature The signed PGP signature for the update payload.
+ * @property {string} changelog Reported changes that occurred during this update.
+ */
+
+/**
  * @typedef {Object} Config
  * @desc Contains the configuration data used for the plugin.
  * @property {string} version The version of the configuration.
@@ -150,16 +161,14 @@
  * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
  * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
  * @property {number} timedMessageExpires How long after a message is sent should it be deleted in seconds.
+ * @property {boolean} automaticUpdates Whether to automatically check for updates.
+ * @property {Array<UpdateInfo>} blacklistedUpdates Updates to ignore due to being blacklisted.
  */
 
 /**
  * @typedef {Object} UpdateCallback
  * @desc The function to execute after an update has been retrieved.
- * @property {string} file_data The update file's data.
- * @property {string} short_hash A 64-bit SHA-256 checksum of the new update.
- * @property {string} new_version The new version of the update.
- * @property {string} full_changelog The full changelog.
- * @property {boolean} Whether the PGP signature is valid or not.
+ * @property {UpdateInfo} info The update's information.
  */
 
 /**
@@ -365,6 +374,20 @@ const discordCrypt = ( () => {
     let _privateExchangeKey;
 
     /**
+     * @private
+     * @desc Stores the compressed PGP public key used for update verification.
+     * @type {string}
+     */
+    let _signingKey = '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';
+
+    /**
+     * @private
+     * @desc Stores the update data for applying later on.
+     * @type {UpdateInfo}}
+     */
+    let _updateData = {};
+
+    /**
      * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
      *      So just backup the function code here in case it gets attacked in the future.
      * @type {function}
@@ -516,7 +539,7 @@ const discordCrypt = ( () => {
              * @type {string}
              */
             this._settingsMenuHtml =
-                `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`;
+                `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`;
 
             /**
              * @desc The Base64 encoded SVG containing the unlocked status icon.
@@ -624,7 +647,7 @@ const discordCrypt = ( () => {
             }
 
             /* Don't check for updates if running a debug version. */
-            if ( !_discordCrypt._shouldIgnoreUpdates( this.getVersion() ) ) {
+            if ( !_discordCrypt._shouldIgnoreUpdates( this.getVersion() ) && _configFile.automaticUpdates ) {
                 /* Check for any new updates. */
                 this._checkForUpdates();
 
@@ -829,6 +852,10 @@ const discordCrypt = ( () => {
          */
         _getDefaultConfig() {
             return {
+                /* Automatically check for updates. */
+                automaticUpdates: true,
+                /* Blacklisted updates. */
+                blacklistedUpdates: [],
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* How often to scan for encrypted messages. */
@@ -924,7 +951,13 @@ const discordCrypt = ( () => {
             /* Iterate all defined properties in the default configuration file. */
             for ( let prop in defaultConfig ) {
                 /* If the defined property doesn't exist in the current configuration file ... */
-                if ( !_configFile.hasOwnProperty( prop ) ) {
+                if (
+                    !_configFile.hasOwnProperty( prop ) ||
+                    (
+                        typeof _configFile[ prop ] !== typeof defaultConfig[ prop ] &&
+                        !Array.isArray( defaultConfig[ prop ] )
+                    )
+                ) {
                     /* Use the default. */
                     _configFile[ prop ] = defaultConfig[ prop ];
 
@@ -1281,55 +1314,41 @@ const discordCrypt = ( () => {
         _checkForUpdates() {
             const self = this;
 
-            setTimeout( () => {
-                /* Proxy call. */
-                try {
-                    _discordCrypt._checkForUpdate(
-                        ( file_data, short_hash, new_version, full_changelog, valid_sig ) => {
-                            const replacePath = require( 'path' )
-                                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
-                            const fs = require( 'fs' );
+            try {
+                _discordCrypt._checkForUpdate(
+                    ( info ) => {
+                        /* Alert the user of the update and changelog. */
+                        $( '#dc-overlay' ).css( 'display', 'block' );
+                        $( '#dc-update-overlay' ).css( 'display', 'block' );
 
-                            /* Alert the user of the update and changelog. */
-                            $( '#dc-overlay' ).css( 'display', 'block' );
-                            $( '#dc-update-overlay' ).css( 'display', 'block' );
+                        /* Update the version info. */
+                        $( '#dc-new-version' ).text(
+                            `New Version: ${info.version === '' ? 'N/A' : info.version} ` +
+                            `( #${info.hash.slice( 0, 16 )} - ` +
+                            `Update ${info.valid ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
+                        );
+                        $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
 
-                            /* Update the version info. */
-                            $( '#dc-new-version' ).text(
-                                `New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} - ` +
-                                `Update ${valid_sig ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
-                            );
-                            $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
+                        /* Update the changelog. */
+                        let dc_changelog = $( '#dc-changelog' );
+                        dc_changelog.val(
+                            typeof info.changelog === "string" && info.changelog.length > 0 ?
+                                _discordCrypt.__tryParseChangelog( info.changelog, self.getVersion() ) :
+                                'N/A'
+                        );
 
-                            /* Update the changelog. */
-                            let dc_changelog = $( '#dc-changelog' );
-                            dc_changelog.val(
-                                typeof full_changelog === "string" && full_changelog.length > 0 ?
-                                    _discordCrypt.__tryParseChangelog( full_changelog, self.getVersion() ) :
-                                    'N/A'
-                            );
+                        /* Scroll to the top of the changelog. */
+                        dc_changelog.scrollTop( 0 );
 
-                            /* Scroll to the top of the changelog. */
-                            dc_changelog.scrollTop( 0 );
-
-                            /* Replace the file. */
-                            fs.writeFile( replacePath, file_data, ( err ) => {
-                                if ( err ) {
-                                    _discordCrypt.log(
-                                        "Unable to replace the target plugin. " +
-                                            `( ${err} )\nDestination: ${replacePath}`,
-                                        'error'
-                                    );
-                                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
-                                }
-                            } );
-                        }
-                    );
-                }
-                catch ( ex ) {
-                    _discordCrypt.log( ex, 'warn' );
-                }
-            }, 1 );
+                        /* Store the update information in the upper scope. */
+                        _updateData = info;
+                    },
+                    _configFile.blacklistedUpdates
+                );
+            }
+            catch ( ex ) {
+                _discordCrypt.log( ex, 'warn' );
+            }
         }
 
         /**
@@ -1423,11 +1442,20 @@ const discordCrypt = ( () => {
             /* Handle Database Settings tab selected. */
             $( '#dc-database-settings-btn' ).click( _discordCrypt._onDatabaseTabButtonClicked( this ) );
 
+            /* Handle Security Settings tab selected. */
+            $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked( this ) );
+
+            /* Handle Automatic Updates button clicked. */
+            $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged( this ) );
+
+            /* Handle checking for updates. */
+            $( '#dc-update-check-btn' ).click( _discordCrypt._onCheckForUpdatesButtonClicked( this ) );
+
             /* Handle Database Import button. */
             $( '#dc-import-database-btn' ).click( _discordCrypt._onImportDatabaseButtonClicked( this ) );
 
             /* Handle Database Export button. */
-            $( '#dc-export-database-btn' ).click( _discordCrypt._onExportDatabaseButtonClicked( this ) );
+            $( '#dc-export-database-btn' ).click( _discordCrypt._onExportDatabaseButtonClicked );
 
             /* Handle Clear Database Entries button. */
             $( '#dc-erase-entries-btn' ).click( _discordCrypt._onClearDatabaseEntriesButtonClicked( this ) );
@@ -1446,6 +1474,9 @@ const discordCrypt = ( () => {
 
             /* Handle Restart-Later button clicking. */
             $( '#dc-restart-later-btn' ).click( _discordCrypt._onUpdateRestartLaterButtonClicked );
+
+            /* Handle Ignore-Update button clicking. */
+            $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked( this ) );
 
             /* Handle Info tab switch. */
             $( '#dc-tab-info-btn' ).click( _discordCrypt._onExchangeInfoTabButtonClicked );
@@ -2691,6 +2722,150 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Selects the Security Settings tab and loads all blacklisted updates.
+         * @param {_discordCrypt} self
+         * @return {Function}
+         */
+        static _onSecurityTabButtonClicked( self ) {
+            return () => {
+                /* Get the table to show blacklisted updates. */
+                let table = $( '#dc-update-blacklist-entries' );
+
+                /* Iterate over all entries. */
+                for ( let i = 0; i < _configFile.blacklistedUpdates.length; i++ ) {
+                    /* Get the update info. */
+                    let updateInfo = _configFile.blacklistedUpdates[ i ];
+
+                    /* Skip empty values.*/
+                    if( !updateInfo )
+                        continue;
+
+                    /* Create the elements needed for building the row. */
+                    let element =
+                            $( `<tr><td>${updateInfo.version}</td><td><div style="display:flex;"></div></td></tr>` ),
+                        remove_btn = $( '<button>' )
+                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                            .text( 'Remove' ),
+                        changelog_btn = $( '<button>' )
+                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                            .text( 'View Changelog' ),
+                        info_btn = $( '<button>' )
+                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                            .text( 'Info' );
+
+                    /* Handle the remove entry button clicked. */
+                    remove_btn.click( function () {
+                        /* Delete the entry. */
+                        delete _configFile.blacklistedUpdates[ i ];
+                        _configFile.blacklistedUpdates = _configFile.blacklistedUpdates.filter( e => e );
+
+                        /* Save the configuration. */
+                        self._saveConfig();
+
+                        /* Remove the entire row. */
+                        remove_btn.parent().parent().parent().remove();
+                    } );
+
+                    /* Handle the changelog button clicked. */
+                    changelog_btn.click( function() {
+                        global.smalltalk.alert(
+                            `Changes`,
+                            _discordCrypt.__tryParseChangelog( updateInfo.changelog, self.getVersion() )
+                        );
+                    } );
+
+                    /* Handle the signatures button clicked. */
+                    info_btn.click( function() {
+                        let size = parseFloat( updateInfo.payload.length / 1024.0 ).toFixed( 3 );
+
+                        global.smalltalk.alert(
+                            'Update Info',
+                            `<strong>Version</strong>: ${updateInfo.version}\n\n` +
+                            `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
+                            `<strong>Size</strong>: ${size} KB\n\n` +
+                            `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
+                            '<code class="hljs dc-code-block" style="background: none !important;">' +
+                            `${updateInfo.signature}</code>`
+                        );
+                    } );
+
+                    /* Add all option buttons to the Options column. */
+                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( changelog_btn );
+                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( info_btn );
+                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( remove_btn );
+
+                    /* Add the row to the table. */
+                    table.append( element );
+                }
+
+                /* Set the current state of automatic updates. */
+                $( '#dc-automatic-updates-enabled' ).prop( 'checked', _configFile.automaticUpdates );
+
+                /* Select the security settings. */
+                _discordCrypt._setActiveSettingsTab( 2 );
+            };
+        }
+
+        /**
+         * @private
+         * @desc Toggles the automatic update checking function.
+         * @param self
+         * @return {Function}
+         */
+        static _onAutomaticUpdateCheckboxChanged( self ) {
+            return () => {
+                /* Set the state. */
+                _configFile.automaticUpdates = $( '#dc-automatic-updates-enabled' )
+                    .is( ':checked' );
+
+                /* Save the configuration. */
+                self._saveConfig();
+
+                /* Log. */
+                _discordCrypt.log( `${_configFile.automaticUpdates ? 'En' : 'Dis'}abled automatic updates.`, 'debug' );
+
+                /* If we're doing automatic updates, make sure an interval is set. */
+                if( _configFile.automaticUpdates ) {
+                    /* Only do this if none is defined. */
+                    if( !_updateHandlerInterval ) {
+                        /* Add an update handler to check for updates every 60 minutes. */
+                        _updateHandlerInterval = setInterval( () => {
+                            self._checkForUpdates();
+                        }, 3600000 );
+                    }
+                }
+                /* Make sure no interval is defined. */
+                else if( _updateHandlerInterval ) {
+                    /* Make sure to clear all intervals. */
+                    clearInterval( _updateHandlerInterval );
+                    _updateHandlerInterval = null;
+                }
+            }
+        }
+
+        /**
+         * @private
+         * @desc Checks for updates immediately.
+         * @param self
+         * @return {Function}
+         */
+        static _onCheckForUpdatesButtonClicked( self ) {
+            return () => {
+                /* Simply call the wrapper, everything else will be handled by this. */
+                self._checkForUpdates();
+
+                /* Update the text. */
+                $( '#dc-update-check-btn' ).text( 'Checking For Updates ...' );
+
+                /* Reset the text after 1 second. */
+                setTimeout( () => {
+                    $( '#dc-update-check-btn' ).text( 'Check For Updates' );
+                }, 1000 );
+            }
+        }
+
+        /**
+         * @private
          * @desc Opens a file dialog to import a JSON encoded entries file.
          * @param self
          * @return {Function}
@@ -2756,13 +2931,13 @@ const discordCrypt = ( () => {
                             continue;
 
                         /* Determine if to count this as an import or an update which aren't counted. */
-                        if ( !self.configFile.passList.hasOwnProperty( e.id ) ) {
+                        if ( !_configFile.passList.hasOwnProperty( e.id ) ) {
                             /* Update the number imported. */
                             imported++;
                         }
 
                         /* Add it to the configuration file. */
-                        self.configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
+                        _configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
                     }
                 }
 
@@ -2791,71 +2966,67 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Opens a file dialog to import a JSON encoded entries file.
-         * @param self
-         * @return {Function}
          */
-        static _onExportDatabaseButtonClicked( self ) {
-            return () => {
-                /* Create an input element. */
-                let file = require( 'electron' ).remote.dialog.showSaveDialog( {
-                    title: 'Export Database',
-                    message: 'Select the destination file',
-                    buttonLabel: 'Export',
-                    filters: [ {
-                        name: 'Database Entries ( *.json )',
-                        extensions: [ 'json' ]
-                    } ]
+        static _onExportDatabaseButtonClicked() {
+            /* Create an input element. */
+            let file = require( 'electron' ).remote.dialog.showSaveDialog( {
+                title: 'Export Database',
+                message: 'Select the destination file',
+                buttonLabel: 'Export',
+                filters: [ {
+                    name: 'Database Entries ( *.json )',
+                    extensions: [ 'json' ]
+                } ]
+            } );
+
+            /* Ignore if no files was selected. */
+            if ( !file.length )
+                return;
+
+            /* Get the FS module. */
+            const fs = require( 'fs' );
+
+            /* Cache the button. */
+            let export_btn = $( '#dc-export-database-btn' );
+
+            /* Create the main object for exporting. */
+            let data = { _discordCrypt_entries: [] },
+                entries;
+
+            /* Iterate each entry in the configuration file. */
+            for ( let prop in _configFile.passList ) {
+                let e = _configFile.passList[ prop ];
+
+                /* Insert the entry to the list. */
+                data._discordCrypt_entries.push( {
+                    id: prop,
+                    primary: e.primary,
+                    secondary: e.secondary
                 } );
+            }
 
-                /* Ignore if no files was selected. */
-                if ( !file.length )
-                    return;
+            /* Update the entry count. */
+            entries = data._discordCrypt_entries.length;
 
-                /* Get the FS module. */
-                const fs = require( 'fs' );
+            try {
+                /* Try writing the file. */
+                fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
 
-                /* Cache the button. */
-                let export_btn = $( '#dc-export-database-btn' );
+                /* Update the button's text. */
+                export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
+            }
+            catch ( e ) {
+                /* Log an error. */
+                _discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
 
-                /* Create the main object for exporting. */
-                let data = { _discordCrypt_entries: [] },
-                    entries;
+                /* Update the button's text. */
+                export_btn.text( 'Error: See Console' );
+            }
 
-                /* Iterate each entry in the configuration file. */
-                for ( let prop in self.configFile.passList ) {
-                    let e = self.configFile.passList[ prop ];
-
-                    /* Insert the entry to the list. */
-                    data._discordCrypt_entries.push( {
-                        id: prop,
-                        primary: e.primary,
-                        secondary: e.secondary
-                    } );
-                }
-
-                /* Update the entry count. */
-                entries = data._discordCrypt_entries.length;
-
-                try {
-                    /* Try writing the file. */
-                    fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
-
-                    /* Update the button's text. */
-                    export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
-                }
-                catch ( e ) {
-                    /* Log an error. */
-                    _discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
-
-                    /* Update the button's text. */
-                    export_btn.text( 'Error: See Console' );
-                }
-
-                /* Reset the button's text. */
-                setTimeout( () => {
-                    export_btn.text( 'Export Database' );
-                }, 1000 );
-            };
+            /* Reset the button's text. */
+            setTimeout( () => {
+                export_btn.text( 'Export Database' );
+            }, 1000 );
         }
 
         /**
@@ -2870,7 +3041,7 @@ const discordCrypt = ( () => {
                 let erase_entries_btn = $( '#dc-erase-entries-btn' );
 
                 /* Remove all entries. */
-                self.configFile.passList = {};
+                _configFile.passList = {};
 
                 /* Clear the table. */
                 $( '#dc-database-entries' ).html( '' );
@@ -3009,21 +3180,82 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Restarts the app by performing a window.location.reload()
+         * @desc Applies the update & restarts the app by performing a window.location.reload()
          */
         static _onUpdateRestartNowButtonClicked() {
+            const replacePath = require( 'path' )
+                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
+            const fs = require( 'fs' );
+
+            /* Replace the file. */
+            fs.writeFile( replacePath, _updateData.payload, ( err ) => {
+                if ( err ) {
+                    _discordCrypt.log(
+                        "Unable to replace the target plugin. " +
+                        `( ${err} )\nDestination: ${replacePath}`,
+                        'error'
+                    );
+                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
+                }
+            } );
+
             /* Window reload is simple enough. */
             location.reload();
         }
 
         /**
          * @private
-         * @desc Closes the upload available panel.
+         * @desc Applies the update & closes the upload available panel.
          */
         static _onUpdateRestartLaterButtonClicked() {
+            const replacePath = require( 'path' )
+                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
+            const fs = require( 'fs' );
+
+            /* Replace the file. */
+            fs.writeFile( replacePath, _updateData.payload, ( err ) => {
+                if ( err ) {
+                    _discordCrypt.log(
+                        "Unable to replace the target plugin. " +
+                        `( ${err} )\nDestination: ${replacePath}`,
+                        'error'
+                    );
+                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
+                }
+            } );
+
+            /* Also reset any opened tabs. */
+            _discordCrypt._setActiveSettingsTab( 0 );
+            _discordCrypt._setActiveExchangeTab( 0 );
+
             /* Hide the update and changelog. */
             $( '#dc-overlay' ).css( 'display', 'none' );
             $( '#dc-update-overlay' ).css( 'display', 'none' );
+        }
+
+        /**
+         * @private
+         * @desc Adds the upper scoped update info to the blacklist, saves the configuration file and
+         *      closes the update window.
+         * @param self
+         * @return {Function}
+         */
+        static _onUpdateIgnoreButtonClicked( self ) {
+            return () => {
+                /* Add the blacklist to the configuration file. */
+                _configFile.blacklistedUpdates.push( _updateData );
+
+                /* Save the configuration. */
+                self._saveConfig();
+
+                /* Also reset any opened tabs. */
+                _discordCrypt._setActiveSettingsTab( 0 );
+                _discordCrypt._setActiveExchangeTab( 0 );
+
+                /* Hide the update and changelog. */
+                $( '#dc-overlay' ).css( 'display', 'none' );
+                $( '#dc-update-overlay' ).css( 'display', 'none' );
+            };
         }
 
         /**
@@ -3249,9 +3481,7 @@ const discordCrypt = ( () => {
                 message = self._encodedKeyHeader + _discordCrypt.__substituteMessage( message, true );
 
                 /* Split the message by adding a new line every 32 characters like a standard PGP message. */
-                let formatted_message = message.replace( /(.{32})/g, ( e ) => {
-                    return `${e}\n`
-                } );
+                let formatted_message = message.replace( /(.{32})/g, e => `${e}\n` );
 
                 /* Calculate the algorithm string. */
                 let algo_str = `${$( '#dc-keygen-method' ).val() !== 'ecdh' ? 'DH-' : 'ECDH-'}` +
@@ -3866,7 +4096,7 @@ const discordCrypt = ( () => {
          * setActiveTab( 1 );
          */
         static _setActiveSettingsTab( index ) {
-            let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab' ];
+            let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab', 'dc-security-settings-tab' ];
             let tabs = $( '#dc-settings-tab .dc-tab-link' );
 
             /* Hide all tabs. */
@@ -3884,6 +4114,10 @@ const discordCrypt = ( () => {
             case 1:
                 $( '#dc-database-settings-btn' ).addClass( 'active' );
                 $( '#dc-database-settings-tab' ).css( 'display', 'block' );
+                break;
+            case 2:
+                $( '#dc-security-settings-btn' ).addClass( 'active' );
+                $( '#dc-security-settings-tab' ).css( 'display', 'block' );
                 break;
             default:
                 break;
@@ -3994,22 +4228,35 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Checks the update server for an encrypted update.
-         * @param {UpdateCallback} on_update_callback
+         * @param {UpdateCallback} on_update_callback Callback to execute when an update is found.
+         * @param {Array<UpdateInfo>} [blacklisted_updates] Optional list of blacklisted updates to ignore.
          * @returns {boolean}
          * @example
-         * _checkForUpdate( ( file_data, short_hash, new_version, full_changelog, validated ) => {
-     *      console.log( `New Update Available: #${short_hash} - v${new_version}` );
-     *      console.log( `Signature is: ${validated ? valid' : 'invalid'}!` );
-     *      console.log( `Changelog:\n${full_changelog}` );
-     * } );
+         * _checkForUpdate( ( info ) => {
+         *      console.log( `New Update Available: #${info.hash} - v${info.version}` );
+         *      console.log( `Signature is: ${info.valid ? valid' : 'invalid'}!` );
+         *      console.log( `Changelog:\n${info.changelog}` );
+         * } );
          */
-        static _checkForUpdate( on_update_callback ) {
+        static _checkForUpdate( on_update_callback, blacklisted_updates ) {
             /* Update URL and request method. */
             const base_url = 'https://gitlab.com/leogx9r/discordCrypt/raw/master';
             const update_url = `${base_url}/build/${_discordCrypt._getPluginName()}`;
-            const signing_key_url = `${base_url}/build/signing-key.pub`;
             const changelog_url = `${base_url}/src/CHANGELOG`;
             const signature_url = `${update_url}.sig`;
+
+            /**
+             * @desc Local update information.
+             * @type {UpdateInfo}
+             */
+            let updateInfo = {
+                version: '',
+                payload: '',
+                valid: false,
+                hash: '',
+                signature: '',
+                changelog: ''
+            };
 
             /* Make sure the callback is a function. */
             if ( typeof on_update_callback !== 'function' )
@@ -4065,45 +4312,51 @@ const discordCrypt = ( () => {
 
                     /* Read the current hash of the plugin and compare them.. */
                     let currentHash = _discordCrypt.__sha256( localFile.replace( '\r', '' ) );
-                    let hash = _discordCrypt.__sha256( data.replace( '\r', '' ) );
-                    let shortHash = Buffer.from( hash, 'base64' )
-                        .toString( 'hex' )
-                        .slice( 0, 16 );
+                    updateInfo.hash = _discordCrypt.__sha256( data.replace( '\r', '' ), true );
 
                     /* If the hash equals the retrieved one, no update is needed. */
-                    if ( hash === currentHash ) {
-                        _discordCrypt.log( `No Update Needed - #${shortHash}` );
+                    if ( updateInfo.hash === currentHash ) {
+                        _discordCrypt.log( `No Update Needed - #${updateInfo.hash.slice( 0, 16 )}` );
+                        return true;
+                    }
+
+                    /* Check if the hash matches a blacklisted update. */
+                    if(
+                        blacklisted_updates &&
+                        blacklisted_updates.length &&
+                        blacklisted_updates.filter( e => e && e.hash === updateInfo.hash ).length !== 0
+                    ) {
+                        _discordCrypt.log( `Ignoring update - #${updateInfo.hash.slice( 0, 16 )}` );
                         return true;
                     }
 
                     /* Try parsing a version number. */
-                    let version_number = '';
                     try {
-                        version_number = data
+                        updateInfo.version = data
                             .match( /((["'])(\d+\.)(\d+\.)(\*|\d+)(["']))/gi )
                             .toString()
                             .replace( /(['|"]*['|"])/g, '' );
                     }
                     catch ( e ) {
+                        updateInfo.version = '?.?.?';
                         _discordCrypt.log( 'Failed to locate the version number in the update ...', 'warn' );
                     }
 
                     /* Basically the finally step - resolve the changelog & call the callback function. */
                     let tryResolveChangelog = ( valid_signature ) => {
+                        /* Store the validity. */
+                        updateInfo.valid = valid_signature;
+
                         /* Now get the changelog. */
                         try {
                             /* Fetch the changelog from the URL. */
                             _discordCrypt.__getRequest(
                                 changelog_url,
                                 ( statusCode, errorString, changelog ) => {
+                                    updateInfo.changelog = statusCode == 200 ? changelog : '';
+
                                     /* Perform the callback. */
-                                    on_update_callback(
-                                        data,
-                                        shortHash,
-                                        version_number,
-                                        statusCode == 200 ? changelog : '',
-                                        valid_signature
-                                    );
+                                    on_update_callback( updateInfo );
                                 }
                             );
                         }
@@ -4111,25 +4364,33 @@ const discordCrypt = ( () => {
                             _discordCrypt.log( 'Error fetching the changelog.', 'warn' );
 
                             /* Perform the callback without a changelog. */
-                            on_update_callback( data, shortHash, version_number, '', valid_signature );
+                            updateInfo.changelog = '';
+                            on_update_callback( updateInfo );
                         }
                     };
 
+                    /* Store the update. */
+                    updateInfo.payload = data;
+
                     /* Try validating the signature. */
                     try {
-                        /* Fetch the signing key. */
-                        _discordCrypt.__getRequest( signing_key_url, ( statusCode, errorString, signing_key ) => {
-                            /* Fetch the detached signature. */
-                            _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
-                                /* Validate the signature then continue. */
-                                let r = _discordCrypt.__validatePGPSignature( data, detached_sig, signing_key );
+                        /* Fetch the detached signature. */
+                        _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
+                            /* Store the signature. */
+                            updateInfo.signature = detached_sig;
 
-                                /* This returns a Promise if valid or false if invalid. */
-                                if( r )
-                                    r.then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
-                                else
-                                    tryResolveChangelog( false );
-                            } );
+                            /* Validate the signature then continue. */
+                            let r = _discordCrypt.__validatePGPSignature(
+                                updateInfo.payload,
+                                updateInfo.signature,
+                                _discordCrypt.__zlibDecompress( _signingKey )
+                            );
+
+                            /* This returns a Promise if valid or false if invalid. */
+                            if( r )
+                                r.then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
+                            else
+                                tryResolveChangelog( false );
                         } );
                     }
                     catch( e ) {
@@ -4857,7 +5118,11 @@ const discordCrypt = ( () => {
          */
         static log( message, method = "info" ) {
             try {
-                console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
+                console[ method ](
+                    `%c[DiscordCrypt]%c - ${message}`,
+                    "color: #7f007f; font-weight: bold; text-shadow: 0 0 1px #f00, 0 0 2px #f0f, 0 0 3px #00f;",
+                    ""
+                );
             }
             catch ( ex ) {
                 console.error( '[DiscordCrypt] - Error logging message ...' );

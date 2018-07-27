@@ -126,6 +126,17 @@
  */
 
 /**
+ * @typedef {Object} UpdateInfo
+ * @desc Contains information regarding a blacklisted update.
+ * @property {string} version Reported version of the blacklisted update.
+ * @property {string} payload The raw update payload.
+ * @property {boolean} valid The signature was marked as valid.
+ * @property {string} hash Checksum of the update data.
+ * @property {string} signature The signed PGP signature for the update payload.
+ * @property {string} changelog Reported changes that occurred during this update.
+ */
+
+/**
  * @typedef {Object} Config
  * @desc Contains the configuration data used for the plugin.
  * @property {string} version The version of the configuration.
@@ -148,16 +159,14 @@
  * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
  * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
  * @property {number} timedMessageExpires How long after a message is sent should it be deleted in seconds.
+ * @property {boolean} automaticUpdates Whether to automatically check for updates.
+ * @property {Array<UpdateInfo>} blacklistedUpdates Updates to ignore due to being blacklisted.
  */
 
 /**
  * @typedef {Object} UpdateCallback
  * @desc The function to execute after an update has been retrieved.
- * @property {string} file_data The update file's data.
- * @property {string} short_hash A 64-bit SHA-256 checksum of the new update.
- * @property {string} new_version The new version of the update.
- * @property {string} full_changelog The full changelog.
- * @property {boolean} Whether the PGP signature is valid or not.
+ * @property {UpdateInfo} info The update's information.
  */
 
 /**
@@ -368,6 +377,13 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     let _signingKey = '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */';
+
+    /**
+     * @private
+     * @desc Stores the update data for applying later on.
+     * @type {UpdateInfo}}
+     */
+    let _updateData = {};
 
     /**
      * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
@@ -624,7 +640,7 @@ const discordCrypt = ( () => {
             }
 
             /* Don't check for updates if running a debug version. */
-            if ( !_discordCrypt._shouldIgnoreUpdates( this.getVersion() ) ) {
+            if ( !_discordCrypt._shouldIgnoreUpdates( this.getVersion() ) && _configFile.automaticUpdates ) {
                 /* Check for any new updates. */
                 this._checkForUpdates();
 
@@ -829,6 +845,10 @@ const discordCrypt = ( () => {
          */
         _getDefaultConfig() {
             return {
+                /* Automatically check for updates. */
+                automaticUpdates: true,
+                /* Blacklisted updates. */
+                blacklistedUpdates: [],
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* How often to scan for encrypted messages. */
@@ -924,7 +944,13 @@ const discordCrypt = ( () => {
             /* Iterate all defined properties in the default configuration file. */
             for ( let prop in defaultConfig ) {
                 /* If the defined property doesn't exist in the current configuration file ... */
-                if ( !_configFile.hasOwnProperty( prop ) ) {
+                if (
+                    !_configFile.hasOwnProperty( prop ) ||
+                    (
+                        typeof _configFile[ prop ] !== typeof defaultConfig[ prop ] &&
+                        !Array.isArray( defaultConfig[ prop ] )
+                    )
+                ) {
                     /* Use the default. */
                     _configFile[ prop ] = defaultConfig[ prop ];
 
@@ -1281,55 +1307,41 @@ const discordCrypt = ( () => {
         _checkForUpdates() {
             const self = this;
 
-            setTimeout( () => {
-                /* Proxy call. */
-                try {
-                    _discordCrypt._checkForUpdate(
-                        ( file_data, short_hash, new_version, full_changelog, valid_sig ) => {
-                            const replacePath = require( 'path' )
-                                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
-                            const fs = require( 'fs' );
+            try {
+                _discordCrypt._checkForUpdate(
+                    ( info ) => {
+                        /* Alert the user of the update and changelog. */
+                        $( '#dc-overlay' ).css( 'display', 'block' );
+                        $( '#dc-update-overlay' ).css( 'display', 'block' );
 
-                            /* Alert the user of the update and changelog. */
-                            $( '#dc-overlay' ).css( 'display', 'block' );
-                            $( '#dc-update-overlay' ).css( 'display', 'block' );
+                        /* Update the version info. */
+                        $( '#dc-new-version' ).text(
+                            `New Version: ${info.version === '' ? 'N/A' : info.version} ` +
+                            `( #${info.hash.slice( 0, 16 )} - ` +
+                            `Update ${info.valid ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
+                        );
+                        $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
 
-                            /* Update the version info. */
-                            $( '#dc-new-version' ).text(
-                                `New Version: ${new_version === '' ? 'N/A' : new_version} ( #${short_hash} - ` +
-                                `Update ${valid_sig ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
-                            );
-                            $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
+                        /* Update the changelog. */
+                        let dc_changelog = $( '#dc-changelog' );
+                        dc_changelog.val(
+                            typeof info.changelog === "string" && info.changelog.length > 0 ?
+                                _discordCrypt.__tryParseChangelog( info.changelog, self.getVersion() ) :
+                                'N/A'
+                        );
 
-                            /* Update the changelog. */
-                            let dc_changelog = $( '#dc-changelog' );
-                            dc_changelog.val(
-                                typeof full_changelog === "string" && full_changelog.length > 0 ?
-                                    _discordCrypt.__tryParseChangelog( full_changelog, self.getVersion() ) :
-                                    'N/A'
-                            );
+                        /* Scroll to the top of the changelog. */
+                        dc_changelog.scrollTop( 0 );
 
-                            /* Scroll to the top of the changelog. */
-                            dc_changelog.scrollTop( 0 );
-
-                            /* Replace the file. */
-                            fs.writeFile( replacePath, file_data, ( err ) => {
-                                if ( err ) {
-                                    _discordCrypt.log(
-                                        "Unable to replace the target plugin. " +
-                                            `( ${err} )\nDestination: ${replacePath}`,
-                                        'error'
-                                    );
-                                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
-                                }
-                            } );
-                        }
-                    );
-                }
-                catch ( ex ) {
-                    _discordCrypt.log( ex, 'warn' );
-                }
-            }, 1 );
+                        /* Store the update information in the upper scope. */
+                        _updateData = info;
+                    },
+                    _configFile.blacklistedUpdates
+                );
+            }
+            catch ( ex ) {
+                _discordCrypt.log( ex, 'warn' );
+            }
         }
 
         /**
@@ -1423,11 +1435,20 @@ const discordCrypt = ( () => {
             /* Handle Database Settings tab selected. */
             $( '#dc-database-settings-btn' ).click( _discordCrypt._onDatabaseTabButtonClicked( this ) );
 
+            /* Handle Security Settings tab selected. */
+            $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked( this ) );
+
+            /* Handle Automatic Updates button clicked. */
+            $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged( this ) );
+
+            /* Handle checking for updates. */
+            $( '#dc-update-check-btn' ).click( _discordCrypt._onCheckForUpdatesButtonClicked( this ) );
+
             /* Handle Database Import button. */
             $( '#dc-import-database-btn' ).click( _discordCrypt._onImportDatabaseButtonClicked( this ) );
 
             /* Handle Database Export button. */
-            $( '#dc-export-database-btn' ).click( _discordCrypt._onExportDatabaseButtonClicked( this ) );
+            $( '#dc-export-database-btn' ).click( _discordCrypt._onExportDatabaseButtonClicked );
 
             /* Handle Clear Database Entries button. */
             $( '#dc-erase-entries-btn' ).click( _discordCrypt._onClearDatabaseEntriesButtonClicked( this ) );
@@ -1446,6 +1467,9 @@ const discordCrypt = ( () => {
 
             /* Handle Restart-Later button clicking. */
             $( '#dc-restart-later-btn' ).click( _discordCrypt._onUpdateRestartLaterButtonClicked );
+
+            /* Handle Ignore-Update button clicking. */
+            $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked( this ) );
 
             /* Handle Info tab switch. */
             $( '#dc-tab-info-btn' ).click( _discordCrypt._onExchangeInfoTabButtonClicked );
@@ -2691,6 +2715,150 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Selects the Security Settings tab and loads all blacklisted updates.
+         * @param {_discordCrypt} self
+         * @return {Function}
+         */
+        static _onSecurityTabButtonClicked( self ) {
+            return () => {
+                /* Get the table to show blacklisted updates. */
+                let table = $( '#dc-update-blacklist-entries' );
+
+                /* Iterate over all entries. */
+                for ( let i = 0; i < _configFile.blacklistedUpdates.length; i++ ) {
+                    /* Get the update info. */
+                    let updateInfo = _configFile.blacklistedUpdates[ i ];
+
+                    /* Skip empty values.*/
+                    if( !updateInfo )
+                        continue;
+
+                    /* Create the elements needed for building the row. */
+                    let element =
+                            $( `<tr><td>${updateInfo.version}</td><td><div style="display:flex;"></div></td></tr>` ),
+                        remove_btn = $( '<button>' )
+                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                            .text( 'Remove' ),
+                        changelog_btn = $( '<button>' )
+                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                            .text( 'View Changelog' ),
+                        info_btn = $( '<button>' )
+                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                            .text( 'Info' );
+
+                    /* Handle the remove entry button clicked. */
+                    remove_btn.click( function () {
+                        /* Delete the entry. */
+                        delete _configFile.blacklistedUpdates[ i ];
+                        _configFile.blacklistedUpdates = _configFile.blacklistedUpdates.filter( e => e );
+
+                        /* Save the configuration. */
+                        self._saveConfig();
+
+                        /* Remove the entire row. */
+                        remove_btn.parent().parent().parent().remove();
+                    } );
+
+                    /* Handle the changelog button clicked. */
+                    changelog_btn.click( function() {
+                        global.smalltalk.alert(
+                            `Changes`,
+                            _discordCrypt.__tryParseChangelog( updateInfo.changelog, self.getVersion() )
+                        );
+                    } );
+
+                    /* Handle the signatures button clicked. */
+                    info_btn.click( function() {
+                        let size = parseFloat( updateInfo.payload.length / 1024.0 ).toFixed( 3 );
+
+                        global.smalltalk.alert(
+                            'Update Info',
+                            `<strong>Version</strong>: ${updateInfo.version}\n\n` +
+                            `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
+                            `<strong>Size</strong>: ${size} KB\n\n` +
+                            `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
+                            '<code class="hljs dc-code-block" style="background: none !important;">' +
+                            `${updateInfo.signature}</code>`
+                        );
+                    } );
+
+                    /* Add all option buttons to the Options column. */
+                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( changelog_btn );
+                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( info_btn );
+                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( remove_btn );
+
+                    /* Add the row to the table. */
+                    table.append( element );
+                }
+
+                /* Set the current state of automatic updates. */
+                $( '#dc-automatic-updates-enabled' ).prop( 'checked', _configFile.automaticUpdates );
+
+                /* Select the security settings. */
+                _discordCrypt._setActiveSettingsTab( 2 );
+            };
+        }
+
+        /**
+         * @private
+         * @desc Toggles the automatic update checking function.
+         * @param self
+         * @return {Function}
+         */
+        static _onAutomaticUpdateCheckboxChanged( self ) {
+            return () => {
+                /* Set the state. */
+                _configFile.automaticUpdates = $( '#dc-automatic-updates-enabled' )
+                    .is( ':checked' );
+
+                /* Save the configuration. */
+                self._saveConfig();
+
+                /* Log. */
+                _discordCrypt.log( `${_configFile.automaticUpdates ? 'En' : 'Dis'}abled automatic updates.`, 'debug' );
+
+                /* If we're doing automatic updates, make sure an interval is set. */
+                if( _configFile.automaticUpdates ) {
+                    /* Only do this if none is defined. */
+                    if( !_updateHandlerInterval ) {
+                        /* Add an update handler to check for updates every 60 minutes. */
+                        _updateHandlerInterval = setInterval( () => {
+                            self._checkForUpdates();
+                        }, 3600000 );
+                    }
+                }
+                /* Make sure no interval is defined. */
+                else if( _updateHandlerInterval ) {
+                    /* Make sure to clear all intervals. */
+                    clearInterval( _updateHandlerInterval );
+                    _updateHandlerInterval = null;
+                }
+            }
+        }
+
+        /**
+         * @private
+         * @desc Checks for updates immediately.
+         * @param self
+         * @return {Function}
+         */
+        static _onCheckForUpdatesButtonClicked( self ) {
+            return () => {
+                /* Simply call the wrapper, everything else will be handled by this. */
+                self._checkForUpdates();
+
+                /* Update the text. */
+                $( '#dc-update-check-btn' ).text( 'Checking For Updates ...' );
+
+                /* Reset the text after 1 second. */
+                setTimeout( () => {
+                    $( '#dc-update-check-btn' ).text( 'Check For Updates' );
+                }, 1000 );
+            }
+        }
+
+        /**
+         * @private
          * @desc Opens a file dialog to import a JSON encoded entries file.
          * @param self
          * @return {Function}
@@ -2791,10 +2959,9 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Opens a file dialog to import a JSON encoded entries file.
-         * @param self
-         * @return {Function}
          */
-        static _onExportDatabaseButtonClicked() {/* Create an input element. */
+        static _onExportDatabaseButtonClicked() {
+            /* Create an input element. */
             let file = require( 'electron' ).remote.dialog.showSaveDialog( {
                 title: 'Export Database',
                 message: 'Select the destination file',
@@ -3006,21 +3173,82 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Restarts the app by performing a window.location.reload()
+         * @desc Applies the update & restarts the app by performing a window.location.reload()
          */
         static _onUpdateRestartNowButtonClicked() {
+            const replacePath = require( 'path' )
+                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
+            const fs = require( 'fs' );
+
+            /* Replace the file. */
+            fs.writeFile( replacePath, _updateData.payload, ( err ) => {
+                if ( err ) {
+                    _discordCrypt.log(
+                        "Unable to replace the target plugin. " +
+                        `( ${err} )\nDestination: ${replacePath}`,
+                        'error'
+                    );
+                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
+                }
+            } );
+
             /* Window reload is simple enough. */
             location.reload();
         }
 
         /**
          * @private
-         * @desc Closes the upload available panel.
+         * @desc Applies the update & closes the upload available panel.
          */
         static _onUpdateRestartLaterButtonClicked() {
+            const replacePath = require( 'path' )
+                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
+            const fs = require( 'fs' );
+
+            /* Replace the file. */
+            fs.writeFile( replacePath, _updateData.payload, ( err ) => {
+                if ( err ) {
+                    _discordCrypt.log(
+                        "Unable to replace the target plugin. " +
+                        `( ${err} )\nDestination: ${replacePath}`,
+                        'error'
+                    );
+                    global.smalltalk.alert( 'Error During Update', 'Failed to apply the update!' );
+                }
+            } );
+
+            /* Also reset any opened tabs. */
+            _discordCrypt._setActiveSettingsTab( 0 );
+            _discordCrypt._setActiveExchangeTab( 0 );
+
             /* Hide the update and changelog. */
             $( '#dc-overlay' ).css( 'display', 'none' );
             $( '#dc-update-overlay' ).css( 'display', 'none' );
+        }
+
+        /**
+         * @private
+         * @desc Adds the upper scoped update info to the blacklist, saves the configuration file and
+         *      closes the update window.
+         * @param self
+         * @return {Function}
+         */
+        static _onUpdateIgnoreButtonClicked( self ) {
+            return () => {
+                /* Add the blacklist to the configuration file. */
+                _configFile.blacklistedUpdates.push( _updateData );
+
+                /* Save the configuration. */
+                self._saveConfig();
+
+                /* Also reset any opened tabs. */
+                _discordCrypt._setActiveSettingsTab( 0 );
+                _discordCrypt._setActiveExchangeTab( 0 );
+
+                /* Hide the update and changelog. */
+                $( '#dc-overlay' ).css( 'display', 'none' );
+                $( '#dc-update-overlay' ).css( 'display', 'none' );
+            };
         }
 
         /**
@@ -3246,9 +3474,7 @@ const discordCrypt = ( () => {
                 message = self._encodedKeyHeader + _discordCrypt.__substituteMessage( message, true );
 
                 /* Split the message by adding a new line every 32 characters like a standard PGP message. */
-                let formatted_message = message.replace( /(.{32})/g, ( e ) => {
-                    return `${e}\n`
-                } );
+                let formatted_message = message.replace( /(.{32})/g, e => `${e}\n` );
 
                 /* Calculate the algorithm string. */
                 let algo_str = `${$( '#dc-keygen-method' ).val() !== 'ecdh' ? 'DH-' : 'ECDH-'}` +
@@ -3863,7 +4089,7 @@ const discordCrypt = ( () => {
          * setActiveTab( 1 );
          */
         static _setActiveSettingsTab( index ) {
-            let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab' ];
+            let tab_names = [ 'dc-plugin-settings-tab', 'dc-database-settings-tab', 'dc-security-settings-tab' ];
             let tabs = $( '#dc-settings-tab .dc-tab-link' );
 
             /* Hide all tabs. */
@@ -3881,6 +4107,10 @@ const discordCrypt = ( () => {
             case 1:
                 $( '#dc-database-settings-btn' ).addClass( 'active' );
                 $( '#dc-database-settings-tab' ).css( 'display', 'block' );
+                break;
+            case 2:
+                $( '#dc-security-settings-btn' ).addClass( 'active' );
+                $( '#dc-security-settings-tab' ).css( 'display', 'block' );
                 break;
             default:
                 break;
@@ -3991,21 +4221,35 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Checks the update server for an encrypted update.
-         * @param {UpdateCallback} on_update_callback
+         * @param {UpdateCallback} on_update_callback Callback to execute when an update is found.
+         * @param {Array<UpdateInfo>} [blacklisted_updates] Optional list of blacklisted updates to ignore.
          * @returns {boolean}
          * @example
-         * _checkForUpdate( ( file_data, short_hash, new_version, full_changelog, validated ) => {
-     *      console.log( `New Update Available: #${short_hash} - v${new_version}` );
-     *      console.log( `Signature is: ${validated ? valid' : 'invalid'}!` );
-     *      console.log( `Changelog:\n${full_changelog}` );
-     * } );
+         * _checkForUpdate( ( info ) => {
+         *      console.log( `New Update Available: #${info.hash} - v${info.version}` );
+         *      console.log( `Signature is: ${info.valid ? valid' : 'invalid'}!` );
+         *      console.log( `Changelog:\n${info.changelog}` );
+         * } );
          */
-        static _checkForUpdate( on_update_callback ) {
+        static _checkForUpdate( on_update_callback, blacklisted_updates ) {
             /* Update URL and request method. */
             const base_url = 'https://gitlab.com/leogx9r/discordCrypt/raw/master';
             const update_url = `${base_url}/build/${_discordCrypt._getPluginName()}`;
             const changelog_url = `${base_url}/src/CHANGELOG`;
             const signature_url = `${update_url}.sig`;
+
+            /**
+             * @desc Local update information.
+             * @type {UpdateInfo}
+             */
+            let updateInfo = {
+                version: '',
+                payload: '',
+                valid: false,
+                hash: '',
+                signature: '',
+                changelog: ''
+            };
 
             /* Make sure the callback is a function. */
             if ( typeof on_update_callback !== 'function' )
@@ -4061,45 +4305,51 @@ const discordCrypt = ( () => {
 
                     /* Read the current hash of the plugin and compare them.. */
                     let currentHash = _discordCrypt.__sha256( localFile.replace( '\r', '' ) );
-                    let hash = _discordCrypt.__sha256( data.replace( '\r', '' ) );
-                    let shortHash = Buffer.from( hash, 'base64' )
-                        .toString( 'hex' )
-                        .slice( 0, 16 );
+                    updateInfo.hash = _discordCrypt.__sha256( data.replace( '\r', '' ), true );
 
                     /* If the hash equals the retrieved one, no update is needed. */
-                    if ( hash === currentHash ) {
-                        _discordCrypt.log( `No Update Needed - #${shortHash}` );
+                    if ( updateInfo.hash === currentHash ) {
+                        _discordCrypt.log( `No Update Needed - #${updateInfo.hash.slice( 0, 16 )}` );
+                        return true;
+                    }
+
+                    /* Check if the hash matches a blacklisted update. */
+                    if(
+                        blacklisted_updates &&
+                        blacklisted_updates.length &&
+                        blacklisted_updates.filter( e => e && e.hash === updateInfo.hash ).length !== 0
+                    ) {
+                        _discordCrypt.log( `Ignoring update - #${updateInfo.hash.slice( 0, 16 )}` );
                         return true;
                     }
 
                     /* Try parsing a version number. */
-                    let version_number = '';
                     try {
-                        version_number = data
+                        updateInfo.version = data
                             .match( /((["'])(\d+\.)(\d+\.)(\*|\d+)(["']))/gi )
                             .toString()
                             .replace( /(['|"]*['|"])/g, '' );
                     }
                     catch ( e ) {
+                        updateInfo.version = '?.?.?';
                         _discordCrypt.log( 'Failed to locate the version number in the update ...', 'warn' );
                     }
 
                     /* Basically the finally step - resolve the changelog & call the callback function. */
                     let tryResolveChangelog = ( valid_signature ) => {
+                        /* Store the validity. */
+                        updateInfo.valid = valid_signature;
+
                         /* Now get the changelog. */
                         try {
                             /* Fetch the changelog from the URL. */
                             _discordCrypt.__getRequest(
                                 changelog_url,
                                 ( statusCode, errorString, changelog ) => {
+                                    updateInfo.changelog = statusCode == 200 ? changelog : '';
+
                                     /* Perform the callback. */
-                                    on_update_callback(
-                                        data,
-                                        shortHash,
-                                        version_number,
-                                        statusCode == 200 ? changelog : '',
-                                        valid_signature
-                                    );
+                                    on_update_callback( updateInfo );
                                 }
                             );
                         }
@@ -4107,16 +4357,27 @@ const discordCrypt = ( () => {
                             _discordCrypt.log( 'Error fetching the changelog.', 'warn' );
 
                             /* Perform the callback without a changelog. */
-                            on_update_callback( data, shortHash, version_number, '', valid_signature );
+                            updateInfo.changelog = '';
+                            on_update_callback( updateInfo );
                         }
                     };
+
+                    /* Store the update. */
+                    updateInfo.payload = data;
 
                     /* Try validating the signature. */
                     try {
                         /* Fetch the detached signature. */
                         _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
+                            /* Store the signature. */
+                            updateInfo.signature = detached_sig;
+
                             /* Validate the signature then continue. */
-                            let r = _discordCrypt.__validatePGPSignature( data, detached_sig, _signingKey );
+                            let r = _discordCrypt.__validatePGPSignature(
+                                updateInfo.payload,
+                                updateInfo.signature,
+                                _discordCrypt.__zlibDecompress( _signingKey )
+                            );
 
                             /* This returns a Promise if valid or false if invalid. */
                             if( r )
@@ -4850,7 +5111,11 @@ const discordCrypt = ( () => {
          */
         static log( message, method = "info" ) {
             try {
-                console[ method ]( `%c[DiscordCrypt]%c - ${message}`, "color: #7f007f; font-weight: bold;", "" );
+                console[ method ](
+                    `%c[DiscordCrypt]%c - ${message}`,
+                    "color: #7f007f; font-weight: bold; text-shadow: 0 0 1px #f00, 0 0 2px #f0f, 0 0 3px #00f;",
+                    ""
+                );
             }
             catch ( ex ) {
                 console.error( '[DiscordCrypt] - Error logging message ...' );
