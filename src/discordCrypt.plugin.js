@@ -5158,7 +5158,7 @@ const discordCrypt = ( () => {
                     'a combination of alpha-numeric characters both uppercase and lowercase ( A-Z, a-z, 0-9 ) ' +
                     'as well as at least one symbol <b>OR</b> be greater than 64 characters for the best security.' +
                     '<br/><br/><br/>' +
-                    'Please enter a password meeting these requirements.<br./>' +
+                    'Please enter a password meeting these requirements.<br/>' +
                     'We recommend you use a password manager like KeePassX or KeePassXC to easily store these.'
                 );
                 return false;
