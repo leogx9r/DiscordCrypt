@@ -416,6 +416,65 @@ class testGenerator {
 
         this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
     }
+
+    /**
+     * @desc Generates SJCL test vectors used for Up1 encryption via SJCL's library.
+     * @param {int} num_tests The number of tests to generate.
+     * @param {string} output_path The output path of the JSON file containing the generated test vectors.
+     */
+    generateSJCLTests( num_tests, output_path = './tests/vectors/sjcl-test-vectors.json' ) {
+        let unit_tests = [];
+
+        /**
+         * @desc Pads a URL-encoded Base64 string and converts symbols to the required format.
+         * @param {string} input The input to convert from URL form.
+         * @return {string}
+         */
+        const url_to_base64 = ( input ) => {
+
+            if ( !input.length % 4 )
+                return input;
+
+            let position = input.length;
+            let padLength = 4 - ( input.length % 4 );
+            let buffer = Buffer.alloc( input.length + padLength );
+
+            buffer.write( input );
+
+            while ( padLength-- )
+                buffer.write( '=', position++ );
+
+            return buffer.toString().replace( /-/g, '+' ).replace( /_/g, '/' );
+        };
+
+        /* Loop over every test. */
+        for( let i = 0; i < num_tests; i++ ) {
+            /* Create the test & input. */
+            unit_tests[ i ] = {};
+            unit_tests[ i ].buffer = this.crypto.randomBytes( 1024 * ( num_tests + 1 ) );
+
+            /* Encrypt the buffer. */
+            this.discordCrypt.__up1EncryptBuffer(
+                unit_tests[ i ].buffer,
+                '',
+                '',
+                global.sjcl,
+                ( err, output, id, seed ) => {
+                    /* Check for any errors. */
+                    if( err )
+                        throw new Error( err );
+
+                    /* Store the seed and actual input. We expect no errors here when running the test. */
+                    /* We don't actually store the output due to how SJCL works. */
+                    unit_tests[ i ].seed = url_to_base64( seed );
+                    unit_tests[ i ].buffer = unit_tests[ i ].buffer.toString( 'base64' );
+                }
+            );
+        }
+
+        /* Write the output vectors. */
+        this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
+    }
 }
 
 module.exports = { testGenerator };
