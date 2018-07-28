@@ -4316,7 +4316,7 @@ const discordCrypt = ( () => {
                     }
 
                     /* Read the current hash of the plugin and compare them.. */
-                    let currentHash = _discordCrypt.__sha256( localFile.replace( '\r', '' ) );
+                    let currentHash = _discordCrypt.__sha256( localFile.replace( '\r', '' ), true );
                     updateInfo.hash = _discordCrypt.__sha256( data.replace( '\r', '' ), true );
 
                     /* If the hash equals the retrieved one, no update is needed. */
