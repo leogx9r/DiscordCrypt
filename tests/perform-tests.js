@@ -892,6 +892,27 @@ class testRunner {
      * @param {Array} unit_tests An array of unit tests to run.
      */
     addEncryptedFileTests( unit_tests ) {
+        const vectors = require( './vectors/sjcl-test-vectors.json' );
+
+        /* SJCL Library test. */
+        unit_tests.generic_tests[ 'SJCL' ] = {};
+        for( let i = 0; i < vectors.length; i++ ) {
+            unit_tests.generic_tests[ 'SJCL' ][ `Test ${i}` ] = ( ut ) => {
+                this.discordCrypt.__up1EncryptBuffer(
+                    Buffer.from( vectors[ i ].buffer ),
+                    '',
+                    '',
+                    global.sjcl,
+                    ( err ) => {
+                        ut.equal( err, null, `An error occurred: ${err}` );
+                    },
+                    Buffer.from( vectors[ i ].seed, 'base64' )
+                );
+
+                ut.done();
+            };
+        }
+
         /* File upload test. */
         unit_tests.generic_tests[ 'Encrypted File Upload' ] = ( ut ) => {
             this.discordCrypt.__up1UploadFile(
