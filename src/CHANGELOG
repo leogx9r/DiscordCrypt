@@ -1,3 +1,8 @@
+Version 1.5.1
+
+- Added the GPG key fingerprint to the blacklisted updates panel for manual verification.
+- Fixed a bug regarding the plugin always thinking an update was available.
+
 Version 1.5.0
 
 - Added an update manager with the ability to blacklist updates.
