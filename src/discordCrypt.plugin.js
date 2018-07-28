@@ -6040,14 +6040,15 @@ const discordCrypt = ( () => {
 
         /**
          * @public
-         * @desc Uploads the specified buffer to Up1's format specifications and returns this data to the callback.
+         * @desc Encrypts the specified buffer to Up1's format specifications and returns this data to the callback.
          * @param {Buffer} data The input buffer to encrypt.
          * @param {string} mime_type The MIME type of this file.
          * @param {string} file_name The name of this file.
          * @param {Object} sjcl The loaded Stanford Javascript Crypto Library.
          * @param {EncryptedFileCallback} callback The callback function that will be called on error or completion.
+         * @param {Buffer} [seed] Optional seed to use for the generation of keys.
          */
-        static __up1EncryptBuffer( data, mime_type, file_name, sjcl, callback ) {
+        static __up1EncryptBuffer( data, mime_type, file_name, sjcl, callback, seed ) {
             const crypto = require( 'crypto' );
 
             /* Returns a parameter object from the input seed. */
@@ -6102,7 +6103,7 @@ const discordCrypt = ( () => {
                 data = sjcl.codec.bytes.toBits( new Uint8Array( data ) );
 
                 /* Generate a random 512 bit seed and calculate the key and IV from this. */
-                let params = getParams( crypto.randomBytes( 64 ) );
+                let params = getParams( seed || crypto.randomBytes( 64 ) );
 
                 /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
                 data = sjcl.mode.ccm.encrypt( new sjcl.cipher.aes( params.key ), data, params.iv );

@@ -166,7 +166,7 @@ class testRunner {
      * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
      */
     addScryptTests( unit_tests, coverage ) {
-        const vectors = require( './scrypt-test-vectors' );
+        const vectors = require( './vectors/scrypt-test-vectors' );
 
         /* Prepare the unit tests. */
         unit_tests.discordCrypt_scrypt = {};
@@ -213,7 +213,7 @@ class testRunner {
     addPBKDF2Tests( unit_tests, coverage ) {
 
         /* Load the test units. */
-        const hash_vectors = require( './pbkdf2-test-vectors.json' );
+        const hash_vectors = require( './vectors/pbkdf2-test-vectors.json' );
         const hash_list = [
             {
                 name: 'sha1',
@@ -283,7 +283,7 @@ class testRunner {
     addHashTests( unit_tests, coverage ) {
 
         /* Load the test units. */
-        const hash_vectors = require( './hash-test-vectors.json' );
+        const hash_vectors = require( './vectors/hash-test-vectors.json' );
         const hash_list = [
             {
                 name: 'sha1',
@@ -369,7 +369,7 @@ class testRunner {
     addHMACTests( unit_tests, coverage ) {
 
         /* Load the test units. */
-        const hash_vectors = require( './hmac-test-vectors.json' );
+        const hash_vectors = require( './vectors/hmac-test-vectors.json' );
         const hmac_list = [
             {
                 name: 'hmac_sha256',
@@ -435,7 +435,7 @@ class testRunner {
      * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
      */
     addCipherTests( unit_tests, preferred_cipher = undefined, coverage ) {
-        const vectors = require( './cipher-test-vectors.json' );
+        const vectors = require( './vectors/cipher-test-vectors.json' );
 
         /**
          * @desc Locates the given array containing the target's test vectors.
@@ -687,7 +687,7 @@ class testRunner {
      * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
      */
     addEncodingTests( unit_tests, coverage ) {
-        const vectors = require( './encode-test-vectors.json' );
+        const vectors = require( './vectors/encode-test-vectors.json' );
 
         /* Loop over every dual-encryption combination. */
         for ( let i = 0; i < vectors.length; i++ ) {
@@ -945,7 +945,6 @@ class testRunner {
                 }
             );
         };
-
     }
 
     /**

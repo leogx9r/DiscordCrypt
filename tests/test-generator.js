@@ -99,7 +99,7 @@ class testGenerator {
      * @param {int} j The block operation mode of the ciphers.
      * @param {int} k The padding scheme for the ciphers.
      */
-    addCipherTest( /* int */ num_tests = 25, /* Array */ unit_tests, /* int */ i, /* int */ j, /* int */ k ) {
+    addCipherTest( num_tests = 25, unit_tests, i, j, k ) {
         /* Loop for the number of tests desired. */
         for ( let l = 0; l < num_tests; l++ ) {
             /* Generate random plaintext. */
@@ -153,7 +153,7 @@ class testGenerator {
      * @param {int} num_tests The number of tests to generate PER cipher-combo PER block mode PER padding scheme.
      * @param {string} output_path The output path of the JSON file containing the generated test vectors.
      */
-    generateCipherTests( /* int */ num_tests = 25, /* string */ output_path = './tests/cipher-test-vectors.json' ) {
+    generateCipherTests( num_tests = 25, output_path = './tests/vectors/cipher-test-vectors.json' ) {
 
         let unit_tests = [];
 
@@ -258,7 +258,7 @@ class testGenerator {
      * @param {int} num_tests The number of tests to generate.
      * @param {string} output_path The output path of the JSON file containing the generated test vectors.
      */
-    generateHashTests( /* int */ num_tests = 25, /* string */ output_path = './tests/hash-test-vectors.json' ) {
+    generateHashTests( num_tests = 25,  output_path = './tests/vectors/hash-test-vectors.json' ) {
         let unit_tests = [];
         const hash_list = [
             {
@@ -322,7 +322,7 @@ class testGenerator {
      * @param {int} num_tests The number of tests to generate.
      * @param {string} output_path The output path of the JSON file containing the generated test vectors.
      */
-    generateHMACTests( /* int */ num_tests = 25, /* string */ output_path = './tests/hmac-test-vectors.json' ) {
+    generateHMACTests( num_tests = 25,  output_path = './tests/vectors/hmac-test-vectors.json' ) {
         let unit_tests = [];
         const hmac_list = [
             {
@@ -368,10 +368,7 @@ class testGenerator {
      * @param {int} num_tests The number of tests to generate.
      * @param {string} output_path The output path of the JSON file containing the generated test vectors.
      */
-    generateFullEncryptionTests(
-        /* int */ num_tests = 5,
-        /* string */ output_path = './tests/encode-test-vectors.json'
-    ) {
+    generateFullEncryptionTests( num_tests = 5, output_path = './tests/vectors/encode-test-vectors.json' ) {
         let unit_tests = [];
 
         /* Loop over each dual-encryption type. */
