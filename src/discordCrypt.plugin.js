@@ -4565,9 +4565,10 @@ const discordCrypt = ( () => {
              */
             const findByDispatchToken = ( token, force_load = false ) =>
                 find( module =>
-                    module[ '_dispatchToken' ] !== undefined &&
+                    module[ '_dispatchToken' ] &&
+                    typeof module[ '_dispatchToken' ] === 'string' &&
                     module[ '_dispatchToken' ] === `ID_${token}` &&
-                    module[ '_actionHandlers' ] !== undefined, force_load
+                    module[ '_actionHandlers' ] && force_load
                 );
 
             /**
@@ -4609,6 +4610,7 @@ const discordCrypt = ( () => {
         static _dumpWebpackModuleCallbacks( dump_actions = true ) {
             const ignored = [
                 '_dependencies',
+                '_isInitialized',
                 'initialize',
                 'initializeIfNeeded',
                 'syncWith',
@@ -4622,20 +4624,13 @@ const discordCrypt = ( () => {
                 'mustEmitChanges'
             ];
 
-            /* Resolve the finder function. */
-            let finder = _discordCrypt._getWebpackModuleSearcher().findByDispatchToken;
-
             /* Create the dumping array. */
-            let dump = [];
+            let dump = [], i = 0;
 
             /* Iterate over let's say 1000 possible modules ? */
-            for ( let i = 0; i < 1000; i++ ) {
-                /* Locate the module. */
-                let module = finder( i );
-
-                /* Skip if it's invalid. */
-                if ( !module )
-                    continue;
+            _discordCrypt._getWebpackModuleSearcher().find( ( module ) => {
+                if( !module[ '__esModule' ] )
+                    return false;
 
                 /* Create an entry in the array. */
                 dump[ i ] = {};
@@ -4647,7 +4642,7 @@ const discordCrypt = ( () => {
                         continue;
 
                     /* Dump action handlers. */
-                    if( prop == '_actionHandlers' || prop == '_changeCallbacks' ) {
+                    if( [ '_actionHandlers', '_dispatchHandlers', '_changeCallbacks' ].indexOf( prop ) !== -1 ) {
                         /* Skip if not required. */
                         if( !dump_actions )
                             continue;
@@ -4658,20 +4653,33 @@ const discordCrypt = ( () => {
                         for ( let action in module[ prop ] ) {
 
                             /* Quick sanity check. */
-                            if ( !module._actionHandlers.hasOwnProperty( action ) )
+                            if ( !action.length || !module._actionHandlers.hasOwnProperty( action ) )
                                 continue;
 
-                            /* Assign the module property name and it's basic prototype. */
-                            dump[ i ][ prop ][ action ] =
-                                module[ prop ][ action ].prototype.constructor.toString().split( '{' )[ 0 ];
+                            try{
+                                /* Assign the module property name and it's basic prototype. */
+                                dump[ i ][ prop ][ action ] =
+                                    module[ prop ][ action ].prototype.constructor.toString().split( '{' )[ 0 ];
+                            }
+                            catch( e ) {
+                                dump[ i ][ prop ] = 'N/A';
+                            }
                         }
                     }
                     else {
-                        /* Add the actual property name and its prototype. */
-                        dump[ i ][ prop ] = module[ prop ].toString().split( '{' )[ 0 ];
+                        try{
+                            /* Add the actual property name and its prototype. */
+                            dump[ i ][ prop ] = module[ prop ].toString().split( '{' )[ 0 ];
+                        }
+                        catch( e ) {
+                            dump[ i ][ prop ] = 'N/A';
+                        }
                     }
                 }
-            }
+
+                i++;
+                return false;
+            } );
 
             /* Return any found module handlers. */
             return dump;
