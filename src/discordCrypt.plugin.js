@@ -2191,6 +2191,9 @@ const discordCrypt = ( () => {
                 _discordCrypt.log( 'Blocked BrainTree from sending analytics.', 'info' );
                 return '';
             } );
+
+            /* Block reporting of suspicious code. */
+            blockProperty( 'hasSuspiciousCode', 'Disabling suspicious code reporting', () => false );
         }
 
         /* ========================================================= */
