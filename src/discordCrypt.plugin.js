@@ -5875,7 +5875,7 @@ const discordCrypt = ( () => {
                     .split( item.surrogates )
                     .join(
                         '<span class="dc-tooltip dc-tooltip-delayed">' +
-                        `<img src="${item.defaultUrl}" class="${emoji_class}">` +
+                        `<img src="${item.defaultUrl}" class="${emoji_class}" alt=":${item.names[ 0 ]}:">` +
                         `<span class="dc-tooltip-text" style="font-size: 12px">:${item.names[ 0 ]}:</span>` +
                         '</span>'
                     );
@@ -5901,7 +5901,7 @@ const discordCrypt = ( () => {
                     .split( emojis[ i ].formatted )
                     .join(
                         '<span class="dc-tooltip dc-tooltip-delayed">' +
-                        `<img src="${URI}" class="${emoji_class}">` +
+                        `<img src="${URI}" class="${emoji_class}" alt="${e.name}">` +
                         `<span class="dc-tooltip-text" style="font-size: 12px">${e.name}</span>` +
                         '</span>'
                     );
