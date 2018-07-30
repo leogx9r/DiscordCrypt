@@ -4689,6 +4689,43 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @experimental
+         * @desc Fires before every web request and handles URL blocking.
+         *      N.B. This breaks reloading and shouldn't be used till this issues is resolved.
+         *
+         *      let webRequest = require( 'electron' )
+         *        .remote
+         *        .getCurrentWindow()
+         *        .webContents
+         *        .session
+         *        .webRequest;
+         *
+         *      webRequest.onBeforeRequest( [ '*://*.*\/*' ], _discordCrypt._onBeforeWebRequest );
+         *
+         * @param {Object} details The details of the request.
+         * @param callback The callback function to execute to determine if to cancel or continue the request.
+         */
+        static _onBeforeWebRequest( details, callback ) {
+            /**
+             * @desc Default paths that are specifically designed for tracking.
+             * @type {string[]}
+             * @private
+             */
+            const _defaultHosts = [
+                'sentry.io',
+                'crash.discordapp.com',
+                'discordapp.com/api/science',
+                'discordapp.com/api/v6/science'
+            ];
+
+            /* Use the default block list. */
+            callback( {
+                cancel: _defaultHosts.filter( e => details.url.indexOf( e ) !== -1 ).length > 0
+            } );
+        }
+
+        /**
+         * @private
          * @desc Get React component instance of closest owner of DOM element matched by filter.
          * @author noodlebox
          * @param {Element} element DOM element to start react component searching.
