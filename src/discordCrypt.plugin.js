@@ -4564,11 +4564,13 @@ const discordCrypt = ( () => {
              * @return {object} First module that matches the dispatch ID or `null` if none match.
              */
             const findByDispatchToken = ( token, force_load = false ) =>
-                find( module =>
-                    module[ '_dispatchToken' ] &&
-                    typeof module[ '_dispatchToken' ] === 'string' &&
-                    module[ '_dispatchToken' ] === `ID_${token}` &&
-                    module[ '_actionHandlers' ] && force_load
+                find(
+                    module =>
+                        module[ '_dispatchToken' ] &&
+                        typeof module[ '_dispatchToken' ] === 'string' &&
+                        module[ '_dispatchToken' ] === `ID_${token}` &&
+                        module[ '_actionHandlers' ],
+                    force_load
                 );
 
             /**
