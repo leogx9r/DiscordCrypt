@@ -141,9 +141,8 @@
 /**
  * @typedef {Object} Config
  * @desc Contains the configuration data used for the plugin.
- * @property {boolean} automaticUpdates Whether to automatically check for updates.
- * @property {Array<UpdateInfo>} blacklistedUpdates Updates to ignore due to being blacklisted.
- * @property {Array<string>} blacklistedHosts Hosts to block connections from.
+ * @property {string} version The version of the configuration.
+ * @property {boolean} useEmbeds Whether to use embeds for dispatching encrypted messages.
  * @property {string} defaultPassword The default key to encrypt or decrypt message with,
  *      if not specifically defined.
  * @property {string} encodeMessageTrigger The suffix trigger which, once appended to the message,
@@ -162,14 +161,14 @@
  * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
  * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
  * @property {number} timedMessageExpires How long after a message is sent should it be deleted in seconds.
- * @property {boolean} useEmbeds Whether to use embeds for dispatching encrypted messages.
- * @property {string} version The version of the configuration.
+ * @property {boolean} automaticUpdates Whether to automatically check for updates.
+ * @property {Array<UpdateInfo>} blacklistedUpdates Updates to ignore due to being blacklisted.
  */
 
 /**
  * @typedef {Object} UpdateCallback
- * @desc The function to execute after an update has been retrieved.
- * @property {UpdateInfo} info The update's information.
+ * @desc The function to execute after an update has been retrieved or if an error occurs.
+ * @property {UpdateInfo} [info] The update's information if valid.
  */
 
 /**
@@ -389,18 +388,6 @@ const discordCrypt = ( () => {
     let _updateData = {};
 
     /**
-     * @desc Default paths that are specifically designed for tracking.
-     * @type {string[]}
-     * @private
-     */
-    let _defaultHosts = [
-        'sentry.io',
-        'crash.discordapp.com',
-        'discordapp.com/api/science',
-        'discordapp.com/api/v6/science'
-    ];
-
-    /**
      * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
      *      So just backup the function code here in case it gets attacked in the future.
      * @type {function}
@@ -552,7 +539,7 @@ const discordCrypt = ( () => {
              * @type {string}
              */
             this._settingsMenuHtml =
-                `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`;
+                `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`;
 
             /**
              * @desc The Base64 encoded SVG containing the unlocked status icon.
@@ -843,17 +830,6 @@ const discordCrypt = ( () => {
 
             /* Load necessary _libraries. */
             _discordCrypt.__loadLibraries( this._libraries );
-
-            /* Resolve the WebRequest object for hooking. */
-            let webRequest = require( 'electron' )
-                .remote
-                .getCurrentWindow()
-                .webContents
-                .session
-                .webRequest;
-
-            /* Create the URL hook for hosts blocking. */
-            webRequest.onBeforeRequest( [ '*://*.*/*' ], _discordCrypt._onBeforeWebRequest() );
         }
 
         /**
@@ -880,8 +856,6 @@ const discordCrypt = ( () => {
                 automaticUpdates: true,
                 /* Blacklisted updates. */
                 blacklistedUpdates: [],
-                /* Blacklisted host URIs. */
-                blacklistedHosts: [],
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* How often to scan for encrypted messages. */
@@ -1339,10 +1313,32 @@ const discordCrypt = ( () => {
          */
         _checkForUpdates() {
             const self = this;
+            const update_check_btn = $( '#dc-update-check-btn' );
 
             try {
+
+                /* Sanity check in case this isn't defined yet. */
+                if( update_check_btn.length ) {
+                    /* Update the checking button. */
+                    update_check_btn.attr( 'disabled', true );
+                    update_check_btn.text( 'Checking For Updates ...' );
+                }
+
+                /* Perform the update check. */
                 _discordCrypt._checkForUpdate(
                     ( info ) => {
+                        /* Make sure an update was received. */
+                        if( !info ) {
+                            /* Sanity check in case this isn't defined yet. */
+                            if( update_check_btn.length ) {
+                                /* Reset the update check button if necessary. */
+                                update_check_btn.attr( 'disabled', false );
+                                update_check_btn.text( 'Check For Updates' );
+                            }
+
+                            return;
+                        }
+
                         /* Alert the user of the update and changelog. */
                         $( '#dc-overlay' ).css( 'display', 'block' );
                         $( '#dc-update-overlay' ).css( 'display', 'block' );
@@ -1470,9 +1466,6 @@ const discordCrypt = ( () => {
 
             /* Handle Security Settings tab selected. */
             $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked( this ) );
-
-            /* Handle Blacklisted Hosts updateing. */
-            $( '#dc-blocked-hosts-textarea' ).change( _discordCrypt._onBlockedHostsTextareaChanged( this ) );
 
             /* Handle Automatic Updates button clicked. */
             $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged( this ) );
@@ -2842,35 +2835,11 @@ const discordCrypt = ( () => {
                     table.append( element );
                 }
 
-                /* Set the current blacklisted hosts. */
-                $( '#dc-blocked-hosts-textarea' ).val( _configFile.blacklistedHosts.join( '\n' ) );
-
                 /* Set the current state of automatic updates. */
                 $( '#dc-automatic-updates-enabled' ).prop( 'checked', _configFile.automaticUpdates );
 
                 /* Select the security settings. */
                 _discordCrypt._setActiveSettingsTab( 2 );
-            };
-        }
-
-        /**
-         * @private
-         * @desc Updates the internal configuration of blocked hosts when the textarea is updated.
-         * @param self
-         * @return {Function}
-         */
-        static _onBlockedHostsTextareaChanged( self ) {
-            return () => {
-                /* Update the entries in the configuration. */
-                _configFile.blacklistedHosts = $( '#dc-blocked-hosts-textarea' )
-                    .val()
-                    .split( "\r" )
-                    .join( "" )
-                    .split( "\n" )
-                    .filter( e => e !== '' );
-
-                /* Save the configuration. */
-                self._saveConfig();
             };
         }
 
@@ -2921,14 +2890,6 @@ const discordCrypt = ( () => {
             return () => {
                 /* Simply call the wrapper, everything else will be handled by this. */
                 self._checkForUpdates();
-
-                /* Update the text. */
-                $( '#dc-update-check-btn' ).text( 'Checking For Updates ...' );
-
-                /* Reset the text after 1 second. */
-                setTimeout( () => {
-                    $( '#dc-update-check-btn' ).text( 'Check For Updates' );
-                }, 1000 );
             }
         }
 
@@ -3154,7 +3115,8 @@ const discordCrypt = ( () => {
                 /* Cache jQuery results. */
                 let dc_primary_cipher = $( '#dc-primary-cipher' ),
                     dc_secondary_cipher = $( '#dc-secondary-cipher' ),
-                    dc_master_password = $( '#dc-master-password' );
+                    dc_master_password = $( '#dc-master-password' ),
+                    dc_save_settings_btn = $( '#dc-settings-save-btn' );
 
                 /* Update all settings from the settings panel. */
                 _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
@@ -3181,6 +3143,9 @@ const discordCrypt = ( () => {
                     /* Reset the password field. */
                     dc_master_password.val( '' );
 
+                    /* Disable the button since this takes a while. */
+                    dc_save_settings_btn.attr( 'disabled', true );
+
                     /* Hash the password. */
                     _discordCrypt.__scrypt
                     (
@@ -3191,6 +3156,9 @@ const discordCrypt = ( () => {
                         8,
                         1,
                         ( error, progress, pwd ) => {
+                            /* Enable the button. */
+                            dc_save_settings_btn.attr( 'disabled', false );
+
                             if ( error ) {
                                 /* Alert the user. */
                                 global.smalltalk.alert(
@@ -3199,6 +3167,7 @@ const discordCrypt = ( () => {
                                 );
 
                                 _discordCrypt.log( error.toString(), 'error' );
+
                                 return true;
                             }
 
@@ -3207,7 +3176,7 @@ const discordCrypt = ( () => {
                                 _masterPassword = Buffer.from( pwd, 'hex' );
 
                                 /* Save the configuration file and update the button text. */
-                                self._saveSettings( $( '#dc-settings-save-btn' ) );
+                                self._saveSettings( dc_save_settings_btn );
                             }
 
                             return false;
@@ -3216,7 +3185,7 @@ const discordCrypt = ( () => {
                 }
                 else {
                     /* Save the configuration file and update the button text. */
-                    self._saveSettings( $( '#dc-settings-save-btn' ) );
+                    self._saveSettings( dc_save_settings_btn );
                 }
             };
         }
@@ -3310,6 +3279,9 @@ const discordCrypt = ( () => {
          */
         static _onUpdateIgnoreButtonClicked( self ) {
             return () => {
+                /* Clear out the needless data which isn't actually needed to validate a blacklisted update. */
+                _updateData.payload = '';
+
                 /* Add the blacklist to the configuration file. */
                 _configFile.blacklistedUpdates.push( _updateData );
 
@@ -4228,45 +4200,6 @@ const discordCrypt = ( () => {
             }
         }
 
-        /**
-         * @private
-         * @desc Fires before every web request and handles URL blocking.
-         * @param {Object} details The details of the request.
-         * @param callback The callback function to execute to determine if to cancel or continue the request.
-         */
-        static _onBeforeWebRequest( details, callback ) {
-            return () => {
-                try {
-                    let hasConfig = _configFile && _configFile[ 'blacklistedHosts' ];
-                    try {
-                        /* Skip if we don't have a configuration and use the default block list. */
-                        if( !hasConfig ) {
-                            callback( {
-                                cancel: _defaultHosts.filter( e => details.url.indexOf( e ) !== -1 ).length > 0
-                            } );
-                            return;
-                        }
-
-                        /* Continue or cancel the request based on if the URI matches any partial URIs blocked. */
-                        callback( {
-                            cancel:
-                            _defaultHosts
-                                .filter( e => details.url.indexOf( e ) !== -1 )
-                                .length > 0 ||
-                            _configFile
-                                .blacklistedHosts
-                                .filter( e => details.url.indexOf( e ) !== -1 )
-                                .length > 0
-                        } );
-                    }
-                    catch( e ) {
-                        callback( { cancel: false } );
-                    }
-                }
-                catch( e ) {}
-            };
-        }
-
         /* ========================================================= */
 
         /* ====================== APP UTILITIES ==================== */
@@ -4340,6 +4273,10 @@ const discordCrypt = ( () => {
          * @returns {boolean}
          * @example
          * _checkForUpdate( ( info ) => {
+         *      if( !info ) {
+         *          console.log( 'No update available.' );
+         *          return;
+         *      }
          *      console.log( `New Update Available: #${info.hash} - v${info.version}` );
          *      console.log( `Signature is: ${info.valid ? valid' : 'invalid'}!` );
          *      console.log( `Changelog:\n${info.changelog}` );
@@ -4384,10 +4321,11 @@ const discordCrypt = ( () => {
                             _discordCrypt.log( 'Forbidden request when checking for updates.', 'error' );
                             break;
                         default:
-                            _discordCrypt.log( `Error while fetching update: ${errorString}`, 'error' );
+                            _discordCrypt.log( `Error while fetching update: ${statusCode}:${errorString}`, 'error' );
                             break;
                         }
 
+                        on_update_callback( null );
                         return false;
                     }
 
@@ -4414,6 +4352,8 @@ const discordCrypt = ( () => {
                             'Plugin metadata is missing from either the local or update file.',
                             'error'
                         );
+
+                        on_update_callback( null );
                         return false;
                     }
 
@@ -4424,6 +4364,8 @@ const discordCrypt = ( () => {
                     /* If the hash equals the retrieved one, no update is needed. */
                     if ( updateInfo.hash === currentHash ) {
                         _discordCrypt.log( `No Update Needed - #${updateInfo.hash.slice( 0, 16 )}` );
+
+                        on_update_callback( null );
                         return true;
                     }
 
@@ -4434,6 +4376,8 @@ const discordCrypt = ( () => {
                         blacklisted_updates.filter( e => e && e.hash === updateInfo.hash ).length !== 0
                     ) {
                         _discordCrypt.log( `Ignoring update - #${updateInfo.hash.slice( 0, 16 )}` );
+
+                        on_update_callback( null );
                         return true;
                     }
 
@@ -4784,6 +4728,43 @@ const discordCrypt = ( () => {
 
             /* Return any found module handlers. */
             return dump;
+        }
+
+        /**
+         * @private
+         * @experimental
+         * @desc Fires before every web request and handles URL blocking.
+         *      N.B. This breaks reloading and shouldn't be used till this issues is resolved.
+         *
+         *      let webRequest = require( 'electron' )
+         *        .remote
+         *        .getCurrentWindow()
+         *        .webContents
+         *        .session
+         *        .webRequest;
+         *
+         *      webRequest.onBeforeRequest( [ '*://*.*\/*' ], _discordCrypt._onBeforeWebRequest );
+         *
+         * @param {Object} details The details of the request.
+         * @param callback The callback function to execute to determine if to cancel or continue the request.
+         */
+        static _onBeforeWebRequest( details, callback ) {
+            /**
+             * @desc Default paths that are specifically designed for tracking.
+             * @type {string[]}
+             * @private
+             */
+            const _defaultHosts = [
+                'sentry.io',
+                'crash.discordapp.com',
+                'discordapp.com/api/science',
+                'discordapp.com/api/v6/science'
+            ];
+
+            /* Use the default block list. */
+            callback( {
+                cancel: _defaultHosts.filter( e => details.url.indexOf( e ) !== -1 ).length > 0
+            } );
         }
 
         /**

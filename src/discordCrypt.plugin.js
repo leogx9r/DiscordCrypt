@@ -3272,6 +3272,9 @@ const discordCrypt = ( () => {
          */
         static _onUpdateIgnoreButtonClicked( self ) {
             return () => {
+                /* Clear out the needless data which isn't actually needed to validate a blacklisted update. */
+                _updateData.payload = '';
+
                 /* Add the blacklist to the configuration file. */
                 _configFile.blacklistedUpdates.push( _updateData );
 
