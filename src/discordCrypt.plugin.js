@@ -165,8 +165,8 @@
 
 /**
  * @typedef {Object} UpdateCallback
- * @desc The function to execute after an update has been retrieved.
- * @property {UpdateInfo} info The update's information.
+ * @desc The function to execute after an update has been retrieved or if an error occurs.
+ * @property {UpdateInfo} [info] The update's information if valid.
  */
 
 /**
@@ -1306,10 +1306,32 @@ const discordCrypt = ( () => {
          */
         _checkForUpdates() {
             const self = this;
+            const update_check_btn = $( '#dc-update-check-btn' );
 
             try {
+
+                /* Sanity check in case this isn't defined yet. */
+                if( update_check_btn.length ) {
+                    /* Update the checking button. */
+                    update_check_btn.attr( 'disabled', true );
+                    update_check_btn.text( 'Checking For Updates ...' );
+                }
+
+                /* Perform the update check. */
                 _discordCrypt._checkForUpdate(
                     ( info ) => {
+                        /* Make sure an update was received. */
+                        if( !info ) {
+                            /* Sanity check in case this isn't defined yet. */
+                            if( update_check_btn.length ) {
+                                /* Reset the update check button if necessary. */
+                                update_check_btn.attr( 'disabled', false );
+                                update_check_btn.text( 'Check For Updates' );
+                            }
+
+                            return;
+                        }
+
                         /* Alert the user of the update and changelog. */
                         $( '#dc-overlay' ).css( 'display', 'block' );
                         $( '#dc-update-overlay' ).css( 'display', 'block' );
@@ -2861,14 +2883,6 @@ const discordCrypt = ( () => {
             return () => {
                 /* Simply call the wrapper, everything else will be handled by this. */
                 self._checkForUpdates();
-
-                /* Update the text. */
-                $( '#dc-update-check-btn' ).text( 'Checking For Updates ...' );
-
-                /* Reset the text after 1 second. */
-                setTimeout( () => {
-                    $( '#dc-update-check-btn' ).text( 'Check For Updates' );
-                }, 1000 );
             }
         }
 
@@ -3094,7 +3108,8 @@ const discordCrypt = ( () => {
                 /* Cache jQuery results. */
                 let dc_primary_cipher = $( '#dc-primary-cipher' ),
                     dc_secondary_cipher = $( '#dc-secondary-cipher' ),
-                    dc_master_password = $( '#dc-master-password' );
+                    dc_master_password = $( '#dc-master-password' ),
+                    dc_save_settings_btn = $( '#dc-settings-save-btn' );
 
                 /* Update all settings from the settings panel. */
                 _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
@@ -3121,6 +3136,9 @@ const discordCrypt = ( () => {
                     /* Reset the password field. */
                     dc_master_password.val( '' );
 
+                    /* Disable the button since this takes a while. */
+                    dc_save_settings_btn.attr( 'disabled', true );
+
                     /* Hash the password. */
                     _discordCrypt.__scrypt
                     (
@@ -3131,6 +3149,9 @@ const discordCrypt = ( () => {
                         8,
                         1,
                         ( error, progress, pwd ) => {
+                            /* Enable the button. */
+                            dc_save_settings_btn.attr( 'disabled', false );
+
                             if ( error ) {
                                 /* Alert the user. */
                                 global.smalltalk.alert(
@@ -3139,6 +3160,7 @@ const discordCrypt = ( () => {
                                 );
 
                                 _discordCrypt.log( error.toString(), 'error' );
+
                                 return true;
                             }
 
@@ -3147,7 +3169,7 @@ const discordCrypt = ( () => {
                                 _masterPassword = Buffer.from( pwd, 'hex' );
 
                                 /* Save the configuration file and update the button text. */
-                                self._saveSettings( $( '#dc-settings-save-btn' ) );
+                                self._saveSettings( dc_save_settings_btn );
                             }
 
                             return false;
@@ -3156,7 +3178,7 @@ const discordCrypt = ( () => {
                 }
                 else {
                     /* Save the configuration file and update the button text. */
-                    self._saveSettings( $( '#dc-settings-save-btn' ) );
+                    self._saveSettings( dc_save_settings_btn );
                 }
             };
         }
@@ -4241,6 +4263,10 @@ const discordCrypt = ( () => {
          * @returns {boolean}
          * @example
          * _checkForUpdate( ( info ) => {
+         *      if( !info ) {
+         *          console.log( 'No update available.' );
+         *          return;
+         *      }
          *      console.log( `New Update Available: #${info.hash} - v${info.version}` );
          *      console.log( `Signature is: ${info.valid ? valid' : 'invalid'}!` );
          *      console.log( `Changelog:\n${info.changelog}` );
@@ -4285,10 +4311,11 @@ const discordCrypt = ( () => {
                             _discordCrypt.log( 'Forbidden request when checking for updates.', 'error' );
                             break;
                         default:
-                            _discordCrypt.log( `Error while fetching update: ${errorString}`, 'error' );
+                            _discordCrypt.log( `Error while fetching update: ${statusCode}:${errorString}`, 'error' );
                             break;
                         }
 
+                        on_update_callback( null );
                         return false;
                     }
 
@@ -4315,6 +4342,8 @@ const discordCrypt = ( () => {
                             'Plugin metadata is missing from either the local or update file.',
                             'error'
                         );
+
+                        on_update_callback( null );
                         return false;
                     }
 
@@ -4325,6 +4354,8 @@ const discordCrypt = ( () => {
                     /* If the hash equals the retrieved one, no update is needed. */
                     if ( updateInfo.hash === currentHash ) {
                         _discordCrypt.log( `No Update Needed - #${updateInfo.hash.slice( 0, 16 )}` );
+
+                        on_update_callback( null );
                         return true;
                     }
 
@@ -4335,6 +4366,8 @@ const discordCrypt = ( () => {
                         blacklisted_updates.filter( e => e && e.hash === updateInfo.hash ).length !== 0
                     ) {
                         _discordCrypt.log( `Ignoring update - #${updateInfo.hash.slice( 0, 16 )}` );
+
+                        on_update_callback( null );
                         return true;
                     }
 
