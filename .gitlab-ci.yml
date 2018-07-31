@@ -16,7 +16,7 @@ stages:
 docs_gen:
   stage: build
   script:
-   - npm install
+   - npm install --save-dev
    - node node_modules/.bin/jsdoc -c ./.jsdoc.conf.json
   allow_failure: false
   artifacts:
@@ -28,7 +28,7 @@ docs_gen:
 test:
   stage: test
   script:
-   - npm install
+   - npm install --save-dev
    - node ./tests/perform-tests.js
   allow_failure: false
   except:
@@ -38,7 +38,7 @@ test:
 cover_test:
   stage: test
   script:
-   - npm install
+   - npm install --save-dev
    - node node_modules/.bin/istanbul cover ./tests/perform-tests.js coverage
   coverage: '/^Statements *: (\d+\.\d+%)/'
   artifacts:
