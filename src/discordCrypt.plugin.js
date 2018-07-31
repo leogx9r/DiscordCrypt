@@ -1320,17 +1320,17 @@ const discordCrypt = ( () => {
                 /* Perform the update check. */
                 _discordCrypt._checkForUpdate(
                     ( info ) => {
-                        /* Make sure an update was received. */
-                        if( !info ) {
-                            /* Sanity check in case this isn't defined yet. */
-                            if( update_check_btn.length ) {
-                                /* Reset the update check button if necessary. */
-                                update_check_btn.attr( 'disabled', false );
-                                update_check_btn.text( 'Check For Updates' );
-                            }
 
-                            return;
+                        /* Sanity check in case this isn't defined yet. */
+                        if( update_check_btn.length ) {
+                            /* Reset the update check button if necessary. */
+                            update_check_btn.attr( 'disabled', false );
+                            update_check_btn.text( 'Check For Updates' );
                         }
+
+                        /* Make sure an update was received. */
+                        if( !info )
+                            return;
 
                         /* Alert the user of the update and changelog. */
                         $( '#dc-overlay' ).css( 'display', 'block' );
