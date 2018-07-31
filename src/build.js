@@ -7,7 +7,7 @@ class Compiler {
     /**
      * @typedef {Object} LibraryInfo
      * @desc Contains the library and necessary information.
-     * @property {boolean} requiresElectron Whether this library relies on Electron's internal support.
+     * @property {boolean} requiresNode Whether this library relies on NodeJS internal support.
      * @property {boolean} requiresBrowser Whether this library is meant to be run in a browser.
      * @property {string} code The raw code for execution defined in the library.
      */
@@ -32,31 +32,31 @@ class Compiler {
     constructor() {
         /**
          * @desc Cache the FS module for file operations.
-         * @type {module:fs}
+         * @type {fs}
          */
         this.fs = require( 'fs' );
 
         /**
          * @desc Cache the PATH module for constructing relative and absolute paths.
-         * @type {module:path}
+         * @type {path}
          */
         this.path = require( 'path' );
 
         /**
          * @desc Cache the CHILD_PROCESS module for exporting GPG keys.
-         * @type {module:child_process}
+         * @type {child_process}
          */
         this.child_process = require( 'child_process' );
 
         /**
          * @desc Cache the PROCESS module for argument retrieval.
-         * @type {NodeJS.Process}
+         * @type {process}
          */
         this.process = require( 'process' );
 
         /**
          * @desc Cache the ZLIB module for compression.
-         * @type {module:zlib}
+         * @type {zlib}
          */
         this.zlib = require( 'zlib' );
 
@@ -513,12 +513,12 @@ class Compiler {
                     '/* ----- APPLICATION UNLOCKING GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
             },
             library_info: {
-                'sjcl.js': { requiresElectron: true, requiresBrowser: false, minify: true },
-                'sha3.js': { requiresElectron: true, requiresBrowser: false, minify: true },
-                'smalltalk.js': { requiresElectron: false, requiresBrowser: true, minify: true },
-                'currify.js': { requiresElectron: false, requiresBrowser: true, minify: true },
-                'curve25519.js': { requiresElectron: true, requiresBrowser: false, minify: true },
-                'openpgp.js': { requiresElectron: true, requiresBrowser: true, minify: false },
+                'sjcl.js': { requiresNode: true, requiresBrowser: false, minify: true },
+                'sha3.js': { requiresNode: true, requiresBrowser: false, minify: true },
+                'smalltalk.js': { requiresNode: false, requiresBrowser: true, minify: true },
+                'currify.js': { requiresNode: false, requiresBrowser: true, minify: true },
+                'curve25519.js': { requiresNode: true, requiresBrowser: false, minify: true },
+                'openpgp.js': { requiresNode: true, requiresBrowser: true, minify: false },
             },
             signature_template: '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */',
             compression: false,

@@ -296,7 +296,7 @@
 /**
  * @typedef {Object} LibraryInfo
  * @desc Contains the library and necessary information.
- * @property {boolean} requiresElectron Whether this library relies on Electron's internal support.
+ * @property {boolean} requiresNode Whether this library relies on NodeJS internal support.
  * @property {boolean} requiresBrowser Whether this library is meant to be run in a browser.
  * @property {string} code The raw code for execution defined in the library.
  */
@@ -316,12 +316,14 @@
 const discordCrypt = ( () => {
 
     /**
+     * @private
      * @desc Master database password. This is a Buffer() containing a 256-bit key.
      * @type {Buffer|null}
      */
     let _masterPassword = null;
 
     /**
+     * @private
      * @desc Message scanning interval handler's index. Used to stop any running handler.
      *      Defined only if hooking of modules failed.
      * @type {int}
@@ -329,6 +331,7 @@ const discordCrypt = ( () => {
     let _scanInterval;
 
     /**
+     * @private
      * @desc The index of the handler used to reload the toolbar.
      *      Defined only if hooking of modules failed.
      * @type {int}
@@ -336,36 +339,42 @@ const discordCrypt = ( () => {
     let _toolbarReloadInterval;
 
     /**
+     * @private
      * @desc The index of the handler used for automatic update checking.
      * @type {int}
      */
     let _updateHandlerInterval;
 
     /**
+     * @private
      * @desc The index of the handler used for timed message deletion.
      * @type {int}
      */
     let _timedMessageInterval;
 
     /**
+     * @private
      * @desc The main message update event dispatcher used by Discord. Resolved upon startup.
      * @type {Object|null}
      */
     let _messageUpdateDispatcher = null;
 
     /**
+     * @private
      * @desc The configuration file currently in use. Only valid after decryption of the configuration database.
      * @type {Config|null}
      */
     let _configFile = null;
 
     /**
+     * @private
      * @desc Used to cache webpack modules.
      * @type {CachedModules}
      */
     let _cachedModules = {};
 
     /**
+     * @private
      * @desc Stores the private key object used in key exchanges.
      * @type {Object}
      */
@@ -381,11 +390,12 @@ const discordCrypt = ( () => {
     /**
      * @private
      * @desc Stores the update data for applying later on.
-     * @type {UpdateInfo}}
+     * @type {UpdateInfo}
      */
     let _updateData = {};
 
     /**
+     * @private
      * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
      *      So just backup the function code here in case it gets attacked in the future.
      * @type {function}
@@ -5420,6 +5430,7 @@ const discordCrypt = ( () => {
          */
         static __loadLibraries( libraries ) {
             const vm = require( 'vm' );
+            const module = require( 'module' );
 
             /* Inject all compiled _libraries based on if they're needed */
             for ( let name in libraries ) {
@@ -5431,41 +5442,30 @@ const discordCrypt = ( () => {
                     continue;
                 }
 
-                /* If the module can't be loaded, don't load this library. */
-                if ( libInfo.requiresElectron ) {
-                    try {
-                        require( 'electron' );
-                    }
-                    catch ( e ) {
-                        _discordCrypt.log( `Skipping loading of electron-required plugin: ${name} ...`, 'warn' );
-                        continue;
-                    }
-                }
-
                 /* Decompress the Base64 code. */
                 let code = _discordCrypt.__zlibDecompress( libInfo.code );
 
                 /* Determine how to run this. */
-                if ( libInfo.requiresBrowser || libInfo.requiresElectron ) {
+                if ( libInfo.requiresBrowser || libInfo.requiresNode ) {
                     /* Run in the current context as it operates on currently defined objects. */
                     vm.runInThisContext(
-                        code,
+                        module.wrap( code ),
                         {
                             filename: name,
                             displayErrors: false
                         }
-                    );
+                    )( exports, require, module, __filename, __dirname );
                 }
                 else {
                     /* Run in a new sandbox and store the result in a global object. */
                     global[ name.replace( '.js', '' ) ] =
                         vm.runInNewContext(
-                            code,
+                            module.wrap( code ),
                             {
                                 filename: name,
                                 displayErrors: false
                             }
-                        );
+                        )( exports, require, module, __filename, __dirname );
                 }
             }
         }
@@ -6294,9 +6294,9 @@ const discordCrypt = ( () => {
                 /* DIB v2.0 Header Size */
                 Buffer.from( [ 12, 0, 0, 0 ] ),
                 /* BMP Width */
-                Buffer( [ width, 0 ] ),
+                Buffer.from( [ width, 0 ] ),
                 /* BMP Height */
-                Buffer( [ height, 0 ] ),
+                Buffer.from( [ height, 0 ] ),
                 /* Number Of Color Planes */
                 Buffer.from( [ 1, 0 ] ),
                 /* Bits Per Pixel */

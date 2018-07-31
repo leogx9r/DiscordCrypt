@@ -18,25 +18,25 @@
   "license": "MIT",
   "dependencies": {
     "crypto": "^1.0.1",
-    "electron": "^2.0.4",
     "form-data": "^2.3.2",
     "fs": "0.0.1-security",
-    "gpg": "^0.6.0",
-    "istanbul": "^0.4.5",
     "mime-types": "^2.1.18",
-    "minimist": "^1.2.0",
-    "nodeunit": "^0.11.3",
     "original-fs": "^1.0.0",
     "path": "^0.12.7",
     "process": "^0.11.10",
     "request": "^2.87.0",
-    "uglify-es": "^3.3.9",
     "vm": "^0.1.0"
   },
   "devDependencies": {
+    "child_process": "^1.0.2",
     "eslint": "^5.1.0",
     "eslint-config-defaults": "^9.0.0",
+    "gpg": "^0.6.0",
+    "istanbul": "^0.4.5",
     "jsdoc": "^3.5.5",
-    "tui-jsdoc-template": "^1.2.2"
+    "minimist": "^1.2.0",
+    "nodeunit": "^0.11.3",
+    "tui-jsdoc-template": "^1.2.2",
+    "uglify-es": "^3.3.9"
   }
 }
