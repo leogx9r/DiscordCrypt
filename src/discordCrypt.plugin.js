@@ -2864,21 +2864,24 @@ const discordCrypt = ( () => {
                 /* Log. */
                 _discordCrypt.log( `${_configFile.automaticUpdates ? 'En' : 'Dis'}abled automatic updates.`, 'debug' );
 
-                /* If we're doing automatic updates, make sure an interval is set. */
-                if( _configFile.automaticUpdates ) {
-                    /* Only do this if none is defined. */
-                    if( !_updateHandlerInterval ) {
-                        /* Add an update handler to check for updates every 60 minutes. */
-                        _updateHandlerInterval = setInterval( () => {
-                            self._checkForUpdates();
-                        }, 3600000 );
+                /* Skip if we don't need to update. */
+                if( !_discordCrypt._shouldIgnoreUpdates( self.getVersion() ) ) {
+                    /* If we're doing automatic updates, make sure an interval is set. */
+                    if( _configFile.automaticUpdates ) {
+                        /* Only do this if none is defined. */
+                        if( !_updateHandlerInterval ) {
+                            /* Add an update handler to check for updates every 60 minutes. */
+                            _updateHandlerInterval = setInterval( () => {
+                                self._checkForUpdates();
+                            }, 3600000 );
+                        }
                     }
-                }
-                /* Make sure no interval is defined. */
-                else if( _updateHandlerInterval ) {
-                    /* Make sure to clear all intervals. */
-                    clearInterval( _updateHandlerInterval );
-                    _updateHandlerInterval = null;
+                    /* Make sure no interval is defined. */
+                    else if( _updateHandlerInterval ) {
+                        /* Make sure to clear all intervals. */
+                        clearInterval( _updateHandlerInterval );
+                        _updateHandlerInterval = null;
+                    }
                 }
             }
         }
