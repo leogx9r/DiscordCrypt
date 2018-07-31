@@ -5440,7 +5440,6 @@ const discordCrypt = ( () => {
          */
         static __loadLibraries( libraries ) {
             const vm = require( 'vm' );
-            const module = require( 'module' );
 
             /* Inject all compiled _libraries based on if they're needed */
             for ( let name in libraries ) {
@@ -5459,23 +5458,23 @@ const discordCrypt = ( () => {
                 if ( libInfo.requiresBrowser || libInfo.requiresNode ) {
                     /* Run in the current context as it operates on currently defined objects. */
                     vm.runInThisContext(
-                        module.wrap( code ),
+                        code,
                         {
                             filename: name,
                             displayErrors: false
                         }
-                    )( exports, require, module, __filename, __dirname );
+                    );
                 }
                 else {
                     /* Run in a new sandbox and store the result in a global object. */
                     global[ name.replace( '.js', '' ) ] =
                         vm.runInNewContext(
-                            module.wrap( code ),
+                            code,
                             {
                                 filename: name,
                                 displayErrors: false
                             }
-                        )( exports, require, module, __filename, __dirname );
+                        );
                 }
             }
         }
@@ -6277,7 +6276,7 @@ const discordCrypt = ( () => {
             const colors = Buffer.from(
                 _discordCrypt.__pbkdf2_sha160(
                     data,
-                    Buffer.alloc( width + height ).fill( 0 ),
+                    Buffer.allocUnsafe( width + height ),
                     true,
                     undefined,
                     undefined,
@@ -6315,12 +6314,13 @@ const discordCrypt = ( () => {
             ] );
 
             /* Iterate over each row. */
+            let constRow = Buffer.allocUnsafe( width % 4 ).fill( 0 );
             for ( let i = 0; i < height; i++ ) {
                 /* Add the row's pixels and the padding row if required. */
                 image = Buffer.concat( [
                     image,
                     colors.slice( i * height, ( i * height ) + ( width * 3 ) ),
-                    Buffer.alloc( width % 4 ).fill( 0 )
+                    constRow
                 ] );
             }
 
