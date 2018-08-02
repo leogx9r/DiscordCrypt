@@ -70,8 +70,9 @@ module.exports = ( mainWnd ) => {
          */
         headerInfo = {
             modify: {
-                'user-agent': 'Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0',
-                'accept-language': 'en-US'
+                'user-agent': 'Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0',
+                'accept-language': 'en-US,en;q=0.5',
+                'accept-encoding': 'gzip, deflate, br'
             },
             remove: [
                 'x-fingerprint',
@@ -87,7 +88,8 @@ module.exports = ( mainWnd ) => {
             'crash.discordapp.com',
             'discordapp.com/api/science',
             'discordapp.com/api/v6/science',
-            'discordapp.com/api/v6/experiments'
+            'discordapp.com/api/v6/experiments',
+            'webrtc.org/experiments'
         ];
 
     /**
