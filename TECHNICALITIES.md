@@ -142,9 +142,77 @@ These methods have all been manually implemented
 
 The following algorithms are currently supported to exchange keys in a secure manner.
 
-* [Diffie-Hellman ( ***DH*** )](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) 
+* [Diffie-Hellman ( ***DH*** )](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange)
+* [Elliptic Curve Diffie-Hellman ( ***ECDH*** ) ](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman) 
     ( **Default Exchange Algorithm** )
-* [Elliptic Curve Diffie-Hellman ( ***ECDH*** ) ](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman)
+
+The default type and key size was chosen to provide roughly 256-bits of security.
+ This is further detailed below.
+
+
+    The table below was taken from SP800-57, Recommendation for Key Management, Section 5.6.1.
+    
+    In the table below, 2TDEA is 2-key triple-DES; and 3TDEA is 3-key triple-DES and sometimes 
+    referred to as just triple DES. Triple DES is specified in SP800-67,
+    
+    Recommendation for the Triple Data Encryption Algorithm (TDEA) Block Cipher.
+    The yellow and green highlights are explained in the NIST Recommendations section. 
+    
+    Source: https://www.cryptopp.com/wiki/Security_Level#Finite_Field 
+    Publication: https://csrc.nist.gov/csrc/media/publications/sp/800-131a/rev-1/final/documents/sp800-131a_r1_draft.pdf
+
+
+- ----------------- - ----------------- - ------------- - ---------- - ------------- -
+| **Security Bits** | **Symmetric Key** |    **FF**     |   **IF**   |    **EC**     |
+| ----------------- | ----------------- | ------------- | ---------- | ------------- |
+|        80         |        2TDEA      | L=1024  N=160 |   k=1024   |   f=160-223   |
+|       112         |        3TDEA      | L=2048  N=224 |   k=2048   |   f=224-255   |
+|       128         |         AES       | L=3072  N=256 |   k=3072   |   f=256-383   |
+|       192         |         AES       | L=7680  N=384 |   k=7680   |   f=384-511   |
+|       256         |         AES       | L=15360 N=511 |   k=15360  |   f=512+      |
+- ----------------- - ----------------- - ------------- - ---------- - ------------- -
+
+
+    **Security Bits**
+
+        Security Bits estimate the computational steps or operations (not machine instructions) 
+         required to find a solution to the problem in the problem's domain (FF, IF, or EC).
+
+        For example, if someone says, 'My system uses 1024 Diffie Hellman", they are really
+         stating their system has a security level of 80 bits (and because its Diffie Hellman,
+         the problem domain is finite field). It will take a computer, on average, approximately 
+         280 operations to find a solution (think Big-Oh notation).
+
+        To break Diffie-Hellman via classical discrete logarithms, a number of methods could be
+         employed: Index calculus, modified Pollard's rho, or Baby-step giant-step to name a few.
+
+    Symmetric Key
+
+        Symmetric Key is a block cipher algorithm that offers an equivalent strength.
+
+        Though DES and AES are listed, any non-wounded or non-broken block cipher can be used.
+
+        For example, European and international users might want to use Cameilla rather than AES 
+         since Cameilla is NESSIE and ISO approved. Note that an appropriate mode
+         ( block cipher mode of operation ) must also be chosen.
+
+    Finite Field ( FF )
+
+        FF is finite field cryptography, sometimes referred to as the discrete log problem (DLP), 
+        and examples include Diffie-Hellman, ElGamal, and DSA ( one of the three signature schemes 
+        specified in the Digital Signature Standard (DSS) ).
+
+        L is the size of the field, N is the size of the subgroup.
+
+    Integer Factorization ( IF )
+
+        IF is integer factorization and is the underlying problem of RSA and Rabin-Williams.
+
+    Elliptic Curves ( EC )
+
+        EC is elliptical curve cryptography. 
+
+
 
 ##### Diffie-Hellman
 
@@ -179,7 +247,7 @@ The following key sizes in bits are supported:
 * 3072 Bits ( `modp15` )
 * 4096 Bits ( `modp16` )
 * 6144 Bits ( `modp17` )
-* 8192 Bits ( `modp18` ) ( **Default Key Size** )
+* 8192 Bits ( `modp18` )
 
 Please see [here](https://www.rfc-editor.org/rfc/rfc2412.txt) for parameters defined less 
     than 2048 or [here](https://www.rfc-editor.org/rfc/rfc3526.txt) for parameters larger than 
@@ -209,7 +277,8 @@ This operates on the same principle of a Diffie-Hellman exchange except it is do
     Elliptic Curves.
 
 The main benefits of this algorithm is that it is much smaller in size in contrast to 
-     standard Diffie-Hellman keys and is extremely quick to generate a key pair.
+     standard Diffie-Hellman keys and is extremely quick to generate a key pair while 
+     offering the same level of security..
 
 The downside, however, is that many consider it insecure as concerns of various 
     [backdoors](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography#Backdoors) 
@@ -229,13 +298,12 @@ The following key sizes in bits are supported:
 * 384 Bits ( `secp384r1: NIST/SECG curve over a 384 bit prime field.` )
 * 409 Bits ( `sect409k1: NIST/SECG curve over a 409 bit binary field.` )
 * 521 Bits ( `secp521r1: NIST/SECG curve over a 521 bit prime field.` )
-* 571 Bits ( `sect571k1: NIST/SECG curve over a 571 bit binary field.` )
+* 571 Bits ( `sect571k1: NIST/SECG curve over a 571 bit binary field.` ) ( **Default Key Size** )
 
 Please see [here](http://www.secg.org/sec2-v2.pdf) for more information on curve parameters.
 
 For information regarding the specifics of Curve25519, see its introductory paper 
     [here](https://cr.yp.to/ecdh/curve25519-20060209.pdf).
-
 
 #### Hash Algorithms
 
@@ -403,7 +471,7 @@ Below indicates the current index assignment for each combination of ciphers.
  * @desc Indexes of each dual-symmetric encryption mode.
  * @type {int[]}
  */
-discordCrypt.prototype._encryptModes = [
+_encryptModes = [
     /* Blowfish(Blowfish, AES, Camellia, IDEA, TripleDES) */
     0, 1, 2, 3, 4,
     /* AES(Blowfish, AES, Camellia, IDEA, TripleDES) */
