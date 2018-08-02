@@ -43,18 +43,87 @@
 module.exports = ( mainWnd ) => {
     let _mainWnd = mainWnd, reloadFlag = false, hookedDom = false;
 
-    const execJS = ( s ) => _mainWnd.webContents.executeJavaScript( s ),
+    /**
+     * @desc Log color CSS defined for logging messages.
+     * @type {string}
+     */
+    const
         logColor = 'color: #00007f; font-weight: bold; text-shadow: 0 0 1px #f00, 0 0 2px #0f0, 0 0 3px #00f;',
-        log = ( s ) => execJS( `console.log( '%c[SecureDiscord]%c - ${s}', '${logColor}', '' );` ),
+        /**
+         * @desc Log color CSS for logging filtered URL requests.
+         * @type {string}
+         */
+        warnColor = 'color: #f00; font-weight: bold',
+        /**
+         * Array of URLs to filter connections from.
+         * @type {string[]}
+         */
         targetURLs = [
             '*://*.*/*',
             '*://*/*',
             '*://*',
             '*'
         ],
-        tor_user_agent = 'Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0';
+        /**
+         * @desc Header information to modify or remove from requests.
+         * @type {{modify: Object, remove: string[]}}
+         */
+        headerInfo = {
+            modify: {
+                'user-agent': 'Mozilla/5.0 (Windows NT 6.1; rv:31.0) Gecko/20100101 Firefox/31.0',
+                'accept-language': 'en-US'
+            },
+            remove: [
+                'x-fingerprint',
+                'x-super-properties'
+            ]
+        },
+        /**
+         * @desc Specific domain names and paths to block access to.
+         * @type {string[]}
+         */
+        filteredHosts = [
+            'sentry.io',
+            'crash.discordapp.com',
+            'discordapp.com/api/science',
+            'discordapp.com/api/v6/science',
+            'discordapp.com/api/v6/experiments'
+        ];
 
-    let domLoad = () => {
+    /**
+     * @desc Executes javascript code in the main window.
+     * @param code
+     * @return {*}
+     */
+    const execJS = ( code ) => _mainWnd.webContents.executeJavaScript( code );
+
+    /**
+     * @desc Executes a console logging operation.
+     * @param {string} str The output to the console.
+     * @return {*}
+     */
+    const log = ( str ) => execJS( `console.log( '%c[SecureDiscord]%c ${str}', '${logColor}', '' );` );
+
+    /**
+     * @desc Modifies or removes any particular headers according to the `headerInfo` defined above.
+     * @param {Object} request Request information defined by the Electron spec.
+     * @see https://electronjs.org/docs/api/web-request
+     */
+    const modifyHeaders = ( request ) => {
+        for( let i in request.requestHeaders ) {
+            let v = headerInfo.modify[ i.toLowerCase() ];
+            if( v && request.requestHeaders[ i ] !== v )
+                request.requestHeaders[ i ] = v;
+            else if( headerInfo.remove.indexOf( i.toLowerCase() ) !== -1 )
+                delete request.requestHeaders[ i ];
+        }
+    };
+
+    /**
+     * @desc Event that executes upon the DOM having finished construction.
+     *      This sets up the necessary hooks required.
+     */
+    const onDomReady = () => {
         log( 'Initializing ...' );
 
         hookedDom = true;
@@ -66,58 +135,42 @@ module.exports = ( mainWnd ) => {
 
         reloadFlag = true;
 
-        log( `Setting user agent to: "${tor_user_agent}"` );
-        _mainWnd.webContents.setUserAgent( tor_user_agent );
+        log( 'Setting up header patching.' );
+        _mainWnd.webContents.setUserAgent( headerInfo.modify[ 'user-agent' ] );
 
         /* Events in case these every get replaced by any future code. */
-        let session = _mainWnd.webContents.session,
-            applyHeaders = ( details ) => {
-                for( let i in details.requestHeaders ) {
-                    if( i.toLowerCase() === 'user-agent' ) {
-                        if( details.requestHeaders[ i ] !== tor_user_agent )
-                            details.requestHeaders[ i ] = tor_user_agent;
-                    }
-                }
-                details.requestHeaders[ 'DNT' ] = '1';
-                details.requestHeaders[ 'Upgrade-Insecure-Requests' ] = '1';
-            };
-        session.webRequest.onBeforeSendHeaders( [ targetURLs ], ( details, callback ) => {
-            applyHeaders( details );
+        _mainWnd.webContents.session.webRequest.onBeforeSendHeaders( [ targetURLs ], ( details, callback ) => {
+            modifyHeaders( details );
             callback( { cancel: false, requestHeaders: details.requestHeaders } );
         } );
-        session.webRequest.onSendHeaders( [ targetURLs ], applyHeaders );
+        _mainWnd.webContents.session.webRequest.onSendHeaders( [ targetURLs ], modifyHeaders );
 
-        /* Set the proxy to Tor, fallback to direct connections. */
-        log( 'Applying Tor proxy for address 127.0.0.1:9050' );
-        session.setProxy(
+        /* Set the proxy to SOCKS5, fallback to direct connections. */
+        log( 'Applying SOCKS5 Proxy: 127.0.0.1:9050' );
+        _mainWnd.webContents.session.setProxy(
             { proxyRules: 'socks5://127.0.0.1:9050,direct' },
             () => log( 'Now routing all connections over Tor!' )
         );
 
         /* Block specific tracking URLs. */
         log( 'Blocking known tracking URLs' );
-        session.webRequest.onBeforeRequest( [ targetURLs ], ( details, callback ) => {
-            const _defaultHosts = [
-                'sentry.io',
-                'crash.discordapp.com',
-                'discordapp.com/api/science',
-                'discordapp.com/api/v6/science',
-                'discordapp.com/api/v6/experiments'
-            ];
-
+        _mainWnd.webContents.session.webRequest.onBeforeRequest( [ targetURLs ], ( details, callback ) => {
             /* Use the default block list. */
-            let filtered = _defaultHosts.filter( e => details.url.indexOf( e ) !== -1 ).length > 0;
+            let filtered = filteredHosts.filter( e => details.url.indexOf( e ) !== -1 ).length > 0;
             callback( { cancel: filtered } );
 
             if( filtered )
-                log( `[x] ${details.url}` );
+                execJS(
+                    `console.log( '%c[SecureDiscord]%c [%c✖%c] ${details.url}', '${logColor}', '', '${warnColor}', '' )`
+                );
         } );
     };
 
     try {
-        _mainWnd.webContents.on( 'dom-ready', domLoad );
+        /* Apply the DOM hooks. */
+        _mainWnd.webContents.on( 'dom-ready', onDomReady );
         _mainWnd.webContents.on( 'did-finish-loading', () => {
-            hookedDom ? domLoad() : null;
+            hookedDom ? onDomReady() : null;
         } );
     }
     catch( e ) {
