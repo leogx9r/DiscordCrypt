@@ -437,13 +437,19 @@ The following tips should be adhered to for maximum privacy between users.
     MiTM attacks, use a strong password generator, encrypt these using PGP and 
     send them to your partner over a non-Discord channel then manually apply these
     keys after you decrypt them.
-* Install the complimentary [script](scripts/secureDiscord.js) for additional protection.
-    * Blocks known tracking URLs used by Discord.
-    * Spoofs your User-Agent to Tor's.
+* Install the complimentary script [SecureDiscord](scripts/secureDiscord.js) for additional
+    protection.
+    * Sets your user agent to [Tor](https://www.torproject.org/)'s.
+    * Sets additional HTTP headers to Tor defaults.
+    * Blocks access to known Discord tracking URLs.
+    * Removes tracking from any external URL.
+    * Removes several fingerprint based headers from requests.
     * Adds an additional [Do-Not-Track](https://en.wikipedia.org/wiki/Do_Not_Track) header 
         to all your requests.
     * Routes all your traffic through a Tor proxy running on your computer.
-        - N.B. This requires Tor to be running at 127.0.0.1:9050!
+        - If you don't want to do this, remove `socks5://127.0.0.1:9050,` in the file.
+        - Get Tor [here](https://www.torproject.org/download/download.html.en).
+            ( N.B. This requires Tor to be running at 127.0.0.1:9050! )
         - If required, edit the script to point to the correct address.
             - By default, requests that fail to be fulfilled are connected to directly.
             - Disable this by removing the `,direct` part of the string:
