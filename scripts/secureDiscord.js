@@ -31,7 +31,7 @@
  *          < discord_desktop_core >/app/mainScreen.js
  *
  *          Below Line:
- *              require( './discordCryptLoader.js' )( mainWindow );
+ *              mainWindow = new _electron.BrowserWindow(mainWindowOptions);
  *
  *          If BetterDiscord Is Installed, Before:
  *              _betterDiscord2 = new _betterDiscord.BetterDiscord(mainWindow);
@@ -45,6 +45,7 @@
  *          - Blocks access to known Discord tracking URLs.
  *          - Removes tracking from any external URL.
  *          - Removes several fingerprint based headers from requests.
+ *
  * @param {BrowserWindow} mainWnd Main BrowserWindow object created upon Discord's main loading event.
  */
 module.exports = ( mainWnd ) => {
