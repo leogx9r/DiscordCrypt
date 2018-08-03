@@ -23,7 +23,7 @@
  ******************************************************************************/
 
 /**
- * @desc Simple file to spoof Discord's user agent, proxy all connections over Tor & apply some tracking-prevention.
+ * @desc Enhance Discord's desktop app for privacy.
  *      Save This File As:
  *          < discord_desktop_core >/app/secureDiscord.js
  *
@@ -38,16 +38,41 @@
  *
  *          As:
  *              require( './secureDiscord.js' )( mainWindow );
+ *     Features:
+ *          - Sets your user agent to Tor's.
+ *          - Sets additional HTTP headers to Tor defaults.
+ *          - Routes all traffic over Tor ( Requires Tor to be running on 127.0.0.1:9050 )
+ *          - Blocks access to known Discord tracking URLs.
+ *          - Removes tracking from any external URL.
+ *          - Removes several fingerprint based headers from requests.
  * @param {BrowserWindow} mainWnd Main BrowserWindow object created upon Discord's main loading event.
  */
 module.exports = ( mainWnd ) => {
-    let _mainWnd = mainWnd, reloadFlag = false, hookedDom = false;
+    let reloadFlag = false, hookedDom = false;
 
     /**
-     * @desc Log color CSS defined for logging messages.
-     * @type {string}
+     * @desc Generates a random IP address.
+     * @return {string}
      */
+    const randomIP = () => {
+        const buf = require( 'crypto' ).pseudoRandomBytes( 4 );
+
+        if( buf[ 0 ] === 0 )
+            buf[ 0 ] = 1;
+
+        return `${buf[ 0 ]}.${buf[ 1 ]}.${buf[ 2 ]}.${buf[ 3 ]}`
+    };
+
     const
+        /**
+         * @desc Main window created during the Electron load event.
+         * @type {BrowserWindow}
+         */
+        _mainWnd = mainWnd,
+        /**
+         * @desc Log color CSS defined for logging messages.
+         * @type {string}
+         */
         logColor = 'color: #00007f; font-weight: bold; text-shadow: 0 0 1px #f00, 0 0 2px #0f0, 0 0 3px #00f;',
         /**
          * @desc Log color CSS for logging filtered URL requests.
@@ -70,13 +95,18 @@ module.exports = ( mainWnd ) => {
          */
         headerInfo = {
             modify: {
+                'if-none-match': ( Math.random() * 10 ).toString( 36 ).substr( 2, Math.random() * 11 ),
                 'user-agent': 'Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0',
                 'accept-language': 'en-US,en;q=0.5',
-                'accept-encoding': 'gzip, deflate, br'
+                'accept-encoding': 'gzip, deflate, br',
+                '"x-forwarded-for': randomIP(),
+                'via': randomIP(),
             },
             remove: [
                 'x-fingerprint',
-                'x-super-properties'
+                'x-failed-requests',
+                'x-super-properties',
+                'referer'
             ]
         },
         /**
@@ -93,6 +123,12 @@ module.exports = ( mainWnd ) => {
             'google-analytics.com',
             'webrtc.org/experiments'
         ],
+        /**
+         * @desc Discord modifies any posted URL to add a tracker to it. This removes that.
+         *      Example:
+         *              discordapp.net/external/< Tracking ID >/https/google.com
+         * @type {string}
+         */
         external_tracking_path = 'discordapp.net/external/';
 
     /**
