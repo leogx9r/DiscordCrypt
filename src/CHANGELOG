@@ -1,3 +1,14 @@
+Version 1.5.2
+
+- NOTE: An addon has been implemented called SecureDiscord to compliment the features of DiscordCrypt.
+
+- Updated OpenPGP.js to v3.1.0
+- Added more methods reporting prevention.
+- Added some sanity checks for update checking.
+- Added a complimentary script called SecureDiscord that enhances a user's privacy.
+- Fixed a bug that prevented messages from being modified instantly.
+- Fixed a bug where debug versions would still apply updates if checked manually.
+
 Version 1.5.1
 
 - Added the GPG key fingerprint to the blacklisted updates panel for manual verification.
