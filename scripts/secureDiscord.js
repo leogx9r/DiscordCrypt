@@ -89,8 +89,11 @@ module.exports = ( mainWnd ) => {
             'discordapp.com/api/science',
             'discordapp.com/api/v6/science',
             'discordapp.com/api/v6/experiments',
+            'discordapp.com/api/v6/rtc/quality-report',
+            'google-analytics.com',
             'webrtc.org/experiments'
-        ];
+        ],
+        external_tracking_path = 'discordapp.net/external/';
 
     /**
      * @desc Executes javascript code in the main window.
@@ -159,12 +162,57 @@ module.exports = ( mainWnd ) => {
         _mainWnd.webContents.session.webRequest.onBeforeRequest( [ targetURLs ], ( details, callback ) => {
             /* Use the default block list. */
             let filtered = filteredHosts.filter( e => details.url.indexOf( e ) !== -1 ).length > 0;
-            callback( { cancel: filtered } );
+
+            /* Handle link tracking via external URLs if not filtered. */
+            let ext_tracking_pos;
+            if(
+                !filtered &&
+                ( ext_tracking_pos = details.url.indexOf( external_tracking_path ), ext_tracking_pos !== -1 )
+            ) {
+                let part_url = details.url.substr( external_tracking_path.length + ext_tracking_pos );
+
+                /* Scroll past the "/" identifier part. */
+                let link_pos = part_url.indexOf( '/' );
+                if( link_pos === -1 ) {
+                    callback( { cancel: filtered } );
+                    return;
+                }
+                part_url = part_url.substr( link_pos + 1 );
+
+                /* Make sure it begins with the "http" or "https" */
+                if( !( part_url.indexOf( 'https' ) === 0 || part_url.indexOf( 'http' ) === 0 ) ) {
+                    callback( { cancel: filtered } );
+                    return;
+                }
+
+                let is_https = !part_url.indexOf( 'https' );
+
+                /* Scroll past the "/" identifier part. */
+                link_pos = part_url.indexOf( '/' );
+                if( link_pos === -1 ) {
+                    callback( { cancel: filtered } );
+                    return;
+                }
+                part_url = part_url.substr( link_pos + 1 );
+
+                /* Build the final URL. */
+                let redirectURL = `${is_https ? 'https' : 'http'}://${part_url}`;
+                log( `Removed Tracker: ${redirectURL}` );
+
+                /* Do the redirect. */
+                callback( {
+                    cancel: false,
+                    redirectURL: redirectURL
+                } );
+                return;
+            }
 
             if( filtered )
                 execJS(
                     `console.log( '%c[SecureDiscord]%c [%c✖%c] ${details.url}', '${logColor}', '', '${warnColor}', '' )`
                 );
+
+            callback( { cancel: filtered } );
         } );
     };
 
