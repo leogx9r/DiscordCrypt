@@ -5002,7 +5002,7 @@ const discordCrypt = ( () => {
             /* Send this message as an embed. */
             if ( as_embed ) {
                 /* Generate a unique nonce for this message. */
-                let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 6 ).toString( 'hex' ), 16 );
+                let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 8 ).toString( 'hex' ), 16 );
 
                 /* Create the message embed object and add it to the queue. */
                 React.MessageQueue.enqueue(
@@ -5052,7 +5052,7 @@ const discordCrypt = ( () => {
                         return;
 
                     /* Generate a unique nonce for this message. */
-                    let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 6 ).toString( 'hex' ), 16 );
+                    let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 8 ).toString( 'hex' ), 16 );
 
                     /* Create the message object and dispatch it to the queue. */
                     React.MessageQueue.enqueue(
