@@ -3396,7 +3396,7 @@ const discordCrypt = ( () => {
             case 'ecdh':
                 for ( let i = 0; i < ecdh_bl.length; i++ ) {
                     let v = ecdh_bl[ i ];
-                    $( '#dc-keygen-algorithm' ).append( new Option( v, v, i === ( ecdh_bl.length - 1 ) ) );
+                    dc_keygen_algorithm.append( new Option( v, v, i === ( ecdh_bl.length - 1 ) ) );
                 }
                 break;
             default:
@@ -4734,43 +4734,6 @@ const discordCrypt = ( () => {
 
             /* Return any found module handlers. */
             return dump;
-        }
-
-        /**
-         * @private
-         * @experimental
-         * @desc Fires before every web request and handles URL blocking.
-         *      N.B. This breaks reloading and shouldn't be used till this issues is resolved.
-         *
-         *      let webRequest = require( 'electron' )
-         *        .remote
-         *        .getCurrentWindow()
-         *        .webContents
-         *        .session
-         *        .webRequest;
-         *
-         *      webRequest.onBeforeRequest( [ '*://*.*\/*' ], _discordCrypt._onBeforeWebRequest );
-         *
-         * @param {Object} details The details of the request.
-         * @param callback The callback function to execute to determine if to cancel or continue the request.
-         */
-        static _onBeforeWebRequest( details, callback ) {
-            /**
-             * @desc Default paths that are specifically designed for tracking.
-             * @type {string[]}
-             * @private
-             */
-            const _defaultHosts = [
-                'sentry.io',
-                'crash.discordapp.com',
-                'discordapp.com/api/science',
-                'discordapp.com/api/v6/science'
-            ];
-
-            /* Use the default block list. */
-            callback( {
-                cancel: _defaultHosts.filter( e => details.url.indexOf( e ) !== -1 ).length > 0
-            } );
         }
 
         /**
@@ -6257,77 +6220,6 @@ const discordCrypt = ( () => {
 
         /**
          * @public
-         * @desc Constructs a "random art" noise based BMP image from the input data.
-         * @param {Buffer} data The input data to construct the image from.
-         * @param {int} width The width of the image in pixels.
-         * @param {int} height The height of the image in pixels.
-         * @param {boolean} html_encode Whether to encode the image as a Base64 URI or return a raw buffer.
-         * @return {Buffer|string}
-         */
-        static __constructRandomArtImage( data, width, height, html_encode ) {
-            /* Construct a random color array from the input data and use the width + height as a salt. */
-            const colors = Buffer.from(
-                _discordCrypt.__pbkdf2_sha160(
-                    data,
-                    Buffer.allocUnsafe( width + height ),
-                    true,
-                    undefined,
-                    undefined,
-                    width * height * 3,
-                    1000
-                ),
-                'hex'
-            );
-
-            /* Construct a buffer containing the BMP and DIB file headers. */
-            let image = Buffer.concat( [
-                /** ----------------------------- **/
-                /* BMP File Header Magic. */
-                Buffer.from( 'BM' ),
-                /* Compressed Size */
-                Buffer.from( [ 0, 0, 0, 0 ] ),
-                /* Reserved */
-                Buffer.from( [ 0, 0 ] ),
-                /* Reserved */
-                Buffer.from( [ 0, 0 ] ),
-                /* Pixel Array Offset */
-                Buffer.from( [ 26, 0, 0, 0 ] ),
-                /** ----------------------------- **/
-                /* DIB v2.0 Header Size */
-                Buffer.from( [ 12, 0, 0, 0 ] ),
-                /* BMP Width */
-                Buffer.from( [ width, 0 ] ),
-                /* BMP Height */
-                Buffer.from( [ height, 0 ] ),
-                /* Number Of Color Planes */
-                Buffer.from( [ 1, 0 ] ),
-                /* Bits Per Pixel */
-                Buffer.from( [ 24, 0 ] )
-                /** ----------------------------- **/
-            ] );
-
-            /* Iterate over each row. */
-            let constRow = Buffer.allocUnsafe( width % 4 ).fill( 0 );
-            for ( let i = 0; i < height; i++ ) {
-                /* Add the row's pixels and the padding row if required. */
-                image = Buffer.concat( [
-                    image,
-                    colors.slice( i * height, ( i * height ) + ( width * 3 ) ),
-                    constRow
-                ] );
-            }
-
-            /* Add the terminator. */
-            image = Buffer.concat( [ image, Buffer.from( [ 0 ] ) ] );
-
-            /* Return the result either encoded or as-is. */
-            return html_encode ?
-                `data:image/bmp;base64,${image.toString( 'base64' )}` :
-                image;
-        }
-
-        /**
-         * @public
          * @desc Uploads raw data to an Up1 service and returns the file URL and deletion key.
          * @param {string} up1_host The host URL for the Up1 service.
          * @param {string} [up1_api_key] The optional API key used for the service.
@@ -7070,15 +6962,6 @@ const discordCrypt = ( () => {
                     return false;
 
             return true;
-        }
-
-        /**
-         * @public
-         * @desc Retrieves Base64 charset as an Array Object.
-         * @returns {Array} Returns an array of all 64 characters used in Base64 + encoding characters.
-         */
-        static __getBase64() {
-            return Array.from( "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=" );
         }
 
         /**
