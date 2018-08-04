@@ -1,3 +1,7 @@
+Version 1.5.4
+
+- Fixed a bug with sending messages where nonces would sometimes overflow.
+
 Version 1.5.3
 
 - Fixed Discord altering class names causing failure to encrypt messages.
