@@ -448,7 +448,7 @@ const discordCrypt = ( () => {
              * @desc Used to hook messages being sent.
              * @type {string}
              */
-            this._channelTextAreaClass = '.content textarea';
+            this._channelTextAreaClass = '.content-yTz4x3 textarea';
 
             /**
              * @desc Used to assign the correct image class to parsed emojis.
@@ -5025,7 +5025,7 @@ const discordCrypt = ( () => {
                                     name: message_header || '-----MESSAGE-----',
                                     icon_url:
                                         'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png',
-                                    url: 'https://discord.me/_discordCrypt'
+                                    url: 'https://discord.me/discordCrypt'
                                 },
                                 footer: {
                                     text: message_footer || 'discordCrypt',
