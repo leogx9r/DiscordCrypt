@@ -1,3 +1,8 @@
+Version 1.5.3
+
+- Fixed Discord altering class names causing failure to encrypt messages.
+- Updated nonces to span the full 64-bits supported.
+
 Version 1.5.2
 
 - NOTE: An addon has been implemented called SecureDiscord to compliment the features of DiscordCrypt.
