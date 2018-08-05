@@ -5643,8 +5643,10 @@ const discordCrypt = ( () => {
                 else if ( ( /(<@![0-9]{14,22}>)/gm ).test( split_msg[ i ] ) ) {
                     user_tags[ k++ ] = split_msg[ i ];
 
-                    /* Convert the tag back to human-readable form. */
-                    tmp_tag = _cachedModules.MessageParser.unparse( split_msg[ i ], channelProps );
+                    /* Convert the tag back to human-readable form if a valid channel props was passed. */
+                    tmp_tag = channelProps ?
+                        _cachedModules.MessageParser.unparse( split_msg[ i ], channelProps ) :
+                        split_msg[ i ];
                     cleaned_msg += `${tmp_tag.split( '#' )[ 0 ]} `;
                 }
                 /* Check for @here or @everyone. */

@@ -5633,7 +5633,7 @@ const discordCrypt = ( () => {
                     cleaned_msg += `${split_msg[ i ].split( '#' )[ 0 ]} `;
                 }
                 /* Check for parsed user IDs. */
-                else if ( ( /(<@![0-9]{14,22}>)/gm ).test( split_msg[ i ] ) ) {
+                else if ( ( /(<@[!]*[0-9]{14,22}>)/gm ).test( split_msg[ i ] ) ) {
                     user_tags[ k++ ] = split_msg[ i ];
 
                     /* Convert the tag back to human-readable form if a valid channel props was passed. */
