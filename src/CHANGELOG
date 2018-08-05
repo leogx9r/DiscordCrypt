@@ -1,3 +1,8 @@
+Version 1.5.5
+
+- Fixed a regression with tagging users due to adding emoji support.
+- Minor code optimizations.
+
 Version 1.5.4
 
 - Fixed a bug with sending messages where nonces would sometimes overflow.
