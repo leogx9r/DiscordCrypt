@@ -13,7 +13,7 @@ stages:
 - deploy
 
 # Generate documents on every branch.
-docs_gen:
+documents:
   stage: build
   script:
    - npm install --save-dev
@@ -35,7 +35,7 @@ test:
    - master
 
 # Perform code coverage only on the master & development branches.
-cover_test:
+coverage:
   stage: test
   script:
    - npm install --save-dev
@@ -54,8 +54,8 @@ cover_test:
 pages:
   stage: deploy
   dependencies:
-   - docs_gen
-   - cover_test
+   - documents
+   - coverage
   script:
    - mv docs public/
    - mv coverage/lcov-report/ public/coverage
