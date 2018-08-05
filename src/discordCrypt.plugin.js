@@ -2000,7 +2000,7 @@ const discordCrypt = ( () => {
                 return false;
 
             /* Try parsing any user-tags. */
-            let parsed = _discordCrypt.__extractTags( cleaned );
+            let parsed = _discordCrypt.__extractTags( cleaned, _discordCrypt._getChannelProps() );
 
             /* Sanity check for messages with just spaces or new line feeds in it. */
             if ( parsed[ 0 ].length !== 0 ) {
@@ -4786,42 +4786,50 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Returns the React modules loaded natively in Discord.
-         * @param {CachedModules} cached_modules Cached module parameter for locating standard modules.
-         * @returns {ReactModules}
+         * @desc Returns the channel properties for the currently viewed channel or null.
+         * @return {object}
          */
-        static _getReactModules( cached_modules ) {
+        static _getChannelProps() {
+            /* Blacklisted IDs that don't have actual properties. */
             const blacklisted_channel_props = [
                 '@me',
                 'activity'
             ];
 
-            if ( cached_modules ) {
-                let channelProps = null;
+            /* Skip blacklisted channels. */
+            if( blacklisted_channel_props.indexOf( _discordCrypt._getChannelId() ) === -1 ) {
+                let elementOwner = _discordCrypt._getElementReactOwner( $( 'form' )[ 0 ] );
 
-                if( blacklisted_channel_props.indexOf( _discordCrypt._getChannelId() ) === -1 ) {
-                    let elementOwner = _discordCrypt._getElementReactOwner( $( 'form' )[ 0 ] );
-
-                    if( elementOwner[ 'props' ] && elementOwner.props[ 'channel' ] )
-                        channelProps = elementOwner.props.channel;
-                }
-
-                return {
-                    ChannelProps: channelProps,
-                    EmojiParser: cached_modules.EmojiParser,
-                    MessageParser: cached_modules.MessageParser,
-                    MessageController: cached_modules.MessageController,
-                    MessageActionTypes: cached_modules.MessageActionTypes,
-                    MessageDispatcher: cached_modules.MessageDispatcher,
-                    MessageQueue: cached_modules.MessageQueue,
-                    UserResolver: cached_modules.UserResolver,
-                    GuildResolver: cached_modules.GuildResolver,
-                    ChannelResolver: cached_modules.ChannelResolver,
-                    HighlightJS: cached_modules.HighlightJS,
-                };
+                /* Ensure the properties exist. */
+                if ( elementOwner[ 'props' ] && elementOwner.props[ 'channel' ] )
+                    /* Return the result. */
+                    return elementOwner.props.channel;
             }
 
+            /* Return nothing for invalid channels. */
             return null;
+        }
+
+        /**
+         * @private
+         * @desc Returns the React modules loaded natively in Discord.
+         * @param {CachedModules} cached_modules Cached module parameter for locating standard modules.
+         * @returns {ReactModules}
+         */
+        static _getReactModules( cached_modules ) {
+            return {
+                ChannelProps: _discordCrypt._getChannelProps(),
+                EmojiParser: cached_modules.EmojiParser,
+                MessageParser: cached_modules.MessageParser,
+                MessageController: cached_modules.MessageController,
+                MessageActionTypes: cached_modules.MessageActionTypes,
+                MessageDispatcher: cached_modules.MessageDispatcher,
+                MessageQueue: cached_modules.MessageQueue,
+                UserResolver: cached_modules.UserResolver,
+                GuildResolver: cached_modules.GuildResolver,
+                ChannelResolver: cached_modules.ChannelResolver,
+                HighlightJS: cached_modules.HighlightJS,
+            };
         }
 
         /**
@@ -5607,20 +5615,32 @@ const discordCrypt = ( () => {
 
         /**
          * @public
-         * @desc Extracts all tags from the given message and removes any tagged discriminators.
+         * @desc Extracts all tags from the given message and optionally removes any tagged discriminators.
          * @param {string} message The input message to extract all tags from.
+         * @param {object} channelProps The properties of the current channel used for parsing.
          * @returns {UserTags}
          */
-        static __extractTags( message ) {
+        static __extractTags( message, channelProps ) {
             let split_msg = message.split( ' ' );
-            let cleaned_tags = '', cleaned_msg = '';
+            let cleaned_tags = '', cleaned_msg = '', tmp_tag;
             let user_tags = [];
 
             /* Iterate over each segment and check for usernames. */
             for ( let i = 0, k = 0; i < split_msg.length; i++ ) {
+                /* Check for normal user names. */
                 if ( this.__isValidUserName( split_msg[ i ] ) ) {
                     user_tags[ k++ ] = split_msg[ i ];
                     cleaned_msg += `${split_msg[ i ].split( '#' )[ 0 ]} `;
+                }
+                /* Check for parsed user IDs. */
+                else if ( ( /(<@![0-9]{14,22}>)/gm ).test( split_msg[ i ] ) ) {
+                    user_tags[ k++ ] = split_msg[ i ];
+
+                    /* Convert the tag back to human-readable form if a valid channel props was passed. */
+                    tmp_tag = channelProps ?
+                        _cachedModules.MessageParser.unparse( split_msg[ i ], channelProps ) :
+                        split_msg[ i ];
+                    cleaned_msg += `${tmp_tag.split( '#' )[ 0 ]} `;
                 }
                 /* Check for @here or @everyone. */
                 else if ( [ '@everyone', '@here', '@me' ].indexOf( split_msg[ i ] ) !== -1 ) {
