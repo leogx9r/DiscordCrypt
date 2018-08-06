@@ -159,6 +159,10 @@ module.exports = ( mainWnd ) => {
      * @see https://electronjs.org/docs/api/web-request
      */
     const modifyHeaders = ( request ) => {
+        /* Skip encoded data URLs. */
+        if( request.url.indexOf( 'data:image/' ) !== -1 )
+            return;
+
         /* Scan headers for removal or modification. */
         for( let i in request.requestHeaders ) {
             let v = headerInfo.modify[ i.toLowerCase() ];
