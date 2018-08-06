@@ -95,6 +95,10 @@ module.exports = ( mainWnd ) => {
          * @type {{modify: Object, remove: string[]}}
          */
         headerInfo = {
+            insert: {
+                'DNT': '1',
+                'Upgrade-Insecure-Requests': 1
+            },
             modify: {
                 'if-none-match': ( Math.random() * 10 ).toString( 36 ).substr( 2, Math.random() * 11 ),
                 'user-agent': 'Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0',
@@ -105,8 +109,11 @@ module.exports = ( mainWnd ) => {
             },
             remove: [
                 'x-fingerprint',
+                'x-debug',
+                'x-debug-options',
                 'x-failed-requests',
                 'x-super-properties',
+                'x-context-properties',
                 'referer'
             ]
         },
@@ -147,17 +154,31 @@ module.exports = ( mainWnd ) => {
     const log = ( str ) => execJS( `console.log( '%c[SecureDiscord]%c ${str}', '${logColor}', '' );` );
 
     /**
-     * @desc Modifies or removes any particular headers according to the `headerInfo` defined above.
+     * @desc Modifies, inserts or removes any particular headers according to the `headerInfo` defined above.
      * @param {Object} request Request information defined by the Electron spec.
      * @see https://electronjs.org/docs/api/web-request
      */
     const modifyHeaders = ( request ) => {
+        /* Scan headers for removal or modification. */
         for( let i in request.requestHeaders ) {
             let v = headerInfo.modify[ i.toLowerCase() ];
             if( v && request.requestHeaders[ i ] !== v )
                 request.requestHeaders[ i ] = v;
             else if( headerInfo.remove.indexOf( i.toLowerCase() ) !== -1 )
                 delete request.requestHeaders[ i ];
+        }
+
+        /* Add any headers needed. */
+        for( let i in headerInfo.insert ) {
+            /* Determine if the header is already present in lowercase form. */
+            let _i = request.requestHeaders.hasOwnProperty( i.toLowerCase() ) ? i.toLowerCase() : i;
+
+            /* Skip if it already exists and the value is as expected. */
+            if( request.requestHeaders[ _i ] === headerInfo.insert[ i ] )
+                continue;
+
+            /* Add the header. */
+            request.requestHeaders[ _i ] = headerInfo.insert[ i ];
         }
     };
 
@@ -257,7 +278,7 @@ module.exports = ( mainWnd ) => {
         /* Apply the DOM hooks. */
         _mainWnd.webContents.on( 'dom-ready', onDomReady );
         _mainWnd.webContents.on( 'did-finish-loading', () => {
-            hookedDom ? onDomReady() : null;
+            !hookedDom ? onDomReady() : null;
         } );
     }
     catch( e ) {
