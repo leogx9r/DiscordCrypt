@@ -92,7 +92,7 @@ module.exports = ( mainWnd ) => {
         ],
         /**
          * @desc Header information to modify or remove from requests.
-         * @type {{modify: Object, remove: string[]}}
+         * @type {{insert: Object, modify: Object, remove: string[]}}
          */
         headerInfo = {
             insert: {
