@@ -43,6 +43,7 @@
  *          - Sets additional HTTP headers to Tor defaults.
  *          - Routes all traffic over Tor ( Requires Tor to be running on 127.0.0.1:9050 )
  *          - Blocks access to known Discord tracking URLs.
+ *          - Adds Do-Not-Track & Upgrade-Insecure-Requests headers.
  *          - Removes tracking from any external URL.
  *          - Removes several fingerprint based headers from requests.
  *
