@@ -73,33 +73,17 @@
 
 /**
  * @typedef {Object} CachedModules
- * @desc Cached React and Discord modules for internal access.
- * @property {Object} EmojiParser Internal emoji parser that's used to translate emojis sent in messages.
- * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
+ * @desc Cached Webpack modules for internal access.
+ * @property {Object} ChannelStore Internal channel resolver for retrieving a list of all channels available.
+ * @property {Object} EmojiStore Internal emoji parser that's used to translate emojis sent in messages.
+ * @property {Object} GlobalTypes Internal message action types and constants for events.
+ * @property {Object} GuildStore Internal Guild resolver for retrieving a list of all guilds currently in.
+ * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
+ * @property {Object} MessageCreator Internal message parser that's used to translate tags to Discord symbols.
  * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
- * @property {Object} MessageActionTypes Internal message action types and constants for events.
  * @property {Object} MessageDispatcher Internal message dispatcher for pending queued messages.
  * @property {Object} MessageQueue Internal message Queue store for pending parsing.
- * @property {Object} UserResolver Internal user resolver for retrieving all users known.
- * @property {Object} GuildResolver Internal Guild resolver for retrieving a list of all guilds currently in.
- * @property {Object} ChannelResolver Internal channel resolver for retrieving a list of all channels available.
- * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
- */
-
-/**
- * @typedef {Object} ReactModules
- * @desc Contains all React and Discord modules including the channel's properties for internal access.
- * @property {Object} ChannelProps Retrieved channel properties object for the current channel.
- * @property {Object} EmojiParser Internal emoji parser that's used to translate emojis sent in messages.
- * @property {Object} MessageParser Internal message parser that's used to translate tags to Discord symbols.
- * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
- * @property {Object} MessageActionTypes Internal message action types and constants for events.
- * @property {Object} MessageDispatcher Internal message dispatcher for pending queued messages.
- * @property {Object} MessageQueue Internal message Queue store for pending parsing.
- * @property {Object} UserResolver Internal user resolver for retrieving all users known.
- * @property {Object} GuildResolver Internal Guild resolver for retrieving a list of all guilds currently in.
- * @property {Object} ChannelResolver Internal channel resolver for retrieving a list of all channels available.
- * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
+ * @property {Object} UserStore Internal user resolver for retrieving all users known.
  */
 
 /**
@@ -661,36 +645,36 @@ const discordCrypt = ( () => {
             }
 
             /* Get module searcher for caching. */
-            const WebpackModules = _discordCrypt._getWebpackModuleSearcher();
+            const searcher = _discordCrypt._getWebpackModuleSearcher();
 
             /* Resolve and cache all modules needed. */
             _cachedModules = {
-                EmojiParser: WebpackModules
+                EmojiStore: searcher
                     .findByUniqueProperties( [ 'translateSurrogatesToInlineEmoji', 'getCategories' ] ),
-                MessageParser: WebpackModules
+                MessageCreator: searcher
                     .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
-                MessageController: WebpackModules
+                MessageController: searcher
                     .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
-                MessageActionTypes: WebpackModules
+                GlobalTypes: searcher
                     .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
-                MessageDispatcher: WebpackModules
+                MessageDispatcher: searcher
                     .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
-                MessageQueue: WebpackModules
+                MessageQueue: searcher
                     .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
-                UserResolver: WebpackModules
+                UserStore: searcher
                     .findByUniqueProperties( [ "getUser", "getUsers", "findByTag" ] ),
-                GuildResolver: WebpackModules
+                GuildStore: searcher
                     .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
-                ChannelResolver: WebpackModules
+                ChannelStore: searcher
                     .findByUniqueProperties( [ "getChannel", "getChannels", "getDMFromUserId", 'getDMUserIds' ] ),
-                HighlightJS: WebpackModules
+                HighlightJS: searcher
                     .findByUniqueProperties( [ 'initHighlighting', 'highlightBlock', 'highlightAuto' ] ),
             };
 
             /* Throw an error if a cached module can't be found. */
             for ( let prop in _cachedModules ) {
                 if ( typeof _cachedModules[ prop ] !== 'object' ) {
-                    global.smalltalk.alert( 'Error Loading _discordCrypt', `Could not find requisite module: ${prop}` );
+                    global.smalltalk.alert( 'Error Loading DiscordCrypt', `Could not find requisite module: ${prop}` );
                     return;
                 }
             }
@@ -1229,7 +1213,7 @@ const discordCrypt = ( () => {
          */
         _unhookMessageCallbacks() {
             /* Skip if no dispatcher was called. */
-            if ( !_messageUpdateDispatcher )
+            if ( !_messageUpdateDispatcher || !_messageUpdateDispatcher[ '_actionHandlers' ] )
                 return false;
 
             /* Iterate over every dispatcher. */
@@ -1598,12 +1582,11 @@ const discordCrypt = ( () => {
                 if ( $( self._autoCompleteClass )[ 0 ] )
                     return;
 
-                /* Retrieve the channel props for message parsing. */
-                let modules = _discordCrypt._getReactModules( _cachedModules );
-
                 /* Encrypt the parsed message and send it. */
                 if ( !self._sendEncryptedMessage(
-                    modules.MessageParser.parse( modules.ChannelProps, $( this ).val() ).content
+                    _cachedModules
+                        .MessageCreator
+                        .parse( _discordCrypt._getChannelProps(), $( this ).val() ).content
                 ) )
                     return;
 
@@ -1719,10 +1702,9 @@ const discordCrypt = ( () => {
          * @param {string} primary_key The primary key used to decrypt the message.
          * @param {string} secondary_key The secondary key used to decrypt the message.
          * @param {boolean} as_embed Whether to consider this message object as an embed.
-         * @param {ReactModules} react_modules The modules retrieved by calling _getReactModules()
          * @returns {boolean} Returns true if the message has been decrypted.
          */
-        _parseSymmetric( obj, primary_key, secondary_key, as_embed, react_modules ) {
+        _parseSymmetric( obj, primary_key, secondary_key, as_embed ) {
             let message = $( obj );
             let dataMsg;
 
@@ -1809,14 +1791,14 @@ const discordCrypt = ( () => {
                 /* If this contains code blocks, highlight them. */
                 if ( dataMsg.code ) {
                     /* Sanity check. */
-                    if ( react_modules.HighlightJS !== null ) {
+                    if ( _cachedModules.HighlightJS !== null ) {
                         /* The inner element contains a <span></span> class, get all children beneath that. */
                         let elements = $( message.children()[ 0 ] ).children();
 
                         /* Loop over each element to get the markup division list. */
                         for ( let i = 0; i < elements.length; i++ ) {
                             /* Highlight the element's <pre><code></code></code> block. */
-                            react_modules.HighlightJS.highlightBlock( $( elements[ i ] ).children()[ 0 ] );
+                            _cachedModules.HighlightJS.highlightBlock( $( elements[ i ] ).children()[ 0 ] );
 
                             /* Reset the class name. */
                             $( elements[ i ] ).children().addClass( 'hljs' );
@@ -1876,7 +1858,7 @@ const discordCrypt = ( () => {
             processed = _discordCrypt.__buildEmojiMessage(
                 processed.html,
                 this._emojisClass,
-                _cachedModules.EmojiParser
+                _cachedModules.EmojiStore
             );
             let hasEmojis = processed.emoji;
 
@@ -1917,14 +1899,13 @@ const discordCrypt = ( () => {
             );
 
             /* Look through each markup element to find an embedDescription. */
-            let React = _discordCrypt._getReactModules( _cachedModules );
             $( this._embedDescriptionClass ).each( ( function () {
                 /* Skip parsed messages. */
                 if ( $( this ).data( 'dc-parsed' ) !== undefined )
                     return;
 
                 /* Try parsing a symmetric message. */
-                self._parseSymmetric( this, primary, secondary, true, React );
+                self._parseSymmetric( this, primary, secondary, true );
 
                 /* Set the flag. */
                 $( this ).data( 'dc-parsed', true );
@@ -1937,7 +1918,7 @@ const discordCrypt = ( () => {
                     return;
 
                 /* Try parsing a symmetric message. */
-                self._parseSymmetric( this, primary, secondary, false, React );
+                self._parseSymmetric( this, primary, secondary, false );
 
                 /* Set the flag. */
                 $( this ).data( 'dc-parsed', true );
@@ -2633,9 +2614,9 @@ const discordCrypt = ( () => {
                 table.html( '' );
 
                 /* Resolve all users, guilds and channels the current user is a part of. */
-                users = _cachedModules.UserResolver.getUsers();
-                guilds = _cachedModules.GuildResolver.getGuilds();
-                channels = _cachedModules.ChannelResolver.getChannels();
+                users = _cachedModules.UserStore.getUsers();
+                guilds = _cachedModules.GuildStore.getGuilds();
+                channels = _cachedModules.ChannelStore.getChannels();
 
                 /* Iterate over each password in the configuration. */
                 for ( let prop in _configFile.passList ) {
@@ -4560,7 +4541,7 @@ const discordCrypt = ( () => {
                         }
                     }
 
-                    _discordCrypt.log( 'Cannot find React module.', 'warn' );
+                    _discordCrypt.log( 'Cannot find Webpack module.', 'warn' );
                 }
 
                 return null;
@@ -4812,28 +4793,6 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Returns the React modules loaded natively in Discord.
-         * @param {CachedModules} cached_modules Cached module parameter for locating standard modules.
-         * @returns {ReactModules}
-         */
-        static _getReactModules( cached_modules ) {
-            return {
-                ChannelProps: _discordCrypt._getChannelProps(),
-                EmojiParser: cached_modules.EmojiParser,
-                MessageParser: cached_modules.MessageParser,
-                MessageController: cached_modules.MessageController,
-                MessageActionTypes: cached_modules.MessageActionTypes,
-                MessageDispatcher: cached_modules.MessageDispatcher,
-                MessageQueue: cached_modules.MessageQueue,
-                UserResolver: cached_modules.UserResolver,
-                GuildResolver: cached_modules.GuildResolver,
-                ChannelResolver: cached_modules.ChannelResolver,
-                HighlightJS: cached_modules.HighlightJS,
-            };
-        }
-
-        /**
-         * @private
          * @desc Edits the message's content from the channel indicated.
          *      N.B. This does not edit embeds due to the internal code Discord uses.
          * @param {string} channel_id The channel's identifier that the message is located in.
@@ -4869,7 +4828,6 @@ const discordCrypt = ( () => {
          * @param {string} [message_content] Message content to be attached above the main message.
          * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the
          *      current channel.
-         * @param {CachedModules} cached_modules Internally cached modules.
          * @param {Array<TimedMessage>} [timed_messages] Array containing timed messages to add this sent message to.
          * @param {int} [expire_time_minutes] The amount of minutes till this message is to be deleted.
          */
@@ -4881,26 +4839,24 @@ const discordCrypt = ( () => {
             embedded_color = 0x551A8B,
             message_content = '',
             channel_id = undefined,
-            cached_modules = {},
             timed_messages = undefined,
             expire_time_minutes = 0
         ) {
             let mention_everyone = false;
 
-            /* Finds appropriate React modules. */
-            const React = _discordCrypt._getReactModules( cached_modules );
-
             /* Parse the message content to the required format if applicable.. */
             if ( typeof message_content === 'string' && message_content.length ) {
                 /* Sanity check. */
-                if ( React.MessageParser === null ) {
-                    _discordCrypt.log( 'Could not locate the MessageParser module!', 'error' );
+                if ( _cachedModules.MessageCreator === null ) {
+                    _discordCrypt.log( 'Could not locate the MessageCreator module!', 'error' );
                     return;
                 }
 
                 try {
                     /* Parse the message. */
-                    message_content = React.MessageParser.parse( React.ChannelProps, message_content ).content;
+                    message_content = _cachedModules
+                        .MessageCreator
+                        .parse( _discordCrypt._getChannelProps(), message_content ).content;
 
                     /* Check for @everyone or @here mentions. */
                     if ( message_content.includes( '@everyone' ) || message_content.includes( '@here' ) )
@@ -4917,13 +4873,13 @@ const discordCrypt = ( () => {
             let _channel = channel_id !== undefined ? channel_id : _discordCrypt._getChannelId();
 
             /* Sanity check. */
-            if ( React.MessageQueue === null ) {
+            if ( _cachedModules.MessageQueue === null ) {
                 _discordCrypt.log( 'Could not locate the MessageQueue module!', 'error' );
                 return;
             }
 
             /* Sanity check. */
-            if ( React.MessageController === null ) {
+            if ( _cachedModules.MessageController === null ) {
                 _discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
                 return;
             }
@@ -4937,19 +4893,19 @@ const discordCrypt = ( () => {
                         r.status >= 400 &&
                         r.status < 500 &&
                         r.body &&
-                        !React.MessageController.sendClydeError( _channel, r.body.code )
+                        !_cachedModules.MessageController.sendClydeError( _channel, r.body.code )
                     ) {
                         /* Log the error in case we can't manually dispatch the error. */
                         _discordCrypt.log( `Error sending message: ${r.status}`, 'error' );
 
                         /* Sanity check. */
-                        if ( React.MessageDispatcher === null || React.MessageActionTypes === null ) {
+                        if ( _cachedModules.MessageDispatcher === null || _cachedModules.GlobalTypes === null ) {
                             _discordCrypt.log( 'Could not locate the MessageDispatcher module!', 'error' );
                             return;
                         }
 
-                        React.MessageDispatcher.dispatch( {
-                            type: React.MessageActionTypes.ActionTypes.MESSAGE_SEND_FAILED,
+                        _cachedModules.MessageDispatcher.dispatch( {
+                            type: _cachedModules.GlobalTypes.ActionTypes.MESSAGE_SEND_FAILED,
                             messageId: r.body.id,
                             channelId: _channel
                         } );
@@ -4957,7 +4913,7 @@ const discordCrypt = ( () => {
                 }
                 else {
                     /* Receive the message normally. */
-                    React.MessageController.receiveMessage( _channel, r.body );
+                    _cachedModules.MessageController.receiveMessage( _channel, r.body );
 
                     /* Add the message to the TimedMessage array. */
                     if ( timed_messages && expire_time_minutes > 0 ) {
@@ -4976,7 +4932,7 @@ const discordCrypt = ( () => {
                 let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 7 ).toString( 'hex' ), 16 );
 
                 /* Create the message embed object and add it to the queue. */
-                React.MessageQueue.enqueue(
+                _cachedModules.MessageQueue.enqueue(
                     {
                         type: 'send',
                         message: {
@@ -5026,7 +4982,7 @@ const discordCrypt = ( () => {
                     let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 7 ).toString( 'hex' ), 16 );
 
                     /* Create the message object and dispatch it to the queue. */
-                    React.MessageQueue.enqueue(
+                    _cachedModules.MessageQueue.enqueue(
                         {
                             type: 'send',
                             message: {
@@ -5638,7 +5594,7 @@ const discordCrypt = ( () => {
 
                     /* Convert the tag back to human-readable form if a valid channel props was passed. */
                     tmp_tag = channelProps ?
-                        _cachedModules.MessageParser.unparse( split_msg[ i ], channelProps ) :
+                        _cachedModules.MessageCreator.unparse( split_msg[ i ], channelProps ) :
                         split_msg[ i ];
                     cleaned_msg += `${tmp_tag.split( '#' )[ 0 ]} `;
                 }
