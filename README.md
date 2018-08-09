@@ -28,9 +28,11 @@
  
 
 # Features
+
+![Encrypted Message](images/encrypted-message.png)
  
 - Supports Windows, MAC and Linux. ( No mobile support, sorry! )
-- All messages in DMs, group DMs and channels are end-to-end encrypted.
+- All messages in DMs, group DMs and channels are end-to-end encrypted. ( More below. )
 - Uses a dual encryption mode with multiple ciphers. ( Defaults to AES-256 and Camellia-256 )
 - Supports embedded messages for extra spice if you want to look unique.
 - Optional timed messages which are deleted after a certain period passes.
@@ -45,10 +47,9 @@
 
 # Introduction
 
-![Encrypted Message](images/encrypted-message.png)
-
-**DiscordCrypt** is a plugin for Discord that uses BetterDiscord's internal structure to send and 
-    receive encrypted messages between users and channels in a safe and secure manner.
+**DiscordCrypt** is a plugin for Discord that uses 
+    [BetterDiscord](https://github.com/rauenzi/BetterDiscordApp/releases)'s internal structure to 
+    send and receive encrypted messages between users and channels in a safe and secure manner.
 
 The plugin achieves this by using 
     [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) 
@@ -62,8 +63,8 @@ The source code is completely free and open source
 If you'd like an in-depth explanation of its inner workings, click [here](TECHNICALITIES.md).
 
 If you wish to use a web browser instead of Discord's native application, we recommend you use 
-    [**SimpleDiscordCrypt**](https://gitlab.com/An0/SimpleDiscordCrypt) made by our friend An0.
-    Please note, these two versions are incompatible with one another.
+    [**SimpleDiscordCrypt**](https://gitlab.com/An0/SimpleDiscordCrypt) made by our friend An0. 
+    Please note, these two versions are ***incompatible*** with one another.
 
 Contributions are welcome! Be sure to read [our guidelines](CONTRIBUTING.md) before submitting 
     your changes.
