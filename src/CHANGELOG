@@ -1,3 +1,9 @@
+Version 1.5.6
+
+- Fixed a bug due to Discord update that broke code block highlighting.
+- Fixed a bug in SecureDiscord module where DNT headers weren't applied.
+- Added additional header tracking removal in SecureDiscord.
+
 Version 1.5.5
 
 - Fixed a regression with tagging users due to adding emoji support.
