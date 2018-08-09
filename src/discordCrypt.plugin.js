@@ -1788,26 +1788,6 @@ const discordCrypt = ( () => {
                     message = $( tmp );
                 }
 
-                /* If this contains code blocks, highlight them. */
-                if ( dataMsg.code ) {
-                    /* Sanity check. */
-                    if ( _cachedModules.HighlightJS !== null ) {
-                        /* The inner element contains a <span></span> class, get all children beneath that. */
-                        let elements = $( message.children()[ 0 ] ).children();
-
-                        /* Loop over each element to get the markup division list. */
-                        for ( let i = 0; i < elements.length; i++ ) {
-                            /* Highlight the element's <pre><code></code></code> block. */
-                            _cachedModules.HighlightJS.highlightBlock( $( elements[ i ] ).children()[ 0 ] );
-
-                            /* Reset the class name. */
-                            $( elements[ i ] ).children().addClass( 'hljs' );
-                        }
-                    }
-                    else
-                        _discordCrypt.log( 'Could not locate HighlightJS module!', 'error' );
-                }
-
                 /* Decrypted messages get set to green. */
                 message.css( 'color', 'green' );
             }
@@ -5766,36 +5746,32 @@ const discordCrypt = ( () => {
 
                 /* Loop over each expanded code block. */
                 for ( let i = 0; i < _extracted.length; i++ ) {
+                    let lang = _extracted[ i ].language,
+                        raw = _extracted[ i ].raw_code;
+
                     /* Inline code blocks get styled differently. */
-                    if ( _extracted[ i ].language !== 'inline' ) {
-                        let _lines = '';
+                    if ( lang !== 'inline' ) {
+                        /* For multiple line blocks, new lines are also captured from above. Remove them. */
+                        if( raw[ 0 ] === '\n' )
+                            raw = raw.substr( 1 );
+                        if( raw[ raw.length - 1 ] === '\n' )
+                            raw = raw.substr( 0, raw.length - 1 );
 
-                        /* Remove any line-reset characters and split the message into lines. */
-                        let _code = _extracted[ i ].raw_code.replace( "\r", '' ).split( "\n" );
+                        /* Build a <pre><code></code></pre> element for HLJS to work on. */
+                        let code_block = $( '<pre>' ).addClass( lang ).append( $( '<code>' ).html( raw ) );
 
-                        /* Wrap each line in list elements. */
-                        /* We start from position 1 since the regex leaves us with 2 blank lines. */
-                        for ( let j = 1; j < _code.length - 1; j++ )
-                            _lines += `<li>${_code[ j ]}</li>`;
-
-                        /* Split the HTML message according to the full markdown code block. */
-                        message = message.split( _extracted[ i ].captured_block );
+                        /* Highlight this block. */
+                        _cachedModules.HighlightJS.highlightBlock( code_block[ 0 ] );
 
                         /* Replace the code with an HTML formatted code block. */
-                        message = message.join(
-                            '<div class="markup line-scanned" data-colour="true" style="color: rgb(111, 0, 0);">' +
-                            `<pre class="hljs"><code class="dc-code-block hljs 
-                        ${_extracted[ i ].language === 'text' ? '' : _extracted[ i ].language}"
-                         style="position: relative;">` +
-                            `<ol>${_lines}</ol></code></pre></div>`
-                        );
+                        message = message.split( _extracted[ i ].captured_block ).join( code_block[ 0 ].outerHTML );
                     }
                     else {
                         /* Split the HTML message according to the inline markdown code block. */
                         message = message.split( _extracted[ i ].captured_block );
 
                         /* Replace the data with a inline code class. */
-                        message = message.join( `<code class="inline">${_extracted[ i ].raw_code}</code>` );
+                        message = message.join( `<code class="inline">${raw}</code>` );
                     }
                 }
 
