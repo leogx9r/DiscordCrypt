@@ -591,7 +591,7 @@ const discordCrypt = ( () => {
          * @returns {string}
          */
         getAuthor() {
-            return 'Leonardo Gates';
+            return 'leogx9r';
         }
 
         /**
@@ -614,9 +614,9 @@ const discordCrypt = ( () => {
             /* Perform idiot-proof check to make sure the user named the plugin `_discordCrypt.plugin.js` */
             if ( !_discordCrypt._validPluginName() ) {
                 global.smalltalk.alert(
-                    'Hi There! - _discordCrypt',
+                    'Hi There! - DiscordCrypt',
                     "Oops!\r\n\r\n" +
-                    "It seems you didn't read _discordCrypt's usage guide. :(\r\n" +
+                    "It seems you didn't read DiscordCrypt's usage guide. :(\r\n" +
                     "You need to name this plugin exactly as follows to allow it to function correctly.\r\n\r\n" +
                     `\t${_discordCrypt._getPluginName()}\r\n\r\n\r\n` +
                     "You should probably check the usage guide again just in case you missed anything else. :)"
