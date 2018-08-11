@@ -5583,6 +5583,15 @@ const discordCrypt = ( () => {
                     user_tags[ k++ ] = split_msg[ i ];
                     cleaned_msg += `${split_msg[ i ]} `;
                 }
+                /* Check for parsed channel tags. */
+                else if ( ( /(<#[0-9]{14,22}>)/gm ).test( split_msg[ i ] ) ) {
+                    user_tags[ k++ ] = split_msg[ i ];
+
+                    /* Convert the channel tag back to human-readable form if a valid channel props was passed. */
+                    cleaned_msg += channelProps ?
+                        _cachedModules.MessageCreator.unparse( split_msg[ i ], channelProps ) :
+                        split_msg[ i ];
+                }
                 else
                     cleaned_msg += `${split_msg[ i ]} `;
             }
