@@ -1,3 +1,8 @@
+Version 1.5.7
+
+- Added support for mentioning channels in messages. ( They will appear just as tagged users. )
+- Changed the character to not encrypt messages from a single hash ( # ) to double hash. ( ## )
+
 Version 1.5.6
 
 - Fixed a bug due to Discord update that broke code block highlighting.
