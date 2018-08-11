@@ -1928,13 +1928,13 @@ const discordCrypt = ( () => {
             const maximum_encoded_data = 1820;
 
             /* Add the message signal handler. */
-            const escapeCharacters = [ "#", "/" ];
+            const escapeCharacters = [ "/" ];
             const crypto = require( 'crypto' );
 
             let cleaned;
 
             /* Skip messages starting with pre-defined escape characters. */
-            if ( escapeCharacters.indexOf( message[ 0 ] ) !== -1 )
+            if ( message.substr( 0, 2 ) === "##" || escapeCharacters.indexOf( message[ 0 ] ) !== -1 )
                 return false;
 
             /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
@@ -5595,9 +5595,9 @@ const discordCrypt = ( () => {
                     user_tags[ k++ ] = split_msg[ i ];
 
                     /* Convert the channel tag back to human-readable form if a valid channel props was passed. */
-                    cleaned_msg += channelProps ?
+                    cleaned_msg += `${channelProps ?
                         _cachedModules.MessageCreator.unparse( split_msg[ i ], channelProps ) :
-                        split_msg[ i ];
+                        split_msg[ i ]} `;
                 }
                 else
                     cleaned_msg += `${split_msg[ i ]} `;

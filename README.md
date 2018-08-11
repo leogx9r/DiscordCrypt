@@ -774,8 +774,8 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
     * Since messages are encrypted and the search feature relies 
         on the ability for Discord's servers to read past messages, the search functionality will 
         always be unavailable.
-    * If you require searching, you may send your messages in an unencrypted format by making 
-        them start with the hash ( `#` ) character.
+    * If you require searching, you may send your messages in an unencrypted format by starting  
+        them with two hash characters  ( `##` ).
     * Messages also will be sent unencrypted if they begin with the forward-slash ( `/` ) character 
         as these are also used for commands.
  
