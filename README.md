@@ -25,12 +25,14 @@
 * [**Known Limitations And Bugs**](#known-limitations-and-bugs)
 * [**Support And Discussion**](#support-and-discussion)
 
- 
+ 
 
 # Features
- 
+
+![Encrypted Message](images/encrypted-message.png)
+ 
 - Supports Windows, MAC and Linux. ( No mobile support, sorry! )
-- All messages in DMs, group DMs and channels are end-to-end encrypted.
+- All messages in DMs, group DMs and channels are end-to-end encrypted. ( More below. )
 - Uses a dual encryption mode with multiple ciphers. ( Defaults to AES-256 and Camellia-256 )
 - Supports embedded messages for extra spice if you want to look unique.
 - Optional timed messages which are deleted after a certain period passes.
@@ -45,10 +47,9 @@
 
 # Introduction
 
-![Encrypted Message](images/encrypted-message.png)
-
-**DiscordCrypt** is a plugin for Discord that uses BetterDiscord's internal structure to send and 
-    receive encrypted messages between users and channels in a safe and secure manner.
+**DiscordCrypt** is a plugin for Discord that uses 
+    [BetterDiscord](https://github.com/rauenzi/BetterDiscordApp/releases)'s internal structure to 
+    send and receive encrypted messages between users and channels in a safe and secure manner.
 
 The plugin achieves this by using 
     [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) 
@@ -62,8 +63,8 @@ The source code is completely free and open source
 If you'd like an in-depth explanation of its inner workings, click [here](TECHNICALITIES.md).
 
 If you wish to use a web browser instead of Discord's native application, we recommend you use 
-    [**SimpleDiscordCrypt**](https://gitlab.com/An0/SimpleDiscordCrypt) made by our friend An0.
-    Please note, these two versions are incompatible with one another.
+    [**SimpleDiscordCrypt**](https://gitlab.com/An0/SimpleDiscordCrypt) made by our friend An0. 
+    Please note, these two versions are ***incompatible*** with one another.
 
 Contributions are welcome! Be sure to read [our guidelines](CONTRIBUTING.md) before submitting 
     your changes.
@@ -80,7 +81,7 @@ Also, while this project is licensed under the MIT, if you feel generous and wis
 | Monero       | `83h2PKvpjx9dDK1VJ5B2h8ADbZZUcfEbwaQqqve8nmWv3VyvY7tNv5FLa3dUPwybJGZoGWCz5UDjfDYmKttQmChV2Wv9uiq`  |
 
 
- 
+ 
 
 # Verifying Signatures
 
@@ -126,7 +127,7 @@ Fingerprint: B8EC 0775 960A EB2E 4C11 F084 DA61 3E75 3787 CE3F
     signatures once upon your first installation.
 
 
- 
+ 
 
 # Installation
 
@@ -140,7 +141,7 @@ Fingerprint: B8EC 0775 960A EB2E 4C11 F084 DA61 3E75 3787 CE3F
 
 For installation on specific operating systems, see below:
 
- 
+ 
 
 #### Windows
 
@@ -152,7 +153,7 @@ For installation on specific operating systems, see below:
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
- 
+ 
 
 #### MacOS
 
@@ -164,7 +165,7 @@ For installation on specific operating systems, see below:
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
- 
+ 
 
 #### Linux
 
@@ -183,7 +184,7 @@ The *PTB* or *SNAP* versions have **NOT** been tested.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
- 
+ 
 
 # Usage
 
@@ -246,7 +247,7 @@ These icons each offer a different functionality as follows:
         the `Key Exchange Menu`.
     * This is further detailed below.
 
- 
+ 
 
 ### Creating a new database
 
@@ -275,7 +276,7 @@ All exchanged keys and passwords are saved to this database and **cannot be reco
 
 **N.B. This password is the only thing protecting all others and as such, should be a very 
     strong and unpredictable.**
- 
+ 
 
 ### Changing the database password
 
@@ -292,7 +293,7 @@ If you enter a password in the `New Master Database Password` field and save you
 **N.B.** If a key is not entered into this field, it is ignored. Your current password will 
     **NOT** be replaced.
 
- 
+ 
 
 ### Exchanging Keys
 
@@ -309,7 +310,7 @@ This involves using an
 Advanced users are free to mess with the configuration, though be aware that we will only 
     discuss the built-in key exchange feature in this tutorial.
 
- 
+ 
 
 #### Personal Conversations
 
@@ -326,7 +327,7 @@ All it takes is three ( 3 ) clicks.
 * After the passwords are generated and the progress bar fully fills, click the 
     `Apply Generated Passwords` button located at the bottom of the pop-up window.
 
- 
+ 
 
 ###### Longer Explanation
 
@@ -349,7 +350,7 @@ All it takes is three ( 3 ) clicks.
 
 Voila, your conversation will now be encrypted using keys you've just created.
 
- 
+ 
 
 #### Group Conversations And Channels
 
@@ -373,7 +374,7 @@ The process, however, is quite similar to generating keys for a personal convers
 * After the passwords have been shared ( securely ), every user must manually set the 
     passwords for the channel. ( More on that below. )
 
- 
+ 
 
 ###### Alternative Method
 
@@ -389,7 +390,7 @@ There is an alternative process for sharing existing passwords with users but it
 * Paste your clipboard to your partner over an encrypted channel. 
     ( `Ctrl+V` or `Right Click -> Paste` )
 
- 
+ 
 
 ### Resetting Or Updating Conversation Passwords Manually
 
@@ -409,7 +410,7 @@ If you are manually updating the passwords to be able to have an encrypted group
     conversation, simply paste the "Primary Key" in the first field and the 
     "Secondary Key" in the second field, then press `Save Password`.
 
- 
+ 
 
 # Best Practices
 
@@ -455,7 +456,7 @@ The following tips should be adhered to for maximum privacy between users.
             - Disable this by removing the `,direct` part of the string:
                 -    `socks5://127.0.0.1:9050,direct`
 
- 
+ 
 
 # Debugging
 
@@ -483,7 +484,7 @@ In case there is an error caused by the plugin, create an issue ticket with the
 
 Be sure to read the [contribution](CONTRIBUTING.md) guidelines before creating an issue.
 
- 
+ 
 
 # Frequently Asked Questions
 
@@ -494,8 +495,8 @@ We recently added bigger libraries to the plugin (Such as OpenPGP.js), and as a 
 
 Having such a large source would also make developing fairly hard. If you wish to have a look at the uncompressed source, 
     look at the code as it is in [src/discordCrypt.plugin.js](src/discordCrypt.plugin.js).
-
- 
+    
+    
 
 ### Isn't Discord already encrypted or private ?
 
@@ -578,7 +579,7 @@ While this plugin does not support, nor plan to support end-to-end voice encrypt
     messages and uploaded files via the encrypted file uploading interface **should** 
     be safe and secure from prying eyes.
 
- 
+ 
 
 ### Why's the UI so unattractive?
 
@@ -588,7 +589,7 @@ Unfortunately, the core project members have never been good CSS designers as we
 If you however do know how to make an attractive UI, please do create a pull request 
     with your changes!
 
- 
+ 
 
 ### How do I tag users?
 
@@ -620,7 +621,7 @@ Here's how this looks:
 ![User Tagging](images/tags.png)
 
 
- 
+ 
 
 ### Can I skip the password prompt?
 
@@ -628,12 +629,12 @@ The screen prompting you to unlock your database is necessary for **DiscordCrypt
     function. Without it, you won't be able to send or receive any encrypted messages.
 
 If you wish to stop seeing it, you will simply have to disable the plugin optionally, 
-    click the `Cancel` button to bypass this prompt. 
+    click the `Cancel` button to bypass this prompt.
     
 Should you choose to skip the prompt, a button (that looks like DiscordCrypt's icon) will remain at the top, 
     you can press it at any time to be prompted to unlock your database again.
 
- 
+ 
 
 ### What do I do if I forgot my Master Password?
 
@@ -649,7 +650,7 @@ As a result, you will need need to perform a new key exchange with your friends.
     If you're part of an encrypted group/channel conversation, you will need to generate 
     new keys or ask someone to send your the passwords securely.
 
- 
+ 
 
 ### How do I share passwords with new people?
 
@@ -657,7 +658,7 @@ While we do not recommend sharing passwords with newcomers, and instead suggest 
     new keys whenever that happens, you can copy the passwords of the current channel and 
     share them by following [theses steps](#alternative-method).
 
- 
+ 
 
 ### Why is DiscordCrypt's CPU usage so high?
 
@@ -670,7 +671,7 @@ Discord itself can be annoying in that regard as it generally uses a large amoun
 If you believe it is causing issues, you may want to try increasing the 
     `Encryption Scanning Frequency` in the plugin settings.
 
- 
+ 
 
 ### Why is this so complicated?
 
@@ -679,7 +680,7 @@ Unfortunately, implementing privacy and message encryption in this manner is dif
 We've tried to simplify the process as much as possible but once you get used to it, it becomes 
     much easier.
 
- 
+ 
 
 ### Why embedded messages?
 
@@ -696,7 +697,7 @@ We however do support non-embedded messages as a means to avoid users having the
 
 By default, the plugin will NOT use embeds and warns users about this in the settings menu.
 
- 
+ 
 
 # Known Limitations And Bugs
 
@@ -707,7 +708,7 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
     undergo the standard post-processing that Discord itself does. An example of this would be 
     link previews.
 
- 
+ 
 
 * ***DiscordCrypt's key exchange is vulnerable to Discord's servers being used for 
     [Man-in-The-Middle attacks](https://en.wikipedia.org/wiki/Man-in-the-middle_attack).***
@@ -727,7 +728,7 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
     * Due to additional costs of encryption, messages at maximum size will only be able to 
         display 1820 characters of text..
         * If your message is longer than this, it will be split and sent in multiple messages.
- 
+ 
 
 
 * Only text channels are end-to-end encrypted. Voice channels cannot be secured, so what you 
@@ -753,7 +754,7 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
         them start with the hash ( `#` ) character.
     * Messages also will be sent unencrypted if they begin with the forward-slash ( `/` ) character 
         as these are also used for commands.
- 
+ 
 
 
 * Some third-party plugins may conflict with **DiscordCrypt**.
@@ -763,7 +764,7 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
         * For a list of known problematic themes and plugins, see
             [here](https://gitlab.com/leogx9r/DiscordCrypt/issues/5).
 
- 
+ 
 
 # Support And Discussion
 
@@ -774,4 +775,4 @@ If you've discovered a bug in the plugin, feel free to create an issue after rea
 We also have a [Discord Server](https://discord.me/discordcrypt) for any discussion 
     related to **DiscordCrypt** and for general support.
 
- 
+ 
