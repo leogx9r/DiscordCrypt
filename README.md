@@ -1,5 +1,6 @@
 <h1 align="center">
-    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/discordCrypt-mini.png" height="50" width="50">
+    <img src="https://assets.gitlab-static.net/uploads/-/system/project/avatar/6431320/discordCrypt-mini.png" 
+        height="50" width="50">
     DiscordCrypt <h3>End-To-End File & Message Encryption For Discord</h3>
 </h1>
 
@@ -272,7 +273,7 @@ Every additional time you start or restart Discord, you'll be prompted with the 
 
 All exchanged keys and passwords are saved to this database and **cannot be recovered** 
     if the master password is lost so be sure to use a strong but memorable one. 
-    ( [Forgot Password?](#forgotten-master-password) )
+    ( [Forgot Password?](#what-do-i-do-if-i-forgot-my-master-password?) )
 
 **N.B. This password is the only thing protecting all others and as such, should be a very 
     strong and unpredictable.**
@@ -765,7 +766,7 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
 * Tagging users works in a different way when using encrypted messages:
     * As we use embeds, tagging users in a message should result in them not being notified.
         * To fix this, every users tagged in a message will receive an unencrypted notification.
-            [Example here](#tagging-users).
+            [Example here](#how-do-i-tag-users?).
 
 
 
