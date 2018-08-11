@@ -28,11 +28,9 @@
  
 
 # Features
-
-![Encrypted Message](images/encrypted-message.png)
  
 - Supports Windows, MAC and Linux. ( No mobile support, sorry! )
-- All messages in DMs, group DMs and channels are end-to-end encrypted. ( More below. )
+- All messages in DMs, group DMs and channels are end-to-end encrypted.
 - Uses a dual encryption mode with multiple ciphers. ( Defaults to AES-256 and Camellia-256 )
 - Supports embedded messages for extra spice if you want to look unique.
 - Optional timed messages which are deleted after a certain period passes.
@@ -47,9 +45,10 @@
 
 # Introduction
 
-**DiscordCrypt** is a plugin for Discord that uses 
-    [BetterDiscord](https://github.com/rauenzi/BetterDiscordApp/releases)'s internal structure to 
-    send and receive encrypted messages between users and channels in a safe and secure manner.
+![Encrypted Message](images/encrypted-message.png)
+
+**DiscordCrypt** is a plugin for Discord that uses BetterDiscord's internal structure to send and 
+    receive encrypted messages between users and channels in a safe and secure manner.
 
 The plugin achieves this by using 
     [multiple levels of encryption](https://en.wikipedia.org/wiki/Multiple_encryption) 
@@ -63,8 +62,8 @@ The source code is completely free and open source
 If you'd like an in-depth explanation of its inner workings, click [here](TECHNICALITIES.md).
 
 If you wish to use a web browser instead of Discord's native application, we recommend you use 
-    [**SimpleDiscordCrypt**](https://gitlab.com/An0/SimpleDiscordCrypt) made by our friend An0. 
-    Please note, these two versions are ***incompatible*** with one another.
+    [**SimpleDiscordCrypt**](https://gitlab.com/An0/SimpleDiscordCrypt) made by our friend An0.
+    Please note, these two versions are incompatible with one another.
 
 Contributions are welcome! Be sure to read [our guidelines](CONTRIBUTING.md) before submitting 
     your changes.
@@ -488,6 +487,16 @@ Be sure to read the [contribution](CONTRIBUTING.md) guidelines before creating a
 
 # Frequently Asked Questions
 
+### Why does the plugin look so weird?
+
+We recently added bigger libraries to the plugin (Such as OpenPGP.js), and as a result, 
+    we started compressing the plugin to save everyone a few megabytes of bandwidth everytime discordCrypt is downloaded.
+
+Having such a large source would also make developing fairly hard. If you wish to have a look at the uncompressed source, 
+    look at the code as it is in [src/discordCrypt.plugin.js](src/discordCrypt.plugin.js).
+
+ 
+
 ### Isn't Discord already encrypted or private ?
 
 Discord ***claims*** that all its messages are encrypted, and while that 
@@ -571,7 +580,7 @@ While this plugin does not support, nor plan to support end-to-end voice encrypt
 
  
 
-### Unattractive UI
+### Why's the UI so unattractive?
 
 Unfortunately, the core project members have never been good CSS designers as we 
     mainly specialize in internal application and system-level programming.
@@ -581,7 +590,7 @@ If you however do know how to make an attractive UI, please do create a pull req
 
  
 
-### Tagging Users
+### How do I tag users?
 
 As we explained in the [Known Limitations](#known-limitations-and-bugs), tagging users 
     normally does not work because we cannot notify users of tags after messages 
@@ -613,17 +622,20 @@ Here's how this looks:
 
  
 
-### Skipping Startup Screen
+### Can I skip the password prompt?
 
 The screen prompting you to unlock your database is necessary for **DiscordCrypt** to 
     function. Without it, you won't be able to send or receive any encrypted messages.
 
 If you wish to stop seeing it, you will simply have to disable the plugin optionally, 
-    click the `Cancel` button to bypass this prompt.
+    click the `Cancel` button to bypass this prompt. 
+    
+Should you choose to skip the prompt, a button (that looks like DiscordCrypt's icon) will remain at the top, 
+    you can press it at any time to be prompted to unlock your database again.
 
  
 
-### Forgotten Master Password
+### What do I do if I forgot my Master Password?
 
 You can reset your database ( and thus your configuration ) by deleting the file 
     `DiscordCrypt.config.json` located in the same directory as the plugin that you went to 
@@ -639,7 +651,7 @@ As a result, you will need need to perform a new key exchange with your friends.
 
  
 
-### Sharing Passwords With New People
+### How do I share passwords with new people?
 
 While we do not recommend sharing passwords with newcomers, and instead suggest you generate 
     new keys whenever that happens, you can copy the passwords of the current channel and 
@@ -647,7 +659,7 @@ While we do not recommend sharing passwords with newcomers, and instead suggest 
 
  
 
-### DiscordCrypt CPU Usage
+### Why is DiscordCrypt's CPU usage so high?
 
 Unless you're generating keys or performing encrypted file uploads, **DiscordCrypt** should not 
     be CPU heavy.
@@ -660,7 +672,7 @@ If you believe it is causing issues, you may want to try increasing the
 
  
 
-### This Is Complicated
+### Why is this so complicated?
 
 Unfortunately, implementing privacy and message encryption in this manner is difficult to do.
 
@@ -669,7 +681,7 @@ We've tried to simplify the process as much as possible but once you get used to
 
  
 
-### Why Embedded Messages
+### Why embedded messages?
 
 We wanted a way for users who both use and do not use the plugin to easily identify 
     encrypted messages.
@@ -705,6 +717,10 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
         key exchange.
         * We discussed this in greater details in the [TECHNICALITIES.md](TECHNICALITIES.md) file.
 
+
+* There is a bug that results in messages not being properly marked as read.
+    * This also creates an issue where Discord won't properly scroll down as you're receiving new messages.
+    * While we are aware of this bug, we currently don't know how to fix it. Any help would be greatly appreciated.
 
 
 * Messages are limited to 1820 characters each.
