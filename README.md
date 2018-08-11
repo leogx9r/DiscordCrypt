@@ -489,18 +489,6 @@ Be sure to read the [contribution](CONTRIBUTING.md) guidelines before creating a
 
 # Frequently Asked Questions
 
-### Why does the plugin look so weird?
-
-We recently added bigger libraries to the plugin (Such as OpenPGP.js), and as a result, 
-    we started compressing the plugin to save everyone a few megabytes of bandwidth every time 
-    discordCrypt is downloaded.
-
-Having such a large source would also make developing fairly hard. If you wish to have a look at 
-    the uncompressed source, look at the code as it is in 
-    [src/discordCrypt.plugin.js](src/discordCrypt.plugin.js).
-    
-    
-
 ### Isn't Discord already encrypted or private ?
 
 Discord ***claims*** that all its messages are encrypted, and while that 
@@ -582,7 +570,19 @@ While this plugin does not support, nor plan to support end-to-end voice encrypt
     messages and uploaded files via the encrypted file uploading interface **should** 
     be safe and secure from prying eyes.
 
- 
+
+
+### Why does the plugin's source so weird?
+
+We recently added bigger libraries to the plugin (Such as OpenPGP.js), and as a result, 
+    we started compressing the plugin to save everyone a few megabytes of bandwidth every time 
+    discordCrypt is downloaded.
+
+Having such a large source would also make developing fairly hard. If you wish to have a look at 
+    the uncompressed source, look at the code as it is in 
+    [src/discordCrypt.plugin.js](src/discordCrypt.plugin.js).
+
+
 
 ### Why's the UI so unattractive?
 
