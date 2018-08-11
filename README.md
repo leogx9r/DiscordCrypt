@@ -491,10 +491,12 @@ Be sure to read the [contribution](CONTRIBUTING.md) guidelines before creating a
 ### Why does the plugin look so weird?
 
 We recently added bigger libraries to the plugin (Such as OpenPGP.js), and as a result, 
-    we started compressing the plugin to save everyone a few megabytes of bandwidth everytime discordCrypt is downloaded.
+    we started compressing the plugin to save everyone a few megabytes of bandwidth every time 
+    discordCrypt is downloaded.
 
-Having such a large source would also make developing fairly hard. If you wish to have a look at the uncompressed source, 
-    look at the code as it is in [src/discordCrypt.plugin.js](src/discordCrypt.plugin.js).
+Having such a large source would also make developing fairly hard. If you wish to have a look at 
+    the uncompressed source, look at the code as it is in 
+    [src/discordCrypt.plugin.js](src/discordCrypt.plugin.js).
     
     
 
@@ -629,12 +631,15 @@ This question is quite similar to "How do I tag users?". Using emojis should nor
     because of the encryption.
     
 However, not only did we make it so that they are visible, we also gave users the ability to send 
-    emojis they should not be able to use. (Including animated ones, without the need to purchase nitro)
+    emojis they should not be able to use. 
+    ( Including animated ones, without the need to purchase Nitro. )
     
-While this does not mean you can use all of them, if a server added custom emojis for its members to use, 
-    you will be able to send those emojis anywhere using encrypted messages.
+While this does not mean you can use all of them, if a server added custom emojis for its members 
+    to use, you will be able to send those emojis anywhere using encrypted messages.
 
-There is however one caveat: Autocomplete does not work for emojis you aren't supposed to use.
+There is however, one caveat:
+
+- Autocomplete does not work for emojis you aren't supposed to use.
 
  
 
@@ -646,8 +651,9 @@ The screen prompting you to unlock your database is necessary for **DiscordCrypt
 If you wish to stop seeing it, you will simply have to disable the plugin optionally, 
     click the `Cancel` button to bypass this prompt.
     
-Should you choose to skip the prompt, a button (that looks like DiscordCrypt's icon) will remain at the top, 
-    you can press it at any time to be prompted to unlock your database again.
+Should you choose to skip the prompt, a button (that looks like DiscordCrypt's icon) will 
+    remain at the top, you can press it at any time to be prompted to unlock your database 
+    again.
 
  
 
@@ -735,8 +741,10 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
 
 
 * There is a bug that results in messages not being properly marked as read.
-    * This also creates an issue where Discord won't properly scroll down as you're receiving new messages.
-    * While we are aware of this bug, we currently don't know how to fix it. Any help would be greatly appreciated.
+    * This also creates an issue where Discord won't properly scroll down as you're receiving 
+        new messages.
+    * While we are aware of this bug, we currently don't know how to fix it. Any help would be 
+        greatly appreciated.
 
 
 * Messages are limited to 1820 characters each.
