@@ -43,6 +43,7 @@
 - Strong key exchange for easily exchanging keys with your friends.
 - Supports encrypted file uploads up to 50 MB which are automatically deleted after 7 days.
 - Automatic updates which are verified ensures you always get the latest features.
+- Blocks various tracking elements used by Discord. ( Experiments, voice reports etc. )
 - Designed to provide the maximum security and privacy.
 - Extensively tested for reliability and stability.
 
