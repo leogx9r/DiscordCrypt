@@ -623,6 +623,21 @@ Here's how this looks:
 
  
 
+### How do I send emojis?
+
+This question is quite similar to "How do I tag users?". Using emojis should normally not work 
+    because of the encryption.
+    
+However, not only did we make it so that they are visible, we also gave users the ability to send 
+    emojis they should not be able to use. (Including animated ones, without the need to purchase nitro)
+    
+While this does not mean you can use all of them, if a server added custom emojis for its members to use, 
+    you will be able to send those emojis anywhere using encrypted messages.
+
+There is however one caveat: Autocomplete does not work for emojis you aren't supposed to use.
+
+ 
+
 ### Can I skip the password prompt?
 
 The screen prompting you to unlock your database is necessary for **DiscordCrypt** to 
