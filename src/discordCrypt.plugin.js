@@ -4864,18 +4864,6 @@ const discordCrypt = ( () => {
             /* Save the Channel ID. */
             let _channel = channel_id !== undefined ? channel_id : _discordCrypt._getChannelId();
 
-            /* Sanity check. */
-            if ( _cachedModules.MessageQueue === null ) {
-                _discordCrypt.log( 'Could not locate the MessageQueue module!', 'error' );
-                return;
-            }
-
-            /* Sanity check. */
-            if ( _cachedModules.MessageController === null ) {
-                _discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
-                return;
-            }
-
             /* Handles returns for messages. */
             const onDispatchResponse = ( r ) => {
                 /* Check if an error occurred and inform Clyde bot about it. */

@@ -76,6 +76,7 @@
 /**
  * @typedef {Object} CachedModules
  * @desc Cached Webpack modules for internal access.
+ * @property {Object} NonceGenerator Internal nonce generator used for generating unique IDs from the current time.
  * @property {Object} ChannelStore Internal channel resolver for retrieving a list of all channels available.
  * @property {Object} EmojiStore Internal emoji parser that's used to translate emojis sent in messages.
  * @property {Object} GlobalTypes Internal message action types and constants for events.
@@ -656,10 +657,12 @@ const discordCrypt = ( () => {
 
             /* Resolve and cache all modules needed. */
             _cachedModules = {
+                NonceGenerator: searcher
+                    .findByUniqueProperties( [ "extractTimestamp", "fromTimestamp" ] ),
                 EmojiStore: searcher
                     .findByUniqueProperties( [ 'translateSurrogatesToInlineEmoji', 'getCategories' ] ),
                 MessageCreator: searcher
-                    .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
+                    .findByUniqueProperties( [ "createMessage", "parse", "unparse" ] ),
                 MessageController: searcher
                     .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
                 MarkdownParser: searcher
@@ -677,7 +680,7 @@ const discordCrypt = ( () => {
                 ChannelStore: searcher
                     .findByUniqueProperties( [ "getChannel", "getChannels", "getDMFromUserId", 'getDMUserIds' ] ),
                 HighlightJS: searcher
-                    .findByUniqueProperties( [ 'initHighlighting', 'highlightBlock', 'highlightAuto' ] ),
+                    .findByUniqueProperties( [ "initHighlighting", "highlightBlock", "highlightAuto" ] ),
             };
 
             /* Throw an error if a cached module can't be found. */
@@ -4180,6 +4183,15 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Generates a nonce according to Discord's internal EPOCH. ( 14200704e5 )
+         * @return {string} The string representation of the integer nonce.
+         */
+        static _getNonce() {
+            return _cachedModules.NonceGenerator.fromTimestamp( Date.now() );
+        }
+
+        /**
+         * @private
          * @desc Returns the name of the plugin file expected on the disk.
          * @returns {string}
          * @example
@@ -4859,18 +4871,6 @@ const discordCrypt = ( () => {
             /* Save the Channel ID. */
             let _channel = channel_id !== undefined ? channel_id : _discordCrypt._getChannelId();
 
-            /* Sanity check. */
-            if ( _cachedModules.MessageQueue === null ) {
-                _discordCrypt.log( 'Could not locate the MessageQueue module!', 'error' );
-                return;
-            }
-
-            /* Sanity check. */
-            if ( _cachedModules.MessageController === null ) {
-                _discordCrypt.log( 'Could not locate the MessageController module!', 'error' );
-                return;
-            }
-
             /* Handles returns for messages. */
             const onDispatchResponse = ( r ) => {
                 /* Check if an error occurred and inform Clyde bot about it. */
@@ -4915,16 +4915,13 @@ const discordCrypt = ( () => {
 
             /* Send this message as an embed. */
             if ( as_embed ) {
-                /* Generate a unique nonce for this message. */
-                let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 7 ).toString( 'hex' ), 16 );
-
                 /* Create the message embed object and add it to the queue. */
                 _cachedModules.MessageQueue.enqueue(
                     {
                         type: 'send',
                         message: {
                             channelId: _channel,
-                            nonce: _nonce,
+                            nonce: _discordCrypt._getNonce(),
                             content: message_content,
                             mention_everyone: mention_everyone,
                             tts: false,
@@ -4965,16 +4962,13 @@ const discordCrypt = ( () => {
                     if ( !value.length )
                         return;
 
-                    /* Generate a unique nonce for this message. */
-                    let _nonce = parseInt( require( 'crypto' ).pseudoRandomBytes( 7 ).toString( 'hex' ), 16 );
-
                     /* Create the message object and dispatch it to the queue. */
                     _cachedModules.MessageQueue.enqueue(
                         {
                             type: 'send',
                             message: {
                                 channelId: _channel,
-                                nonce: _nonce,
+                                nonce: _discordCrypt._getNonce(),
                                 content: value === message_content ? value : `\`${value}\``,
                                 mention_everyone: value === message_content ? mention_everyone : false,
                                 tts: false
