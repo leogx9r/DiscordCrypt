@@ -655,6 +655,8 @@ const discordCrypt = ( () => {
                     .findByUniqueProperties( [ 'createMessage', 'parse', 'unparse' ] ),
                 MessageController: searcher
                     .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
+                MarkdownParser: searcher
+                    .findByUniqueProperties( [ "parseInline", "defaultParseBlock" ] ),
                 GlobalTypes: searcher
                     .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
                 MessageDispatcher: searcher
@@ -5612,7 +5614,7 @@ const discordCrypt = ( () => {
         static __extractCodeBlocks( message ) {
             /* This regex only extracts code blocks. */
             let code_block_expr = new RegExp( /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm ),
-                inline_block_expr = new RegExp( /(`([^`].*?)`)/g ),
+                inline_block_expr = new RegExp( /(`([^`]*(^\n)*?)`)/g ),
                 _matched;
 
             /* Array to store all the extracted blocks in. */
