@@ -1617,10 +1617,8 @@ const discordCrypt = ( () => {
             let local_fingerprint = _discordCrypt.__sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
 
             /* Skip if this is our current public key. */
-            if ( metadata[ 'fingerprint' ] === local_fingerprint ) {
-                obj.css( 'display', 'none' );
+            if ( metadata[ 'fingerprint' ] === local_fingerprint )
                 return true;
-            }
 
             /* Create a button allowing the user to perform a key exchange with this public key. */
             let button = $( "<button>Perform Key Exchange</button>" )
