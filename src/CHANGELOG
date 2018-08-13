@@ -1,3 +1,10 @@
+Version 1.5.8
+
+- Fixed accidentally breaking signature due to pushing to the wrong branch.
+- Prevent public key messages sent from being hidden due to user confusion.
+- Allowed inline code blocks to span multiple lines.
+- Minor code improvements.
+
 Version 1.5.7
 
 - Added support for mentioning channels in messages. ( They will appear just as tagged users. )
