@@ -128,6 +128,8 @@
  * @property {boolean} useEmbeds Whether to use embeds for dispatching encrypted messages.
  * @property {string} defaultPassword The default key to encrypt or decrypt message with,
  *      if not specifically defined.
+ * @property {string} decryptedPrefix This denotes the string that should be prepended to messages
+ *      that have been successfully decrypted.
  * @property {string} encodeMessageTrigger The suffix trigger which, once appended to the message,
  *      forces encryption even if a key is not specifically defined for this channel.
  * @property {number} encryptScanDelay If using timed scanning events in case hooked events fail,
@@ -860,6 +862,8 @@ const discordCrypt = ( () => {
                 encodeAll: true,
                 /* Default password for servers not set. */
                 defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
+                /* Decrypted messages have this string prefixed to it. */
+                decryptedPrefix: "🔐 ",
                 /* Default padding mode for blocks. */
                 paddingMode: 'PKC7',
                 /* Password array of objects for users or channels. */
@@ -1705,9 +1709,10 @@ const discordCrypt = ( () => {
          * @param {string} primary_key The primary key used to decrypt the message.
          * @param {string} secondary_key The secondary key used to decrypt the message.
          * @param {boolean} as_embed Whether to consider this message object as an embed.
+         * @param {string} prefix Messages that are successfully decrypted should have this prefix prepended.
          * @returns {boolean} Returns true if the message has been decrypted.
          */
-        _parseSymmetric( obj, primary_key, secondary_key, as_embed ) {
+        _parseSymmetric( obj, primary_key, secondary_key, as_embed, prefix ) {
             let message = $( obj );
             let dataMsg;
 
@@ -1793,15 +1798,19 @@ const discordCrypt = ( () => {
 
                 /* Decrypted messages get set to green. */
                 message.css( 'color', 'green' );
+
+                /* If a prefix is being used, add it now. */
+                if( prefix && typeof prefix === 'string' && prefix.length > 0 )
+                    message.prepend( prefix );
             }
             else {
                 /* If it failed, set a red foreground and set a failure message to prevent further retries. */
                 if ( dataMsg === 1 )
-                    message.text( '[ ERROR ] AUTHENTICATION OF CIPHER TEXT FAILED !!!' );
+                    message.text( '🚫 [ ERROR ] AUTHENTICATION OF CIPHER TEXT FAILED !!!' );
                 else if ( dataMsg === 2 )
-                    message.text( '[ ERROR ] FAILED TO DECRYPT CIPHER TEXT !!!' );
+                    message.text( '🚫 [ ERROR ] FAILED TO DECRYPT CIPHER TEXT !!!' );
                 else
-                    message.text( '[ ERROR ] DECRYPTION FAILURE. INVALID KEY OR MALFORMED MESSAGE !!!' );
+                    message.text( '🚫 [ ERROR ] DECRYPTION FAILURE. INVALID KEY OR MALFORMED MESSAGE !!!' );
                 message.css( 'color', 'red' );
             }
 
@@ -1888,7 +1897,7 @@ const discordCrypt = ( () => {
                     return;
 
                 /* Try parsing a symmetric message. */
-                self._parseSymmetric( this, primary, secondary, true );
+                self._parseSymmetric( this, primary, secondary, true, _configFile.decryptedPrefix );
 
                 /* Set the flag. */
                 $( this ).data( 'dc-parsed', true );
@@ -1901,7 +1910,7 @@ const discordCrypt = ( () => {
                     return;
 
                 /* Try parsing a symmetric message. */
-                self._parseSymmetric( this, primary, secondary, false );
+                self._parseSymmetric( this, primary, secondary, false, _configFile.decryptedPrefix );
 
                 /* Set the flag. */
                 $( this ).data( 'dc-parsed', true );
