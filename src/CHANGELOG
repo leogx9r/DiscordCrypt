@@ -1,3 +1,7 @@
+Version 1.5.9
+
+- Added an option to allow users to configure what decrypted messages should be prefixed with.
+
 Version 1.5.8
 
 - Fixed accidentally breaking signature due to pushing to the wrong branch.
