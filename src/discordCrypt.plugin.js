@@ -1432,6 +1432,7 @@ const discordCrypt = ( () => {
             $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
             $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
+            $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
             $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
             $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
@@ -3100,6 +3101,7 @@ const discordCrypt = ( () => {
                 /* Update all settings from the settings panel. */
                 _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
                 _configFile.timedMessageExpires = $( '#dc-settings-timed-expire' ).val();
+                _configFile.decryptedPrefix = $( '#dc-settings-decrypted-prefix' ).val();
                 _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
                 _configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
                 _configFile.encryptScanDelay = $( '#dc-settings-scan-delay' ).val();
@@ -3187,6 +3189,7 @@ const discordCrypt = ( () => {
                 $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
                 $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
                 $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
+                $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
                 $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
                 $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
                 $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
