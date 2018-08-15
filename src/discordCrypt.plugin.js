@@ -130,6 +130,8 @@
  *      if not specifically defined.
  * @property {string} decryptedPrefix This denotes the string that should be prepended to messages
  *      that have been successfully decrypted.
+ * @property {string} decryptedColor This denotes the color of a decrypted message's text.
+ *      This only applies to messages that have been successfully decrypted.
  * @property {string} encodeMessageTrigger The suffix trigger which, once appended to the message,
  *      forces encryption even if a key is not specifically defined for this channel.
  * @property {number} encryptScanDelay If using timed scanning events in case hooked events fail,
@@ -864,6 +866,8 @@ const discordCrypt = ( () => {
                 defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Decrypted messages have this string prefixed to it. */
                 decryptedPrefix: "🔐 ",
+                /* Decrypted messages have this color. */
+                decryptedColor: "green",
                 /* Default padding mode for blocks. */
                 paddingMode: 'PKC7',
                 /* Password array of objects for users or channels. */
@@ -1433,6 +1437,7 @@ const discordCrypt = ( () => {
             $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
+            $( '#dc-settings-decrypted-color' ).val( _configFile.decryptedColor );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
             $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
             $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
@@ -1710,10 +1715,11 @@ const discordCrypt = ( () => {
          * @param {string} primary_key The primary key used to decrypt the message.
          * @param {string} secondary_key The secondary key used to decrypt the message.
          * @param {boolean} as_embed Whether to consider this message object as an embed.
-         * @param {string} prefix Messages that are successfully decrypted should have this prefix prepended.
+         * @param {string} [prefix] Messages that are successfully decrypted should have this prefix prepended.
+         * @param {string} [color] Messages that get successfully decrypted should have this color.
          * @returns {boolean} Returns true if the message has been decrypted.
          */
-        _parseSymmetric( obj, primary_key, secondary_key, as_embed, prefix ) {
+        _parseSymmetric( obj, primary_key, secondary_key, as_embed, prefix, color ) {
             let message = $( obj );
             let dataMsg;
 
@@ -1797,8 +1803,9 @@ const discordCrypt = ( () => {
                     message = $( tmp );
                 }
 
-                /* Decrypted messages get set to green. */
-                message.css( 'color', 'green' );
+                /* Decrypted messages get set to the predefined color. */
+                if( color && typeof color === 'string' && color.length > 0 )
+                    message.css( 'color', color );
 
                 /* If a prefix is being used, add it now. */
                 if( prefix && typeof prefix === 'string' && prefix.length > 0 )
@@ -1898,7 +1905,14 @@ const discordCrypt = ( () => {
                     return;
 
                 /* Try parsing a symmetric message. */
-                self._parseSymmetric( this, primary, secondary, true, _configFile.decryptedPrefix );
+                self._parseSymmetric(
+                    this,
+                    primary,
+                    secondary,
+                    true,
+                    _configFile.decryptedPrefix,
+                    _configFile.decryptedColor
+                );
 
                 /* Set the flag. */
                 $( this ).data( 'dc-parsed', true );
@@ -1911,7 +1925,14 @@ const discordCrypt = ( () => {
                     return;
 
                 /* Try parsing a symmetric message. */
-                self._parseSymmetric( this, primary, secondary, false, _configFile.decryptedPrefix );
+                self._parseSymmetric(
+                    this,
+                    primary,
+                    secondary,
+                    false,
+                    _configFile.decryptedPrefix,
+                    _configFile.decryptedColor
+                );
 
                 /* Set the flag. */
                 $( this ).data( 'dc-parsed', true );
@@ -3102,6 +3123,7 @@ const discordCrypt = ( () => {
                 _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
                 _configFile.timedMessageExpires = $( '#dc-settings-timed-expire' ).val();
                 _configFile.decryptedPrefix = $( '#dc-settings-decrypted-prefix' ).val();
+                _configFile.decryptedColor = $( '#dc-settings-decrypted-color' ).val();
                 _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
                 _configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
                 _configFile.encryptScanDelay = $( '#dc-settings-scan-delay' ).val();
@@ -3190,6 +3212,7 @@ const discordCrypt = ( () => {
                 $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
                 $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
                 $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
+                $( '#dc-settings-decrypted-color' ).val( _configFile.decryptedColor );
                 $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
                 $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
                 $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
