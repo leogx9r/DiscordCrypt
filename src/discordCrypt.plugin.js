@@ -2055,7 +2055,6 @@ const discordCrypt = ( () => {
                     0x551A8B,
                     user_tags,
                     channel_id,
-                    _cachedModules,
                     _configFile.timedMessages,
                     _configFile.timedMessageExpires
                 );
@@ -2098,7 +2097,6 @@ const discordCrypt = ( () => {
                         0x551A8B,
                         i === 0 ? user_tags : '',
                         channel_id,
-                        _cachedModules,
                         _configFile.timedMessages,
                         _configFile.timedMessageExpires
                     );
@@ -3120,13 +3118,13 @@ const discordCrypt = ( () => {
                     dc_save_settings_btn = $( '#dc-settings-save-btn' );
 
                 /* Update all settings from the settings panel. */
+                _configFile.timedMessageExpires = parseInt( $( '#dc-settings-timed-expire' ).val() );
+                _configFile.encryptScanDelay = parseInt( $( '#dc-settings-scan-delay' ).val() );
                 _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
-                _configFile.timedMessageExpires = $( '#dc-settings-timed-expire' ).val();
                 _configFile.decryptedPrefix = $( '#dc-settings-decrypted-prefix' ).val();
                 _configFile.decryptedColor = $( '#dc-settings-decrypted-color' ).val();
                 _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
                 _configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
-                _configFile.encryptScanDelay = $( '#dc-settings-scan-delay' ).val();
                 _configFile.paddingMode = $( '#dc-settings-padding-mode' ).val();
                 _configFile.useEmbeds = $( '#dc-embed-enabled' ).is( ':checked' );
                 _configFile.encryptMode = _discordCrypt
@@ -4841,7 +4839,7 @@ const discordCrypt = ( () => {
          */
         static _deleteMessage( channel_id, message_id, cached_modules ) {
             /* Delete the message internally. */
-            cached_modules.MessageController._deleteMessage( channel_id, message_id );
+            cached_modules.MessageController.deleteMessage( channel_id, message_id );
         }
 
         /**
