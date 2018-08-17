@@ -1,3 +1,10 @@
+Version 1.5.10
+
+- Added the ability to escape inline code blocks with the backslash character. ( "\" )
+- Fixed a bug where timed messages were completely broken.
+- Fixed a bug where updating the timed message expiration interval wouldn't be saved on reload.
+- Fixed a bug where updating the scanning interval wouldn't be saved on a reload.
+
 Version 1.5.9
 
 - Added an option to allow users to configure what decrypted messages should be prefixed with.
