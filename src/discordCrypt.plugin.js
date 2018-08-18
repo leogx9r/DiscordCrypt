@@ -6081,9 +6081,10 @@ const discordCrypt = ( () => {
          * @private
          * @desc Converts a seed to the encryption keys used in the Up1 protocol.
          * @param {string|Buffer|Uint8Array} seed
+         * @param {Object} sjcl The loaded Stanford Javascript Crypto Library.
          * @return {{seed: *, key: *, iv: *, ident: *}}
          */
-        static __up1SeedToKey( seed ) {
+        static __up1SeedToKey( seed, sjcl ) {
             /* Convert the seed either from a string to Base64 or read it via raw bytes. */
             if ( typeof seed === 'string' )
                 seed = sjcl.codec.base64url.toBits( seed );
@@ -6147,7 +6148,7 @@ const discordCrypt = ( () => {
                 data = sjcl.codec.bytes.toBits( new Uint8Array( data ) );
 
                 /* Generate a random 512 bit seed and calculate the key and IV from this. */
-                let params = _discordCrypt.__up1SeedToKey( seed || crypto.randomBytes( 64 ) );
+                let params = _discordCrypt.__up1SeedToKey( seed || crypto.randomBytes( 64 ), sjcl );
 
                 /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
                 data = sjcl.mode.ccm.encrypt( new sjcl.cipher.aes( params.key ), data, params.iv );
@@ -6180,7 +6181,7 @@ const discordCrypt = ( () => {
             let has_header = true, idx = 0, header = '', view;
 
             /* Retrieve the AES key and IV. */
-            let params = _discordCrypt.__up1SeedToKey( seed );
+            let params = _discordCrypt.__up1SeedToKey( seed, sjcl );
 
             /* Convert the buffer to a Uint8Array. */
             let _file = new Uint8Array( data );
