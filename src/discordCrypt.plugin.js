@@ -605,7 +605,7 @@ const discordCrypt = ( () => {
          * @returns {string}
          */
         getVersion() {
-            return '1.5.10';
+            return '1.5.11';
         }
 
         /**
@@ -1834,24 +1834,16 @@ const discordCrypt = ( () => {
          * @returns {ProcessedMessage}
          */
         _postProcessMessage( message, embed_link_prefix ) {
-            /* HTML escape characters. */
-            const html_escape_characters = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            };
 
-            /* Remove any injected HTML. */
-            message = message.replace( /[&<>"']/g, x => html_escape_characters[ x ] );
+            /* Quick jQuery trick to encode special html characters to prevent XSS */
+            message = $( '<div/>' ).text( message ).html();
 
             /* Extract any code blocks from the message. */
             let processed = _discordCrypt.__buildCodeBlockMessage( message );
             let hasCode = processed.code;
 
             /* Extract any URLs. */
-            processed = _discordCrypt.__buildUrlMessage( processed.html, embed_link_prefix );
+            processed = _discordCrypt.__buildUrlMessage( processed.html );
             let hasUrl = processed.url;
 
             /* Extract any Emojis. */
@@ -4274,7 +4266,7 @@ const discordCrypt = ( () => {
             const plugin_file = path.join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
 
             return fs.existsSync( plugin_file ) &&
-                ( fs.lstatSync( plugin_file ).isSymbolicLink() || version.indexOf( '-debug' ) !== -1 );
+            ( fs.lstatSync( plugin_file ).isSymbolicLink() || version.indexOf( '-debug' ) !== -1 );
         }
 
         /**
@@ -5723,34 +5715,6 @@ const discordCrypt = ( () => {
 
         /**
          * @public
-         * @desc Extracts raw URLs from a message.
-         *      N.B. This does not remove the URLs from the message.
-         * @param {string} message The message to extract the URLs from.
-         * @returns {Array} Returns an array of URLs detected int the message.
-         * @example
-         * __extractUrls( 'Hello https://google.com' );
-         * //
-         * [ 'https://google.com' ]
-         */
-        static __extractUrls( message ) {
-            /* This regex only extracts HTTP/HTTPS/FTP and FILE URLs. */
-            let url_expr = new RegExp( /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig ),
-                matched;
-
-            /* Array to store all the extracted URLs in. */
-            let urls = [];
-
-            /* Loop through each tested RegExp result. */
-            while ( ( matched = url_expr.exec( message ) ) ) {
-                /* Insert the captured data. */
-                urls.push( matched[ 0 ] );
-            }
-
-            return urls;
-        }
-
-        /**
-         * @public
          * @desc Extracts code blocks from a message and formats them in HTML to the proper format.
          * @param {string} message The message to format code blocks from.
          * @returns {CodeBlockInfo} Returns whether the message contains code blocks and the formatted HTML.
@@ -5833,42 +5797,47 @@ const discordCrypt = ( () => {
          * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
          * @returns {URLInfo} Returns whether the message contains URLs and the formatted HTML.
          */
-        static __buildUrlMessage( message, embed_link_prefix ) {
+        static __buildUrlMessage( message ) {
             try {
-                /* Extract the URLs. */
-                let _extracted = _discordCrypt.__extractUrls( message );
 
-                /* Wrap the message normally. */
-                if ( !_extracted.length )
-                    return {
-                        url: false,
-                        html: message
-                    };
+                /* Split message into array for easier parsing */
+                message = message.split(' ');
 
-                /* Loop over each URL and format it. */
-                for ( let i = 0; i < _extracted.length; i++ ) {
-                    let join = '';
+                let containsURL = false;
 
-                    /* Split the message according to the URL and replace it. */
-                    message = message.split( _extracted[ i ] );
+                /* Simple detection and replacement */
+                for ( let i = 0; i < message.length; i++ ) {
+                    try {
 
-                    /* If this is an Up1 host, we can directly embed it. Obviously don't embed deletion links.*/
-                    if (
-                        embed_link_prefix !== undefined &&
-                        _extracted[ i ].startsWith( `${embed_link_prefix}/#` ) &&
-                        _extracted[ i ].indexOf( 'del?ident=' ) === -1
-                    )
-                        join = `<iframe src=${_extracted[ i ]} width="100%" height="400px"></iframe><br/><br/>`;
-
-                    /* Join the message together. */
-                    message = message
-                        .join( `${join}<a target="_blank" href="${_extracted[ i ]}">${_extracted[ i ]}</a>` );
+                        /* Creates URL object of every chunk in the message */
+                        let url = new URL( message[ i ] );
+    
+                        /* Only allows https and http protocols */
+                        if( url.protocol === 'https:' || url.protocol === 'http:' ) {
+                            containsURL = true;
+                        /* Replaces the inputted URL with a formatted one */
+                            message[ i ] = `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
+                        }
+    
+                    /* If the object creation fails, message chunk wasn't a valid URL */
+                    } catch( e ) {}
                 }
+
+                /* Rejoin the message array back to normal */
+                message = message.join(' ');
+
+                if( containsURL )
 
                 /* Wrap the message in span tags. */
                 return {
                     url: true,
                     html: `<span>${message}</span>`
+                };
+
+                /* If the message didn't contain a URL return normal message */
+                else return {
+                    url: false,
+                    html: message
                 };
             }
             catch ( e ) {
