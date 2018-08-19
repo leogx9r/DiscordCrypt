@@ -6059,6 +6059,32 @@ const discordCrypt = ( () => {
         }
 
         /**
+         * @private
+         * @desc Converts a seed to the encryption keys used in the Up1 protocol.
+         * @param {string|Buffer|Uint8Array} seed
+         * @param {Object} sjcl The loaded Stanford Javascript Crypto Library.
+         * @return {{seed: *, key: *, iv: *, ident: *}}
+         */
+        static __up1SeedToKey( seed, sjcl ) {
+            /* Convert the seed either from a string to Base64 or read it via raw bytes. */
+            if ( typeof seed === 'string' )
+                seed = sjcl.codec.base64url.toBits( seed );
+            else
+                seed = sjcl.codec.bytes.toBits( seed );
+
+            /* Compute an SHA-512 hash. */
+            let out = sjcl.hash.sha512.hash( seed );
+
+            /* Calculate the output values based on Up1's specs. */
+            return {
+                seed: seed,
+                key: sjcl.bitArray.bitSlice( out, 0, 256 ),
+                iv: sjcl.bitArray.bitSlice( out, 256, 384 ),
+                ident: sjcl.bitArray.bitSlice( out, 384, 512 )
+            }
+        }
+
+        /**
          * @public
          * @desc Encrypts the specified buffer to Up1's format specifications and returns this data to the callback.
          * @param {Buffer} data The input buffer to encrypt.
@@ -6070,26 +6096,6 @@ const discordCrypt = ( () => {
          */
         static __up1EncryptBuffer( data, mime_type, file_name, sjcl, callback, seed ) {
             const crypto = require( 'crypto' );
-
-            /* Returns a parameter object from the input seed. */
-            function getParams( /* string|Buffer|Array|Uint8Array */ seed ) {
-                /* Convert the seed either from a string to Base64 or read it via raw bytes. */
-                if ( typeof seed === 'string' )
-                    seed = sjcl.codec.base64url.toBits( seed );
-                else
-                    seed = sjcl.codec.bytes.toBits( seed );
-
-                /* Compute an SHA-512 hash. */
-                let out = sjcl.hash.sha512.hash( seed );
-
-                /* Calculate the output values based on Up1's specs. */
-                return {
-                    seed: seed,
-                    key: sjcl.bitArray.bitSlice( out, 0, 256 ),
-                    iv: sjcl.bitArray.bitSlice( out, 256, 384 ),
-                    ident: sjcl.bitArray.bitSlice( out, 384, 512 )
-                }
-            }
 
             /* Converts a string to its UTF-16 equivalent in network byte order. */
             function str2ab( /* string */ str ) {
@@ -6123,7 +6129,7 @@ const discordCrypt = ( () => {
                 data = sjcl.codec.bytes.toBits( new Uint8Array( data ) );
 
                 /* Generate a random 512 bit seed and calculate the key and IV from this. */
-                let params = getParams( seed || crypto.randomBytes( 64 ) );
+                let params = _discordCrypt.__up1SeedToKey( seed || crypto.randomBytes( 64 ), sjcl );
 
                 /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
                 data = sjcl.mode.ccm.encrypt( new sjcl.cipher.aes( params.key ), data, params.iv );
@@ -6139,6 +6145,70 @@ const discordCrypt = ( () => {
             catch ( ex ) {
                 callback( ex.toString() );
             }
+        }
+
+        /**
+         * @desc Decrypts the specified data as per Up1's spec.
+         * @param {Buffer} data The encrypted buffer.
+         * @param {string} seed A base64-URL encoded string.
+         * @param {Object} sjcl The Stanford Javascript Library object.
+         * @return {{header: Object, data: Blob}}
+         * @private
+         */
+        static __up1DecryptBuffer( data, seed, sjcl ) {
+            /* Constant as per the Up1 protocol. Every file contains these four bytes: "Up1\0". */
+            const file_header = [ 85, 80, 49, 0 ];
+
+            let has_header = true, idx = 0, header = '', view;
+
+            /* Retrieve the AES key and IV. */
+            let params = _discordCrypt.__up1SeedToKey( seed, sjcl );
+
+            /* Convert the buffer to a Uint8Array. */
+            let _file = new Uint8Array( data );
+
+            /* Scan for the file header. */
+            for ( let i = 0; i < file_header.length; i++ ) {
+                if ( _file[ i ] != file_header[ i ] ) {
+                    has_header = false;
+                    break
+                }
+            }
+
+            /* Remove the header if it exists. */
+            if ( has_header )
+                _file = _file.subarray( file_header.length );
+
+            /* Decrypt the blob. */
+            let decrypted = sjcl.mode.ccm.decrypt(
+                new sjcl.cipher.aes( params.key ),
+                sjcl.codec.bytes.toBits( _file ),
+                params.iv
+            );
+
+            /* The header is a JSON encoded UTF-16 string at the top. */
+            view = new DataView( ( new Uint8Array( sjcl.codec.bytes.fromBits( decrypted ) ) ).buffer );
+            for ( ; ; idx++ ) {
+                /* Get the UTF-16 byte at the position. */
+                let num = view.getUint16( idx * 2, false );
+
+                /* Break on null terminators. */
+                if ( num === 0 )
+                    break;
+
+                /* Add to the JSON string. */
+                header += String.fromCharCode( num );
+            }
+
+            /* Return the header object and the decrypted data. */
+            header = JSON.parse( header );
+            return {
+                header: header,
+                data: Buffer.from( sjcl.codec.bytes.fromBits( decrypted ) )
+                    .slice( ( idx * 2 ) + 2, data.length ),
+                blob: ( new Blob( [ decrypted ], { type: header.mime } ) )
+                    .slice( ( idx * 2 ) + 2, data.length, header.mime )
+            };
         }
 
         /**
