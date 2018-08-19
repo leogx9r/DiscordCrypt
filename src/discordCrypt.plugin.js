@@ -605,7 +605,7 @@ const discordCrypt = ( () => {
          * @returns {string}
          */
         getVersion() {
-            return '1.5.11';
+            return '1.5.10';
         }
 
         /**
@@ -1843,7 +1843,7 @@ const discordCrypt = ( () => {
             let hasCode = processed.code;
 
             /* Extract any URLs. */
-            processed = _discordCrypt.__buildUrlMessage( processed.html );
+            processed = _discordCrypt.__buildUrlMessage( processed.html, embed_link_prefix );
             let hasUrl = processed.url;
 
             /* Extract any Emojis. */
@@ -5797,11 +5797,10 @@ const discordCrypt = ( () => {
          * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
          * @returns {URLInfo} Returns whether the message contains URLs and the formatted HTML.
          */
-        static __buildUrlMessage( message ) {
+        static __buildUrlMessage( message, embed_link_prefix ) {
             try {
-
                 /* Split message into array for easier parsing */
-                message = message.split(' ');
+                message = message.split( ' ' );
 
                 let containsURL = false;
 
@@ -5811,28 +5810,41 @@ const discordCrypt = ( () => {
 
                         /* Creates URL object of every chunk in the message */
                         let url = new URL( message[ i ] );
-    
+
                         /* Only allows https and http protocols */
                         if( url.protocol === 'https:' || url.protocol === 'http:' ) {
                             containsURL = true;
-                        /* Replaces the inputted URL with a formatted one */
-                            message[ i ] = `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
+
+                            /* If this is an Up1 host, we can directly embed it. Obviously don't embed deletion links.*/
+                            if (
+                                embed_link_prefix !== undefined &&
+                                message[ i ].startsWith( `${embed_link_prefix}/#` ) &&
+                                message[ i ].indexOf( 'del?ident=' ) === -1
+                            )
+                                message[ i ] =
+                                    `<iframe src=${message[ i ]} width="100%" height="400px"></iframe><br/><br/>`;
+
+                            /* Replaces the inputted URL with a formatted one */
+                            message[ i ] =
+                                `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
                         }
-    
+
+                    }
                     /* If the object creation fails, message chunk wasn't a valid URL */
-                    } catch( e ) {}
+                    catch( e ) {
+                        /* Ignore. */
+                    }
                 }
 
                 /* Rejoin the message array back to normal */
-                message = message.join(' ');
-
-                if( containsURL )
+                message = message.join( ' ' );
 
                 /* Wrap the message in span tags. */
-                return {
-                    url: true,
-                    html: `<span>${message}</span>`
-                };
+                if( containsURL )
+                    return {
+                        url: true,
+                        html: `<span>${message}</span>`
+                    };
 
                 /* If the message didn't contain a URL return normal message */
                 else return {
