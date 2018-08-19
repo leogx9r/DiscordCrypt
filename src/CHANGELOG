@@ -1,3 +1,8 @@
+Version 1.5.11
+
+- Fixed a bug due to URL parsing allowing possibly exploitable messages from crashing the client.
+- Removed referrers from being passed to URL links.
+
 Version 1.5.10
 
 - Added the ability to escape inline code blocks with the backslash character. ( "\" )
