@@ -126,6 +126,7 @@
  * @desc Contains the configuration data used for the plugin.
  * @property {string} version The version of the configuration.
  * @property {boolean} useEmbeds Whether to use embeds for dispatching encrypted messages.
+ * @property {channelId: { autoencrypt: boolean }} channelSettings Settings local to a channel.
  * @property {string} defaultPassword The default key to encrypt or decrypt message with,
  *      if not specifically defined.
  * @property {string} decryptedPrefix This denotes the string that should be prepended to messages
@@ -140,6 +141,7 @@
  * @property {string} encryptBlockMode The block operation mode of the ciphers used to encrypt message.
  * @property {boolean} encodeAll If enabled, automatically forces all messages sent to be encrypted if a
  *      ChannelPassword object is defined for the current channel..
+ * @property {boolean} localStates Localizes settings to the local channel.
  * @property {string} paddingMode The short-hand padding scheme to used to align all messages to the cipher's
  *      block length.
  * @property {{channelId: string, password: ChannelPassword}} passList Storage containing all channels with
@@ -852,6 +854,8 @@ const discordCrypt = ( () => {
                 automaticUpdates: true,
                 /* Blacklisted updates. */
                 blacklistedUpdates: [],
+                /* Storage of channel settings */
+                channelSettings: {},
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* How often to scan for encrypted messages. */
@@ -868,6 +872,8 @@ const discordCrypt = ( () => {
                 decryptedPrefix: "🔐 ",
                 /* Decrypted messages have this color. */
                 decryptedColor: "green",
+                /* Use local channel settings */
+                localStates: false,
                 /* Default padding mode for blocks. */
                 paddingMode: 'PKC7',
                 /* Password array of objects for users or channels. */
@@ -1104,8 +1110,12 @@ const discordCrypt = ( () => {
             let sec = $( "#dc-password-secondary" );
 
             /* Check if a primary password has actually been entered. */
-            if ( !( prim.val() !== '' && prim.val().length > 1 ) )
+            if ( !( prim.val() !== '' && prim.val().length > 1 ) ) {
                 delete _configFile.passList[ _discordCrypt._getChannelId() ];
+
+                /* Disable auto-encrypt for that channel */
+                _discordCrypt._setAutoEncrypt( false );
+            }
             else {
                 /* Update the password field for this id. */
                 _configFile.passList[ _discordCrypt._getChannelId() ] =
@@ -1118,6 +1128,9 @@ const discordCrypt = ( () => {
                 /* Update the password toolbar. */
                 prim.val( '' );
                 sec.val( '' );
+
+                /* Enable auto-encrypt for the channel */
+                this._setAutoEncrypt( true );
             }
 
             /* Save the configuration file and decode any messages. */
@@ -1179,6 +1192,18 @@ const discordCrypt = ( () => {
                         setTimeout(
                             () => {
                                 _discordCrypt.log( 'Detected chat switch.', 'debug' );
+
+                                /* Make sure localStates is enabled */
+                                if( _configFile.localStates ) {
+
+                                    /* Checks if channel is in channel settings storage */
+                                    if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
+                                        _configFile.channelSettings[ _discordCrypt._getChannelId() ]
+                                            = { autoEncrypt: false }
+
+                                    /* Update the lock icon since it is local to the channel */
+                                    _discordCrypt._updateLockIcon( this );
+                                }
 
                                 /* Add the toolbar. */
                                 this._loadToolbar();
@@ -1375,6 +1400,30 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Updates the auto-encrypt toggle
+         * @param {boolean} enable
+         */
+        _setAutoEncrypt( enable ) {
+            if( _configFile.localStates )
+                _configFile.channelSettings[ _discordCrypt._getChannelId() ].autoEncrypt = enable;
+            else
+                _configFile.encodeAll = enable;
+        }
+
+        /**
+         * @private
+         * @desc Returns whether or not auto-encrypt is enabled
+         * @returns {boolean}
+         */
+        _getAutoEncrypt() {
+            if( _configFile.localStates )
+                return _configFile.channelSettings[ _discordCrypt._getChannelId() ].autoEncrypt;
+            else
+                return _configFile.encodeAll;
+        }
+
+        /**
+         * @private
          * @desc Inserts the plugin's option toolbar to the current toolbar and handles all triggers.
          */
         _loadToolbar() {
@@ -1409,7 +1458,7 @@ const discordCrypt = ( () => {
 
             /* Set the initial status icon. */
             if ( dc_lock_btn.length > 0 ) {
-                if ( _configFile.encodeAll ) {
+                if ( this._getAutoEncrypt() ) {
                     dc_lock_btn.html( Buffer.from( this._lockIcon, 'base64' ).toString( 'utf8' ) );
                     dc_lock_btn.append( lock_tooltip.text( 'Disable Message Encryption' ) );
                 }
@@ -1440,6 +1489,7 @@ const discordCrypt = ( () => {
             $( '#dc-settings-decrypted-color' ).val( _configFile.decryptedColor );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
             $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
+            $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
             $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
 
             /* Handle clipboard upload button. */
@@ -1960,7 +2010,7 @@ const discordCrypt = ( () => {
             if ( force_send === false &&
                 ( !_configFile.passList[ _discordCrypt._getChannelId() ] ||
                     !_configFile.passList[ _discordCrypt._getChannelId() ].primary ||
-                    !_configFile.encodeAll )
+                    !this._getAutoEncrypt() )
             ) {
                 /* Try splitting via the defined split-arg. */
                 message = message.split( '|' );
@@ -2666,6 +2716,9 @@ const discordCrypt = ( () => {
                         /* Delete the entry. */
                         delete _configFile.passList[ id ];
 
+                        /* Disable auto-encryption for the channel */
+                        _configFile.channelSettings[ id ].autoEncrypt = false;
+
                         /* Save the configuration. */
                         self._saveConfig();
 
@@ -3119,11 +3172,16 @@ const discordCrypt = ( () => {
                 _configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
                 _configFile.paddingMode = $( '#dc-settings-padding-mode' ).val();
                 _configFile.useEmbeds = $( '#dc-embed-enabled' ).is( ':checked' );
+                _configFile.localStates = $( '#dc-local-states' ).is( ':checked' );
                 _configFile.encryptMode = _discordCrypt
                     .__cipherStringToIndex( dc_primary_cipher.val(), dc_secondary_cipher.val() );
 
                 dc_primary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
                 dc_secondary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
+
+                /* Remove all channel settings if disabled */
+                if( !_configFile.localStates )
+                    _configFile.channelSettings = {};
 
                 /* Handle master password updates if necessary. */
                 if ( dc_master_password.val() !== '' ) {
@@ -3206,6 +3264,7 @@ const discordCrypt = ( () => {
                 $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
                 $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
                 $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
+                $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
                 $( '#dc-master-password' ).val( '' );
             };
         }
@@ -3944,6 +4003,9 @@ const discordCrypt = ( () => {
                 dc_handshake_primary_key.val( '' );
                 dc_handshake_secondary_key.val( '' );
 
+                /* Enable auto-encryption on the channel */
+                _setAutoEncrypt( true );
+
                 /* Apply the passwords and save the config. */
                 _configFile.passList[ _discordCrypt._getChannelId() ] = pwd;
                 self._saveConfig();
@@ -4019,6 +4081,9 @@ const discordCrypt = ( () => {
         static _onResetPasswordsButtonClicked( self ) {
             return () => {
                 let btn = $( '#dc-reset-pwd' );
+
+                /* Disable auto-encrypt for the channel */
+                _setAutoEncrypt( false );
 
                 /* Reset the configuration for this user and save the file. */
                 delete _configFile.passList[ _discordCrypt._getChannelId() ];
@@ -4099,28 +4164,46 @@ const discordCrypt = ( () => {
          */
         static _onForceEncryptButtonClicked( self ) {
             return () => {
-
                 /* Cache jQuery results. */
                 let dc_lock_btn = $( '#dc-lock-btn' ), new_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
                 /* Update the icon and toggle. */
-                if ( !_configFile.encodeAll ) {
+                if ( !self._getAutoEncrypt() ) {
                     dc_lock_btn.html( Buffer.from( self._lockIcon, 'base64' ).toString( 'utf8' ) );
                     dc_lock_btn.append( new_tooltip.text( 'Disable Message Encryption' ) );
-                    _configFile.encodeAll = true;
+                    self._setAutoEncrypt( true );
                 }
                 else {
                     dc_lock_btn.html( Buffer.from( self._unlockIcon, 'base64' ).toString( 'utf8' ) );
                     dc_lock_btn.append( new_tooltip.text( 'Enable Message Encryption' ) );
-                    _configFile.encodeAll = false;
+                    self._setAutoEncrypt( false );
                 }
-
-                /* Set the button class. */
-                $( '.dc-svg' ).attr( 'class', 'dc-svg' );
 
                 /* Save config. */
                 self._saveConfig();
             };
+        }
+
+        /**
+         * @private
+         * @desc Updates the lock icon
+         */
+        static _updateLockIcon( self ) {
+            /* Cache jQuery results. */
+            let dc_lock_btn = $( '#dc-lock-btn' ), tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
+
+            /* Update the icon based on the channel */
+            if ( self._getAutoEncrypt() ) {
+                dc_lock_btn.html( Buffer.from( self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.append( tooltip.text( 'Disable Message Encryption' ) );
+            }
+            else {
+                dc_lock_btn.html( Buffer.from( self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.append( tooltip.text( 'Enable Message Encryption' ) );
+            }
+
+            /* Set the button class. */
+            $( '.dc-svg' ).attr( 'class', 'dc-svg' );
         }
 
         /**
@@ -5822,11 +5905,16 @@ const discordCrypt = ( () => {
                                 message[ i ].indexOf( 'del?ident=' ) === -1
                             )
                                 message[ i ] =
-                                    `<iframe src=${message[ i ]} width="100%" height="400px"></iframe><br/><br/>`;
+                                    `<a target="_blank" rel="noopener noreferrer" href="${url.href}">
+                                    ${url.href}</a>
+                                    <iframe src=${url.href} width="100%" height="400px">
+                                    </iframe><br/><br/>`;
 
-                            /* Replaces the inputted URL with a formatted one */
-                            message[ i ] =
-                                `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
+                            else
+                                /* Replaces the inputted URL with a formatted one */
+                                message[ i ] =
+                                    `<a target="_blank" rel="noopener noreferrer" href="${url.href}">
+                                    ${url.href}</a>`;
                         }
 
                     }
