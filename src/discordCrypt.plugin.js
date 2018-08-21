@@ -122,11 +122,17 @@
  */
 
 /**
+ * @typedef {Object} LocalChannelState
+ * @desc Contains per-channel specific information.
+ * @property {boolean} autoEncrypt Whether automatic encryption is enabled for this channel.
+ */
+
+/**
  * @typedef {Object} Config
  * @desc Contains the configuration data used for the plugin.
  * @property {string} version The version of the configuration.
  * @property {boolean} useEmbeds Whether to use embeds for dispatching encrypted messages.
- * @property {channelId: { autoencrypt: boolean }} channelSettings Settings local to a channel.
+ * @property {Array<{channelId: string, LocalChannelState}>} channelSettings Settings local to a channel.
  * @property {string} defaultPassword The default key to encrypt or decrypt message with,
  *      if not specifically defined.
  * @property {string} decryptedPrefix This denotes the string that should be prepended to messages
@@ -1198,8 +1204,8 @@ const discordCrypt = ( () => {
 
                                     /* Checks if channel is in channel settings storage */
                                     if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
-                                        _configFile.channelSettings[ _discordCrypt._getChannelId() ]
-                                            = { autoEncrypt: false }
+                                        _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
+                                            { autoEncrypt: false };
 
                                     /* Update the lock icon since it is local to the channel */
                                     _discordCrypt._updateLockIcon( this );
