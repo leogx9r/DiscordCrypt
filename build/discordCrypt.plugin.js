@@ -124,10 +124,17 @@
  */
 
 /**
+ * @typedef {Object} LocalChannelState
+ * @desc Contains per-channel specific information.
+ * @property {boolean} autoEncrypt Whether automatic encryption is enabled for this channel.
+ */
+
+/**
  * @typedef {Object} Config
  * @desc Contains the configuration data used for the plugin.
  * @property {string} version The version of the configuration.
  * @property {boolean} useEmbeds Whether to use embeds for dispatching encrypted messages.
+ * @property {Array<{channelId: string, LocalChannelState}>} channelSettings Settings local to a channel.
  * @property {string} defaultPassword The default key to encrypt or decrypt message with,
  *      if not specifically defined.
  * @property {string} decryptedPrefix This denotes the string that should be prepended to messages
@@ -142,6 +149,7 @@
  * @property {string} encryptBlockMode The block operation mode of the ciphers used to encrypt message.
  * @property {boolean} encodeAll If enabled, automatically forces all messages sent to be encrypted if a
  *      ChannelPassword object is defined for the current channel..
+ * @property {boolean} localStates Localizes settings to the local channel.
  * @property {string} paddingMode The short-hand padding scheme to used to align all messages to the cipher's
  *      block length.
  * @property {{channelId: string, password: ChannelPassword}} passList Storage containing all channels with
@@ -538,7 +546,7 @@ const discordCrypt = ( () => {
              * @type {string}
              */
             this._settingsMenuHtml =
-                `eNrVHNtu28j1V6ZapNkAK/mSTWIrjgpHVjZuEseInb30JRiSI3EgisNyhpZV9KH/UKBP/br9kp5zZngVJUu2XLQJYMvk8Jwz534Z6iSQN0wGbzqB31U3Io34osP8iGtduzRgJ8sLu1kSKR60rO/6IjYiHUsRwW1tFpGA21IncK8fq1i8BogWZPlsmkUi7fJITmK8y05knGSGmUUCDxtxa6qI6F7XIXBkjWUkugk3YYfZfw7xXAYm7LOD/f0nrxMeBDKe9Nlhcvt6xtOJjLuRGJs++xEudFgqeKDiaMGMNPjsO4DJLhHmHtHkZcaouEKIu1B8AsqAB1p0HOH2akGjFpHwTUlq1zNxp0qsUUmfdY+QGETITnTCq/iMUpGRib256m6X2DW4ImTslNEurhX7SgI72cOnLIAe/UdIxcWTPUszSmgPRIS/ER4H3lRRuUvAMzWHS4f7IB8VwaeDw6O6TGZCaz4RlUfoH2iDL0IVBSJ90xmhwjAeLxhKyEjgKS5nRjEt4oDNpQnZQmUpc9BYr9frsBm/jUQ8MSGgPQISBid7OZb1Gpbze6xi09Xyb6J/gBrAnIJ0PQU8mPUP9nNJOHWs7isA/iKlXT8U/tRTt1UNLa9ZRSj/rilnTQf3HSqSan0B6cUL0tEVyrBeFwjn+ZiJmHuRCH5gnOXks0jGU2BwFDFPILcN45GKJ5bnJhQMd2tXmZAb5gMeWJlpERBYkBHBEuViOZuJQHIjokVDvdgVivMsx/0RoVbuFyr3uKKL+Ux0Ux4HavZ/KT1ktHW/xO+nmuGOCiHanQFrAgbGzACGiDWyO18wFYlpCuZL/pD1FxcI8A7JaAPqgD+6Hk8ru5cBe8MKZltCu7gu053qs/gYiMGA2DoNdw3c3NtMH9Y55gZUigF15+SIQz88yP3jsgO8H/a2sHAXPWBcvogsPSiVYaS0WCYp/9USlhMgYq7SBwRmkvhlKkF7FxD9LLh+qQnVyNyGLb/WCNDF5cSC7tRDADr0vcGJl+4VNFwJX8XBI1Ghc+Br6biv3uUBn99ApJ8HqFwB+MNiI7oi060UyAFOhRbGQv6CH3cGuKqAQ/rcZhD31XhWV3k/WeAedKHvQ5Us2DBLUwxDLVtq0fuMGLsmfW3Veg/gihToSW6ZVpEMXrO/Ac2BuAVPvb+//5rldsHQMEq7OJPah2eH6SIBp++kenrDZYS+uVTPOxRHmxRjbLnCbaOurLGYd5GN4Lu3coebQQeFfwTog2HI44nQaKq0cLAp3HunmT5hjNSkksG3JJlOWI4+Zg29qtTpDiweDBMoNt1YzW12X9f/58+fuNT+i6D4faHmD3cFhDGCzaUb4fyIKx+IFRiiUpGLvh2rRXpOK52pbBXKwK9hbqDbjHrGZbwUw1hrdWm4V6nALMguXlze+lPUOe51Mdt9WoSMKMMsrniUnNUlXYR01l5czc1WkMAK7nEtGkDP3OX7goWYlqXSLBpgr9zl+4IVt9LUQRZJOOiT6adyEhpg++///tcd2ROChrAL+ajprGIviaspWC9S/tRl2ElRLYN3sLbZZ9bJ52WzV/PT1X3bGjexO0+LQH+X3Tfv2w4E+HwRdYpcaSiTEIJKvnF0lbYGX9+5cPlQ16fHO3nzoQ41L/lVQoXTDY8yDGNjYBXhEMHgbaTmY6lD9j17cXDYfSsNe3ayZx9ofZoL3Rmcjq7ggcMXLzd4wIeiIMK8AH5Fkm/8nAkQ03Uqk0icEb6D400IlAG4/sH52egUHzk8ankEogzt38rVMb4hrFDGroo6SQbXodQMIr30wR1pKqUs421FC9WsiH3SGrwl4xju2AXUkVBjqJ1dE6KXK9IKvFspUZns3lONioS2qUhNyCtV6X9Yg2qasFule2QNUpn5L2mQlS6kzdQIYZ9UIO6hRM4L5+2UGUApNKmB4coPxUy0q1My9V+BZ/wwvGLfvVqvQ7E+BCW6uDpnvx73Dp+v1wOtDkAPrj5DJXFw+PKutcd27fGr41cHOxd63op0rGKa2GGVYKxS5ikTOsHrxxD0W4yJ7HMisIUC236YwC2hrfJuQ9Qudd/zG+RBti1jQLDeK4y94rF3QgQehycRy9qnFD71OTPYB1j91C4kTdkHQ9ag9aqCEY8q5TMx5llk2Mg6E8RXaYMUUt52TlIIPLDwqYngyqVc7mtQu0nI5oy0HHTIWN5+KVxlIKyrdMaEnGdYz8Ui0tSCBv8J/rJ4zhNkasLsmNdEBZD0yRn1ZSrG8nZHjHbAIdNDoMvcbke+NasLnZ1jnz5v9oJ3sqxGOVCpaENQQVYRjNjQtvbFLDGLR+bvUEUq3TF7fYR5N3cJ9f2ZS/EeQSAbrW43GLlbP3DlgzWg0r9LxV8zSC0WO2GbBrA4w8KeWZ1jywi3YNZ5wadQzYFDUOrRFA+nRuguXWrUwix8+qOaQwgg/65ZKjS6DIk6aTCJwuYO92SEpSwONrhxwtCk0jNsMwwvv4JvqaRWhQQJKiNRspNsMAPzkDZnhrowG+xUZrmqQfY5mYjd6LnjXNdYmEWQbuDaSrHBIWRjcDU5K3E4R84B6StEhALM9R98izAYpxtpLm6lyvLRLZ9B4t1HVhP7c1i5WyoUoff30cUQJbBLAVzLWcXiR7eJtCF7lSTibOYhTzeUhUHwXYFgRdN8VqG+v8dBS6KRLB/bMfmyFaFe4+z2B6YhYkYBgzLHE24wG6DKz2QMlUjN2kA0VwLFh0Fasc5+hyKy1NjKZrTHqpXuVkIXYs4+cY0bKtped+U3bXOeNjnNCG5lFFaX0DrU27i6MdOJ8CXgDn5wpxMs1CJbyZXdtkldFJa7jQ9fgfoRaC+Fead2ehUH10+7834fQuu6aXOTea3otuNaMcemsx0cWLQcFcCJYwgiUmpKaysBL+8BUiTus+/G+/udwS+nXy7OL37quz4fNQLfLqqgggoKkhmIbIESGkccvCfklwvmWodgZ/aAAwv5jbDyJRgM8v+Z1Dg30WwSKQ92sIDgdKOm4M0quG1nkagYxdam0NRcFQMul2CqeQw2N4FohxB7FiW6ZtsYfaoZzyANTrXVpliRZYeg7yySBBXjKp6dSRQ2ViWPICTG2sZuslzPVUJbKp3rDC9lDjjUpC7w0hRkcIWs+iM7TZJoUe0yrwRmB5mt0FqmD5afduLZ2szedm/LO7AS40v6NR6zP8hZolLDY/O6sIoQUvU3ndCYRPf3ADupDk+Snq9me0C2NGLv578cHf/5L+BceToR5k3nmxfxeNoZ/FnhBCFLEChsJ73BqQx3smrh3Y6JnYBBc48IjYSa3B6ne9Wu+TK9P0sNYeUKlNYXIIREwZ8qXbTRXAqiaLJX2+2bzgaW5yTF3GazKUDLQGXDCYD2UxVFiC9yendCn6vTyfIe3AwhO80/p/YDXgX4NBKNaZKOJ9TC+k08adN+5zM5Cl2/CZ/S4lMVp6eCxRLfgB+pxD4oa1AGH4PBZTkeBWDBhrc2nxZWrugZeEksBOmk2AjIKv1DBUFtd7gjp1nE6hWK9RBzL8aZZCwl32hudk4Xixzhe/1sI7NcMzWFjHEZzei2hubBONKK4B0GvERMh0ttZrqpPS4PGLezx7ZJ5Ep7TNAG3oIeTqFQw9zAjpCdPSSPbLM/25MRu7bMfGCeb6thoVUygpph1P58LDNZk2aeZkbNoJDxKdsZYs7I3kHi4YTyoIST57Ade/R2yecj+gUnLqLYHYpq7nytPbVFvzUnHsStPcuywxMPOchtTjzgBRmPlXOD8GnLEwN4YSoWExFbEB/Egv0kYtc3vwcw2EKgQz4VxYmGFFLAoZqBpt0HJh1pKFiz6yMN3FNgOLs5yICsGzlC0xZ3WZ7IGvyCbV9quEtdjKH+VJzDwpVZVNEs9D8OTyRt00FDIIyworV9ziRVUEFAyZKyiRMfdd/Bi+Mp4oW2PT3uh1hyYBwiYUDJAQBzwF+p/CKiHBCVlrUXCBLbSjHU5ATQFmsaEteAYxEWTRREjHAGtGWAhmvyB2fvkabREH4jBTMeZ1D2FFqi6xS8g6ig5q4BLhINBRT9rXKCRH3EYOZCVMYQiia7qcU8D/F4tB1D2JpOsSTzIulHWIFpU50NNui4rvEAgeqcmSHXYXWz37Or96fPu4cvXlIdSn+8ODhkz7CXg8wRM3tCn7wjYLyyvbgPZ+/YOIt9+w4FzldSCSWZmStib0HPyV4WtenQe+BLoNg5Ekcyq+tP0lrWn9reayAMB+YEbJLJwJalxs2AeH5C0hUsW1Ui3zlDxXk0bmK5MglFKrAM6VWMY42q/1RKHeCB5GXq9I5UJG/qlPIgGeBSfOGAIWdD2gnr1D0bUubVZf6TzJsHCU8Nniaxf5DKEEwPjAA+T3P8HXpH4tIuAPgdZh1QHe6pntbBojY7XAhG1nBUdocH+9EKQHshtNSB0vnbKtSnugoFuZBgiwvbizLOqW36YuJC0T5xY+iOXYClGK3/gIKsY/+FA1jUmtpLFOQcAwHaYDu4LAPlT8Gbi9dlvbuPZ3Y7g7efr99XX3CyPsyeo0J6ijMy1tcAyzxR+ICgwWBmX1lgHk9RhcEX3kg3ShNcS3xNTEQR8Xsegr+gSXDuRXTZOfLQmaxAMkTBWz5SzyTXJUBTHH/O5Y+IOS1qYILr+WZ9d3Ya/RX6LefDls3e2XQeWdhp6XpcR0IE/U1DR96GyEducgzm8/s//vke+AOumXSnTG1amxEi7s3lVCb43lBPpZM9/GvPQnoyOnxytP/k+LmD9w3gfVuC1/AJLBXRm06sVIIchcqTQHVzkr7HEPKsbF1UZNLYzSiKJKT7PvIWpNnc3Fb7yWF9I1jf2re36Y4KwoYVwiobpOi4tMVSAzazMbZkZHkrwOnG2Wd28fm6piv1NwqXFIe5390UMvwG2x2QSwyk1hFB/EJXDTLv4UtQaG6B+qEauTF3gDSYnX/6NDo7P70effytVyOnRbzu7mlkWjwyGE7Z8839K6el5Flphogd1zlfbIrpPAaTxKMM9u2sCrp2CLUAfe8GmkvCt6rSl9+wYxFq4mt3kliwpXR+TVK67GHqbsWFhzq9M2FCFRQjzmUYjtb6gaAgbJp5/SRQfbXwYX15eja3pm6bNVXh1A4U1YpNtyvkzkd6LRWM8K00mj3bYMtFrlHsuoTTutvDwx87A/ixbo+QPsKaFy/XrXl+BHDgx7o1P+4fdwbwY92aF4cHnQH8WLvm1UGF5S/qh/JWM3a7QYVjaF58trTN8yC7bkLhoPiR4Onm84khLt+kEV71dc7Dgbz7oDEP8s0fRqNLdjUafhldV/KgZ+W7ODnu4mWb8hD6De4ZXEX+ss1R7V2bGb9FXwCXD44P8xCVxVZkmNm/6WDm56bHwdK79JVd5m/Tt/GiyHr7G9CceY9LcpmC7+1IKXHiSXSvmp/VU//VmrRFYL0QN3R4BjaGTRFI8V0toG0N32NftVhbeeTvedO8loKiDVuVWHdZhDMo9iBE8Fq7UMS+wtSZKtYiBGoIqY0KGeN+nToQTwriAiBzFT818DOdQhkW+0TyApHh5RwD/nOVCVQSQAHDQ0wAIujtNrKWHaldBVf092eCzGR1VE0G7OHJW25tkLeN+o3so/wiiGQbJWutHMvUjY1+PR1ef/wN+zdQ5M3hF/ZKmuXQbwgAsJmyXqpBGaegNqSpLXW3bc/kJy7c+VLfVZ0Vdb+rBXJZbGArb1QqRJJM73BIBy8x6hZ+pgXhwz1OhR4s2becsV9Smf8O+Q01auIpngbrwmWJzXF8lYdraQO0e7nNFG8Zf5lIDXq9mnotryUPtMk6Ira2cIX2tHA/lbNu5FXeE7Nb306l3DtiU3TKVrUOSLWyWbykXc8PX708WvquitsulC6T0PQZfWEGdgjcF9LkU4R1sbE2hqlvZHU4b2Wk5UX5UtI9uFG+6vS/wY/mZu4w3vr3ZtTfm321/6T23T/NKc69vkbDWdWDHQm+r48udEtfQrEBDZ39kV1kU7GZH6FW1xp0DvjKttn2x1Ecl+jnfwBN+a/J`;
+                `eNrVHNtu28j1V6ZapNkAK8l2NomtOCocWdm4SRwjdvbSl2BIjqSBKQ7LGVlW0Yf+Q4E+9ev2S3rOmRneRMmSLRdtAtgyOTznzLlfhjqO5A2T0ZtWFLbVjchivmixMOZaVy712fHywvYsjRWPGta3Q5EYkY2kiOG2NotYwG2pU7jXS1QiXgNEC7J4NpvFImvzWI4TvMuOZZLODDOLFB424taUEdG9tkPgyBrJWLRTbiYtZv85xHMZmUmP7e/tPXmd8iiSybjHDtLb11OejWXSjsXI9NiPcKHFMsEjlcQLZqTBZ98BTHaBMLtEUzAzRiUlQtyF/BNQBjzQouUIt1dzGrWIRWgKUtuBSVplYo1Ke6x9iMQgQnasU17GZ5SKjUztzVV328Su/iUhYyeMdnGl2FcS2HEXn7IAOvQfIeUXj7uWZpRQF0SEvxEeB96UUblLwDM1h0sHeyAfFcOn/YPDqkymQms+FqVH6B9oQygmKo5E9qY1RIVhPFkwlJCRwFNczoxiWiQRm0szYQs1y5iDxjqdTotN+W0skrGZANpDIKF/3PVY1muY5/dIJaat5d9Ebx81gDkFaQcKeDDt7e95STh1LO8rAv4ipe1wIsLrQN2WNbS4ZhWh+LuinBUd3HOoSKrVBaQXL0hHVyjDel0gnGcjJhIexCL6gXHmyWexTK6BwXHMAoHcNozHKhlbnpuJYLhbu8pMuGEh4IGVMy0iAgsyIliiWCynUxFJbkS8qKkXu0RxnnrcHxFq6X6uco8ruoRPRTvjSaSm/5fSQ0Zb90v8fqoZ7igXot0ZsCZiYMwMYIhEI7v9gmuRmrpgvviHrL84R4B3SEYbUAf80Q54Vtq9jNgbljPbEtrGdTPdKj+Lj4EYDIitVXPXwM3uZvqwzjHXoFIMqDonRxz64b73j8sO8H7Ym8LCXfSAcYUitvSgVAax0mKZJP+rISynQMRcZQ8IzCTxi0yC9i4g+llwvUITypG5CZu/VgvQ+eXUgm5VQwA69G7/OMi6OQ2XIlRJ9EhUaA98LR331Tsf8PkNRPp5hMoVgT/MN6JLMt1KgRzgTGhhLOQv+HFngMsKOKDPTQZxX41nVZUP0wXuQef6PlDpgg1mWYZhqGFLDXo/I8auSV8btT4AuCIDetJbplUso9fsb0BzJG7BU+/t7b1m3i4YGkZhF6dSh/DsIFuk4PSdVE9uuIzRNxfqeYfiaJNhjC1WuG1UlTUR8zayEXz3Vu5wM+ig8I8AvT+Y8GQsNJoqLexvCvfeaWZIGGM1LmXwDUmmE5ajj1lDLyt1tgOLB8MEik07UXOb3Vf1//nzJy61/yIofp+r+cNdAWGMYXPZRjg/4soHYgWGqEx40TdjtUjPaKUzla1CGfg1zA10k1FPuUyWYhhrrC4ND0oVmAXZxovLW3+KOseDNma7T/OQEc8wi8sfJWd1QRchnbUXV3OzESSwggdcixrQU3f5vmAhps0yaRY1sJfu8n3BiltpqiDzJBz0yfQyOZ4YYPvv//7XHdkTgoawC/moaa1iL4mrLtggVuG1y7DTvFoG72Bts8esk/dlc1Dx0+V92xo3tTvP8kB/l93X79sOBPh8EbfyXGkg0wkEFb9xdJW2Bl/fuXD5UDukx1u++VCF6kt+lVLhdMPjGYaxEbCKcIio/zZW85HUE/Y9e7F/0H4rDXt23LUPND7NhW71T4aX8MDBi5cbPBBCURBjXgC/Ysk3fs5EiOkqk2ksTgnf/tEmBMoIXH//7HR4go8cHDY8AlGG9m/l6hhfE9ZEJq6KOk77VxOpGUR6GYI70lRKWcbbihaqWZGEpDV4SyYJ3LELqCOhRlA7uyZExyvSCrxbKVGR7N5TjfKEtq5IdcgrVel/WIMqmrBbpXtkDVIz81/SICtdSJupEcI+qUjcQ4mcF/btlClAyTWphuEynIipaFan9Dp8BZ7xw+CSffdqvQ4l+gCU6PzyjP161Dl4vl4PtNoHPbj8DJXE/sHLu9Ye2bVHr45e7e9c6L4V6VjFNLHDKsFIZSxQZuIErx9D0G8xJrLPqcAWCmz7YQK3hDbKuwlRs9TDIKyRB9m2TADBeq8wCvLH3gkRBRyeRCxrn1L41OeZwT7A6qd2IWnKPhiyBq1X5Yx4VCmfihGfxYYNrTNBfKU2SC7lbeckucAjC5+aCK5c8nJfg9pNQjZnpOWgQ8Z8+yV3lZGwrtIZE3KeYT2XiFhTCxr8J/jL/LlAkKkJs2NeExVA0idn1BeZGMnbHTHaAYdMD4Euc7sZ+dasznV2jn163+wF72RZjXKgUtGGoJysPBixgW3ti2lqFo/M34GKVbZj9oYI827uEur7M5fiPYJANlrdrjFyt37gMhWhHMmQGhdgFnk1s4p76ycajn3g0XhMTXnIkmos+4j3cBLgDJHlhfjmTCuPKwQPJzksUssJv4Hc2mim5kkO3XMNHx+OO+xkZtQUHG3o86nyCAPL5IilmFpZwOWnbbQIfJ1I0uqx70Z7e63+Lydfzs/Of+q5WpCKRZKwIwMkHWYCoGs7cPSlup1s8QSkzBcsExrdGTgrblkX8/FYAjXiFmiSQDCEihv428gpZnk5rsx+gPIUmVMannHYV+g6n55XkLeP5Hhmo41mpdJ1J4oVAhbc8btM/HUGJC92Yo8awOJwFJuxVb1aRriNQuUGOFFzMD0jEhoP4zgS47DTkQYrxKc/qjkIgxIHXRJeAETDdewa8kDG2CPBiRk3zso1+cop9q8GF18haJVy9tw1EFRGPoIdz/pT0FBpizF93J31d+oMvA+DsmY8FrtxoI5zbWNh5tlfDddWHhMizWwEMcyzEqe+FHWQvlxEKEDvWCFoCYMJYK1+wq1UPMMtn0JF10NWE/s9LO8ZckXo/H14PkAJ7FIAV2DPRSgZ3qbSWucqSSSzaYA83VAW6C6itkCwom4+q1DfP5ShJdGsn4/s+YtlK2LkGRPzA9OQisUReG1ksnVaEar8VCZQ4lasDUQDQQrEh9mfYq29Fjk67/NoHyUr3a2EzsWcfeIaN5T3U+9KnJsGiE1ymhLc0oy1KqF1qLeLndoGfYye9tiLhZqnwV7Zbf/dpXdyt4nHV6B+CNpL+aNTu4clHQKhtV1eUGdeI7p7Zhx0aAgj6nJUACeOIYhI0Q9JGt4uyqCiEgqSGaUJIKERZgZ4EmPBXE+akgj6R2kQyZdgYDozlVpTsB/HKoAdYKpxo67Bm5WTiG5OxTCxNoWm5spjcLkEE3OrSI4h2iHEjkWJrtl23J9qxmdQX2XaalOiyLInoO8slgQV4yoeykoVduwlp4xE29hNlhv075WUuJHDUuaA03IaLyyN1/qXyKo/spM0jRfl8cVKYHZC3gitYaxl+WlH6Y1Tkm33trwDKzG+pF+jEfuDnKYqMzwxr3OrmEAN+KY1MSbVvS5gJ9XhadoJ1bQLZEsjuj//5fDoz38B58qzsTBvWt+CmCfXrf6fFY6mZikChe1kNzju405WDbzbMbFjMGgeEKGxUOPbo6xbHscs0/uz1BBWLkFpIW3+IlIFf6ps0URzIYh8elOe42w6dFoewOUDwc3GSw2Tug1HSzrMVBwjvtjp3TF9Lo+9i3twcwLZqf/syge8CvD7riRE5MdduFS5iUe4mu98JkehqzfhU5Z/KuMMVLRY4hvwA8oc3coBe8rgY9S/KObuACza8NbmY+jSFT0FL4kdBqqihkBW4R9KCCq7wx05zSJWr1Csh5h7PicnYyn4RgPZM7qY5wjf62cbmeWacTxkjMtohrcVNA/GkZUE7zDgJWI6XGoy003tcXlyvZ09No24V9pjijbwFvTwGgo1zA3s2QRnD+kj2+zP9sjNri3Tn8Tw26pZaJmMqGIYlT8fy0zWpJl5m4eynQHmjOwdJB5OKA9KOLmH7dijt0s+H9EvOHERxe60XX3na+2pKfqtOUojbu0hqR0epfEgtzlKgxdkMlLODcKnLY+i4IVrsRiLxIL4IBbsJ5G4gcw9gMEWIj3h1yI/KpNBCjhQU9C0+8CkszI5a3Z9VoYHCgxnNydkkHVDR2jW4C6Lo379X3CeQJMcqfP55p/yA364chaXNAv9j8MTS9ddhUAYY0VrG+hppqCCgJIlY2MnPhrrgBfH4+kLbXt61DhWFIdIGFByAEAP+CuVX0SUA6KyovbCLi5kBAnU5ATQFmsaEteIYxEWjxVEjMkUaJsBGq5tY/Y90jQcwG+kYMqTGcd+tdMSXaXgHUQFNXeTFZFqKKDob+UJEtXZlZkLUZpvKToykFnM8wk2mO18y/eG01kQyzDGCkyb8tC5RsdVhQcIVHtmTrielDf7Pbt8f/K8ffDiJdWh9MeL/QP2DHs5yBwxta9+kHcEjJe2F/fh9B0bzZLQvpyDbetMQklm5orYm9Nz3J3FTTr0HvgSKXaGxJHMqvqTNpb1J7b3GgnDgTkRG89kZMtS44aL3B+9dQXLVpXId85Q8aADbmK5MpmITGAZ0ikZxxpV/6mQOsADycvM6R2piG/qFPIgGeBSfJOFIWcntBPWqno2pCyoyvwn6ZsHKc8MHlOyf5DKEMwAjAA+X3v8LXr55sIuAPgtZh1QFe6Jvq6CRW12uBCMrOAo7Q7fGEErAO2F0FIFSge7y1Cf6jIU5EKKLS5sL8rEU1v3xcSFvH3izje07AIsxWj9BxRkFfsvHMCi1lTeziHnGAnQBtvBZTNQ/gy8uXhd1Lt7eBi81X/7+ep9+c0568PsAT2kJz98ZX0NsCwQuQ+Iagxm9l0YFvAMVRh84Y10M1rBtcT3D0UcE7/nE/AXdMTAexFddI4CdCYrkAxQ8JaP1DPxugRo8nP1Xv6ImNOiGia47jfrR1Por9BvFVO3mtk7m/aRhZ0Ursd1JETU2zR0+DaEn+XKEZjP7//453vgD7hm0p0itWlsRoikM5fXMsUX0joqG3fxr66F9GR48ORw78nRcwfvG8D7tgSv5hNYJuI3rUSpFDkKlSeBanuSvscQ8qxoXZRkUtvNMI5liuNN4C1Is765rfbjYX0jWN+at7fpjnLCBiXCShuk6Li0xUIDNrMxtmRkvhXgdOP0Mzv/fFXRleqrqkuKw9zvdgYZfo3tDsgFBlLriCB+oasGmXfw7To0t0j9UI7cmDtAGszOPn0anp6dXA0//tapkNMgXnf3JDYNHhkMp+j5ev/KaSl5VpohYsd1zhebYjpLwCTxjIx97a+ErhlCJUDfu4HmkvCtqvTlVzdZjJr42h1RF2wpnV+TlC57mKpbceGhSu9UmImK8hHnMgxHa/WkWTSpm3n1iFl1tQhhfXEs21tTu8maynAqJ9UqxabbFXLnI73vDEb4Fo9PPNtgy3muke+6gNO424ODH1t9+LFuj5A+wpoXL9eteX4IcODHujU/7h21+vBj3ZoXB/utPvxYu+bVfonlL6qnPVczdrtBhWOoLz4b2uY+yK6bUDgoYSx4tvl8YoDLN2mEl32d83Ag7x5ozIN884fh8IJdDgdfhlelPOhZ8ZKXx52/xVW83XCDewZX4d/iOqy8xDXlt+gL4PL+0YEPUbPEigwz+zctzPzc9Dha+pKG0i791zQ08SLPensb0DwLHpfkIgXv7kgpceJJdK+an1VT/9WatEVgPRc3dHgGNoZNEUjxXS2gbQ3fYV+1WFt5+C8QoHktBUUbtkqx7iIPZ1DsQYjglXahSEKFqTNVrHkI1BBSaxUyxv0qdSCeDMQFQOYqeWrgZ3YNZRie3IJFC0SGlz0G/OcqE6gkgAKGh5gARNTZbWQtOlK7Cq7o708FmcnqqJr22cOTN29tkLcNe7Xso/iGkXQbJWusHIvUjQ1/PRlcffwN+zdQ5M3hF/ZK6uXQbwgAsJmiXqpAGWWgNqSpDXW3bc/4Exfu4HLoqs6Sut/VArnIN7CVNyoUIk2v73BI+y8x6uZ+pgHhwz1OiR4s2becsV9Qmf8O+Q01ahoonkXrwmWBzXF8lYdraAM0e7nNFG8Zf5FI9TudinotryUPtMk6IraycIX2NHA/k9N2HJReQLRb306l3MuH1+iUrWrtk2rNpsmSdj0/ePXycOlLUG7bULqMJ6bH6JtYsEPgvunITxHWxcbKGKa6kdXhvJGRlhfF22734EbxDt3/Bj/qm7nDeKtfyFJ9IfvV3pPKl0rVpzj3+n4WZ1UPdiT4RRDoQrf0JRQb0NDZH9n57Fps5keo1bUGnQO+sm22/XEUxyX6+R++93PR`;
 
             /**
              * @desc The Base64 encoded SVG containing the unlocked status icon.
@@ -859,6 +867,8 @@ const discordCrypt = ( () => {
                 automaticUpdates: true,
                 /* Blacklisted updates. */
                 blacklistedUpdates: [],
+                /* Storage of channel settings */
+                channelSettings: {},
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* How often to scan for encrypted messages. */
@@ -875,6 +885,8 @@ const discordCrypt = ( () => {
                 decryptedPrefix: "🔐 ",
                 /* Decrypted messages have this color. */
                 decryptedColor: "green",
+                /* Use local channel settings */
+                localStates: false,
                 /* Default padding mode for blocks. */
                 paddingMode: 'PKC7',
                 /* Password array of objects for users or channels. */
@@ -1111,8 +1123,12 @@ const discordCrypt = ( () => {
             let sec = $( "#dc-password-secondary" );
 
             /* Check if a primary password has actually been entered. */
-            if ( !( prim.val() !== '' && prim.val().length > 1 ) )
+            if ( !( prim.val() !== '' && prim.val().length > 1 ) ) {
                 delete _configFile.passList[ _discordCrypt._getChannelId() ];
+
+                /* Disable auto-encrypt for that channel */
+                _discordCrypt._setAutoEncrypt( false );
+            }
             else {
                 /* Update the password field for this id. */
                 _configFile.passList[ _discordCrypt._getChannelId() ] =
@@ -1125,6 +1141,9 @@ const discordCrypt = ( () => {
                 /* Update the password toolbar. */
                 prim.val( '' );
                 sec.val( '' );
+
+                /* Enable auto-encrypt for the channel */
+                this._setAutoEncrypt( true );
             }
 
             /* Save the configuration file and decode any messages. */
@@ -1186,6 +1205,18 @@ const discordCrypt = ( () => {
                         setTimeout(
                             () => {
                                 _discordCrypt.log( 'Detected chat switch.', 'debug' );
+
+                                /* Make sure localStates is enabled */
+                                if( _configFile.localStates ) {
+
+                                    /* Checks if channel is in channel settings storage and enables it if it isn't. */
+                                    if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
+                                        _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
+                                            { autoEncrypt: true };
+
+                                    /* Update the lock icon since it is local to the channel */
+                                    _discordCrypt._updateLockIcon( this );
+                                }
 
                                 /* Add the toolbar. */
                                 this._loadToolbar();
@@ -1382,6 +1413,30 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Updates the auto-encrypt toggle
+         * @param {boolean} enable
+         */
+        _setAutoEncrypt( enable ) {
+            if( _configFile.localStates )
+                _configFile.channelSettings[ _discordCrypt._getChannelId() ].autoEncrypt = enable;
+            else
+                _configFile.encodeAll = enable;
+        }
+
+        /**
+         * @private
+         * @desc Returns whether or not auto-encrypt is enabled
+         * @returns {boolean}
+         */
+        _getAutoEncrypt() {
+            if( _configFile.localStates )
+                return _configFile.channelSettings[ _discordCrypt._getChannelId() ].autoEncrypt;
+            else
+                return _configFile.encodeAll;
+        }
+
+        /**
+         * @private
          * @desc Inserts the plugin's option toolbar to the current toolbar and handles all triggers.
          */
         _loadToolbar() {
@@ -1416,7 +1471,7 @@ const discordCrypt = ( () => {
 
             /* Set the initial status icon. */
             if ( dc_lock_btn.length > 0 ) {
-                if ( _configFile.encodeAll ) {
+                if ( this._getAutoEncrypt() ) {
                     dc_lock_btn.html( Buffer.from( this._lockIcon, 'base64' ).toString( 'utf8' ) );
                     dc_lock_btn.append( lock_tooltip.text( 'Disable Message Encryption' ) );
                 }
@@ -1447,6 +1502,7 @@ const discordCrypt = ( () => {
             $( '#dc-settings-decrypted-color' ).val( _configFile.decryptedColor );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
             $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
+            $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
             $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
 
             /* Handle clipboard upload button. */
@@ -1967,7 +2023,7 @@ const discordCrypt = ( () => {
             if ( force_send === false &&
                 ( !_configFile.passList[ _discordCrypt._getChannelId() ] ||
                     !_configFile.passList[ _discordCrypt._getChannelId() ].primary ||
-                    !_configFile.encodeAll )
+                    !this._getAutoEncrypt() )
             ) {
                 /* Try splitting via the defined split-arg. */
                 message = message.split( '|' );
@@ -2673,6 +2729,9 @@ const discordCrypt = ( () => {
                         /* Delete the entry. */
                         delete _configFile.passList[ id ];
 
+                        /* Disable auto-encryption for the channel */
+                        _configFile.channelSettings[ id ].autoEncrypt = false;
+
                         /* Save the configuration. */
                         self._saveConfig();
 
@@ -3126,11 +3185,24 @@ const discordCrypt = ( () => {
                 _configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
                 _configFile.paddingMode = $( '#dc-settings-padding-mode' ).val();
                 _configFile.useEmbeds = $( '#dc-embed-enabled' ).is( ':checked' );
+                _configFile.localStates = $( '#dc-local-states' ).is( ':checked' );
                 _configFile.encryptMode = _discordCrypt
                     .__cipherStringToIndex( dc_primary_cipher.val(), dc_secondary_cipher.val() );
 
                 dc_primary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
                 dc_secondary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
+
+                /* Remove all channel settings if disabled */
+                if( !_configFile.localStates )
+                    _configFile.channelSettings = {};
+
+                /* Checks if channel is in channel settings storage and adds it*/
+                else if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
+                    _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
+                        { autoEncrypt: true };
+
+                /* Update icon */
+                _discordCrypt._updateLockIcon( self );
 
                 /* Handle master password updates if necessary. */
                 if ( dc_master_password.val() !== '' ) {
@@ -3213,6 +3285,7 @@ const discordCrypt = ( () => {
                 $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
                 $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
                 $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
+                $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
                 $( '#dc-master-password' ).val( '' );
             };
         }
@@ -3951,6 +4024,9 @@ const discordCrypt = ( () => {
                 dc_handshake_primary_key.val( '' );
                 dc_handshake_secondary_key.val( '' );
 
+                /* Enable auto-encryption on the channel */
+                _setAutoEncrypt( true );
+
                 /* Apply the passwords and save the config. */
                 _configFile.passList[ _discordCrypt._getChannelId() ] = pwd;
                 self._saveConfig();
@@ -4026,6 +4102,9 @@ const discordCrypt = ( () => {
         static _onResetPasswordsButtonClicked( self ) {
             return () => {
                 let btn = $( '#dc-reset-pwd' );
+
+                /* Disable auto-encrypt for the channel */
+                _setAutoEncrypt( false );
 
                 /* Reset the configuration for this user and save the file. */
                 delete _configFile.passList[ _discordCrypt._getChannelId() ];
@@ -4106,28 +4185,46 @@ const discordCrypt = ( () => {
          */
         static _onForceEncryptButtonClicked( self ) {
             return () => {
-
                 /* Cache jQuery results. */
                 let dc_lock_btn = $( '#dc-lock-btn' ), new_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
                 /* Update the icon and toggle. */
-                if ( !_configFile.encodeAll ) {
+                if ( !self._getAutoEncrypt() ) {
                     dc_lock_btn.html( Buffer.from( self._lockIcon, 'base64' ).toString( 'utf8' ) );
                     dc_lock_btn.append( new_tooltip.text( 'Disable Message Encryption' ) );
-                    _configFile.encodeAll = true;
+                    self._setAutoEncrypt( true );
                 }
                 else {
                     dc_lock_btn.html( Buffer.from( self._unlockIcon, 'base64' ).toString( 'utf8' ) );
                     dc_lock_btn.append( new_tooltip.text( 'Enable Message Encryption' ) );
-                    _configFile.encodeAll = false;
+                    self._setAutoEncrypt( false );
                 }
-
-                /* Set the button class. */
-                $( '.dc-svg' ).attr( 'class', 'dc-svg' );
 
                 /* Save config. */
                 self._saveConfig();
             };
+        }
+
+        /**
+         * @private
+         * @desc Updates the lock icon
+         */
+        static _updateLockIcon( self ) {
+            /* Cache jQuery results. */
+            let dc_lock_btn = $( '#dc-lock-btn' ), tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
+
+            /* Update the icon based on the channel */
+            if ( self._getAutoEncrypt() ) {
+                dc_lock_btn.html( Buffer.from( self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.append( tooltip.text( 'Disable Message Encryption' ) );
+            }
+            else {
+                dc_lock_btn.html( Buffer.from( self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.append( tooltip.text( 'Enable Message Encryption' ) );
+            }
+
+            /* Set the button class. */
+            $( '.dc-svg' ).attr( 'class', 'dc-svg' );
         }
 
         /**
@@ -5829,11 +5926,13 @@ const discordCrypt = ( () => {
                                 message[ i ].indexOf( 'del?ident=' ) === -1
                             )
                                 message[ i ] =
-                                    `<iframe src=${message[ i ]} width="100%" height="400px"></iframe><br/><br/>`;
+                                    `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>
+                                    <iframe src=${url.href} width="100%" height="400px"></iframe><br/><br/>`;
 
-                            /* Replaces the inputted URL with a formatted one */
-                            message[ i ] =
-                                `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
+                            else
+                                /* Replaces the inputted URL with a formatted one */
+                                message[ i ] =
+                                    `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
                         }
 
                     }
