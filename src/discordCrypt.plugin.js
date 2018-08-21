@@ -5822,11 +5822,16 @@ const discordCrypt = ( () => {
                                 message[ i ].indexOf( 'del?ident=' ) === -1
                             )
                                 message[ i ] =
-                                    `<iframe src=${message[ i ]} width="100%" height="400px"></iframe><br/><br/>`;
+                                    `<a target="_blank" rel="noopener noreferrer" href="${url.href}">
+                                    ${url.href}</a>
+                                    <iframe src=${message[ i ]} width="100%" height="400px">
+                                    </iframe><br/><br/>`;
 
-                            /* Replaces the inputted URL with a formatted one */
-                            message[ i ] =
-                                `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
+                            else
+                                /* Replaces the inputted URL with a formatted one */
+                                message[ i ] =
+                                    `<a target="_blank" rel="noopener noreferrer" href="${url.href}">
+                                    ${url.href}</a>`;
                         }
 
                     }
