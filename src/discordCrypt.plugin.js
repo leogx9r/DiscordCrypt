@@ -3189,6 +3189,14 @@ const discordCrypt = ( () => {
                 if( !_configFile.localStates )
                     _configFile.channelSettings = {};
 
+                /* Checks if channel is in channel settings storage */
+                else if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
+                    _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
+                        { autoEncrypt: false };
+
+                /* Update icon */
+                _discordCrypt._updateLockIcon( self );
+
                 /* Handle master password updates if necessary. */
                 if ( dc_master_password.val() !== '' ) {
                     let password = dc_master_password.val();
