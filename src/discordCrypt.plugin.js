@@ -1202,10 +1202,10 @@ const discordCrypt = ( () => {
                                 /* Make sure localStates is enabled */
                                 if( _configFile.localStates ) {
 
-                                    /* Checks if channel is in channel settings storage */
+                                    /* Checks if channel is in channel settings storage and enables it if it isn't. */
                                     if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
                                         _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
-                                            { autoEncrypt: false };
+                                            { autoEncrypt: true };
 
                                     /* Update the lock icon since it is local to the channel */
                                     _discordCrypt._updateLockIcon( this );
