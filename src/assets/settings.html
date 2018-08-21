@@ -191,6 +191,24 @@
             </div>
 
             <div class="dc-ruler-align">
+                <div class="dc-input-label">Specific Channel Settings:</div>
+                <input type="checkbox" class="dc-checkbox" id="dc-local-states"
+                       title="Localize channel settings"/>
+            </div>
+
+            <div class="dc-hint">
+                <p>If enabled, each channel will have its own settings.</p>
+                <p>Eg. Automatic encryption will be based per channel.</p>
+                <p>
+                    <b style="color: #f00">WARNING:</b>
+                    <b>This setting increases your database file and may result in a
+                        laggier experience over time.</b>
+                    <br>
+                    Disable to delete all current channel configurations
+                </p>
+            </div>
+
+            <div class="dc-ruler-align">
                 <div class="dc-input-label">Scanning Frequency:</div>
                 <input type="text" class="dc-input-field" id="dc-settings-scan-delay"
                        title="Scanning Frequency"/>
