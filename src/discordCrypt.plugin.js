@@ -3189,10 +3189,10 @@ const discordCrypt = ( () => {
                 if( !_configFile.localStates )
                     _configFile.channelSettings = {};
 
-                /* Checks if channel is in channel settings storage */
+                /* Checks if channel is in channel settings storage and adds it*/
                 else if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
                     _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
-                        { autoEncrypt: false };
+                        { autoEncrypt: true };
 
                 /* Update icon */
                 _discordCrypt._updateLockIcon( self );
