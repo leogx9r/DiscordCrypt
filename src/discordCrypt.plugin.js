@@ -5824,9 +5824,10 @@ const discordCrypt = ( () => {
                                 message[ i ] =
                                     `<iframe src=${message[ i ]} width="100%" height="400px"></iframe><br/><br/>`;
 
-                            /* Replaces the inputted URL with a formatted one */
-                            message[ i ] =
-                                `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
+                            else
+                                /* Replaces the inputted URL with a formatted one */
+                                message[ i ] =
+                                    `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
                         }
 
                     }
