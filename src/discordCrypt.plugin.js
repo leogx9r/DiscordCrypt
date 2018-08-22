@@ -1140,7 +1140,7 @@ const discordCrypt = ( () => {
                 delete _configFile.passList[ _discordCrypt._getChannelId() ];
 
                 /* Disable auto-encrypt for that channel */
-                _discordCrypt._setAutoEncrypt( false );
+                this._setAutoEncrypt( false );
             }
             else {
                 /* Update the password field for this id. */
@@ -4084,7 +4084,7 @@ const discordCrypt = ( () => {
                 dc_handshake_secondary_key.val( '' );
 
                 /* Enable auto-encryption on the channel */
-                _setAutoEncrypt( true );
+                self._setAutoEncrypt( true );
 
                 /* Apply the passwords and save the config. */
                 _configFile.passList[ _discordCrypt._getChannelId() ] = pwd;
@@ -4163,7 +4163,7 @@ const discordCrypt = ( () => {
                 let btn = $( '#dc-reset-pwd' );
 
                 /* Disable auto-encrypt for the channel */
-                _setAutoEncrypt( false );
+                self._setAutoEncrypt( false );
 
                 /* Reset the configuration for this user and save the file. */
                 delete _configFile.passList[ _discordCrypt._getChannelId() ];
