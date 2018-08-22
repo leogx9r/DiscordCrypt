@@ -1187,7 +1187,7 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Debug function that attempts to hook Discord's internal event handlers for message creation.
+         * @desc Hook Discord's internal event handlers for message decryption.
          * @return {boolean} Returns true if handler events have been hooked.
          */
         _hookMessageCallbacks() {
