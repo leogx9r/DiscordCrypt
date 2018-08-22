@@ -1309,8 +1309,7 @@ const discordCrypt = ( () => {
                             patchData.methodArguments[ 0 ],
                             patchData.methodArguments[ 1 ]
                         );
-                    },
-                    silent: false
+                    }
                 }
             )
         }
@@ -2314,6 +2313,11 @@ const discordCrypt = ( () => {
 
             /* Remove Raven/Sentry tracking. */
             blockPrototype( '_sendProcessedPayload', 'Blocked a Sentry tracking report.' );
+
+            /* Remove various metadata tracking. */
+            blockPrototype( 'trackWithMetadata', 'Blocked metadata tracking.' );
+            blockPrototype( 'trackWithGroupMetadata', 'Blocked metadata tracking.' );
+            blockPrototype( 'trackWithOverlayMetadata', 'Blocked metadata tracking.' );
 
             /* Block retrieval of analytics token. */
             blockProperty( 'getAnalyticsToken', '', () => {
