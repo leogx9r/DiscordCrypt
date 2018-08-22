@@ -308,6 +308,38 @@
  */
 
 /**
+ * @interface
+ * @name PatchData
+ * @desc Contains local patch data and state of the function.
+ * @property {object} thisObject Original `this` value in current call of patched method.
+ * @property {Arguments} methodArguments Original `arguments` object in current call of patched
+ *      method.
+ *      Please, never change function signatures, as it may cause a lot of problems in future.
+ * @property {cancelPatch} cancelPatch Function with no arguments and no return value that may be
+ *      called to reverse patching of current method. Calling this function prevents running of this
+ *      callback on further original method calls.
+ * @property {function} originalMethod Reference to the original method that is patched. You can use
+ *      it if you need some special usage. You should explicitly provide a value for `this` and any
+ *      method arguments when you call this function.
+ * @property {function} callOriginalMethod This is a shortcut for calling original method using
+ *      `this` and `arguments` from original call.
+ * @property {*} returnValue This is a value returned from original function call. This property is
+ *      available only in `after` callback or in `instead` callback after calling
+ *      `callOriginalMethod` function.
+ */
+
+/**
+ * @callback PatchCallback
+ * @desc A callback that modifies method logic. This callback is called on each call of the original method and is
+ *      provided all data about original call. Any of the data can be modified if necessary, but do so wisely.
+ * @param {PatchData} data Data object with information about current call and original method that you may need in
+ *      your patching callback.
+ * @return {*} Makes sense only when used as `instead` parameter in _monkeyPatch. If something other than
+ *      `undefined` is returned, the returned value replaces the value of `data.returnValue`.
+ *      If used as `before` or `after` parameters, return value is ignored.
+ */
+
+/**
  * @module discordCrypt
  * @desc Use a scoped variable to protect the internal state of the plugin.
  * @type {_discordCrypt}
@@ -353,13 +385,6 @@ const discordCrypt = ( () => {
 
     /**
      * @private
-     * @desc The main message update event dispatcher used by Discord. Resolved upon startup.
-     * @type {Object|null}
-     */
-    let _messageUpdateDispatcher = null;
-
-    /**
-     * @private
      * @desc The configuration file currently in use. Only valid after decryption of the configuration database.
      * @type {Config|null}
      */
@@ -400,6 +425,13 @@ const discordCrypt = ( () => {
      * @type {function}
      */
     let _freeze = Object.freeze;
+
+    /**
+     * @private
+     * @desc Array containing function callbacks to execute when stopping the plugin.
+     * @type {Array<function>}
+     */
+    let _stopCallbacks = [];
 
     /**
      * @protected
@@ -788,12 +820,6 @@ const discordCrypt = ( () => {
             /* Remove onMessage event handler hook. */
             $( this._channelTextAreaClass ).off( "keydown.dcrypt" );
 
-            /* Unhook switch events if available or fallback to clearing timed handlers. */
-            if ( !this._unhookMessageCallbacks() ) {
-                /* Unload the toolbar reload interval. */
-                clearInterval( _toolbarReloadInterval );
-            }
-
             /* Unload the decryption interval. */
             clearInterval( _scanInterval );
 
@@ -802,6 +828,10 @@ const discordCrypt = ( () => {
 
             /* Unload the update handler. */
             clearInterval( _updateHandlerInterval );
+
+            /* Unload the toolbar reload interval if necessary. */
+            if( _toolbarReloadInterval )
+                clearInterval( _toolbarReloadInterval );
 
             /* Unload elements. */
             $( "#dc-overlay" ).remove();
@@ -812,6 +842,11 @@ const discordCrypt = ( () => {
             $( '#dc-settings-btn' ).remove();
             $( '#dc-quick-exchange-btn' ).remove();
             $( '#dc-clipboard-upload-btn' ).remove();
+
+            /* Remove all hooks & clear the storage. */
+            for( let i = 0; i < _stopCallbacks.length; i++ )
+                _stopCallbacks[ i ]();
+            _stopCallbacks = [];
 
             /* Clear the configuration file. */
             _configFile = null;
@@ -1163,27 +1198,24 @@ const discordCrypt = ( () => {
          * @return {boolean} Returns true if handler events have been hooked.
          */
         _hookMessageCallbacks() {
-            /* Find the main switch event dispatcher if not already found. */
-            if ( !_messageUpdateDispatcher ) {
-                /* Usually ID_78. */
-                _messageUpdateDispatcher = _discordCrypt._getWebpackModuleSearcher().findByDispatchNames( [
-                    'LOAD_MESSAGES',
-                    'LOAD_MESSAGES_SUCCESS',
-                    'LOAD_MESSAGES_FAILURE',
-                    'TRUNCATE_MESSAGES',
-                    'MESSAGE_CREATE',
-                    'MESSAGE_UPDATE',
-                    'MESSAGE_DELETE',
-                    'MESSAGE_DELETE_BULK',
-                    'MESSAGE_REVEAL',
-                    'CHANNEL_SELECT',
-                    'CHANNEL_CREATE',
-                    'CHANNEL_PRELOAD',
-                    'GUILD_CREATE',
-                    'GUILD_SELECT',
-                    'GUILD_DELETE'
-                ] );
-            }
+            /* Find the main switch event dispatcher. */
+            let _messageUpdateDispatcher = _discordCrypt._getWebpackModuleSearcher().findByDispatchNames( [
+                'LOAD_MESSAGES',
+                'LOAD_MESSAGES_SUCCESS',
+                'LOAD_MESSAGES_FAILURE',
+                'TRUNCATE_MESSAGES',
+                'MESSAGE_CREATE',
+                'MESSAGE_UPDATE',
+                'MESSAGE_DELETE',
+                'MESSAGE_DELETE_BULK',
+                'MESSAGE_REVEAL',
+                'CHANNEL_SELECT',
+                'CHANNEL_CREATE',
+                'CHANNEL_PRELOAD',
+                'GUILD_CREATE',
+                'GUILD_SELECT',
+                'GUILD_DELETE'
+            ] );
 
             /* Don't proceed if it failed. */
             if ( !_messageUpdateDispatcher ) {
@@ -1253,26 +1285,6 @@ const discordCrypt = ( () => {
             /* Hook incoming message creation dispatcher. */
             _discordCrypt._hookDispatcher( _messageUpdateDispatcher, 'MESSAGE_CREATE', messageUpdateEvent );
             _discordCrypt._hookDispatcher( _messageUpdateDispatcher, 'MESSAGE_UPDATE', messageUpdateEvent );
-
-            return true;
-        }
-
-        /**
-         * @private
-         * @desc Removes all hooks on modules hooked by the _hookMessageCallbacks() function.
-         * @return {boolean} Returns true if all methods have been unhooked.
-         */
-        _unhookMessageCallbacks() {
-            /* Skip if no dispatcher was called. */
-            if ( !_messageUpdateDispatcher || !_messageUpdateDispatcher[ '_actionHandlers' ] )
-                return false;
-
-            /* Iterate over every dispatcher. */
-            for ( let prop in _messageUpdateDispatcher._actionHandlers ) {
-                /* Search for the hooked property and call it. */
-                if ( prop.hasOwnProperty( '__cancel' ) )
-                    prop.__cancel();
-            }
 
             return true;
         }
@@ -5134,8 +5146,176 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Hooks a dispatcher from Discord's internals.
          * @author samogot
+         * @desc This function monkey-patches a method on an object.
+         *      The patching callback may be run before, after or instead of target method.
+         *      Be careful when monkey-patching. Think not only about original functionality of target method and your
+         *      changes, but also about developers of other plugins, who may also patch this method before or after you.
+         *      Try to change target method behaviour as little as possible, and avoid changing method signatures.
+         *
+         *      By default, this function logs to the console whenever a method is patched or unpatched in order to aid
+         *      debugging by you and other developers, but these messages may be suppressed with the `silent` option.
+         *
+         *      Display name of patched method is changed, so you can see if a function has been patched
+         *      ( and how many times ) while debugging or in the stack trace. Also, patched methods have property
+         *      `__monkeyPatched` set to `true`, in case you want to check something programmatically.
+         *
+         * @param {object} what Object to be patched.
+         *      You can can also pass class prototypes to patch all class instances.
+         *      If you are patching prototype of react component you may also need.
+         * @param {string} methodName The name of the target message to be patched.
+         * @param {object} options Options object. You should provide at least one of `before`, `after` or `instead`
+         *      parameters. Other parameters are optional.
+         * @param {PatchCallback} options.before Callback that will be called before original target
+         *      method call. You can modify arguments here, so it will be passed to original method.
+         *      Can be combined with `after`.
+         * @param {PatchCallback} options.after Callback that will be called after original
+         *      target method call. You can modify return value here, so it will be passed to external code which calls
+         *      target method. Can be combined with `before`.
+         * @param {PatchCallback} options.instead Callback that will be called instead of original target method call.
+         *      You can get access to original method using `originalMethod` parameter if you want to call it,
+         *      but you do not have to. Can't be combined with `before` and `after`.
+         * @param {boolean} [options.once=false] Set to `true` if you want to automatically unpatch method after
+         *      first call.
+         * @param {boolean} [options.silent=false] Set to `true` if you want to suppress log messages about
+         *      patching and unpatching. Useful to avoid clogging the console in case of frequent conditional
+         *      patching/unpatching, for example from another monkeyPatch callback.
+         * @param {string} [options.displayName] You can provide meaningful name for class/object provided in
+         *      `what` param for logging purposes. By default, this function will try to determine name automatically.
+         * @param {boolean} [options.forcePatch=true] Set to `true` to patch even if the function doesn't exist.
+         *      ( Adds noop function in place. )
+         * @return {function()} Function with no arguments and no return value that should be
+         *      called to cancel this patch. You should save and run it when your plugin is stopped.
+         */
+        static _monkeyPatch( what, methodName, options ) {
+            /**
+             * Wraps the method in a `try..catch` block.
+             * @param {function} method - method to wrap
+             * @param {string} description - description of method
+             * @returns {function} wrapped version of method
+             */
+            const suppressErrors = ( method, description ) => ( ... params ) => {
+                try {
+                    return method( ... params );
+                }
+                catch ( e ) {
+                    _discordCrypt.log( `Error while '${description}'`, 'error' );
+                }
+                return undefined;
+            };
+
+            /* Grab options. */
+            const { before, after, instead, once = false, silent = true, forcePatch = true } = options;
+
+            /* Determine the display name for logging. */
+            const displayName = options.displayName || what.displayName || what.name ||
+                what.constructor.displayName || what.constructor.name;
+
+            /* Log if required. */
+            if ( !silent )
+                _discordCrypt.log( `Patching ${methodName} ...` );
+
+            /* Backup the original method for unpatching or restoring. */
+            let origMethod = what[ methodName ];
+
+            /* If a method can't be found, handle appropriately based on if forcing patches. */
+            if ( !origMethod ) {
+                if ( !forcePatch ) {
+                    /* Log and bail out. */
+                    _discordCrypt.log(
+                        `Can't find non-existent method '${displayName}.${methodName}' to patch.`,
+                        'error'
+                    );
+                    return () => {
+                        /* Ignore. */
+                    };
+                }
+                else {
+                    /* Assign empty functions. */
+                    what[ methodName ] = function() {
+                        /* Ignore. */
+                    };
+                    origMethod = function() {
+                        /* Ignore. */
+                    };
+                }
+            }
+
+            /* Create a callback that can cancel the patch. */
+            const cancel = () => {
+                /* Log if appropriate. */
+                if ( !silent )
+                    _discordCrypt.log( `Removing patched method: '${displayName}.${methodName}' ...` );
+
+                /* Restore the original method thus removing the patch. */
+                what[ methodName ] = origMethod;
+            };
+
+            /* Apply a wrapper function that calls the callbacks based on the options. */
+            what[ methodName ] = function() {
+                /**
+                 * @desc Contains the local patch state for this function.
+                 * @type {PatchData} data
+                 */
+                const data = {
+                    thisObject: this,
+                    methodArguments: arguments,
+                    cancelPatch: cancel,
+                    originalMethod: origMethod,
+                    callOriginalMethod: () =>
+                        data.returnValue = data.originalMethod.apply( data.thisObject, data.methodArguments )
+                };
+
+                /* Call the callback instead of the method with the defined return value if any. */
+                if ( instead ) {
+                    const tempRet = suppressErrors(
+                        instead,
+                        `calling override instead of original for '${what[ methodName ].displayName}'`
+                    )( data );
+
+                    if ( tempRet !== undefined )
+                        data.returnValue = tempRet;
+                }
+                else {
+                    /* Handle execution before the method call. */
+                    if ( before )
+                        suppressErrors(
+                            before,
+                            `calling override before '${what[ methodName ].displayName}'`
+                        )( data );
+
+                    /* Actually call the original method. */
+                    data.callOriginalMethod();
+
+                    /* Handle execution after the method call. */
+                    if ( after )
+                        suppressErrors(
+                            after,
+                            `calling override after '${what[ methodName ].displayName}'`
+                        )( data );
+                }
+
+                /* If this function hook is just being executed once, unhook it now. */
+                if ( once )
+                    cancel();
+
+                return data.returnValue;
+            };
+
+            /* Make sure the method is marked as patched. */
+            what[ methodName ].__monkeyPatched = true;
+            what[ methodName ].displayName = `patched ${what[ methodName ].displayName || methodName}`;
+
+            /* Save the unhook method to the object. */
+            what[ methodName ].unpatch = cancel;
+
+            /* Return the callback necessary for cancelling. */
+            return cancel;
+        }
+
+        /**
+         * @private
+         * @desc Hooks a dispatcher from Discord's internals.
          * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
          * @param {string} method_name The name of the method to hook.
          * @param {string} options The type of hook to apply. [ 'before', 'after', 'instead', 'revert' ]
@@ -5144,87 +5324,16 @@ const discordCrypt = ( () => {
          * @param {boolean} [options.silent=false] Set to `true` if you want to suppress log messages about patching and
          *      unhooking. Useful to avoid clogging the console in case of frequent conditional hooking/unhooking, for
          *      example from another monkeyPatch callback.
-         * @return {function} Returns the function used to cancel the hook.
          */
         static _hookDispatcher( dispatcher, method_name, options ) {
-            const { before, after, instead, once = false, silent = false } = options;
-            const origMethod = dispatcher._actionHandlers[ method_name ];
+            /* Hook the dispatcher. */
+            let fn = _discordCrypt._monkeyPatch( dispatcher._actionHandlers, method_name, options );
 
-            const cancel = () => {
-                if ( !silent )
-                    _discordCrypt.log( `Unhooking "${method_name}" ...` );
-                dispatcher[ method_name ] = origMethod;
-            };
+            /* Add it to the existing list of cancel-callbacks. */
+            _stopCallbacks.push( fn );
 
-            // eslint-disable-next-line consistent-return
-            const suppressErrors = ( method, description ) => ( ... params ) => {
-                try {
-                    return method( ... params );
-                }
-                catch ( e ) {
-                    _discordCrypt.log( `Error occurred in ${description}`, 'error' )
-                }
-            };
-
-            if ( !dispatcher._actionHandlers[ method_name ].__hooked ) {
-                if ( !silent )
-                    _discordCrypt.log( `Hooking "${method_name}" ...` );
-
-                dispatcher._actionHandlers[ method_name ] = function () {
-                    /**
-                     * @interface
-                     * @name PatchData
-                     * @property {object} thisObject Original `this` value in current call of patched method.
-                     * @property {Arguments} methodArguments Original `arguments` object in current call of patched
-                     *      method.
-                     *      Please, never change function signatures, as it may cause a lot of problems in future.
-                     * @property {cancelPatch} cancelPatch Function with no arguments and no return value that may be
-                     *      called to reverse patching of current method. Calling this function prevents running of this
-                     *      callback on further original method calls.
-                     * @property {function} originalMethod Reference to the original method that is patched. You can use
-                     *      it if you need some special usage. You should explicitly provide a value for `this` and any
-                     *      method arguments when you call this function.
-                     * @property {function} callOriginalMethod This is a shortcut for calling original method using
-                     *      `this` and `arguments` from original call.
-                     * @property {*} returnValue This is a value returned from original function call. This property is
-                     *      available only in `after` callback or in `instead` callback after calling
-                     *      `callOriginalMethod` function.
-                     */
-                    const data = {
-                        thisObject: this,
-                        methodArguments: arguments,
-                        cancelPatch: cancel,
-                        originalMethod: origMethod,
-                        callOriginalMethod: () => data.returnValue =
-                            data.originalMethod.apply( data.thisObject, data.methodArguments )
-                    };
-                    if ( instead ) {
-                        const tempRet =
-                            suppressErrors( instead, `${method_name} called hook via 'instead'.` )( data );
-
-                        if ( tempRet !== undefined )
-                            data.returnValue = tempRet;
-                    }
-                    else {
-
-                        if ( before )
-                            suppressErrors( before, `${method_name} called hook via 'before'.` )( data );
-
-                        data.callOriginalMethod();
-
-                        if ( after )
-                            suppressErrors( after, `${method_name} called hook via 'after'.` )( data );
-                    }
-                    if ( once )
-                        cancel();
-
-                    return data.returnValue;
-                };
-
-                dispatcher._actionHandlers[ method_name ].__hooked = true;
-                dispatcher._actionHandlers[ method_name ].__cancel = cancel;
-            }
-            return dispatcher._actionHandlers[ method_name ].__cancel;
+            /* Return the callback. */
+            return fn;
         }
 
         /**
