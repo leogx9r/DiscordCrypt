@@ -735,23 +735,8 @@ const discordCrypt = ( () => {
                 }
             }
 
-            /* Hook switch events as the main event processor. */
-            if ( !this._hookMessageCallbacks() ) {
-                /* The toolbar fails to properly load on switches to the friends list. Create an interval to do this. */
-                _toolbarReloadInterval = setInterval( () => {
-                    self._loadToolbar();
-                    self._attachHandler();
-                }, 5000 );
-            }
-            else {
-                setImmediate( () => {
-                    /* Add the toolbar. */
-                    this._loadToolbar();
-
-                    /* Attach the message handler. */
-                    this._attachHandler();
-                } );
-            }
+            /* Hook the necessary functions required for functionality. */
+            this._hookSetup();
 
             /* Block tracking and analytics. */
             this._blockTracking();
@@ -1194,7 +1179,7 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Debug function that attempts to hook Discord's internal event handlers for message creation.
+         * @desc Hook Discord's internal event handlers for message decryption.
          * @return {boolean} Returns true if handler events have been hooked.
          */
         _hookMessageCallbacks() {
@@ -1287,6 +1272,54 @@ const discordCrypt = ( () => {
             _discordCrypt._hookDispatcher( _messageUpdateDispatcher, 'MESSAGE_UPDATE', messageUpdateEvent );
 
             return true;
+        }
+
+        /**
+         * @private
+         * @desc Sets up the hooking methods required for proper plugin functionality.
+         */
+        _hookSetup() {
+            const moduleSearcher = discordCrypt._getWebpackModuleSearcher();
+
+            /* Hook switch events as the main event processor. */
+            if ( !this._hookMessageCallbacks() ) {
+                /* The toolbar fails to properly load on switches to the friends list. Create an interval to do this. */
+                _toolbarReloadInterval = setInterval( () => {
+                    self._loadToolbar();
+                    self._attachHandler();
+                }, 5000 );
+            }
+            else {
+                setImmediate( () => {
+                    /* Add the toolbar. */
+                    this._loadToolbar();
+
+                    /* Attach the message handler. */
+                    this._attachHandler();
+                } );
+            }
+
+            /* Patch emoji selection to force it to be enabled for full-encryption messages. */
+            _discordCrypt._monkeyPatch(
+                moduleSearcher.findByUniqueProperties( [ 'isEmojiDisabled' ] ),
+                'isEmojiDisabled',
+                {
+                    instead: ( patchData ) => {
+                        if(
+                            _discordCrypt._getChannelId() === patchData.methodArguments[ 1 ].id &&
+                            this._hasCustomPassword( patchData.methodArguments[ 1 ].id ) &&
+                            this._getAutoEncrypt()
+                        )
+                            return false;
+
+                        return patchData.callOriginalMethod(
+                            patchData.methodArguments[ 0 ],
+                            patchData.methodArguments[ 1 ]
+                        );
+                    },
+                    silent: false
+                }
+            )
         }
 
         /**
@@ -1441,6 +1474,11 @@ const discordCrypt = ( () => {
          * @returns {boolean}
          */
         _getAutoEncrypt() {
+            /* Quick sanity check. */
+            if( !_configFile )
+                return false;
+
+            /* Fetch the current value depending on if local states are enabled. */
             if( _configFile.localStates )
                 return _configFile.channelSettings[ _discordCrypt._getChannelId() ].autoEncrypt;
             else
@@ -1687,6 +1725,18 @@ const discordCrypt = ( () => {
                 e.preventDefault();
                 e.stopPropagation();
             } ) );
+        }
+
+        /**
+         * @private
+         * @desc Determines if a custom password exists for the specified channel.
+         * @param {string} channel_id The target channel's ID.
+         * @return {boolean} Returns true if a custom password is set.
+         */
+        _hasCustomPassword( channel_id ) {
+            return _configFile.passList[ channel_id ] &&
+                _configFile.passList[ channel_id ].primary &&
+                _configFile.passList[ channel_id ].secondary;
         }
 
         /**
