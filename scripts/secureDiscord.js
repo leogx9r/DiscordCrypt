@@ -84,6 +84,16 @@ module.exports = ( mainWnd ) => {
          */
         _mainWnd = mainWnd,
         /**
+         * @desc Whether to enable developer tools upon startup ( and avoid clearing console logs. )
+         * @type {boolean}
+         */
+        debug = false,
+        /**
+         * @desc Whether to be verbose in logging.
+         * @type {boolean}
+         */
+        verbose = true,
+        /**
          * @desc Log color CSS defined for logging messages.
          * @type {string}
          */
@@ -164,7 +174,10 @@ module.exports = ( mainWnd ) => {
      * @param {string} str The output to the console.
      * @return {*}
      */
-    const log = ( str ) => execJS( `console.log( '%c[SecureDiscord]%c ${str}', '${logColor}', '' );` );
+    const log = ( str ) => {
+        if( verbose )
+            execJS( `console.log( '%c[SecureDiscord]%c ${str}', '${logColor}', '' );` );
+    };
 
     /**
      * @desc Modifies, inserts or removes any particular headers according to the `headerInfo` defined above.
@@ -286,6 +299,11 @@ module.exports = ( mainWnd ) => {
     };
 
     try {
+        if( debug ) {
+            _mainWnd.webContents.executeJavaScript( 'console.clear = () => { };' );
+            _mainWnd.webContents.toggleDevTools();
+        }
+
         doPatch();
     }
     catch( e ) {
