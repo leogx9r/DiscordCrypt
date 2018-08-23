@@ -1147,7 +1147,7 @@ const discordCrypt = ( () => {
                 delete _configFile.passList[ _discordCrypt._getChannelId() ];
 
                 /* Disable auto-encrypt for that channel */
-                _discordCrypt._setAutoEncrypt( false );
+                this._setAutoEncrypt( false );
             }
             else {
                 /* Update the password field for this id. */
@@ -1316,8 +1316,7 @@ const discordCrypt = ( () => {
                             patchData.methodArguments[ 0 ],
                             patchData.methodArguments[ 1 ]
                         );
-                    },
-                    silent: false
+                    }
                 }
             )
         }
@@ -2321,6 +2320,11 @@ const discordCrypt = ( () => {
 
             /* Remove Raven/Sentry tracking. */
             blockPrototype( '_sendProcessedPayload', 'Blocked a Sentry tracking report.' );
+
+            /* Remove various metadata tracking. */
+            blockPrototype( 'trackWithMetadata', 'Blocked metadata tracking.' );
+            blockPrototype( 'trackWithGroupMetadata', 'Blocked metadata tracking.' );
+            blockPrototype( 'trackWithOverlayMetadata', 'Blocked metadata tracking.' );
 
             /* Block retrieval of analytics token. */
             blockProperty( 'getAnalyticsToken', '', () => {
@@ -4087,7 +4091,7 @@ const discordCrypt = ( () => {
                 dc_handshake_secondary_key.val( '' );
 
                 /* Enable auto-encryption on the channel */
-                _setAutoEncrypt( true );
+                self._setAutoEncrypt( true );
 
                 /* Apply the passwords and save the config. */
                 _configFile.passList[ _discordCrypt._getChannelId() ] = pwd;
@@ -4166,7 +4170,7 @@ const discordCrypt = ( () => {
                 let btn = $( '#dc-reset-pwd' );
 
                 /* Disable auto-encrypt for the channel */
-                _setAutoEncrypt( false );
+                self._setAutoEncrypt( false );
 
                 /* Reset the configuration for this user and save the file. */
                 delete _configFile.passList[ _discordCrypt._getChannelId() ];
@@ -5896,7 +5900,7 @@ const discordCrypt = ( () => {
         static __extractCodeBlocks( message ) {
             /* This regex only extracts code blocks. */
             let code_block_expr = new RegExp( /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm ),
-                inline_block_expr = new RegExp( /(`[^`\\]*(?:\\.[^`\\]*)*`)/g ),
+                inline_block_expr = new RegExp( /^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)/g ),
                 _matched;
 
             /* Array to store all the extracted blocks in. */
