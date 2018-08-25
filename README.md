@@ -705,23 +705,6 @@ We've tried to simplify the process as much as possible but once you get used to
 
  
 
-### Why embedded messages?
-
-We wanted a way for users who both use and do not use the plugin to easily identify 
-    encrypted messages.
-
-In addition to this, rich embeds provide a nicer means of conveying and formatting the 
-    encrypted messages that standard messages do not as well as making the plugin itself 
-    detect encrypted messages easily.
-
-We however do support non-embedded messages as a means to avoid users having their embed 
-    permissions revoked and possibly have their account disabled however it does not offer 
-    the same look or feel that standard encrypted messages do.
-
-By default, the plugin will NOT use embeds and warns users about this in the settings menu.
-
- 
-
 # Known Limitations And Bugs
 
 **DiscordCrypt** is not ( and sadly cannot be ) perfect, the plugin is limited in the number 

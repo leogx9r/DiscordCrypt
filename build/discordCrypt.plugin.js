@@ -27,6 +27,13 @@
 "use strict";
 
 /**
+ * @typedef {Object} ModulePredicate
+ * @desc Predicate for searching module.
+ * @property {*} module Module to test.
+ * @return {boolean} Returns `true` if `module` matches predicate.
+ */
+
+/**
  * @typedef {Object} WebpackFinder
  * @property {Object} module The module object.
  */
@@ -78,13 +85,11 @@
  * @desc Cached Webpack modules for internal access.
  * @property {Object} NonceGenerator Internal nonce generator used for generating unique IDs from the current time.
  * @property {Object} ChannelStore Internal channel resolver for retrieving a list of all channels available.
- * @property {Object} EmojiStore Internal emoji parser that's used to translate emojis sent in messages.
  * @property {Object} GlobalTypes Internal message action types and constants for events.
  * @property {Object} GuildStore Internal Guild resolver for retrieving a list of all guilds currently in.
- * @property {Object} HighlightJS Internal code based library responsible for highlighting code blocks.
  * @property {Object} MessageCreator Internal message parser that's used to translate tags to Discord symbols.
  * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
- * @property {Object} MessageDispatcher Internal message dispatcher for pending queued messages.
+ * @property {Object} EventDispatcher Internal message dispatcher for pending queued messages.
  * @property {Object} MessageQueue Internal message Queue store for pending parsing.
  * @property {Object} UserStore Internal user resolver for retrieving all users known.
  */
@@ -124,27 +129,16 @@
  */
 
 /**
- * @typedef {Object} LocalChannelState
- * @desc Contains per-channel specific information.
- * @property {boolean} autoEncrypt Whether automatic encryption is enabled for this channel.
- */
-
-/**
  * @typedef {Object} Config
  * @desc Contains the configuration data used for the plugin.
  * @property {string} version The version of the configuration.
- * @property {boolean} useEmbeds Whether to use embeds for dispatching encrypted messages.
- * @property {Array<{channelId: string, LocalChannelState}>} channelSettings Settings local to a channel.
+ * @property {Array<{channelId: string, autoEncrypt: boolean}>} channelSettings Settings local to a channel.
  * @property {string} defaultPassword The default key to encrypt or decrypt message with,
  *      if not specifically defined.
  * @property {string} decryptedPrefix This denotes the string that should be prepended to messages
  *      that have been successfully decrypted.
- * @property {string} decryptedColor This denotes the color of a decrypted message's text.
- *      This only applies to messages that have been successfully decrypted.
  * @property {string} encodeMessageTrigger The suffix trigger which, once appended to the message,
  *      forces encryption even if a key is not specifically defined for this channel.
- * @property {number} encryptScanDelay If using timed scanning events in case hooked events fail,
- *      this denotes how often, in milliseconds, to scan the window for new messages and decrypt them.
  * @property {number} encryptMode The index of the ciphers to use for message encryption.
  * @property {string} encryptBlockMode The block operation mode of the ciphers used to encrypt message.
  * @property {boolean} encodeAll If enabled, automatically forces all messages sent to be encrypted if a
@@ -169,38 +163,12 @@
  */
 
 /**
- * @typedef {Object} ModulePredicate
- * @desc Predicate for searching module.
- * @property {*} module Module to test.
- * @return {boolean} Returns `true` if `module` matches predicate.
- */
-
-/**
  * @typedef {Object} GetResultCallback
  * @desc The function to execute at the end of a GET request containing the result or error that occurred.
  * @property {int} statusCode The HTTP static code of the operation.
  * @property {string|null} The HTTP error string if an error occurred.
  * @property {string} data The returned data from the request.
  * @return {boolean} Returns true if the data was parsed successfully.
- */
-
-/**
- * @typedef {Object} CodeBlockDescriptor
- * @desc Indicates the values present in a markdown-styled code block.
- * @property {int} start_pos The starting position of the code block.
- * @property {int} end_pos The ending position of the code block.
- * @property {string} language The language identifier of the code within this block.
- * @property {string} raw_code The raw code within the code block.
- * @property {string} captured_block The entire markdown formatted code block.
- */
-
-/**
- * @typedef {Object} EmojiDescriptor
- * @desc Indicates an emoji's name and snowflake ID.
- * @property {boolean} animated Whether this emoji is animated.
- * @property {string} formatted The full formatted string for the emoji. ( <:# NAME #:# SNOWFLAKE #> )
- * @property {string} name The actual name of the emoji. Example: "thonk"
- * @property {string} snowflake The integer snowflake ID for this emoji.
  */
 
 /**
@@ -256,40 +224,20 @@
  */
 
 /**
- * @typedef {Object} ProcessedMessage
- * @desc Contains a processed message with additional data.
- * @property {boolean} url Whether the message has any parsed URLs within it.
- * @property {boolean} code Whether the message has any parsed code blocks within it.
- * @property {boolean} emoji Whether the message has any parsed emojis within it.
- * @property {string} html The raw message's HTML.
+ * @typedef {Object} UserMention
+ * @desc Contains a user-specific mention.
+ * @property {string} avatar The user's avatar hash.
+ * @property {string} discriminator The user's 4-digit discriminator.
+ * @property {string} id The user's unique identification number.
+ * @property {string} username The user's account name. ( Not display name. )
  */
 
 /**
- * @typedef {Object} UserTags
- * @desc Extracted user tagging information from an input message.
- * @property {string} processed_message The processed message containing user tags with the discriminator removed.
- * @property {Array<string>} user_tags All extracted user tags from the message.
- */
-
-/**
- * @typedef {Object} URLInfo
- * @desc Contains information of a message containing any URLs.
- * @property {boolean} url Whether the input message contained any parsed URLs.
- * @property {string} html The raw formatted HTML containing any parsed URLs.
- */
-
-/**
- * @typedef {Object} CodeBlockInfo
- * @desc Contains information of a message containing code blocks.
- * @property {boolean} code Whether the input message contained any parsed code blocks.
- * @property {string} html The raw formatted HTML containing any parsed code blocks.
- */
-
-/**
- * @typedef {Object} EmojiInfo
- * @desc Contains information of a message containing emojis.
- * @property {boolean} emoji Whether the input message contained any parsed emojis.
- * @property {string} html The raw formatted HTML containing any parsed emoji images.
+ * @typedef {Object} MessageMentions
+ * @desc Contains information on what things were mentioned in a message.
+ * @property {boolean} mention_everyone Whether "@everyone" was used in the message.
+ * @property {Array<UserMention>} mentions Contains all user IDs mentioned in a message.
+ * @property {Array<string>} mention_roles Roles that were mentioned.
  */
 
 /**
@@ -305,6 +253,19 @@
  * @desc Contains a definition of a raw library executed upon plugin startup.
  * @property {string} name The name of the library file.
  * @property {LibraryInfo} info The library info.
+ */
+
+/**
+ * @callback EventHookCallback
+ * @desc This callback is executed when an event occurs.
+ * @desc {Object} event The event data that has occurred.
+ */
+
+/**
+ * @typedef {Object} EventHook
+ * @desc Defines an event that is handled via the dispatch event.
+ * @property {string} type The type of event that's handled.
+ * @property {EventHookCallback} callback The callback event to be executed.
  */
 
 /**
@@ -348,6 +309,13 @@ const discordCrypt = ( () => {
 
     /**
      * @private
+     * @desc Internal class instance.
+     * @type {_discordCrypt}
+     */
+    let _self = null;
+
+    /**
+     * @private
      * @desc Master database password. This is a Buffer() containing a 256-bit key.
      * @type {Buffer|null}
      */
@@ -355,11 +323,10 @@ const discordCrypt = ( () => {
 
     /**
      * @private
-     * @desc Message scanning interval handler's index. Used to stop any running handler.
-     *      Defined only if hooking of modules failed.
-     * @type {int}
+     * @desc Used to store all event dispatcher hooks.
+     * @type {Array<EventHook>}
      */
-    let _scanInterval;
+    let _eventHooks = [];
 
     /**
      * @private
@@ -434,6 +401,68 @@ const discordCrypt = ( () => {
     let _stopCallbacks = [];
 
     /**
+     * @private
+     * @desc Defines how many bytes can be sent in a single message that Discord will allow prior to encryption.
+     * @type {number}
+     */
+    const MAX_ENCODED_DATA = 1820;
+
+    /**
+     * @private
+     * @desc Defines what an encrypted message starts with. Must be 4x UTF-16 bytes.
+     * @type {string}
+     */
+    const ENCODED_MESSAGE_HEADER = "⢷⢸⢹⢺";
+
+    /**
+     * @private
+     * @desc Defines what a public key message starts with. Must be 4x UTF-16 bytes.
+     * @type {string}
+     */
+    const ENCODED_KEY_HEADER = "⢻⢼⢽⢾";
+
+    /**
+     * @private
+     * @desc Indexes of each dual-symmetric encryption mode.
+     * @type {int[]}
+     */
+    const ENCRYPT_MODES = [
+        /* Blowfish(Blowfish, AES, Camellia, IDEA, TripleDES) */
+        0, 1, 2, 3, 4,
+        /* AES(Blowfish, AES, Camellia, IDEA, TripleDES) */
+        5, 6, 7, 8, 9,
+        /* Camellia(Blowfish, AES, Camellia, IDEA, TripleDES) */
+        10, 11, 12, 13, 14,
+        /* IDEA(Blowfish, AES, Camellia, IDEA, TripleDES) */
+        15, 16, 17, 18, 19,
+        /* TripleDES(Blowfish, AES, Camellia, IDEA, TripleDES) */
+        20, 21, 22, 23, 24
+    ];
+
+    /**
+     * @private
+     * @desc Symmetric block modes of operation.
+     * @type {string[]}
+     */
+    const ENCRYPT_BLOCK_MODES = [
+        'CBC', /* Cipher Block-Chaining */
+        'CFB', /* Cipher Feedback Mode */
+        'OFB', /* Output Feedback Mode */
+    ];
+
+    /**
+     * @private
+     * @desc Shorthand padding modes for block ciphers referred to in the code.
+     * @type {string[]}
+     */
+    const PADDING_SCHEMES = [
+        'PKC7', /* PKCS #7 */
+        'ANS2', /* ANSI X.923 */
+        'ISO1', /* ISO-10126 */
+        'ISO9', /* ISO-97972 */
+    ];
+
+    /**
      * @protected
      * @class
      * @desc Main plugin prototype.
@@ -450,6 +479,8 @@ const discordCrypt = ( () => {
          * let instance = new _discordCrypt();
          */
         constructor() {
+            /* Do this as early as possible. */
+            _self = this;
 
             /* ============================================ */
 
@@ -496,62 +527,6 @@ const discordCrypt = ( () => {
             /* ============================================ */
 
             /**
-             * @desc Defines what an encrypted message starts with. Must be 4x UTF-16 bytes.
-             * @type {string}
-             */
-            this._encodedMessageHeader = "⢷⢸⢹⢺";
-
-            /**
-             * @desc Defines what a public key message starts with. Must be 4x UTF-16 bytes.
-             * @type {string}
-             */
-            this._encodedKeyHeader = "⢻⢼⢽⢾";
-
-            /**
-             * @desc Defines what the header of an encrypted message says.
-             * @type {string}
-             */
-            this._messageHeader = '-----ENCRYPTED MESSAGE-----';
-
-            /**
-             * @desc Indexes of each dual-symmetric encryption mode.
-             * @type {int[]}
-             */
-            this._encryptModes = [
-                /* Blowfish(Blowfish, AES, Camellia, IDEA, TripleDES) */
-                0, 1, 2, 3, 4,
-                /* AES(Blowfish, AES, Camellia, IDEA, TripleDES) */
-                5, 6, 7, 8, 9,
-                /* Camellia(Blowfish, AES, Camellia, IDEA, TripleDES) */
-                10, 11, 12, 13, 14,
-                /* IDEA(Blowfish, AES, Camellia, IDEA, TripleDES) */
-                15, 16, 17, 18, 19,
-                /* TripleDES(Blowfish, AES, Camellia, IDEA, TripleDES) */
-                20, 21, 22, 23, 24
-            ];
-
-            /**
-             * @desc Symmetric block modes of operation.
-             * @type {string[]}
-             */
-            this._encryptBlockModes = [
-                'CBC', /* Cipher Block-Chaining */
-                'CFB', /* Cipher Feedback Mode */
-                'OFB', /* Output Feedback Mode */
-            ];
-
-            /**
-             * @desc Shorthand padding modes for block ciphers referred to in the code.
-             * @type {string[]}
-             */
-            this._paddingModes = [
-                'PKC7', /* PKCS #7 */
-                'ANS2', /* ANSI X.923 */
-                'ISO1', /* ISO-10126 */
-                'ISO9', /* ISO-97972 */
-            ];
-
-            /**
              * @desc Defines the CSS for the application overlays.
              * @type {string}
              */
@@ -578,7 +553,7 @@ const discordCrypt = ( () => {
              * @type {string}
              */
             this._settingsMenuHtml =
-                `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`;
+                `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`;
 
             /**
              * @desc The Base64 encoded SVG containing the unlocked status icon.
@@ -660,9 +635,6 @@ const discordCrypt = ( () => {
          * @desc Starts the script execution. This is called by BetterDiscord if the plugin is enabled.
          */
         start() {
-            /* Backup class instance. */
-            const self = this;
-
             /* Perform idiot-proof check to make sure the user named the plugin `_discordCrypt.plugin.js` */
             if ( !_discordCrypt._validPluginName() ) {
                 global.smalltalk.alert(
@@ -692,59 +664,12 @@ const discordCrypt = ( () => {
 
                 /* Add an update handler to check for updates every 60 minutes. */
                 _updateHandlerInterval = setInterval( () => {
-                    self._checkForUpdates();
+                    _self._checkForUpdates();
                 }, 3600000 );
             }
 
-            /* Get module searcher for caching. */
-            const searcher = _discordCrypt._getWebpackModuleSearcher();
-
-            /* Resolve and cache all modules needed. */
-            _cachedModules = {
-                NonceGenerator: searcher
-                    .findByUniqueProperties( [ "extractTimestamp", "fromTimestamp" ] ),
-                EmojiStore: searcher
-                    .findByUniqueProperties( [ 'translateSurrogatesToInlineEmoji', 'getCategories' ] ),
-                MessageCreator: searcher
-                    .findByUniqueProperties( [ "createMessage", "parse", "unparse" ] ),
-                MessageController: searcher
-                    .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
-                MarkdownParser: searcher
-                    .findByUniqueProperties( [ "parseInline", "defaultParseBlock" ] ),
-                GlobalTypes: searcher
-                    .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
-                MessageDispatcher: searcher
-                    .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
-                MessageQueue: searcher
-                    .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
-                UserStore: searcher
-                    .findByUniqueProperties( [ "getUser", "getUsers", "findByTag" ] ),
-                GuildStore: searcher
-                    .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
-                ChannelStore: searcher
-                    .findByUniqueProperties( [ "getChannel", "getChannels", "getDMFromUserId", 'getDMUserIds' ] ),
-                HighlightJS: searcher
-                    .findByUniqueProperties( [ "initHighlighting", "highlightBlock", "highlightAuto" ] ),
-            };
-
-            /* Throw an error if a cached module can't be found. */
-            for ( let prop in _cachedModules ) {
-                if ( typeof _cachedModules[ prop ] !== 'object' ) {
-                    global.smalltalk.alert( 'Error Loading DiscordCrypt', `Could not find requisite module: ${prop}` );
-                    return;
-                }
-            }
-
-            /* Hook the necessary functions required for functionality. */
-            this._hookSetup();
-
             /* Block tracking and analytics. */
             this._blockTracking();
-
-            /* Process any blocks on an interval since Discord loves to throttle messages. */
-            _scanInterval = setInterval( () => {
-                self._decodeMessages();
-            }, _configFile.encryptScanDelay );
 
             /* Setup the timed message handler to trigger every 5 seconds. */
             _timedMessageInterval = setInterval( () => {
@@ -759,7 +684,7 @@ const discordCrypt = ( () => {
                         _configFile.timedMessages.splice( i, 1 );
 
                         /* Update the configuration to the disk. */
-                        self._saveConfig();
+                        _self._saveConfig();
                     }
 
                     /* Only continue if the message has been expired. */
@@ -780,16 +705,11 @@ const discordCrypt = ( () => {
                         _configFile.timedMessages.splice( i, 1 );
 
                         /* Update the configuration to the disk. */
-                        self._saveConfig();
+                        _self._saveConfig();
                     }
                 } );
 
             }, 5000 );
-
-            setImmediate( () => {
-                /* Decode all messages immediately. */
-                self._decodeMessages();
-            } );
         }
 
         /**
@@ -804,9 +724,6 @@ const discordCrypt = ( () => {
 
             /* Remove onMessage event handler hook. */
             $( this._channelTextAreaClass ).off( "keydown.dcrypt" );
-
-            /* Unload the decryption interval. */
-            clearInterval( _scanInterval );
 
             /* Unload the timed message handler. */
             clearInterval( _timedMessageInterval );
@@ -842,7 +759,6 @@ const discordCrypt = ( () => {
          * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
          */
         load() {
-
             /* Freeze the plugin instance if required. */
             if(
                 global.bdplugins &&
@@ -861,6 +777,9 @@ const discordCrypt = ( () => {
 
             /* Load necessary _libraries. */
             _discordCrypt.__loadLibraries( this._libraries );
+
+            /* Hook the necessary functions required for functionality. */
+            this._hookSetup();
         }
 
         /**
@@ -915,8 +834,6 @@ const discordCrypt = ( () => {
                 timedMessages: [],
                 /* How long after a message is sent to remove it. */
                 timedMessageExpires: 0,
-                /* Whether to send messages using embedded objects. */
-                useEmbeds: false,
                 /* Contains the URL of the Up1 client. */
                 up1Host: 'https://share.riseup.net',
                 /* Contains the API key used for transactions with the Up1 host. */
@@ -1084,9 +1001,6 @@ const discordCrypt = ( () => {
             /* Save the configuration file. */
             this._saveConfig();
 
-            /* Force decode messages. */
-            this._decodeMessages( true );
-
             if( btn ) {
                 /* Tell the user that their settings were applied. */
                 btn.text( 'Saved & Applied!' );
@@ -1115,9 +1029,6 @@ const discordCrypt = ( () => {
 
             /* Save the configuration file to update any settings. */
             this._saveConfig();
-
-            /* Force decode messages. */
-            this._decodeMessages( true );
 
             if( btn ) {
                 /* Tell the user that their settings were reset. */
@@ -1168,9 +1079,6 @@ const discordCrypt = ( () => {
 
             /* Save the configuration file and decode any messages. */
             this._saveConfig();
-
-            /* Decode any messages with the new password(s). */
-            this._decodeMessages( true );
         }
 
         /* ========================================================= */
@@ -1179,143 +1087,64 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Hook Discord's internal event handlers for message decryption.
-         * @return {boolean} Returns true if handler events have been hooked.
-         */
-        _hookMessageCallbacks() {
-            /* Find the main switch event dispatcher. */
-            let _messageUpdateDispatcher = _discordCrypt._getWebpackModuleSearcher().findByDispatchNames( [
-                'LOAD_MESSAGES',
-                'LOAD_MESSAGES_SUCCESS',
-                'LOAD_MESSAGES_FAILURE',
-                'TRUNCATE_MESSAGES',
-                'MESSAGE_CREATE',
-                'MESSAGE_UPDATE',
-                'MESSAGE_DELETE',
-                'MESSAGE_DELETE_BULK',
-                'MESSAGE_REVEAL',
-                'CHANNEL_SELECT',
-                'CHANNEL_CREATE',
-                'CHANNEL_PRELOAD',
-                'GUILD_CREATE',
-                'GUILD_SELECT',
-                'GUILD_DELETE'
-            ] );
-
-            /* Don't proceed if it failed. */
-            if ( !_messageUpdateDispatcher ) {
-                _discordCrypt.log( `Failed to locate the switch event dispatcher!`, 'error' );
-                return false;
-            }
-
-            /* Hook the switch event dispatcher. */
-            _discordCrypt._hookDispatcher(
-                _messageUpdateDispatcher,
-                'CHANNEL_SELECT',
-                {
-                    after: ( e ) => {
-                        /* Skip channels not currently selected. */
-                        if ( _discordCrypt._getChannelId() !== e.methodArguments[ 0 ].channelId )
-                            return;
-
-                        /* Delays are required due to windows being loaded async. */
-                        setTimeout(
-                            () => {
-                                _discordCrypt.log( 'Detected chat switch.', 'debug' );
-
-                                /* Make sure localStates is enabled */
-                                if( _configFile.localStates ) {
-
-                                    /* Checks if channel is in channel settings storage and enables it if it isn't. */
-                                    if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
-                                        _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
-                                            { autoEncrypt: true };
-
-                                    /* Update the lock icon since it is local to the channel */
-                                    _discordCrypt._updateLockIcon( this );
-                                }
-
-                                /* Add the toolbar. */
-                                this._loadToolbar();
-
-                                /* Attach the message handler. */
-                                this._attachHandler();
-
-                                /* Decrypt any messages. */
-                                this._decodeMessages();
-                            },
-                            1
-                        );
-                    }
-                }
-            );
-
-            let messageUpdateEvent = {
-                after: ( e ) => {
-                    /* Skip channels not currently selected. */
-                    if ( _discordCrypt._getChannelId() !== e.methodArguments[ 0 ].channelId )
-                        return;
-
-                    /* Delays are required due to windows being loaded async. */
-                    setTimeout(
-                        () => {
-                            /* Decrypt any messages. */
-                            this._decodeMessages();
-                        },
-                        1
-                    );
-                }
-            };
-
-            /* Hook incoming message creation dispatcher. */
-            _discordCrypt._hookDispatcher( _messageUpdateDispatcher, 'MESSAGE_CREATE', messageUpdateEvent );
-            _discordCrypt._hookDispatcher( _messageUpdateDispatcher, 'MESSAGE_UPDATE', messageUpdateEvent );
-
-            return true;
-        }
-
-        /**
-         * @private
-         * @desc Sets up the hooking methods required for proper plugin functionality.
+         * @desc Sets up the hooking methods required for plugin functionality.
          */
         _hookSetup() {
-            const moduleSearcher = discordCrypt._getWebpackModuleSearcher();
+            /* Get module searcher for caching. */
+            const searcher = _discordCrypt._getWebpackModuleSearcher();
+
+            /* Resolve and cache all modules needed. */
+            _cachedModules = {
+                NonceGenerator: searcher
+                    .findByUniqueProperties( [ "extractTimestamp", "fromTimestamp" ] ),
+                MessageCreator: searcher
+                    .findByUniqueProperties( [ "createMessage", "parse", "unparse" ] ),
+                MessageController: searcher
+                    .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
+                MarkdownParser: searcher
+                    .findByUniqueProperties( [ "parseInline", "defaultParseBlock" ] ),
+                GlobalTypes: searcher
+                    .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
+                EventDispatcher: searcher
+                    .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
+                MessageQueue: searcher
+                    .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
+                UserStore: searcher
+                    .findByUniqueProperties( [ "getUser", "getUsers", "findByTag" ] ),
+                GuildStore: searcher
+                    .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
+                ChannelStore: searcher
+                    .findByUniqueProperties( [ "getChannel", "getChannels", "getDMFromUserId", 'getDMUserIds' ] ),
+            };
+
+            /* Throw an error if a cached module can't be found. */
+            for ( let prop in _cachedModules ) {
+                if ( typeof _cachedModules[ prop ] !== 'object' ) {
+                    global.smalltalk.alert( 'Error Loading DiscordCrypt', `Could not find requisite module: ${prop}` );
+                    return;
+                }
+            }
 
             /* Hook switch events as the main event processor. */
             if ( !this._hookMessageCallbacks() ) {
-                /* The toolbar fails to properly load on switches to the friends list. Create an interval to do this. */
-                _toolbarReloadInterval = setInterval( () => {
-                    self._loadToolbar();
-                    self._attachHandler();
-                }, 5000 );
-            }
-            else {
-                setImmediate( () => {
-                    /* Add the toolbar. */
-                    this._loadToolbar();
-
-                    /* Attach the message handler. */
-                    this._attachHandler();
-                } );
+                global.smalltalk.alert( 'Error Loading DiscordCrypt', `Failed to hook the required modules.` );
+                return;
             }
 
             /* Patch emoji selection to force it to be enabled for full-encryption messages. */
             _discordCrypt._monkeyPatch(
-                moduleSearcher.findByUniqueProperties( [ 'isEmojiDisabled' ] ),
+                searcher.findByUniqueProperties( [ 'isEmojiDisabled' ] ),
                 'isEmojiDisabled',
                 {
                     instead: ( patchData ) => {
                         if(
                             _discordCrypt._getChannelId() === patchData.methodArguments[ 1 ].id &&
-                            this._hasCustomPassword( patchData.methodArguments[ 1 ].id ) &&
-                            this._getAutoEncrypt()
+                            _self._hasCustomPassword( patchData.methodArguments[ 1 ].id ) &&
+                            _self._getAutoEncrypt()
                         )
                             return false;
 
-                        return patchData.callOriginalMethod(
-                            patchData.methodArguments[ 0 ],
-                            patchData.methodArguments[ 1 ]
-                        );
+                        return patchData.callOriginalMethod();
                     }
                 }
             )
@@ -1323,16 +1152,246 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Hook Discord's internal event handlers for message decryption.
+         * @return {boolean} Returns true if handler events have been hooked.
+         */
+        _hookMessageCallbacks() {
+            /* Hook the event dispatchers. */
+            _discordCrypt._monkeyPatch(
+                _cachedModules.EventDispatcher,
+                'dispatch',
+                { instead: _self._onDispatchEvent }
+            );
+            _discordCrypt._monkeyPatch(
+                _cachedModules.EventDispatcher,
+                'dirtyDispatch',
+                { instead: _self._onDispatchEvent }
+            );
+            _discordCrypt._monkeyPatch(
+                _cachedModules.EventDispatcher,
+                'maybeDispatch',
+                { instead: _self._onDispatchEvent }
+            );
+
+            /* Hook the outgoing message queue handler to encrypt messages. */
+            let hookDefinition = _discordCrypt._monkeyPatch(
+                _cachedModules.MessageQueue,
+                'enqueue',
+                { instead: _self._onOutgoingMessage }
+            );
+
+            /* Save the original enqueue. */
+            _cachedModules.MessageQueue.original_enqueue = hookDefinition.original;
+
+            /* Hook CHANNEL_SWITCH for toolbar and menu reloading. */
+            _eventHooks.push( { type: 'CHANNEL_SELECT', callback: _self._onChannelSwitched } );
+
+            /* Hook MESSAGE_CREATE function for single-load messages. */
+            _eventHooks.push( { type: 'MESSAGE_CREATE', callback: _self._onIncomingMessage } );
+
+            /* Hook MESSAGE_UPDATE function for single-edited messages. */
+            _eventHooks.push( { type: 'MESSAGE_UPDATE', callback: _self._onIncomingMessage } );
+
+            /* Hook LOAD_MESSAGES_SUCCESS function for bulk-messages. */
+            _eventHooks.push( { type: 'LOAD_MESSAGES_SUCCESS', callback: _self._onIncomingMessages } );
+
+            /* Hook LOAD_MESSAGES_AROUND_SUCCESS for location-jumping decryption.  */
+            _eventHooks.push( { type: 'LOAD_MESSAGES_AROUND_SUCCESS', callback: _self._onIncomingMessages } );
+
+            /* Hook LOAD_RECENT_MENTIONS_SUCCESS which is required to decrypt mentions. */
+            _eventHooks.push( { type: 'LOAD_RECENT_MENTIONS_SUCCESS', callback: _self._onIncomingMessages } );
+
+            /* Hook LOAD_PINNED_MESSAGES_SUCCESS for searching encrypted messages. */
+            _eventHooks.push( { type: 'LOAD_PINNED_MESSAGES_SUCCESS', callback: _self._onIncomingMessages } );
+
+            return true;
+        }
+
+        /**
+         * @private
+         * @desc The event handler that fires whenever a new event occurs in Discord.
+         * @param {Object} event The event that occurred.
+         */
+        _onDispatchEvent( event ) {
+            let handled = false;
+
+            for( let i = 0; i < _eventHooks.length; i++ )
+                if( event.methodArguments[ 0 ].type === _eventHooks[ i ].type ) {
+                    _eventHooks[ i ].callback( event );
+                    handled = true;
+                }
+
+            if( !handled )
+                event.callOriginalMethod();
+        }
+
+        /**
+         * @private
+         * @desc The event handler that fires when a channel is switched.
+         * @param {Object} event The channel switching event object.
+         */
+        _onChannelSwitched( event ) {
+            /* Skip channels not currently selected. */
+            if ( _discordCrypt._getChannelId() === event.methodArguments[ 0 ].channelId )
+                /* Delays are required due to windows being loaded async. */
+                setTimeout(
+                    () => {
+                        _discordCrypt.log( 'Detected chat switch.', 'debug' );
+
+                        /* Make sure localStates is enabled */
+                        if( _configFile && _configFile.localStates ) {
+
+                            /* Checks if channel is in channel settings storage and enables it if it isn't. */
+                            if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
+                                _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
+                                    { autoEncrypt: true };
+
+                            /* Update the lock icon since it is local to the channel */
+                            _discordCrypt._updateLockIcon( _self );
+                        }
+
+                        /* Add the toolbar. */
+                        _self._loadToolbar();
+                    },
+                    1
+                );
+
+            /* Call the original method. */
+            event.callOriginalMethod();
+        }
+
+        /**
+         * @private
+         * @desc The event handler that fires when an incoming message is received.
+         * @param {Object} event The message event object.
+         * @return {Promise<void>}
+         */
+        async _onIncomingMessage( event ) {
+            let message = event.methodArguments[ 0 ].message;
+            let id = event.methodArguments[ 0 ].channelId || message.channel_id;
+
+            /* Skip if this has no inline-code blocks. */
+            if( !_discordCrypt._isFormattedMessage( message.content ) ) {
+                event.callOriginalMethod();
+                return;
+            }
+
+            /* Decrypt the content. */
+            let r = await _discordCrypt._awaitParseMessage(
+                message.content.substr( 1, message.content.length - 2 ),
+                id
+            );
+
+            /* Assign it to the object if valid. */
+            if( typeof r === 'string' ) {
+                /* Calculate any mentions. */
+                let mentioned = _discordCrypt._getMentionsForMessage( r, id );
+
+                /* Apply. */
+                event.methodArguments[ 0 ].message.content = r;
+                if( mentioned.mentions.length )
+                    event.methodArguments[ 0 ].message.mentions = mentioned.mentions;
+                if( mentioned.mention_roles.length )
+                    event.methodArguments[ 0 ].message.mention_roles = mentioned.mention_roles;
+                event.methodArguments[ 0 ].message.mention_everyone = mentioned.mention_everyone;
+
+                event.originalMethod.apply( event.thisObject, event.methodArguments );
+                return;
+            }
+
+            /* Call the original method on failure. */
+            event.callOriginalMethod();
+        }
+
+        /**
+         * @private
+         * @desc The event handler that fires when a channel's messages are to be loaded.
+         * @param {Object} event The channel loading event object.
+         * @return {Promise<void>}
+         */
+        async _onIncomingMessages( event ) {
+            let id = event.methodArguments[ 0 ].channelId;
+
+            /* Iterate all messages being received. */
+            for( let i = 0; i < event.methodArguments[ 0 ].messages.length; i++ ) {
+                let message = event.methodArguments[ 0 ].messages[ i ];
+
+                /* Skip if this has no inline-code blocks. */
+                if( !_discordCrypt._isFormattedMessage( message.content ) )
+                    continue;
+
+                /* Decrypt the content. */
+                let r = await _discordCrypt._awaitParseMessage(
+                    message.content.substr( 1, message.content.length - 2 ),
+                    id
+                );
+
+                /* Assign it to the object if valid. */
+                if( typeof r === 'string' ) {
+                    /* Calculate any mentions. */
+                    let mentioned = _discordCrypt._getMentionsForMessage( r, id );
+
+                    event.methodArguments[ 0 ].messages[ i ].content = r;
+                    if( mentioned.mentions.length )
+                        event.methodArguments[ 0 ].messages[ i ].mentions = mentioned.mentions;
+                    if( mentioned.mention_roles.length )
+                        event.methodArguments[ 0 ].messages[ i ].mention_roles = mentioned.mention_roles;
+                    event.methodArguments[ 0 ].messages[ i ].mention_everyone = mentioned.mention_everyone;
+                }
+            }
+
+            /* Call the original method using the modified contents. ( If any. ) */
+            event.originalMethod.apply( event.thisObject, event.methodArguments );
+        }
+
+        /**
+         * @private
+         * @desc The event handler that fires when an outgoing message is being sent.
+         * @param {Object} event The outgoing message event object.
+         * @return {Promise<void>}
+         */
+        async _onOutgoingMessage( event ) {
+            /* Wait till the configuration file has been loaded before parsing any messages. */
+            await ( async () => {
+                while( !_configFile )
+                    await ( new Promise( r => setTimeout( r, 1000 ) ) );
+            } )();
+
+            let message = event.methodArguments[ 0 ].message;
+
+            let r = _discordCrypt._tryEncryptMessage( message.content, false, message.channelId );
+
+            if( typeof r === 'boolean' ) {
+                event.callOriginalMethod();
+                return;
+            }
+
+            event.methodArguments[ 0 ].message.content = r[ 0 ].message;
+            event.originalMethod.apply( event.thisObject, event.methodArguments );
+
+            if( r.length === 1 )
+                return;
+
+            for( let i = 1; i < r.length; i++ ) {
+                _discordCrypt._dispatchMessage(
+                    r[ i ].message,
+                    message.channelId,
+                    _configFile.timedMessages,
+                    _configFile.timedMessageExpires
+                );
+            }
+        }
+
+        /**
+         * @private
          * @desc Loads the master-password unlocking prompt.
          */
         _loadMasterPassword() {
-            const self = this;
-
             if ( $( '#dc-master-overlay' ).length !== 0 )
                 return;
 
             /* Check if the database exists. */
-            const cfg_exists = self._configExists();
+            const cfg_exists = _self._configExists();
 
             const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
 
@@ -1376,7 +1435,6 @@ const discordCrypt = ( () => {
             /* Handle unlock button clicks. */
             unlock_btn.click(
                 _discordCrypt._onMasterUnlockButtonClicked(
-                    self,
                     unlock_btn,
                     cfg_exists,
                     pwd_field,
@@ -1386,7 +1444,7 @@ const discordCrypt = ( () => {
             );
 
             /* Handle cancel button presses. */
-            cancel_btn.click( _discordCrypt._onMasterCancelButtonClicked( self ) );
+            cancel_btn.click( _discordCrypt._onMasterCancelButtonClicked );
         }
 
         /**
@@ -1394,7 +1452,6 @@ const discordCrypt = ( () => {
          * @desc Performs an async update checking and handles actually updating the current version if necessary.
          */
         _checkForUpdates() {
-            const self = this;
             const update_check_btn = $( '#dc-update-check-btn' );
 
             try {
@@ -1431,13 +1488,13 @@ const discordCrypt = ( () => {
                             `( #${info.hash.slice( 0, 16 )} - ` +
                             `Update ${info.valid ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
                         );
-                        $( '#dc-old-version' ).text( `Current Version: ${self.getVersion()} ` );
+                        $( '#dc-old-version' ).text( `Current Version: ${_self.getVersion()} ` );
 
                         /* Update the changelog. */
                         let dc_changelog = $( '#dc-changelog' );
                         dc_changelog.val(
                             typeof info.changelog === "string" && info.changelog.length > 0 ?
-                                _discordCrypt.__tryParseChangelog( info.changelog, self.getVersion() ) :
+                                _discordCrypt.__tryParseChangelog( info.changelog, _self.getVersion() ) :
                                 'N/A'
                         );
 
@@ -1548,14 +1605,11 @@ const discordCrypt = ( () => {
             $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
-            $( '#dc-settings-decrypted-color' ).val( _configFile.decryptedColor );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
-            $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
             $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
-            $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
 
             /* Handle clipboard upload button. */
-            $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked( this ) );
+            $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked );
 
             /* Handle file button clicked. */
             $( '#dc-file-btn' ).click( _discordCrypt._onFileMenuButtonClicked );
@@ -1564,7 +1618,7 @@ const discordCrypt = ( () => {
             $( '#dc-select-file-path-btn' ).click( _discordCrypt._onChangeFileButtonClicked );
 
             /* Handle file upload button. */
-            $( '#dc-file-upload-btn' ).click( _discordCrypt._onUploadFileButtonClicked( this ) );
+            $( '#dc-file-upload-btn' ).click( _discordCrypt._onUploadFileButtonClicked );
 
             /* Handle file button cancelled. */
             $( '#dc-file-cancel-btn' ).click( _discordCrypt._onCloseFileMenuButtonClicked );
@@ -1576,34 +1630,34 @@ const discordCrypt = ( () => {
             $( '#dc-plugin-settings-btn' ).click( _discordCrypt._onSettingsTabButtonClicked );
 
             /* Handle Database Settings tab selected. */
-            $( '#dc-database-settings-btn' ).click( _discordCrypt._onDatabaseTabButtonClicked( this ) );
+            $( '#dc-database-settings-btn' ).click( _discordCrypt._onDatabaseTabButtonClicked );
 
             /* Handle Security Settings tab selected. */
-            $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked( this ) );
+            $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked );
 
             /* Handle Automatic Updates button clicked. */
-            $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged( this ) );
+            $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged );
 
             /* Handle checking for updates. */
-            $( '#dc-update-check-btn' ).click( _discordCrypt._onCheckForUpdatesButtonClicked( this ) );
+            $( '#dc-update-check-btn' ).click( _discordCrypt._onCheckForUpdatesButtonClicked );
 
             /* Handle Database Import button. */
-            $( '#dc-import-database-btn' ).click( _discordCrypt._onImportDatabaseButtonClicked( this ) );
+            $( '#dc-import-database-btn' ).click( _discordCrypt._onImportDatabaseButtonClicked );
 
             /* Handle Database Export button. */
             $( '#dc-export-database-btn' ).click( _discordCrypt._onExportDatabaseButtonClicked );
 
             /* Handle Clear Database Entries button. */
-            $( '#dc-erase-entries-btn' ).click( _discordCrypt._onClearDatabaseEntriesButtonClicked( this ) );
+            $( '#dc-erase-entries-btn' ).click( _discordCrypt._onClearDatabaseEntriesButtonClicked );
 
             /* Handle Settings tab closing. */
             $( '#dc-exit-settings-btn' ).click( _discordCrypt._onSettingsCloseButtonClicked );
 
             /* Handle Save settings. */
-            $( '#dc-settings-save-btn' ).click( _discordCrypt._onSaveSettingsButtonClicked( this ) );
+            $( '#dc-settings-save-btn' ).click( _discordCrypt._onSaveSettingsButtonClicked );
 
             /* Handle Reset settings. */
-            $( '#dc-settings-reset-btn' ).click( _discordCrypt._onResetSettingsButtonClicked( this ) );
+            $( '#dc-settings-reset-btn' ).click( _discordCrypt._onResetSettingsButtonClicked );
 
             /* Handle Restart-Now button clicking. */
             $( '#dc-restart-now-btn' ).click( _discordCrypt._onUpdateRestartNowButtonClicked );
@@ -1612,7 +1666,7 @@ const discordCrypt = ( () => {
             $( '#dc-restart-later-btn' ).click( _discordCrypt._onUpdateRestartLaterButtonClicked );
 
             /* Handle Ignore-Update button clicking. */
-            $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked( this ) );
+            $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked );
 
             /* Handle Info tab switch. */
             $( '#dc-tab-info-btn' ).click( _discordCrypt._onExchangeInfoTabButtonClicked );
@@ -1642,28 +1696,28 @@ const discordCrypt = ( () => {
             $( '#dc-keygen-clear-btn' ).click( _discordCrypt._onExchangeClearKeyButtonClicked );
 
             /* Send the public key to the current channel. */
-            $( '#dc-keygen-send-pub-btn' ).click( _discordCrypt._onExchangeSendPublicKeyButtonClicked( this ) );
+            $( '#dc-keygen-send-pub-btn' ).click( _discordCrypt._onExchangeSendPublicKeyButtonClicked );
 
             /* Paste the data from the clipboard to the public key field. */
             $( '#dc-handshake-paste-btn' ).click( _discordCrypt._onHandshakePastePublicKeyButtonClicked );
 
             /* Compute the primary and secondary keys. */
-            $( '#dc-handshake-compute-btn' ).click( _discordCrypt._onHandshakeComputeButtonClicked( this ) );
+            $( '#dc-handshake-compute-btn' ).click( _discordCrypt._onHandshakeComputeButtonClicked );
 
             /* Copy the primary and secondary key to the clipboard. */
             $( '#dc-handshake-cpy-keys-btn' ).click( _discordCrypt._onHandshakeCopyKeysButtonClicked );
 
             /* Apply generated keys to the current channel. */
-            $( '#dc-handshake-apply-keys-btn' ).click( _discordCrypt._onHandshakeApplyKeysButtonClicked( this ) );
+            $( '#dc-handshake-apply-keys-btn' ).click( _discordCrypt._onHandshakeApplyKeysButtonClicked );
 
             /* Show the overlay when clicking the password button. */
             dc_passwd_btn.click( _discordCrypt._onOpenPasswordMenuButtonClicked );
 
             /* Update the password for the user once clicked. */
-            $( '#dc-save-pwd' ).click( _discordCrypt._onSavePasswordsButtonClicked( this ) );
+            $( '#dc-save-pwd' ).click( _discordCrypt._onSavePasswordsButtonClicked );
 
             /* Reset the password for the user to the default. */
-            $( '#dc-reset-pwd' ).click( _discordCrypt._onResetPasswordsButtonClicked( this ) );
+            $( '#dc-reset-pwd' ).click( _discordCrypt._onResetPasswordsButtonClicked );
 
             /* Hide the overlay when clicking cancel. */
             $( '#dc-cancel-btn' ).click( _discordCrypt._onClosePasswordMenuButtonClicked );
@@ -1672,58 +1726,7 @@ const discordCrypt = ( () => {
             $( '#dc-cpy-pwds-btn' ).click( _discordCrypt._onCopyCurrentPasswordsButtonClicked );
 
             /* Set whether auto-encryption is enabled or disabled. */
-            dc_lock_btn.click( _discordCrypt._onForceEncryptButtonClicked( this ) );
-        }
-
-        /**
-         * @private
-         * @desc Attached a handler to the message area and dispatches encrypted messages if necessary.
-         */
-        _attachHandler() {
-            const self = this;
-
-            /* Get the text area. */
-            let textarea = $( this._channelTextAreaClass );
-
-            /* Make sure we got one element. */
-            if ( textarea.length !== 1 )
-                return;
-
-            /* Replace any old handlers before adding the new one. */
-            textarea.off( "keydown.dcrypt" ).on( "keydown.dcrypt", ( function ( e ) {
-                let code = e.keyCode || e.which;
-
-                /* Skip if we don't have a valid configuration. */
-                if ( !_configFile )
-                    return;
-
-                /* Execute on ENTER/RETURN only. */
-                if ( code !== 13 )
-                    return;
-
-                /* Skip if shift key is down indicating going to a new line. */
-                if ( e.shiftKey )
-                    return;
-
-                /* Skip if autocomplete dialog is opened. */
-                if ( $( self._autoCompleteClass )[ 0 ] )
-                    return;
-
-                /* Encrypt the parsed message and send it. */
-                if ( !self._sendEncryptedMessage(
-                    _cachedModules
-                        .MessageCreator
-                        .parse( _discordCrypt._getChannelProps(), $( this ).val() ).content
-                ) )
-                    return;
-
-                /* Clear text field. */
-                _discordCrypt._getElementReactOwner( $( 'form' )[ 0 ] ).setState( { textValue: '' } );
-
-                /* Cancel the default sending action. */
-                e.preventDefault();
-                e.stopPropagation();
-            } ) );
+            dc_lock_btn.click( _discordCrypt._onForceEncryptButtonClicked );
         }
 
         /**
@@ -1834,257 +1837,188 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Parses a message object and attempts to decrypt it..
-         * @param {Object} obj The jQuery object of the current message being examined.
-         * @param {string} primary_key The primary key used to decrypt the message.
-         * @param {string} secondary_key The secondary key used to decrypt the message.
-         * @param {boolean} as_embed Whether to consider this message object as an embed.
-         * @param {string} [prefix] Messages that are successfully decrypted should have this prefix prepended.
-         * @param {string} [color] Messages that get successfully decrypted should have this color.
-         * @returns {boolean} Returns true if the message has been decrypted.
+         * @desc Awaits for the configuration to be loaded before decrypting a message.
+         * @param {string} message The text to attempt to decrypt.
+         * @param {string} id The channel ID that this message is for.
+         * @return {Promise<string|boolean>} Returns a promise that either decrypts the message's content
+         *      or false on failure.
          */
-        _parseSymmetric( obj, primary_key, secondary_key, as_embed, prefix, color ) {
-            let message = $( obj );
-            let dataMsg;
+        static async _awaitParseMessage( message, id ) {
+            /* Wait till the configuration file has been loaded before parsing any messages. */
+            await ( async () => {
+                while( !_configFile ) {
+                    await ( new Promise( r => setTimeout( r, 1000 ) ) );
 
-            /**********************************************************************************************************
-             *  MESSAGE FORMAT:
-             *
-             *  + 0x0000 [ 4        Chars ] - Message Magic | Key Magic
-             *  + 0x0004 [ 4 ( #4 ) Chars ] - Message Metadata ( #1 ) | Key Data ( #3 )
-             *  + 0x000C [ ?        Chars ] - Cipher Text
-             *
-             *  * 0x0004 - Options - Substituted Base64 encoding of a single word stored in Little Endian.
-             *      [ 31 ... 24 ] - Algorithm ( 0-24 = Dual )
-             *      [ 23 ... 16 ] - Block Mode ( 0 = CBC | 1 = CFB | 2 = OFB )
-             *      [ 15 ... 08 ] - Padding Mode ( #2 )
-             *      [ 07 ... 00 ] - Random Padding Byte
-             *
-             *  #1 - Encode( Base64( Encryption Algorithm << 24 | Padding Mode << 16 | Block Mode << 8 | Reserved ) )
-             *  #2 - ( 0 - PKCS #7 | 1 = ANSI X9.23 | 2 = ISO 10126 | 3 = ISO97971 )
-             *  #3 - Substitute( Base64( ( Key Algorithm Type & 0xff ) + Public Key ) )
-             *  #4 - 8 Byte Metadata For Messages Only
-             *
-             **********************************************************************************************************/
-
-            /* Skip if the message is <= size of the total header. */
-            if ( message.text().length <= 12 )
-                return false;
-
-            /* Split off the magic. */
-            let magic = message.text().slice( 0, 4 );
-
-            /* If this is a public key, just add a button and continue. */
-            if ( magic === this._encodedKeyHeader )
-                return this._parseKeyMessage( message );
-
-            /* Make sure it has the correct header. */
-            if ( magic !== this._encodedMessageHeader )
-                return false;
-
-            /* Try to deserialize the metadata. */
-            let metadata = _discordCrypt.__metaDataDecode( message.text().slice( 4, 8 ) );
-
-            /* Try looking for an algorithm, mode and padding type. */
-            /* Algorithm first. */
-            if ( metadata[ 0 ] >= this._encryptModes.length )
-                return false;
-
-            /* Cipher mode next. */
-            if ( metadata[ 1 ] >= this._encryptBlockModes.length )
-                return false;
-
-            /* Padding after. */
-            if ( metadata[ 2 ] >= this._paddingModes.length )
-                return false;
-
-            /* Decrypt the message. */
-            dataMsg = _discordCrypt.__symmetricDecrypt( message.text().replace( /\r?\n|\r/g, '' )
-                .substr( 8 ), primary_key, secondary_key, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
-
-            /* If decryption didn't fail, set the decoded text along with a green foreground. */
-            if ( ( typeof dataMsg === 'string' || dataMsg instanceof String ) && dataMsg !== "" ) {
-                /* If this is an embed, increase the maximum width of it. */
-                if ( as_embed ) {
-                    /* Expand the message to the maximum width. */
-                    message.parent().parent().parent().parent().css( 'max-width', '100%' );
-                }
-
-                /* Process the message and apply all necessary element modifications. */
-                dataMsg = this._postProcessMessage( dataMsg, _configFile.up1Host );
-
-                /* Handle embeds and inline blocks differently. */
-                if ( as_embed ) {
-                    /* Set the new HTML. */
-                    message.html( dataMsg.html );
-                }
-                else {
-                    /* For inline code blocks, we set the HTML to the parent element. */
-                    let tmp = message.parent();
-                    message.parent().html( dataMsg.html );
-
-                    /* And update the message object with the parent element. */
-                    message = $( tmp );
-                }
-
-                /* Decrypted messages get set to the predefined color. */
-                if( color && typeof color === 'string' && color.length > 0 )
-                    message.css( 'color', color );
-
-                /* If a prefix is being used, add it now. */
-                if( prefix && typeof prefix === 'string' && prefix.length > 0 )
-                    message.prepend( prefix );
-            }
-            else {
-                /* If it failed, set a red foreground and set a failure message to prevent further retries. */
-                if ( dataMsg === 1 )
-                    message.text( '🚫 [ ERROR ] AUTHENTICATION OF CIPHER TEXT FAILED !!!' );
-                else if ( dataMsg === 2 )
-                    message.text( '🚫 [ ERROR ] FAILED TO DECRYPT CIPHER TEXT !!!' );
-                else
-                    message.text( '🚫 [ ERROR ] DECRYPTION FAILURE. INVALID KEY OR MALFORMED MESSAGE !!!' );
-                message.css( 'color', 'red' );
-            }
-
-            /* Message has been parsed. */
-            return true;
-        }
-
-        /**
-         * @private
-         * @desc Processes a decrypted message and formats any elements needed in HTML.
-         * @param message The message to process.
-         * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
-         * @returns {ProcessedMessage}
-         */
-        _postProcessMessage( message, embed_link_prefix ) {
-
-            /* Quick jQuery trick to encode special html characters to prevent XSS */
-            message = $( '<div/>' ).text( message ).html();
-
-            /* Extract any code blocks from the message. */
-            let processed = _discordCrypt.__buildCodeBlockMessage( message );
-            let hasCode = processed.code;
-
-            /* Extract any URLs. */
-            processed = _discordCrypt.__buildUrlMessage( processed.html, embed_link_prefix );
-            let hasUrl = processed.url;
-
-            /* Extract any Emojis. */
-            processed = _discordCrypt.__buildEmojiMessage(
-                processed.html,
-                this._emojisClass,
-                _cachedModules.EmojiStore
-            );
-            let hasEmojis = processed.emoji;
-
-            /* Return the raw HTML. */
-            return {
-                url: hasUrl,
-                code: hasCode,
-                emoji: hasEmojis,
-                html: processed.html,
-            };
-        }
-
-        /**
-         * @private
-         * @desc Iterates all messages in the current channel and tries to decrypt each, skipping cached results.
-         */
-        _decodeMessages() {
-            /* Skip if a valid configuration file has not been loaded. */
-            if ( !_configFile || !_configFile.version )
-                return;
-
-            /* Save self. */
-            const self = this;
-
-            /* Get the current channel ID. */
-            let id = _discordCrypt._getChannelId();
+                    console.log('.');}
+            } )();
 
             /* Use the default password for decryption if one hasn't been defined for this channel. */
-            let primary = Buffer.from(
+            let primary_key = Buffer.from(
                 _configFile.passList[ id ] && _configFile.passList[ id ].primary ?
                     _configFile.passList[ id ].primary :
                     _configFile.defaultPassword
             );
-            let secondary = Buffer.from(
+            let secondary_key = Buffer.from(
                 _configFile.passList[ id ] && _configFile.passList[ id ].secondary ?
                     _configFile.passList[ id ].secondary :
                     _configFile.defaultPassword
             );
 
-            /* Look through each markup element to find an embedDescription. */
-            $( this._embedDescriptionClass ).each( ( function () {
-                /* Skip parsed messages. */
-                if ( $( this ).data( 'dc-parsed' ) !== undefined )
-                    return;
-
-                /* Try parsing a symmetric message. */
-                self._parseSymmetric(
-                    this,
-                    primary,
-                    secondary,
-                    true,
-                    _configFile.decryptedPrefix,
-                    _configFile.decryptedColor
-                );
-
-                /* Set the flag. */
-                $( this ).data( 'dc-parsed', true );
-            } ) );
-
-            /* Look through markup classes for inline code blocks. */
-            $( this._messageMarkupClass ).each( ( function () {
-                /* Skip parsed messages. */
-                if ( $( this ).data( 'dc-parsed' ) !== undefined )
-                    return;
-
-                /* Try parsing a symmetric message. */
-                self._parseSymmetric(
-                    this,
-                    primary,
-                    secondary,
-                    false,
-                    _configFile.decryptedPrefix,
-                    _configFile.decryptedColor
-                );
-
-                /* Set the flag. */
-                $( this ).data( 'dc-parsed', true );
-            } ) );
+            /* Perform parsing on the message content. */
+            return _discordCrypt._parseMessage( message, primary_key, secondary_key, _configFile.decryptedPrefix );
         }
 
         /**
          * @private
-         * @desc Sends an encrypted message to the current channel.
-         * @param {string} message The unencrypted message to send.
-         * @param {boolean} [force_send] Whether to ignore checking for the encryption trigger and
-         *      always encrypt and send.
-         * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the current
-         *      channel.
-         * @returns {boolean} Returns false if the message failed to be parsed correctly and 0 on success.
+         * @desc Detects and returns all roles & users mentioned in a message.
+         *      Shamelessly "stolen" from BetterDiscord team. Thanks guys. :D
+         * @param {string} message The input message.
+         * @param {string} [id] The channel ID this message will be dispatched to.
+         * @return {MessageMentions}
          */
-        _sendEncryptedMessage( message, force_send = false, channel_id = undefined ) {
-            /* Let's use a maximum message size of 1820 instead of 2000 to account for encoding, new line feeds & packet
-         header. */
-            const maximum_encoded_data = 1820;
+        static _getMentionsForMessage( message, id ) {
+            /*  */
+            const user_mentions = /<@!?([0-9]{10,24})>/g,
+                role_mentions = /<@&([0-9]{10,})>/g,
+                everyone_mention = /(?:\s+|^)@everyone(?:\s+|$)/;
 
+            /* Actual format as part of a message object. */
+            let mentions = {
+                mentions: [],
+                mention_roles: [],
+                mention_everyone: false
+            };
+
+            /* Get the channel's ID. */
+            id = id || _discordCrypt._getChannelId();
+
+            /* Get the channel's properties. */
+            let props = _discordCrypt._getChannelProps( id );
+
+            /* Check if properties were retrieved. */
+            if( !props ) {
+                return mentions;
+            }
+
+            /* Parse the message into ID based format. */
+            message = _cachedModules.MessageCreator.parse( props, message ).content;
+
+            /* Check for user tags. */
+            if( user_mentions.test( message ) ) {
+                /* Retrieve all user IDs in the parsed message. */
+                mentions.mentions = message
+                    .match( user_mentions )
+                    .map( m => {
+                        return {id: m.replace( /[^0-9]/g, '' )}
+                    } );
+            }
+
+            /* Gather role mentions. */
+            if( role_mentions.test( message ) ) {
+                /* Retrieve all role IDs in the parsed message. */
+                mentions.mention_roles = message
+                    .match( role_mentions )
+                    .map( m => m.replace( /[^0-9]/g, '' ) );
+            }
+
+            /* Detect if mentioning everyone. */
+            mentions.mention_everyone = everyone_mention.test( message );
+
+            return mentions;
+        }
+
+        /**
+         * @private
+         * @desc Parses a raw message and returns the decrypted result.
+         * @param {string} message Message content.
+         * @param {string} primary_key The primary key used to decrypt the message.
+         * @param {string} secondary_key The secondary key used to decrypt the message.
+         * @param {string} [prefix] Messages that are successfully decrypted should have this prefix prepended.
+         * @return {string|boolean} Returns false if a message isn't in the correct format or the decrypted result.
+         */
+        static _parseMessage( message, primary_key, secondary_key, prefix ) {
+            /* Skip if the message is <= size of the total header. */
+            if ( message.length <= 12 )
+                return false;
+
+            /* Split off the magic. */
+            let magic = message.slice( 0, 4 );
+
+            /* If this is a public key, just add a button and continue. */
+            // TODO Handle this via async function
+            if ( magic === ENCODED_KEY_HEADER )
+                return false;
+
+            /* Make sure it has the correct header. */
+            if ( magic !== ENCODED_MESSAGE_HEADER )
+                return false;
+
+            /* Try to deserialize the metadata. */
+            let metadata = _discordCrypt.__metaDataDecode( message.slice( 4, 8 ) );
+
+            /* Try looking for an algorithm, mode and padding type. */
+            /* Algorithm first. */
+            if ( metadata[ 0 ] >= ENCRYPT_MODES.length )
+                return false;
+
+            /* Cipher mode next. */
+            if ( metadata[ 1 ] >= ENCRYPT_BLOCK_MODES.length )
+                return false;
+
+            /* Padding after. */
+            if ( metadata[ 2 ] >= PADDING_SCHEMES.length )
+                return false;
+
+            /* Decrypt the message. */
+            let dataMsg = _discordCrypt.__symmetricDecrypt( message.replace( /\r?\n|\r/g, '' )
+                .substr( 8 ), primary_key, secondary_key, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
+
+            /* If successfully decrypted, add the prefix if necessary and return the result. */
+            if ( ( typeof dataMsg === 'string' || dataMsg instanceof String ) && dataMsg !== "" ) {
+                /* If a prefix is being used, add it now. */
+                if( prefix && typeof prefix === 'string' && prefix.length > 0 )
+                    dataMsg = prefix + dataMsg;
+
+                /* Return. */
+                return dataMsg;
+            }
+
+            switch( dataMsg ) {
+            case 1:
+                return '🚫 [ ERROR ] AUTHENTICATION OF CIPHER TEXT FAILED !!!';
+            case 2:
+                return '🚫 [ ERROR ] FAILED TO DECRYPT CIPHER TEXT !!!';
+            default:
+                return '🚫 [ ERROR ] DECRYPTION FAILURE. INVALID KEY OR MALFORMED MESSAGE !!!';
+            }
+        }
+
+        /**
+         * @private
+         * @desc Attempts to encrypt a message using the key from the channel ID provided.
+         * @param {string} message The input message to encrypt.
+         * @param {boolean} ignore_trigger Whether to ignore checking for Config::encodeMessageTrigger and
+         *      always encrypt.
+         * @param {string} channel_id The channel ID to send this message to.
+         * @return {Array<{message: string}>|boolean} Returns one or multiple packets containing the encrypted text.
+         *      Returns false on failure.
+         */
+        static _tryEncryptMessage( message, ignore_trigger, channel_id ) {
             /* Add the message signal handler. */
             const escapeCharacters = [ "/" ];
             const crypto = require( 'crypto' );
 
-            let cleaned;
+            let cleaned, id = channel_id || '0';
 
             /* Skip messages starting with pre-defined escape characters. */
             if ( message.substr( 0, 2 ) === "##" || escapeCharacters.indexOf( message[ 0 ] ) !== -1 )
                 return false;
 
             /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
-            if ( force_send === false &&
-                ( !_configFile.passList[ _discordCrypt._getChannelId() ] ||
-                    !_configFile.passList[ _discordCrypt._getChannelId() ].primary ||
-                    !this._getAutoEncrypt() )
+            if ( ignore_trigger === false &&
+                ( !_configFile.passList[ channel_id ] ||
+                    !_configFile.passList[ channel_id ].primary ||
+                    !_self._getAutoEncrypt() )
             ) {
                 /* Try splitting via the defined split-arg. */
                 message = message.split( '|' );
@@ -2110,33 +2044,21 @@ const discordCrypt = ( () => {
             if ( cleaned.length === 0 )
                 return false;
 
-            /* Try parsing any user-tags. */
-            let parsed = _discordCrypt.__extractTags( cleaned, _discordCrypt._getChannelProps() );
-
-            /* Sanity check for messages with just spaces or new line feeds in it. */
-            if ( parsed[ 0 ].length !== 0 ) {
-                /* Extract the message to be encrypted. */
-                cleaned = parsed[ 0 ];
-            }
-
-            /* Add content tags. */
-            let user_tags = parsed[ 1 ].length > 0 ? parsed[ 1 ] : '';
-
             /* Get the passwords. */
             let primaryPassword = Buffer.from(
-                _configFile.passList[ _discordCrypt._getChannelId() ] ?
-                    _configFile.passList[ _discordCrypt._getChannelId() ].primary :
+                _configFile.passList[ id ] ?
+                    _configFile.passList[ id ].primary :
                     _configFile.defaultPassword
             );
 
             let secondaryPassword = Buffer.from(
-                _configFile.passList[ _discordCrypt._getChannelId() ] ?
-                    _configFile.passList[ _discordCrypt._getChannelId() ].secondary :
+                _configFile.passList[ id ] ?
+                    _configFile.passList[ id ].secondary :
                     _configFile.defaultPassword
             );
 
             /* If the message length is less than the threshold, we can send it without splitting. */
-            if ( ( cleaned.length + 16 ) < maximum_encoded_data ) {
+            if ( ( cleaned.length + 16 ) < MAX_ENCODED_DATA ) {
                 /* Encrypt the message. */
                 let msg = _discordCrypt.__symmetricEncrypt(
                     cleaned,
@@ -2149,7 +2071,7 @@ const discordCrypt = ( () => {
                 );
 
                 /* Append the header to the message normally. */
-                msg = this._encodedMessageHeader + _discordCrypt.__metaDataEncode
+                msg = ENCODED_MESSAGE_HEADER + _discordCrypt.__metaDataEncode
                 (
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
@@ -2158,67 +2080,78 @@ const discordCrypt = ( () => {
                 ) + msg;
 
                 /* Break up the message into lines. */
-                msg = msg.replace( /(.{32})/g, ( e ) => {
-                    return `${e}\n`
-                } );
+                msg = msg.replace( /(.{32})/g, ( e ) => `${e}\n` );
 
+                /* Return the message and any user text. */
+                return [ {
+                    message: `\`${msg}\``
+                } ];
+            }
+
+            /* Determine how many packets we need to split this into. */
+            let packets = _discordCrypt.__splitStringChunks( cleaned, MAX_ENCODED_DATA ), result = [];
+            for ( let i = 0; i < packets.length; i++ ) {
+                /* Encrypt the message. */
+                let msg = _discordCrypt.__symmetricEncrypt(
+                    packets[ i ],
+                    primaryPassword,
+                    secondaryPassword,
+                    _configFile.encryptMode,
+                    _configFile.encryptBlockMode,
+                    _configFile.paddingMode,
+                    true
+                );
+
+                /* Append the header to the message normally. */
+                msg = ENCODED_MESSAGE_HEADER + _discordCrypt.__metaDataEncode
+                (
+                    _configFile.encryptMode,
+                    _configFile.encryptBlockMode,
+                    _configFile.paddingMode,
+                    parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
+                ) + msg;
+
+                /* Break up the message into lines. */
+                msg = msg.replace( /(.{32})/g, ( e ) => `${e}\n` );
+
+                /* Add to the result. */
+                result.push( {
+                    message: `\`${msg}\``
+                } );
+            }
+            return result;
+        }
+
+        /**
+         * @private
+         * @desc Sends an encrypted message to the current channel.
+         * @param {string} message The unencrypted message to send.
+         * @param {boolean} [force_send] Whether to ignore checking for the encryption trigger and always encrypt.
+         * @param {int} [channel_id] If specified, sends the message to this channel instead of the current channel.
+         * @returns {boolean} Returns false if the message failed to be parsed correctly and 0 on success.
+         */
+        _sendEncryptedMessage( message, force_send = false, channel_id = undefined ) {
+            /* Attempt to encrypt the message. */
+            let packets = _discordCrypt._tryEncryptMessage(
+                message,
+                force_send,
+                channel_id || _discordCrypt._getChannelId()
+            );
+
+            /* Check if an error occurred. */
+            if( typeof packets !== 'object' )
+                return false;
+
+            /* Dispatch all messages. */
+            for ( let i = 0; i < packets.length; i++ ) {
                 /* Send the message. */
                 _discordCrypt._dispatchMessage(
-                    _configFile.useEmbeds,
-                    msg,
-                    this._messageHeader,
-                    `v${this.getVersion().replace( '-debug', '' )}`,
-                    0x551A8B,
-                    user_tags,
+                    packets[ i ].message,
                     channel_id,
                     _configFile.timedMessages,
                     _configFile.timedMessageExpires
                 );
             }
-            else {
-                /* Determine how many packets we need to split this into. */
-                let packets = _discordCrypt.__splitStringChunks( cleaned, maximum_encoded_data );
-                for ( let i = 0; i < packets.length; i++ ) {
-                    /* Encrypt the message. */
-                    let msg = _discordCrypt.__symmetricEncrypt(
-                        packets[ i ],
-                        primaryPassword,
-                        secondaryPassword,
-                        _configFile.encryptMode,
-                        _configFile.encryptBlockMode,
-                        _configFile.paddingMode,
-                        true
-                    );
-
-                    /* Append the header to the message normally. */
-                    msg = this._encodedMessageHeader + _discordCrypt.__metaDataEncode
-                    (
-                        _configFile.encryptMode,
-                        _configFile.encryptBlockMode,
-                        _configFile.paddingMode,
-                        parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
-                    ) + msg;
-
-                    /* Break up the message into lines. */
-                    msg = msg.replace( /(.{32})/g, ( e ) => {
-                        return `${e}\n`
-                    } );
-
-                    /* Send the message. */
-                    _discordCrypt._dispatchMessage(
-                        _configFile.useEmbeds,
-                        msg,
-                        this._messageHeader,
-                        `v${this.getVersion().replace( '-debug', '' )}`,
-                        0x551A8B,
-                        i === 0 ? user_tags : '',
-                        channel_id,
-                        _configFile.timedMessages,
-                        _configFile.timedMessageExpires
-                    );
-                }
-            }
-
             /* Save the configuration file and store the new message(s). */
             this._saveConfig();
 
@@ -2349,7 +2282,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Attempts to unlock the database upon startup.
-         * @param {_discordCrypt} self
          * @param {Object} unlock_btn
          * @param {boolean} cfg_exists
          * @param {Object} pwd_field
@@ -2357,7 +2289,7 @@ const discordCrypt = ( () => {
          * @param {Object} master_status
          * @return {Function}
          */
-        static _onMasterUnlockButtonClicked( self, unlock_btn, cfg_exists, pwd_field, action_msg, master_status ) {
+        static _onMasterUnlockButtonClicked( unlock_btn, cfg_exists, pwd_field, action_msg, master_status ) {
             return () => {
                 /* Disable the button before clicking. */
                 unlock_btn.attr( 'disabled', true );
@@ -2418,7 +2350,7 @@ const discordCrypt = ( () => {
                             _masterPassword = Buffer.from( pwd, 'hex' );
 
                             /* Attempt to load the database with this password. */
-                            if ( !self._loadConfig() ) {
+                            if ( !_self._loadConfig() ) {
                                 _configFile = null;
 
                                 /* Update the button's text. */
@@ -2444,7 +2376,7 @@ const discordCrypt = ( () => {
                             }
 
                             /* We may now call the start() function. */
-                            self.start();
+                            _self.start();
 
                             /* And update the button text. */
                             if ( cfg_exists )
@@ -2467,69 +2399,66 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Cancels loading the plugin when the unlocking cancel button is pressed.
-         * @param {_discordCrypt} self
          * @return {Function}
          */
-        static _onMasterCancelButtonClicked( self ) {
-            return () => {
-                /* Basically we remove the prompt overlay and load the toolbar but set every element to hidden except
+        static _onMasterCancelButtonClicked() {
+            /* Basically we remove the prompt overlay and load the toolbar but set every element to hidden except
                     the button to reopen the menu. */
 
-                /* These are all buttons we'll be targeting for hiding. */
-                let target_btns = [
-                    '#dc-clipboard-upload-btn',
-                    '#dc-file-btn',
-                    '#dc-settings-btn',
-                    '#dc-lock-btn',
-                    '#dc-passwd-btn',
-                    '#dc-exchange-btn',
-                    '#dc-quick-exchange-btn'
-                ];
+            /* These are all buttons we'll be targeting for hiding. */
+            let target_btns = [
+                '#dc-clipboard-upload-btn',
+                '#dc-file-btn',
+                '#dc-settings-btn',
+                '#dc-lock-btn',
+                '#dc-passwd-btn',
+                '#dc-exchange-btn',
+                '#dc-quick-exchange-btn'
+            ];
 
-                /* Handles reloading of the injected toolbar on switching channels. */
-                let injectedInterval;
+            /* Handles reloading of the injected toolbar on switching channels. */
+            let injectedInterval;
 
-                /* Remove the prompt overlay. */
-                $( '#dc-master-overlay' ).remove();
+            /* Remove the prompt overlay. */
+            $( '#dc-master-overlay' ).remove();
 
-                /* Do some quick cleanup. */
-                _masterPassword = null;
-                _configFile = null;
+            /* Do some quick cleanup. */
+            _masterPassword = null;
+            _configFile = null;
 
-                /* Handle this on an interval for switching channels. */
-                injectedInterval = setInterval( () => {
-                    /* Skip if the toolbar has already been injected. */
-                    if( $( '#dc-toolbar' ).length )
-                        return;
+            /* Handle this on an interval for switching channels. */
+            injectedInterval = setInterval( () => {
+                /* Skip if the toolbar has already been injected. */
+                if( $( '#dc-toolbar' ).length )
+                    return;
 
-                    /* Inject the toolbar. */
-                    $( self._searchUiClass )
-                        .parent()
-                        .parent()
-                        .parent()
-                        .prepend( _discordCrypt.__zlibDecompress( self._toolbarHtml ) );
+                /* Inject the toolbar. */
+                $( _self._searchUiClass )
+                    .parent()
+                    .parent()
+                    .parent()
+                    .prepend( _discordCrypt.__zlibDecompress( _self._toolbarHtml ) );
 
-                    let dc_db_prompt_btn = $( '#dc-db-prompt-btn' );
+                let dc_db_prompt_btn = $( '#dc-db-prompt-btn' );
 
-                    /* Set the Unlock DB Prompt button to visible. */
-                    dc_db_prompt_btn.css( 'display', 'inline' );
+                /* Set the Unlock DB Prompt button to visible. */
+                dc_db_prompt_btn.css( 'display', 'inline' );
 
-                    /* Hide every other button. */
-                    target_btns.forEach( id => $( id ).css( 'display', 'none' ) );
+                /* Hide every other button. */
+                target_btns.forEach( id => $( id ).css( 'display', 'none' ) );
 
-                    /* Add the button click event to reopen the menu. */
-                    dc_db_prompt_btn.click( function() {
-                        /* Clear the interval. */
-                        clearInterval( injectedInterval );
+                /* Add the button click event to reopen the menu. */
+                dc_db_prompt_btn.click( function() {
+                    /* Clear the interval. */
+                    clearInterval( injectedInterval );
 
-                        /* Remove the toolbar. */
-                        $( '#dc-toolbar' ).remove();
+                    /* Remove the toolbar. */
+                    $( '#dc-toolbar' ).remove();
 
-                        /* Reopen the prompt. */
-                        self._loadMasterPassword();
-                    } );
-                }, 1000 );
-            };
+                    /* Reopen the prompt. */
+                    _self._loadMasterPassword();
+                } );
+            }, 1000 );
         }
 
         /**
@@ -2568,130 +2497,124 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Uploads the clipboard's current contents and sends the encrypted link.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onUploadEncryptedClipboardButtonClicked( self ) {
-            return () => {
-                /* Since this is an async operation, we need to backup the channel ID before doing this. */
-                let channel_id = _discordCrypt._getChannelId();
+        static _onUploadEncryptedClipboardButtonClicked() {
+            /* Since this is an async operation, we need to backup the channel ID before doing this. */
+            let channel_id = _discordCrypt._getChannelId();
 
-                /* Upload the clipboard. */
-                _discordCrypt.__up1UploadClipboard(
-                    _configFile.up1Host,
-                    _configFile.up1ApiKey,
-                    global.sjcl,
-                    ( error_string, file_url, deletion_link ) => {
-                        /* Do some sanity checking. */
-                        if (
-                            error_string !== null ||
-                            typeof file_url !== 'string' ||
-                            typeof deletion_link !== 'string'
-                        ) {
-                            global.smalltalk.alert( 'Failed to upload the clipboard!', error_string );
-                            return;
-                        }
-
-                        /* Format and send the message. */
-                        self._sendEncryptedMessage( `${file_url}`, true, channel_id );
-
-                        /* Copy the deletion link to the clipboard. */
-                        require( 'electron' ).clipboard.writeText( `Delete URL: ${deletion_link}` );
+            /* Upload the clipboard. */
+            _discordCrypt.__up1UploadClipboard(
+                _configFile.up1Host,
+                _configFile.up1ApiKey,
+                global.sjcl,
+                ( error_string, file_url, deletion_link ) => {
+                    /* Do some sanity checking. */
+                    if (
+                        error_string !== null ||
+                        typeof file_url !== 'string' ||
+                        typeof deletion_link !== 'string'
+                    ) {
+                        global.smalltalk.alert( 'Failed to upload the clipboard!', error_string );
+                        return;
                     }
-                );
-            };
+
+                    /* Format and send the message. */
+                    _self._sendEncryptedMessage( `${file_url}`, true, channel_id );
+
+                    /* Copy the deletion link to the clipboard. */
+                    require( 'electron' ).clipboard.writeText( `Delete URL: ${deletion_link}` );
+                }
+            );
         }
 
         /**
          * @private
          * @desc  Uploads the selected file and sends the encrypted link.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onUploadFileButtonClicked( self ) {
-            return () => {
-                const fs = require( 'original-fs' );
+        static _onUploadFileButtonClicked() {
+            const fs = require( 'original-fs' );
 
-                let file_path_field = $( '#dc-file-path' );
-                let file_upload_btn = $( '#dc-file-upload-btn' );
-                let message_textarea = $( '#dc-file-message-textarea' );
-                let send_deletion_link = $( '#dc-file-deletion-checkbox' ).is( ':checked' );
-                let randomize_file_name = $( '#dc-file-name-random-checkbox' ).is( ':checked' );
+            let file_path_field = $( '#dc-file-path' );
+            let file_upload_btn = $( '#dc-file-upload-btn' );
+            let message_textarea = $( '#dc-file-message-textarea' );
+            let send_deletion_link = $( '#dc-file-deletion-checkbox' ).is( ':checked' );
+            let randomize_file_name = $( '#dc-file-name-random-checkbox' ).is( ':checked' );
 
-                /* Send the additional text first if it's valid. */
-                if ( message_textarea.val().length > 0 )
-                    self._sendEncryptedMessage( message_textarea.val(), true );
+            /* Send the additional text first if it's valid. */
+            if ( message_textarea.val().length > 0 )
+                _self._sendEncryptedMessage( message_textarea.val(), true );
 
-                /* Since this is an async operation, we need to backup the channel ID before doing this. */
-                let channel_id = _discordCrypt._getChannelId();
+            /* Since this is an async operation, we need to backup the channel ID before doing this. */
+            let channel_id = _discordCrypt._getChannelId();
 
-                /* Clear the message field. */
-                message_textarea.val( '' );
+            /* Clear the message field. */
+            message_textarea.val( '' );
 
-                /* Sanity check the file. */
-                if ( !fs.existsSync( file_path_field.val() ) ) {
-                    file_path_field.val( '' );
-                    return;
-                }
+            /* Sanity check the file. */
+            if ( !fs.existsSync( file_path_field.val() ) ) {
+                file_path_field.val( '' );
+                return;
+            }
 
-                /* Set the status text. */
-                file_upload_btn.text( 'Uploading ...' );
-                file_upload_btn.addClass( 'dc-button-inverse' );
+            /* Set the status text. */
+            file_upload_btn.text( 'Uploading ...' );
+            file_upload_btn.addClass( 'dc-button-inverse' );
 
-                /* Upload the file. */
-                _discordCrypt.__up1UploadFile(
-                    file_path_field.val(),
-                    _configFile.up1Host,
-                    _configFile.up1ApiKey,
-                    global.sjcl,
-                    ( error_string, file_url, deletion_link ) => {
-                        /* Do some sanity checking. */
-                        if (
-                            error_string !== null ||
-                            typeof file_url !== 'string' ||
-                            typeof deletion_link !== 'string'
-                        ) {
-                            /* Set the status text. */
-                            file_upload_btn.text( 'Failed to upload the file!' );
-                            _discordCrypt.log( error_string, 'error' );
-
-                            /* Clear the file path. */
-                            file_path_field.val( '' );
-
-                            /* Reset the status text after 1 second. */
-                            setTimeout( () => {
-                                file_upload_btn.text( 'Upload' );
-                                file_upload_btn.removeClass( 'dc-button-inverse' );
-                            }, 1000 );
-
-                            return;
-                        }
-
-                        /* Format and send the message. */
-                        self._sendEncryptedMessage(
-                            `${file_url}${send_deletion_link ? '\n\nDelete URL: ' + deletion_link : ''}`,
-                            true,
-                            channel_id
-                        );
+            /* Upload the file. */
+            _discordCrypt.__up1UploadFile(
+                file_path_field.val(),
+                _configFile.up1Host,
+                _configFile.up1ApiKey,
+                global.sjcl,
+                ( error_string, file_url, deletion_link ) => {
+                    /* Do some sanity checking. */
+                    if (
+                        error_string !== null ||
+                        typeof file_url !== 'string' ||
+                        typeof deletion_link !== 'string'
+                    ) {
+                        /* Set the status text. */
+                        file_upload_btn.text( 'Failed to upload the file!' );
+                        _discordCrypt.log( error_string, 'error' );
 
                         /* Clear the file path. */
                         file_path_field.val( '' );
 
-                        /* Indicate success. */
-                        file_upload_btn.text( 'Upload Successful!' );
-
-                        /* Reset the status text after 1 second and close the dialog. */
+                        /* Reset the status text after 1 second. */
                         setTimeout( () => {
                             file_upload_btn.text( 'Upload' );
                             file_upload_btn.removeClass( 'dc-button-inverse' );
-
-                            /* Close. */
-                            $( '#dc-file-cancel-btn' ).click();
                         }, 1000 );
-                    },
-                    randomize_file_name
-                );
-            };
+
+                        return;
+                    }
+
+                    /* Format and send the message. */
+                    _self._sendEncryptedMessage(
+                        `${file_url}${send_deletion_link ? '\n\nDelete URL: ' + deletion_link : ''}`,
+                        true,
+                        channel_id
+                    );
+
+                    /* Clear the file path. */
+                    file_path_field.val( '' );
+
+                    /* Indicate success. */
+                    file_upload_btn.text( 'Upload Successful!' );
+
+                    /* Reset the status text after 1 second and close the dialog. */
+                    setTimeout( () => {
+                        file_upload_btn.text( 'Upload' );
+                        file_upload_btn.removeClass( 'dc-button-inverse' );
+
+                        /* Close. */
+                        $( '#dc-file-cancel-btn' ).click();
+                    }, 1000 );
+                },
+                randomize_file_name
+            );
         }
 
         /**
@@ -2733,272 +2656,263 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Selects the Database Settings tab and loads key info.
-         * @param {_discordCrypt} self
          * @return {Function}
          */
-        static _onDatabaseTabButtonClicked( self ) {
-            return () => {
-                let users, guilds, channels, table;
+        static _onDatabaseTabButtonClicked() {
+            let users, guilds, channels, table;
 
-                /* Cache the table. */
-                table = $( '#dc-database-entries' );
+            /* Cache the table. */
+            table = $( '#dc-database-entries' );
 
-                /* Clear all entries. */
-                table.html( '' );
+            /* Clear all entries. */
+            table.html( '' );
 
-                /* Resolve all users, guilds and channels the current user is a part of. */
-                users = _cachedModules.UserStore.getUsers();
-                guilds = _cachedModules.GuildStore.getGuilds();
-                channels = _cachedModules.ChannelStore.getChannels();
+            /* Resolve all users, guilds and channels the current user is a part of. */
+            users = _cachedModules.UserStore.getUsers();
+            guilds = _cachedModules.GuildStore.getGuilds();
+            channels = _cachedModules.ChannelStore.getChannels();
 
-                /* Iterate over each password in the configuration. */
-                for ( let prop in _configFile.passList ) {
-                    let name, id = prop;
+            /* Iterate over each password in the configuration. */
+            for ( let prop in _configFile.passList ) {
+                let name, id = prop;
 
-                    /* Skip channels that don't have an ID. */
-                    if ( !channels[ id ] )
-                        continue;
+                /* Skip channels that don't have an ID. */
+                if ( !channels[ id ] )
+                    continue;
 
-                    /* Check for the correct channel type. */
-                    if ( channels[ id ].type === 0 ) {
-                        /* Guild Channel */
-                        let guild = guilds[ channels[ id ].guild_id ];
+                /* Check for the correct channel type. */
+                if ( channels[ id ].type === 0 ) {
+                    /* Guild Channel */
+                    let guild = guilds[ channels[ id ].guild_id ];
 
-                        /* Resolve the name as a "Guild @ #Channel" format. */
-                        name = `${guild.name} @ #${channels[ id ].name}`;
-                    }
-                    else if ( channels[ id ].type === 1 ) {
-                        /* DM */
-                        let user = users[ channels[ id ].recipients[ 0 ] ];
-
-                        /* Indicate this is a DM and give the full user name. */
-                        name = `DM @${user.username}#${user.discriminator}`;
-                    }
-                    else
-                        continue;
-
-                    /* Create the elements needed for building the row. */
-                    let element =
-                            $( `<tr><td>${id}</td><td>${name}</td><td><div style="display:flex;"></div></td></tr>` ),
-                        delete_btn = $( '<button>' )
-                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                            .text( 'Delete' ),
-                        copy_btn = $( '<button>' )
-                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                            .text( 'Copy' ),
-                        show_fingerprint_btn = $( '<button>' )
-                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                            .text( 'Show Fingerprint' );
-
-                    /* Handle deletion clicks. */
-                    delete_btn.click( function () {
-                        /* Delete the entry. */
-                        delete _configFile.passList[ id ];
-
-                        /* Disable auto-encryption for the channel */
-                        _configFile.channelSettings[ id ].autoEncrypt = false;
-
-                        /* Save the configuration. */
-                        self._saveConfig();
-
-                        /* Remove the entire row. */
-                        delete_btn.parent().parent().remove();
-                    } );
-
-                    /* Handle copy clicks. */
-                    copy_btn.click( function() {
-                        /* Resolve the entry. */
-                        let current_keys = _configFile.passList[ id ];
-
-                        /* Write to the clipboard. */
-                        require( 'electron' ).clipboard.writeText(
-                            `Primary Key: ${current_keys.primary}\n\nSecondary Key: ${current_keys.secondary}`
-                        );
-
-                        copy_btn.text( 'Copied Keys' );
-
-                        setTimeout( () => {
-                            copy_btn.text( 'Copy' );
-                        }, 1000 );
-                    } );
-
-                    /* Handle fingerprint calculation. */
-
-                    /* Handle copy clicks. */
-                    show_fingerprint_btn.click( function() {
-                        /* Resolve the entry. */
-                        let currentKeys = _configFile.passList[ id ];
-
-                        /* Calculate the fingerprint using either the Guild ID & Channel or Channel & UserID. */
-                        let fingerprint = _discordCrypt.__generateFingerprint(
-                            id,
-                            currentKeys.primary,
-                            id,
-                            currentKeys.secondary,
-                            5000
-                        );
-
-                        global.smalltalk.prompt(
-                            'Fingerprint',
-                            "<b>N.B. VERIFY THESE OVER A NON-TEXT COMMUNICATION METHOD!</b><br/><br/><br/>" +
-                            `Your Fingerprint: [ \`${name}\` ]:\n\n`,
-                            fingerprint,
-                            { button: [ 'OK' ] }
-                        );
-                    } );
-
-                    /* Append the button to the Options column. */
-                    $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( copy_btn );
-
-                    /* Append the button to the Options column. */
-                    $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( delete_btn );
-
-                    /* Append the button to the Options column. */
-                    $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( show_fingerprint_btn );
-
-                    /* Append the entire entry to the table. */
-                    table.append( element );
+                    /* Resolve the name as a "Guild @ #Channel" format. */
+                    name = `${guild.name} @ #${channels[ id ].name}`;
                 }
+                else if ( channels[ id ].type === 1 ) {
+                    /* DM */
+                    let user = users[ channels[ id ].recipients[ 0 ] ];
 
-                /* Select the database settings. */
-                _discordCrypt._setActiveSettingsTab( 1 );
-            };
+                    /* Indicate this is a DM and give the full user name. */
+                    name = `DM @${user.username}#${user.discriminator}`;
+                }
+                else
+                    continue;
+
+                /* Create the elements needed for building the row. */
+                let element =
+                        $( `<tr><td>${id}</td><td>${name}</td><td><div style="display:flex;"></div></td></tr>` ),
+                    delete_btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'Delete' ),
+                    copy_btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'Copy' ),
+                    show_fingerprint_btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'Show Fingerprint' );
+
+                /* Handle deletion clicks. */
+                delete_btn.click( function () {
+                    /* Delete the entry. */
+                    delete _configFile.passList[ id ];
+
+                    /* Disable auto-encryption for the channel */
+                    _configFile.channelSettings[ id ].autoEncrypt = false;
+
+                    /* Save the configuration. */
+                    _self._saveConfig();
+
+                    /* Remove the entire row. */
+                    delete_btn.parent().parent().remove();
+                } );
+
+                /* Handle copy clicks. */
+                copy_btn.click( function() {
+                    /* Resolve the entry. */
+                    let current_keys = _configFile.passList[ id ];
+
+                    /* Write to the clipboard. */
+                    require( 'electron' ).clipboard.writeText(
+                        `Primary Key: ${current_keys.primary}\n\nSecondary Key: ${current_keys.secondary}`
+                    );
+
+                    copy_btn.text( 'Copied Keys' );
+
+                    setTimeout( () => {
+                        copy_btn.text( 'Copy' );
+                    }, 1000 );
+                } );
+
+                /* Handle fingerprint calculation. */
+
+                /* Handle copy clicks. */
+                show_fingerprint_btn.click( function() {
+                    /* Resolve the entry. */
+                    let currentKeys = _configFile.passList[ id ];
+
+                    /* Calculate the fingerprint using either the Guild ID & Channel or Channel & UserID. */
+                    let fingerprint = _discordCrypt.__generateFingerprint(
+                        id,
+                        currentKeys.primary,
+                        id,
+                        currentKeys.secondary,
+                        5000
+                    );
+
+                    global.smalltalk.prompt(
+                        'Fingerprint',
+                        "<b>N.B. VERIFY THESE OVER A NON-TEXT COMMUNICATION METHOD!</b><br/><br/><br/>" +
+                        `Your Fingerprint: [ \`${name}\` ]:\n\n`,
+                        fingerprint,
+                        { button: [ 'OK' ] }
+                    );
+                } );
+
+                /* Append the button to the Options column. */
+                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( copy_btn );
+
+                /* Append the button to the Options column. */
+                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( delete_btn );
+
+                /* Append the button to the Options column. */
+                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( show_fingerprint_btn );
+
+                /* Append the entire entry to the table. */
+                table.append( element );
+            }
+
+            /* Select the database settings. */
+            _discordCrypt._setActiveSettingsTab( 1 );
         }
 
         /**
          * @private
          * @desc Selects the Security Settings tab and loads all blacklisted updates.
-         * @param {_discordCrypt} self
          * @return {Function}
          */
-        static _onSecurityTabButtonClicked( self ) {
-            return () => {
-                /* Get the table to show blacklisted updates. */
-                let table = $( '#dc-update-blacklist-entries' );
+        static _onSecurityTabButtonClicked() {
+            /* Get the table to show blacklisted updates. */
+            let table = $( '#dc-update-blacklist-entries' );
 
-                /* Iterate over all entries. */
-                for ( let i = 0; i < _configFile.blacklistedUpdates.length; i++ ) {
-                    /* Get the update info. */
-                    let updateInfo = _configFile.blacklistedUpdates[ i ];
+            /* Iterate over all entries. */
+            for ( let i = 0; i < _configFile.blacklistedUpdates.length; i++ ) {
+                /* Get the update info. */
+                let updateInfo = _configFile.blacklistedUpdates[ i ];
 
-                    /* Skip empty values.*/
-                    if( !updateInfo )
-                        continue;
+                /* Skip empty values.*/
+                if( !updateInfo )
+                    continue;
 
-                    /* Create the elements needed for building the row. */
-                    let element =
-                            $( `<tr><td>${updateInfo.version}</td><td><div style="display:flex;"></div></td></tr>` ),
-                        remove_btn = $( '<button>' )
-                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                            .text( 'Remove' ),
-                        changelog_btn = $( '<button>' )
-                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                            .text( 'View Changelog' ),
-                        info_btn = $( '<button>' )
-                            .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                            .text( 'Info' );
+                /* Create the elements needed for building the row. */
+                let element =
+                        $( `<tr><td>${updateInfo.version}</td><td><div style="display:flex;"></div></td></tr>` ),
+                    remove_btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'Remove' ),
+                    changelog_btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'View Changelog' ),
+                    info_btn = $( '<button>' )
+                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
+                        .text( 'Info' );
 
-                    /* Handle the remove entry button clicked. */
-                    remove_btn.click( function () {
-                        /* Delete the entry. */
-                        delete _configFile.blacklistedUpdates[ i ];
-                        _configFile.blacklistedUpdates = _configFile.blacklistedUpdates.filter( e => e );
+                /* Handle the remove entry button clicked. */
+                remove_btn.click( function () {
+                    /* Delete the entry. */
+                    delete _configFile.blacklistedUpdates[ i ];
+                    _configFile.blacklistedUpdates = _configFile.blacklistedUpdates.filter( e => e );
 
-                        /* Save the configuration. */
-                        self._saveConfig();
+                    /* Save the configuration. */
+                    _self._saveConfig();
 
-                        /* Remove the entire row. */
-                        remove_btn.parent().parent().parent().remove();
-                    } );
+                    /* Remove the entire row. */
+                    remove_btn.parent().parent().parent().remove();
+                } );
 
-                    /* Handle the changelog button clicked. */
-                    changelog_btn.click( function() {
-                        global.smalltalk.alert(
-                            `Changes`,
-                            _discordCrypt.__tryParseChangelog( updateInfo.changelog, self.getVersion() )
-                        );
-                    } );
+                /* Handle the changelog button clicked. */
+                changelog_btn.click( function() {
+                    global.smalltalk.alert(
+                        `Changes`,
+                        _discordCrypt.__tryParseChangelog( updateInfo.changelog, _self.getVersion() )
+                    );
+                } );
 
-                    /* Handle the signatures button clicked. */
-                    info_btn.click( function() {
-                        let size = parseFloat( updateInfo.payload.length / 1024.0 ).toFixed( 3 );
-                        let key_id = Buffer.from(
-                            global
-                                .openpgp
-                                .key
-                                .readArmored( _discordCrypt.__zlibDecompress( _signingKey ) )
-                                .keys[ 0 ]
-                                .primaryKey
-                                .fingerprint
-                        )
-                            .toString( 'hex' )
-                            .toUpperCase();
+                /* Handle the signatures button clicked. */
+                info_btn.click( function() {
+                    let size = parseFloat( updateInfo.payload.length / 1024.0 ).toFixed( 3 );
+                    let key_id = Buffer.from(
+                        global
+                            .openpgp
+                            .key
+                            .readArmored( _discordCrypt.__zlibDecompress( _signingKey ) )
+                            .keys[ 0 ]
+                            .primaryKey
+                            .fingerprint
+                    )
+                        .toString( 'hex' )
+                        .toUpperCase();
 
-                        global.smalltalk.alert(
-                            'Update Info',
-                            `<strong>Version</strong>: ${updateInfo.version}\n\n` +
-                            `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
-                            `<strong>Size</strong>: ${size} KB\n\n` +
-                            `<strong>Key ID</strong>: ${key_id}\n\n` +
-                            `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
-                            '<code class="hljs dc-code-block" style="background: none !important;">' +
-                            `${updateInfo.signature}</code>`
-                        );
-                    } );
+                    global.smalltalk.alert(
+                        'Update Info',
+                        `<strong>Version</strong>: ${updateInfo.version}\n\n` +
+                        `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
+                        `<strong>Size</strong>: ${size} KB\n\n` +
+                        `<strong>Key ID</strong>: ${key_id}\n\n` +
+                        `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
+                        '<code class="hljs dc-code-block" style="background: none !important;">' +
+                        `${updateInfo.signature}</code>`
+                    );
+                } );
 
-                    /* Add all option buttons to the Options column. */
-                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( changelog_btn );
-                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( info_btn );
-                    $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( remove_btn );
+                /* Add all option buttons to the Options column. */
+                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( changelog_btn );
+                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( info_btn );
+                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( remove_btn );
 
-                    /* Add the row to the table. */
-                    table.append( element );
-                }
+                /* Add the row to the table. */
+                table.append( element );
+            }
 
-                /* Set the current state of automatic updates. */
-                $( '#dc-automatic-updates-enabled' ).prop( 'checked', _configFile.automaticUpdates );
+            /* Set the current state of automatic updates. */
+            $( '#dc-automatic-updates-enabled' ).prop( 'checked', _configFile.automaticUpdates );
 
-                /* Select the security settings. */
-                _discordCrypt._setActiveSettingsTab( 2 );
-            };
+            /* Select the security settings. */
+            _discordCrypt._setActiveSettingsTab( 2 );
         }
 
         /**
          * @private
          * @desc Toggles the automatic update checking function.
-         * @param self
          * @return {Function}
          */
-        static _onAutomaticUpdateCheckboxChanged( self ) {
-            return () => {
-                /* Set the state. */
-                _configFile.automaticUpdates = $( '#dc-automatic-updates-enabled' )
-                    .is( ':checked' );
+        static _onAutomaticUpdateCheckboxChanged() {
+            /* Set the state. */
+            _configFile.automaticUpdates = $( '#dc-automatic-updates-enabled' )
+                .is( ':checked' );
 
-                /* Save the configuration. */
-                self._saveConfig();
+            /* Save the configuration. */
+            _self._saveConfig();
 
-                /* Log. */
-                _discordCrypt.log( `${_configFile.automaticUpdates ? 'En' : 'Dis'}abled automatic updates.`, 'debug' );
+            /* Log. */
+            _discordCrypt.log( `${_configFile.automaticUpdates ? 'En' : 'Dis'}abled automatic updates.`, 'debug' );
 
-                /* Skip if we don't need to update. */
-                if( !_discordCrypt._shouldIgnoreUpdates( self.getVersion() ) ) {
-                    /* If we're doing automatic updates, make sure an interval is set. */
-                    if( _configFile.automaticUpdates ) {
-                        /* Only do this if none is defined. */
-                        if( !_updateHandlerInterval ) {
-                            /* Add an update handler to check for updates every 60 minutes. */
-                            _updateHandlerInterval = setInterval( () => {
-                                self._checkForUpdates();
-                            }, 3600000 );
-                        }
+            /* Skip if we don't need to update. */
+            if( !_discordCrypt._shouldIgnoreUpdates( _self.getVersion() ) ) {
+                /* If we're doing automatic updates, make sure an interval is set. */
+                if( _configFile.automaticUpdates ) {
+                    /* Only do this if none is defined. */
+                    if( !_updateHandlerInterval ) {
+                        /* Add an update handler to check for updates every 60 minutes. */
+                        _updateHandlerInterval = setInterval( () => {
+                            _self._checkForUpdates();
+                        }, 3600000 );
                     }
-                    /* Make sure no interval is defined. */
-                    else if( _updateHandlerInterval ) {
-                        /* Make sure to clear all intervals. */
-                        clearInterval( _updateHandlerInterval );
-                        _updateHandlerInterval = null;
-                    }
+                }
+                /* Make sure no interval is defined. */
+                else if( _updateHandlerInterval ) {
+                    /* Make sure to clear all intervals. */
+                    clearInterval( _updateHandlerInterval );
+                    _updateHandlerInterval = null;
                 }
             }
         }
@@ -3006,113 +2920,107 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Checks for updates immediately.
-         * @param self
          * @return {Function}
          */
-        static _onCheckForUpdatesButtonClicked( self ) {
-            return () => {
-                /* Simply call the wrapper, everything else will be handled by this. */
-                self._checkForUpdates();
-            }
+        static _onCheckForUpdatesButtonClicked() {
+            /* Simply call the wrapper, everything else will be handled by this. */
+            _self._checkForUpdates();
         }
 
         /**
          * @private
          * @desc Opens a file dialog to import a JSON encoded entries file.
-         * @param self
          * @return {Function}
          */
-        static _onImportDatabaseButtonClicked( self ) {
-            return () => {
-                /* Get the FS module. */
-                const fs = require( 'fs' );
+        static _onImportDatabaseButtonClicked() {
+            /* Get the FS module. */
+            const fs = require( 'fs' );
 
-                /* Create an input element. */
-                let files = require( 'electron' ).remote.dialog.showOpenDialog( {
-                    title: 'Import Database',
-                    message: 'Select the configuration file(s) to import',
-                    buttonLabel: 'Import',
-                    filters: [ {
-                        name: 'Database Entries ( *.json )',
-                        extensions: [ 'json' ]
-                    } ],
-                    properties: [ 'openFile', 'multiSelections', 'showHiddenFiles', 'treatPackageAsDirectory' ]
-                } );
+            /* Create an input element. */
+            let files = require( 'electron' ).remote.dialog.showOpenDialog( {
+                title: 'Import Database',
+                message: 'Select the configuration file(s) to import',
+                buttonLabel: 'Import',
+                filters: [ {
+                    name: 'Database Entries ( *.json )',
+                    extensions: [ 'json' ]
+                } ],
+                properties: [ 'openFile', 'multiSelections', 'showHiddenFiles', 'treatPackageAsDirectory' ]
+            } );
 
-                /* Ignore if no files was selected. */
-                if ( !files.length )
-                    return;
+            /* Ignore if no files was selected. */
+            if ( !files.length )
+                return;
 
-                /* Cache the button. */
-                let import_btn = $( '#dc-import-database-btn' );
+            /* Cache the button. */
+            let import_btn = $( '#dc-import-database-btn' );
 
-                /* For reference. */
-                let imported = 0;
+            /* For reference. */
+            let imported = 0;
 
-                /* Update the status. */
-                import_btn.text( `Importing ( ${files.length} ) File(s)` );
+            /* Update the status. */
+            import_btn.text( `Importing ( ${files.length} ) File(s)` );
 
-                /* Loop over every file.  */
-                for ( let i = 0; i < files.length; i++ ) {
-                    let file = files[ i ],
-                        data;
+            /* Loop over every file.  */
+            for ( let i = 0; i < files.length; i++ ) {
+                let file = files[ i ],
+                    data;
 
-                    /* Sanity check. */
-                    if ( !fs.statSync( file ).isFile() )
-                        continue;
+                /* Sanity check. */
+                if ( !fs.statSync( file ).isFile() )
+                    continue;
 
-                    /* Read the file. */
-                    try {
-                        data = JSON.parse( fs.readFileSync( file ).toString() );
-                    }
-                    catch ( e ) {
-                        _discordCrypt.log( `Error reading JSON file '${file} ...`, 'warn' );
-                        continue;
-                    }
-
-                    /* Make sure the root element of entries exists. */
-                    if ( !data._discordCrypt_entries || !data._discordCrypt_entries.length )
-                        continue;
-
-                    /* Iterate all entries. */
-                    for ( let j = 0; j < data._discordCrypt_entries.length; j++ ) {
-                        let e = data._discordCrypt_entries[ j ];
-
-                        /* Skip invalid entries. */
-                        if ( !e.id || !e.primary || !e.secondary )
-                            continue;
-
-                        /* Determine if to count this as an import or an update which aren't counted. */
-                        if ( !_configFile.passList.hasOwnProperty( e.id ) ) {
-                            /* Update the number imported. */
-                            imported++;
-                        }
-
-                        /* Add it to the configuration file. */
-                        _configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
-                    }
+                /* Read the file. */
+                try {
+                    data = JSON.parse( fs.readFileSync( file ).toString() );
+                }
+                catch ( e ) {
+                    _discordCrypt.log( `Error reading JSON file '${file} ...`, 'warn' );
+                    continue;
                 }
 
-                /* Update the button's text. */
+                /* Make sure the root element of entries exists. */
+                if ( !data._discordCrypt_entries || !data._discordCrypt_entries.length )
+                    continue;
+
+                /* Iterate all entries. */
+                for ( let j = 0; j < data._discordCrypt_entries.length; j++ ) {
+                    let e = data._discordCrypt_entries[ j ];
+
+                    /* Skip invalid entries. */
+                    if ( !e.id || !e.primary || !e.secondary )
+                        continue;
+
+                    /* Determine if to count this as an import or an update which aren't counted. */
+                    if ( !_configFile.passList.hasOwnProperty( e.id ) ) {
+                        /* Update the number imported. */
+                        imported++;
+                    }
+
+                    /* Add it to the configuration file. */
+                    _configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
+                }
+            }
+
+            /* Update the button's text. */
+            setTimeout( () => {
+                import_btn.text( `Imported (${imported}) ${imported === 1 ? 'Entry' : 'Entries'}` );
+
+                /* Reset the button's text. */
                 setTimeout( () => {
-                    import_btn.text( `Imported (${imported}) ${imported === 1 ? 'Entry' : 'Entries'}` );
+                    import_btn.text( 'Import Database(s)' );
+                }, 1000 );
 
-                    /* Reset the button's text. */
-                    setTimeout( () => {
-                        import_btn.text( 'Import Database(s)' );
-                    }, 1000 );
+            }, 500 );
 
-                }, 500 );
+            /* Determine if to save the database. */
+            if ( imported !== 0 ) {
+                /* Trigger updating the database entries field. */
+                _discordCrypt._onDatabaseTabButtonClicked();
 
-                /* Determine if to save the database. */
-                if ( imported !== 0 ) {
-                    /* Trigger updating the database entries field. */
-                    _discordCrypt._onDatabaseTabButtonClicked( self )();
-
-                    /* Save the configuration. */
-                    self._saveConfig();
-                }
-            };
+                /* Save the configuration. */
+                _self._saveConfig();
+            }
         }
 
         /**
@@ -3184,31 +3092,28 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Clears all entries in the database.
-         * @param self
          * @return {Function}
          */
-        static _onClearDatabaseEntriesButtonClicked( self ) {
-            return () => {
-                /* Cache the button. */
-                let erase_entries_btn = $( '#dc-erase-entries-btn' );
+        static _onClearDatabaseEntriesButtonClicked() {
+            /* Cache the button. */
+            let erase_entries_btn = $( '#dc-erase-entries-btn' );
 
-                /* Remove all entries. */
-                _configFile.passList = {};
+            /* Remove all entries. */
+            _configFile.passList = {};
 
-                /* Clear the table. */
-                $( '#dc-database-entries' ).html( '' );
+            /* Clear the table. */
+            $( '#dc-database-entries' ).html( '' );
 
-                /* Save the database. */
-                self._saveConfig();
+            /* Save the database. */
+            _self._saveConfig();
 
-                /* Update the button's text. */
-                erase_entries_btn.text( 'Cleared Entries' );
+            /* Update the button's text. */
+            erase_entries_btn.text( 'Cleared Entries' );
 
-                /* Reset the button's text. */
-                setTimeout( () => {
-                    erase_entries_btn.text( 'Erase Entries' );
-                }, 1000 );
-            };
+            /* Reset the button's text. */
+            setTimeout( () => {
+                erase_entries_btn.text( 'Erase Entries' );
+            }, 1000 );
         }
 
         /**
@@ -3229,131 +3134,118 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Saves all settings.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onSaveSettingsButtonClicked( self ) {
-            return () => {
+        static _onSaveSettingsButtonClicked() {
+            /* Cache jQuery results. */
+            let dc_primary_cipher = $( '#dc-primary-cipher' ),
+                dc_secondary_cipher = $( '#dc-secondary-cipher' ),
+                dc_master_password = $( '#dc-master-password' ),
+                dc_save_settings_btn = $( '#dc-settings-save-btn' );
 
-                /* Cache jQuery results. */
-                let dc_primary_cipher = $( '#dc-primary-cipher' ),
-                    dc_secondary_cipher = $( '#dc-secondary-cipher' ),
-                    dc_master_password = $( '#dc-master-password' ),
-                    dc_save_settings_btn = $( '#dc-settings-save-btn' );
+            /* Update all settings from the settings panel. */
+            _configFile.timedMessageExpires = parseInt( $( '#dc-settings-timed-expire' ).val() );
+            _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
+            _configFile.decryptedPrefix = $( '#dc-settings-decrypted-prefix' ).val();
+            _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
+            _configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
+            _configFile.paddingMode = $( '#dc-settings-padding-mode' ).val();
+            _configFile.localStates = $( '#dc-local-states' ).is( ':checked' );
+            _configFile.encryptMode = _discordCrypt
+                .__cipherStringToIndex( dc_primary_cipher.val(), dc_secondary_cipher.val() );
 
-                /* Update all settings from the settings panel. */
-                _configFile.timedMessageExpires = parseInt( $( '#dc-settings-timed-expire' ).val() );
-                _configFile.encryptScanDelay = parseInt( $( '#dc-settings-scan-delay' ).val() );
-                _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
-                _configFile.decryptedPrefix = $( '#dc-settings-decrypted-prefix' ).val();
-                _configFile.decryptedColor = $( '#dc-settings-decrypted-color' ).val();
-                _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
-                _configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
-                _configFile.paddingMode = $( '#dc-settings-padding-mode' ).val();
-                _configFile.useEmbeds = $( '#dc-embed-enabled' ).is( ':checked' );
-                _configFile.localStates = $( '#dc-local-states' ).is( ':checked' );
-                _configFile.encryptMode = _discordCrypt
-                    .__cipherStringToIndex( dc_primary_cipher.val(), dc_secondary_cipher.val() );
+            dc_primary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
+            dc_secondary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
 
-                dc_primary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
-                dc_secondary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
+            /* Remove all channel settings if disabled */
+            if( !_configFile.localStates )
+                _configFile.channelSettings = {};
 
-                /* Remove all channel settings if disabled */
-                if( !_configFile.localStates )
-                    _configFile.channelSettings = {};
+            /* Checks if channel is in channel settings storage and adds it*/
+            else if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
+                _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
+                    { autoEncrypt: true };
 
-                /* Checks if channel is in channel settings storage and adds it*/
-                else if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
-                    _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
-                        { autoEncrypt: true };
+            /* Update icon */
+            _discordCrypt._updateLockIcon();
 
-                /* Update icon */
-                _discordCrypt._updateLockIcon( self );
+            /* Handle master password updates if necessary. */
+            if ( dc_master_password.val() !== '' ) {
+                let password = dc_master_password.val();
 
-                /* Handle master password updates if necessary. */
-                if ( dc_master_password.val() !== '' ) {
-                    let password = dc_master_password.val();
+                /* Ensure the password meets the requirements. */
+                if( !_discordCrypt.__validatePasswordRequisites( password ) )
+                    return;
 
-                    /* Ensure the password meets the requirements. */
-                    if( !_discordCrypt.__validatePasswordRequisites( password ) )
-                        return;
+                /* Reset the password field. */
+                dc_master_password.val( '' );
 
-                    /* Reset the password field. */
-                    dc_master_password.val( '' );
+                /* Disable the button since this takes a while. */
+                dc_save_settings_btn.attr( 'disabled', true );
 
-                    /* Disable the button since this takes a while. */
-                    dc_save_settings_btn.attr( 'disabled', true );
+                /* Hash the password. */
+                _discordCrypt.__scrypt
+                (
+                    Buffer.from( password ),
+                    Buffer.from( _discordCrypt.__whirlpool( password, true ), 'hex' ),
+                    32,
+                    4096,
+                    8,
+                    1,
+                    ( error, progress, pwd ) => {
+                        /* Enable the button. */
+                        dc_save_settings_btn.attr( 'disabled', false );
 
-                    /* Hash the password. */
-                    _discordCrypt.__scrypt
-                    (
-                        Buffer.from( password ),
-                        Buffer.from( _discordCrypt.__whirlpool( password, true ), 'hex' ),
-                        32,
-                        4096,
-                        8,
-                        1,
-                        ( error, progress, pwd ) => {
-                            /* Enable the button. */
-                            dc_save_settings_btn.attr( 'disabled', false );
+                        if ( error ) {
+                            /* Alert the user. */
+                            global.smalltalk.alert(
+                                'DiscordCrypt Error',
+                                'Error setting the new database password. Check the console for more info.'
+                            );
 
-                            if ( error ) {
-                                /* Alert the user. */
-                                global.smalltalk.alert(
-                                    'DiscordCrypt Error',
-                                    'Error setting the new database password. Check the console for more info.'
-                                );
+                            _discordCrypt.log( error.toString(), 'error' );
 
-                                _discordCrypt.log( error.toString(), 'error' );
-
-                                return true;
-                            }
-
-                            if ( pwd ) {
-                                /* Now update the password. */
-                                _masterPassword = Buffer.from( pwd, 'hex' );
-
-                                /* Save the configuration file and update the button text. */
-                                self._saveSettings( dc_save_settings_btn );
-                            }
-
-                            return false;
+                            return true;
                         }
-                    );
-                }
-                else {
-                    /* Save the configuration file and update the button text. */
-                    self._saveSettings( dc_save_settings_btn );
-                }
-            };
+
+                        if ( pwd ) {
+                            /* Now update the password. */
+                            _masterPassword = Buffer.from( pwd, 'hex' );
+
+                            /* Save the configuration file and update the button text. */
+                            _self._saveSettings( dc_save_settings_btn );
+                        }
+
+                        return false;
+                    }
+                );
+            }
+            else {
+                /* Save the configuration file and update the button text. */
+                _self._saveSettings( dc_save_settings_btn );
+            }
         }
 
         /**
          * @private
          * @desc Resets the user settings to their default values.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onResetSettingsButtonClicked( self ) {
-            return () => {
-                /* Resets the configuration file and update the button text. */
-                self._resetSettings( $( '#dc-settings-reset-btn' ) );
+        static _onResetSettingsButtonClicked() {
+            /* Resets the configuration file and update the button text. */
+            _self._resetSettings( $( '#dc-settings-reset-btn' ) );
 
-                /* Update all settings from the settings panel. */
-                $( '#dc-secondary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
-                $( '#dc-primary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
-                $( '#dc-settings-cipher-mode' ).val( _configFile.encryptBlockMode.toLowerCase() );
-                $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
-                $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
-                $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
-                $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
-                $( '#dc-settings-decrypted-color' ).val( _configFile.decryptedColor );
-                $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
-                $( '#dc-settings-scan-delay' ).val( _configFile.encryptScanDelay );
-                $( '#dc-embed-enabled' ).prop( 'checked', _configFile.useEmbeds );
-                $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
-                $( '#dc-master-password' ).val( '' );
-            };
+            /* Update all settings from the settings panel. */
+            $( '#dc-secondary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
+            $( '#dc-primary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
+            $( '#dc-settings-cipher-mode' ).val( _configFile.encryptBlockMode.toLowerCase() );
+            $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
+            $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
+            $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
+            $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
+            $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
+            $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
+            $( '#dc-master-password' ).val( '' );
         }
 
         /**
@@ -3415,28 +3307,25 @@ const discordCrypt = ( () => {
          * @private
          * @desc Adds the upper scoped update info to the blacklist, saves the configuration file and
          *      closes the update window.
-         * @param self
          * @return {Function}
          */
-        static _onUpdateIgnoreButtonClicked( self ) {
-            return () => {
-                /* Clear out the needless data which isn't actually needed to validate a blacklisted update. */
-                _updateData.payload = '';
+        static _onUpdateIgnoreButtonClicked() {
+            /* Clear out the needless data which isn't actually needed to validate a blacklisted update. */
+            _updateData.payload = '';
 
-                /* Add the blacklist to the configuration file. */
-                _configFile.blacklistedUpdates.push( _updateData );
+            /* Add the blacklist to the configuration file. */
+            _configFile.blacklistedUpdates.push( _updateData );
 
-                /* Save the configuration. */
-                self._saveConfig();
+            /* Save the configuration. */
+            _self._saveConfig();
 
-                /* Also reset any opened tabs. */
-                _discordCrypt._setActiveSettingsTab( 0 );
-                _discordCrypt._setActiveExchangeTab( 0 );
+            /* Also reset any opened tabs. */
+            _discordCrypt._setActiveSettingsTab( 0 );
+            _discordCrypt._setActiveExchangeTab( 0 );
 
-                /* Hide the update and changelog. */
-                $( '#dc-overlay' ).css( 'display', 'none' );
-                $( '#dc-update-overlay' ).css( 'display', 'none' );
-            };
+            /* Hide the update and changelog. */
+            $( '#dc-overlay' ).css( 'display', 'none' );
+            $( '#dc-update-overlay' ).css( 'display', 'none' );
         }
 
         /**
@@ -3642,60 +3531,42 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Sends the currently generate public key in the correct format.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onExchangeSendPublicKeyButtonClicked( self ) {
-            return () => {
+        static _onExchangeSendPublicKeyButtonClicked() {
+            /* Cache jQuery results. */
+            let dc_pub_key_ta = $( '#dc-pub-key-ta' );
 
-                /* Cache jQuery results. */
-                let dc_pub_key_ta = $( '#dc-pub-key-ta' );
+            /* Don't bother if it's empty. */
+            if ( dc_pub_key_ta.val() === '' )
+                return;
 
-                /* Don't bother if it's empty. */
-                if ( dc_pub_key_ta.val() === '' )
-                    return;
+            /* The text area stores a hex encoded binary. Convert it to a buffer prior to encoding. */
+            let message = Buffer.from( dc_pub_key_ta.val(), 'hex' );
 
-                /* The text area stores a hex encoded binary. Convert it to a buffer prior to encoding. */
-                let message = Buffer.from( dc_pub_key_ta.val(), 'hex' );
+            /* Add the header to the message and encode it. */
+            message = ENCODED_KEY_HEADER + _discordCrypt.__substituteMessage( message, true );
 
-                /* Add the header to the message and encode it. */
-                message = self._encodedKeyHeader + _discordCrypt.__substituteMessage( message, true );
+            /* Split the message by adding a new line every 32 characters like a standard PGP message. */
+            let formatted_message = message.replace( /(.{32})/g, e => `${e}\n` );
 
-                /* Split the message by adding a new line every 32 characters like a standard PGP message. */
-                let formatted_message = message.replace( /(.{32})/g, e => `${e}\n` );
+            /* Send the message. */
+            _discordCrypt._dispatchMessage(
+                `\`${formatted_message}\``,
+                _discordCrypt._getChannelId(),
+                _configFile.timedMessages,
+                _configFile.timedMessageExpires
+            );
 
-                /* Calculate the algorithm string. */
-                let algo_str = `${$( '#dc-keygen-method' ).val() !== 'ecdh' ? 'DH-' : 'ECDH-'}` +
-                    `${$( '#dc-keygen-algorithm' ).val()}`;
+            /* Save the configuration file and store the new message. */
+            _self._saveConfig();
 
-                /* Construct header & footer elements. */
-                let header = `-----BEGIN ${algo_str} PUBLIC KEY-----`,
-                    footer = `-----END ${algo_str} PUBLIC KEY----- | v${self.getVersion().replace( '-debug', '' )}`;
+            /* Update the button text & reset after 1 second.. */
+            $( '#dc-keygen-send-pub-btn' ).text( 'Sent The Public Key!' );
 
-                /* Send the message. */
-                _discordCrypt._dispatchMessage(
-                    _configFile.useEmbeds,
-                    formatted_message,
-                    header,
-                    footer,
-                    0x720000,
-                    '',
-                    undefined,
-                    _cachedModules,
-                    _configFile.timedMessages,
-                    _configFile.timedMessageExpires
-                );
-
-                /* Save the configuration file and store the new message. */
-                self._saveConfig();
-
-                /* Update the button text & reset after 1 second.. */
-                $( '#dc-keygen-send-pub-btn' ).text( 'Sent The Public Key!' );
-
-                setTimeout( ( function () {
-                    $( '#dc-keygen-send-pub-btn' ).text( 'Send Public Key' );
-                } ), 1000 );
-            };
+            setTimeout( ( function () {
+                $( '#dc-keygen-send-pub-btn' ).text( 'Send Public Key' );
+            } ), 1000 );
         }
 
         /**
@@ -3709,321 +3580,318 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Computes a shared secret and generates passwords based on a DH/ECDH key exchange.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onHandshakeComputeButtonClicked( self ) {
-            return () => {
-                let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
-                let isUserSaltPrimary;
+        static _onHandshakeComputeButtonClicked() {
+            let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
+            let isUserSaltPrimary;
 
-                /* Cache jQuery results. */
-                let dc_pub_key_ta = $( '#dc-pub-key-ta' ),
-                    dc_priv_key_ta = $( '#dc-priv-key-ta' ),
-                    dc_handshake_ppk = $( '#dc-handshake-ppk' ),
-                    dc_handshake_compute_btn = $( '#dc-handshake-compute-btn' );
+            /* Cache jQuery results. */
+            let dc_pub_key_ta = $( '#dc-pub-key-ta' ),
+                dc_priv_key_ta = $( '#dc-priv-key-ta' ),
+                dc_handshake_ppk = $( '#dc-handshake-ppk' ),
+                dc_handshake_compute_btn = $( '#dc-handshake-compute-btn' );
 
-                /* Provide some way of showing the user the result without actually giving it away. */
-                function displaySecret( input_hex ) {
-                    const charset = _discordCrypt.__getBraille().splice( 16, 64 );
-                    let output = '';
+            /* Provide some way of showing the user the result without actually giving it away. */
+            function displaySecret( input_hex ) {
+                const charset = _discordCrypt.__getBraille().splice( 16, 64 );
+                let output = '';
 
-                    for ( let i = 0; i < parseInt( input_hex.length / 2 ); i++ )
-                        output += charset[ parseInt( input_hex.substr( i * 2, 2 ) ) & ( charset.length - 1 ) ];
+                for ( let i = 0; i < parseInt( input_hex.length / 2 ); i++ )
+                    output += charset[ parseInt( input_hex.substr( i * 2, 2 ) ) & ( charset.length - 1 ) ];
 
-                    return output;
+                return output;
+            }
+
+            /* Skip if no public key was entered. */
+            if ( !dc_handshake_ppk.val() || !dc_handshake_ppk.val().length )
+                return;
+
+            /* Skip if the user hasn't generated a key of their own. */
+            if ( !dc_pub_key_ta.val() || !dc_pub_key_ta.val().length ) {
+                /* Update the text. */
+                dc_handshake_compute_btn.text( 'You Didn\'t Generate A Key!' );
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                } ), 1000 );
+                return;
+            }
+
+            /* Check if the message header is valid. */
+            if (
+                dc_handshake_ppk.val().replace( /\r?\n|\r/g, "" )
+                    .slice( 0, 4 ) !== ENCODED_KEY_HEADER
+            )
+                return;
+
+            /* Snip off the header. */
+            let blob = dc_handshake_ppk.val().replace( /\r?\n|\r/g, "" ).slice( 4 );
+
+            /* Skip if invalid braille encoded message. */
+            if ( !_discordCrypt.__isValidBraille( blob ) )
+                return;
+
+            try {
+                /* Decode the message. */
+                value = Buffer.from( _discordCrypt.__substituteMessage( blob ), 'hex' );
+            }
+            catch ( e ) {
+                /* Update the text. */
+                dc_handshake_compute_btn.text( 'Invalid Public Key!' );
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                } ), 1000 );
+                return;
+            }
+
+            /* Check the algorithm they're using is the same as ours. */
+            algorithm = value.readInt8( 0 );
+
+            /* Check the algorithm is valid. */
+            if ( !_discordCrypt.__isValidExchangeAlgorithm( algorithm ) ) {
+                /* Update the text. */
+                dc_handshake_compute_btn.text( 'Invalid Algorithm!' );
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                } ), 1000 );
+                return;
+            }
+
+            /* Read the user's generated public key. */
+            let user_pub_key = Buffer.from( dc_pub_key_ta.val(), 'hex' );
+
+            /* Check the algorithm used is the same as ours. */
+            if ( user_pub_key.readInt8( 0 ) !== algorithm ) {
+                /* Update the text. */
+                dc_handshake_compute_btn.text( 'Mismatched Algorithm!' );
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                } ), 1000 );
+                return;
+            }
+
+            /* Update the algorithm text. */
+            $( '#dc-handshake-algorithm' ).text(
+                `Exchange Algorithm: ${_discordCrypt.__indexToExchangeAlgorithmString( algorithm )}`
+            );
+
+            /* Get the salt length. */
+            salt_len = value.readInt8( 1 );
+
+            /* Make sure the salt length is valid. */
+            if ( salt_len < 16 || salt_len > 32 ) {
+                /* Update the text. */
+                dc_handshake_compute_btn.text( 'Invalid Salt Length!' );
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                } ), 1000 );
+                return;
+            }
+
+            /* Read the public salt. */
+            salt = Buffer.from( value.subarray( 2, 2 + salt_len ) );
+
+            /* Read the user's salt length. */
+            user_salt_len = user_pub_key.readInt8( 1 );
+
+            /* Read the user salt. */
+            user_salt = Buffer.from( user_pub_key.subarray( 2, 2 + user_salt_len ) );
+
+            /* Update the salt text. */
+            $( '#dc-handshake-salts' ).text(
+                `Salts: [ ${displaySecret( salt.toString( 'hex' ) )}, ` +
+                `${displaySecret( user_salt.toString( 'hex' ) )} ]`
+            );
+
+            /* Read the public key and convert it to a hex string. */
+            payload = Buffer.from( value.subarray( 2 + salt_len ) ).toString( 'hex' );
+
+            /* Return if invalid. */
+            if ( !_privateExchangeKey || _privateExchangeKey === undefined ||
+                typeof _privateExchangeKey.computeSecret === 'undefined' ) {
+                /* Update the text. */
+                dc_handshake_compute_btn.text( 'Failed To Calculate Private Key!' );
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                } ), 1000 );
+                return;
+            }
+
+            /* Compute the local secret as a hex string. */
+            let derived_secret = _discordCrypt.__computeExchangeSharedSecret(
+                _privateExchangeKey,
+                payload,
+                false,
+                false
+            );
+
+            /* Show error and quit if derivation fails. */
+            if ( !derived_secret || !derived_secret.length ) {
+                /* Update the text. */
+                dc_handshake_compute_btn.text( 'Failed To Derive Key!' );
+                setTimeout( ( function () {
+                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                } ), 1000 );
+                return;
+            }
+
+            /* Display the first 64 characters of it. */
+            $( '#dc-handshake-secret' ).text(
+                `Derived Secret: [ ${displaySecret( derived_secret.length > 64 ?
+                    derived_secret.substring( 0, 64 ) :
+                    derived_secret )
+                } ]`
+            );
+
+            /* We have two salts. We can't know which one is our primary salt so just do a simple check on which
+         Salt32 is bigger. */
+            if ( user_salt_len === salt_len ) {
+                for ( let i = 2; i < parseInt( user_salt_len / 4 ); i += 4 ) {
+                    let usl = user_salt.readUInt32BE( i ), sl = salt.readUInt32BE( i );
+
+                    if ( usl === sl )
+                        continue;
+
+                    isUserSaltPrimary = usl > sl;
+                    break;
                 }
 
-                /* Skip if no public key was entered. */
-                if ( !dc_handshake_ppk.val() || !dc_handshake_ppk.val().length )
-                    return;
-
-                /* Skip if the user hasn't generated a key of their own. */
-                if ( !dc_pub_key_ta.val() || !dc_pub_key_ta.val().length ) {
+                /* Salts are equal, should never happen. */
+                if ( isUserSaltPrimary === undefined ) {
                     /* Update the text. */
-                    dc_handshake_compute_btn.text( 'You Didn\'t Generate A Key!' );
-                    setTimeout( ( function () {
-                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                    } ), 1000 );
+                    dc_handshake_compute_btn.text( 'Both Salts Are Equal ?!' );
+                    setTimeout(
+                        ( function () {
+                            dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                        } ),
+                        1000
+                    );
                     return;
                 }
+            }
+            else
+                isUserSaltPrimary = user_salt_len > salt_len;
 
-                /* Check if the message header is valid. */
-                if (
-                    dc_handshake_ppk.val().replace( /\r?\n|\r/g, "" )
-                        .slice( 0, 4 ) !== self._encodedKeyHeader
-                )
-                    return;
+            /* Create hashed salt from the two user-generated salts. */
+            let primary_hash = Buffer.from(
+                global.sha3.sha3_256( isUserSaltPrimary ? user_salt : salt, true ),
+                'hex'
+            );
+            let secondary_hash = Buffer.from(
+                global.sha3.sha3_512( isUserSaltPrimary ? salt : user_salt, true ),
+                'hex'
+            );
 
-                /* Snip off the header. */
-                let blob = dc_handshake_ppk.val().replace( /\r?\n|\r/g, "" ).slice( 4 );
+            /* Global progress for async callbacks. */
+            let primary_progress = 0, secondary_progress = 0;
 
-                /* Skip if invalid braille encoded message. */
-                if ( !_discordCrypt.__isValidBraille( blob ) )
-                    return;
-
-                try {
-                    /* Decode the message. */
-                    value = Buffer.from( _discordCrypt.__substituteMessage( blob ), 'hex' );
-                }
-                catch ( e ) {
-                    /* Update the text. */
-                    dc_handshake_compute_btn.text( 'Invalid Public Key!' );
-                    setTimeout( ( function () {
-                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                    } ), 1000 );
-                    return;
-                }
-
-                /* Check the algorithm they're using is the same as ours. */
-                algorithm = value.readInt8( 0 );
-
-                /* Check the algorithm is valid. */
-                if ( !_discordCrypt.__isValidExchangeAlgorithm( algorithm ) ) {
-                    /* Update the text. */
-                    dc_handshake_compute_btn.text( 'Invalid Algorithm!' );
-                    setTimeout( ( function () {
-                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                    } ), 1000 );
-                    return;
-                }
-
-                /* Read the user's generated public key. */
-                let user_pub_key = Buffer.from( dc_pub_key_ta.val(), 'hex' );
-
-                /* Check the algorithm used is the same as ours. */
-                if ( user_pub_key.readInt8( 0 ) !== algorithm ) {
-                    /* Update the text. */
-                    dc_handshake_compute_btn.text( 'Mismatched Algorithm!' );
-                    setTimeout( ( function () {
-                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                    } ), 1000 );
-                    return;
-                }
-
-                /* Update the algorithm text. */
-                $( '#dc-handshake-algorithm' ).text(
-                    `Exchange Algorithm: ${_discordCrypt.__indexToExchangeAlgorithmString( algorithm )}`
-                );
-
-                /* Get the salt length. */
-                salt_len = value.readInt8( 1 );
-
-                /* Make sure the salt length is valid. */
-                if ( salt_len < 16 || salt_len > 32 ) {
-                    /* Update the text. */
-                    dc_handshake_compute_btn.text( 'Invalid Salt Length!' );
-                    setTimeout( ( function () {
-                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                    } ), 1000 );
-                    return;
-                }
-
-                /* Read the public salt. */
-                salt = Buffer.from( value.subarray( 2, 2 + salt_len ) );
-
-                /* Read the user's salt length. */
-                user_salt_len = user_pub_key.readInt8( 1 );
-
-                /* Read the user salt. */
-                user_salt = Buffer.from( user_pub_key.subarray( 2, 2 + user_salt_len ) );
-
-                /* Update the salt text. */
-                $( '#dc-handshake-salts' ).text(
-                    `Salts: [ ${displaySecret( salt.toString( 'hex' ) )}, ` +
-                    `${displaySecret( user_salt.toString( 'hex' ) )} ]`
-                );
-
-                /* Read the public key and convert it to a hex string. */
-                payload = Buffer.from( value.subarray( 2 + salt_len ) ).toString( 'hex' );
-
-                /* Return if invalid. */
-                if ( !_privateExchangeKey || _privateExchangeKey === undefined ||
-                    typeof _privateExchangeKey.computeSecret === 'undefined' ) {
-                    /* Update the text. */
-                    dc_handshake_compute_btn.text( 'Failed To Calculate Private Key!' );
-                    setTimeout( ( function () {
-                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                    } ), 1000 );
-                    return;
-                }
-
-                /* Compute the local secret as a hex string. */
-                let derived_secret = _discordCrypt.__computeExchangeSharedSecret(
-                    _privateExchangeKey,
-                    payload,
-                    false,
-                    false
-                );
-
-                /* Show error and quit if derivation fails. */
-                if ( !derived_secret || !derived_secret.length ) {
-                    /* Update the text. */
-                    dc_handshake_compute_btn.text( 'Failed To Derive Key!' );
-                    setTimeout( ( function () {
-                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                    } ), 1000 );
-                    return;
-                }
-
-                /* Display the first 64 characters of it. */
-                $( '#dc-handshake-secret' ).text(
-                    `Derived Secret: [ ${displaySecret( derived_secret.length > 64 ?
-                        derived_secret.substring( 0, 64 ) :
-                        derived_secret )
-                    } ]`
-                );
-
-                /* We have two salts. We can't know which one is our primary salt so just do a simple check on which
-             Salt32 is bigger. */
-                if ( user_salt_len === salt_len ) {
-                    for ( let i = 2; i < parseInt( user_salt_len / 4 ); i += 4 ) {
-                        let usl = user_salt.readUInt32BE( i ), sl = salt.readUInt32BE( i );
-
-                        if ( usl === sl )
-                            continue;
-
-                        isUserSaltPrimary = usl > sl;
-                        break;
-                    }
-
-                    /* Salts are equal, should never happen. */
-                    if ( isUserSaltPrimary === undefined ) {
+            /* Calculate the primary key. */
+            _discordCrypt.__scrypt(
+                Buffer.from( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
+                primary_hash,
+                256,
+                3072,
+                16,
+                2,
+                ( error, progress, key ) => {
+                    if ( error ) {
                         /* Update the text. */
-                        dc_handshake_compute_btn.text( 'Both Salts Are Equal ?!' );
+                        dc_handshake_compute_btn.text( 'Failed Generating Primary Key!' );
                         setTimeout(
                             ( function () {
                                 dc_handshake_compute_btn.text( 'Compute Secret Keys' );
                             } ),
                             1000
                         );
-                        return;
+                        return true;
                     }
+
+                    /* Update progress. */
+                    if ( progress ) {
+                        primary_progress = progress * 50;
+
+                        $( '#dc-exchange-status' )
+                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
+                    }
+
+                    if ( key ) {
+                        /* Generate a quality report and apply the password. */
+                        $( '#dc-handshake-prim-lbl' ).text( `Primary Key: ( Quality - ${
+                            _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
+                        } Bits )` );
+                        $( '#dc-handshake-primary-key' ).val( key.toString( 'base64' ) );
+
+                        /* Since more iterations are done for the primary key, this takes 4x as long thus will
+                       always finish second. We can thus restore the original Generate text for the button once
+                       this is done. */
+                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+
+                        /* Now we clear the additional information. */
+                        $( '#dc-handshake-algorithm' ).text( '...' );
+                        $( '#dc-handshake-secret' ).text( '...' );
+                        $( '#dc-handshake-salts' ).text( '...' );
+                        $( '#dc-exchange-status' ).css( 'width', '0%' );
+                    }
+
+                    return false;
                 }
-                else
-                    isUserSaltPrimary = user_salt_len > salt_len;
+            );
 
-                /* Create hashed salt from the two user-generated salts. */
-                let primary_hash = Buffer.from(
-                    global.sha3.sha3_256( isUserSaltPrimary ? user_salt : salt, true ),
-                    'hex'
-                );
-                let secondary_hash = Buffer.from(
-                    global.sha3.sha3_512( isUserSaltPrimary ? salt : user_salt, true ),
-                    'hex'
-                );
+            /* Calculate all salts needed. */
+            let primary_salt = isUserSaltPrimary ? user_salt : salt;
+            let secondary_salt = isUserSaltPrimary ? salt : user_salt;
+            let secondary_password = Buffer.from(
+                primary_salt.toString( 'hex' ) + derived_secret + secondary_salt.toString( 'hex' ),
+                'hex'
+            );
 
-                /* Global progress for async callbacks. */
-                let primary_progress = 0, secondary_progress = 0;
-
-                /* Calculate the primary key. */
-                _discordCrypt.__scrypt(
-                    Buffer.from( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
-                    primary_hash,
-                    256,
-                    3072,
-                    16,
-                    2,
-                    ( error, progress, key ) => {
-                        if ( error ) {
-                            /* Update the text. */
-                            dc_handshake_compute_btn.text( 'Failed Generating Primary Key!' );
-                            setTimeout(
-                                ( function () {
-                                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                                } ),
-                                1000
-                            );
-                            return true;
-                        }
-
-                        /* Update progress. */
-                        if ( progress ) {
-                            primary_progress = progress * 50;
-
-                            $( '#dc-exchange-status' )
-                                .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
-                        }
-
-                        if ( key ) {
-                            /* Generate a quality report and apply the password. */
-                            $( '#dc-handshake-prim-lbl' ).text( `Primary Key: ( Quality - ${
-                                _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
-                            } Bits )` );
-                            $( '#dc-handshake-primary-key' ).val( key.toString( 'base64' ) );
-
-                            /* Since more iterations are done for the primary key, this takes 4x as long thus will
-                           always finish second. We can thus restore the original Generate text for the button once
-                           this is done. */
-                            dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-
-                            /* Now we clear the additional information. */
-                            $( '#dc-handshake-algorithm' ).text( '...' );
-                            $( '#dc-handshake-secret' ).text( '...' );
-                            $( '#dc-handshake-salts' ).text( '...' );
-                            $( '#dc-exchange-status' ).css( 'width', '0%' );
-                        }
-
-                        return false;
+            /* Calculate the secondary key. */
+            _discordCrypt.__scrypt(
+                secondary_password,
+                secondary_hash,
+                256,
+                3072,
+                8,
+                1,
+                ( error, progress, key ) => {
+                    if ( error ) {
+                        /* Update the text. */
+                        dc_handshake_compute_btn.text( 'Failed Generating Secondary Key!' );
+                        setTimeout(
+                            ( function () {
+                                dc_handshake_compute_btn.text( 'Compute Secret Keys' );
+                            } ),
+                            1000
+                        );
+                        return true;
                     }
-                );
 
-                /* Calculate all salts needed. */
-                let primary_salt = isUserSaltPrimary ? user_salt : salt;
-                let secondary_salt = isUserSaltPrimary ? salt : user_salt;
-                let secondary_password = Buffer.from(
-                    primary_salt.toString( 'hex' ) + derived_secret + secondary_salt.toString( 'hex' ),
-                    'hex'
-                );
-
-                /* Calculate the secondary key. */
-                _discordCrypt.__scrypt(
-                    secondary_password,
-                    secondary_hash,
-                    256,
-                    3072,
-                    8,
-                    1,
-                    ( error, progress, key ) => {
-                        if ( error ) {
-                            /* Update the text. */
-                            dc_handshake_compute_btn.text( 'Failed Generating Secondary Key!' );
-                            setTimeout(
-                                ( function () {
-                                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                                } ),
-                                1000
-                            );
-                            return true;
-                        }
-
-                        if ( progress ) {
-                            secondary_progress = progress * 50;
-                            $( '#dc-exchange-status' )
-                                .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
-                        }
-
-                        if ( key ) {
-                            /* Generate a quality report and apply the password. */
-                            $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
-                                _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
-                            } Bits )` );
-                            $( '#dc-handshake-secondary-key' ).val( key.toString( 'base64' ) );
-                        }
-
-                        return false;
+                    if ( progress ) {
+                        secondary_progress = progress * 50;
+                        $( '#dc-exchange-status' )
+                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
                     }
-                );
 
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Generating Keys ...' );
+                    if ( key ) {
+                        /* Generate a quality report and apply the password. */
+                        $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
+                            _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
+                        } Bits )` );
+                        $( '#dc-handshake-secondary-key' ).val( key.toString( 'base64' ) );
+                    }
 
-                /* Finally clear all volatile information. */
-                _privateExchangeKey = undefined;
-                dc_handshake_ppk.val( '' );
-                dc_priv_key_ta.val( '' );
-                dc_pub_key_ta.val( '' );
-            };
+                    return false;
+                }
+            );
+
+            /* Update the text. */
+            dc_handshake_compute_btn.text( 'Generating Keys ...' );
+
+            /* Finally clear all volatile information. */
+            _privateExchangeKey = undefined;
+            dc_handshake_ppk.val( '' );
+            dc_priv_key_ta.val( '' );
+            dc_pub_key_ta.val( '' );
         }
 
         /**
@@ -4063,59 +3931,55 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Applies the generate passwords to the current channel or DM.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onHandshakeApplyKeysButtonClicked( self ) {
-            return () => {
+        static _onHandshakeApplyKeysButtonClicked() {
+            /* Cache jQuery results. */
+            let dc_handshake_primary_key = $( '#dc-handshake-primary-key' ),
+                dc_handshake_secondary_key = $( '#dc-handshake-secondary-key' );
 
-                /* Cache jQuery results. */
-                let dc_handshake_primary_key = $( '#dc-handshake-primary-key' ),
-                    dc_handshake_secondary_key = $( '#dc-handshake-secondary-key' );
+            /* Skip if no primary key was generated. */
+            if ( !dc_handshake_primary_key.val() || !dc_handshake_primary_key.val().length )
+                return;
 
-                /* Skip if no primary key was generated. */
-                if ( !dc_handshake_primary_key.val() || !dc_handshake_primary_key.val().length )
-                    return;
+            /* Skip if no secondary key was generated. */
+            if ( !dc_handshake_secondary_key.val() ||
+                !dc_handshake_secondary_key.val().length )
+                return;
 
-                /* Skip if no secondary key was generated. */
-                if ( !dc_handshake_secondary_key.val() ||
-                    !dc_handshake_secondary_key.val().length )
-                    return;
+            /* Create the password object and nuke. */
+            let pwd = _discordCrypt._createPassword(
+                dc_handshake_primary_key.val(),
+                dc_handshake_secondary_key.val()
+            );
+            dc_handshake_primary_key.val( '' );
+            dc_handshake_secondary_key.val( '' );
 
-                /* Create the password object and nuke. */
-                let pwd = _discordCrypt._createPassword(
-                    dc_handshake_primary_key.val(),
-                    dc_handshake_secondary_key.val()
-                );
-                dc_handshake_primary_key.val( '' );
-                dc_handshake_secondary_key.val( '' );
+            /* Enable auto-encryption on the channel */
+            _self._setAutoEncrypt( true );
 
-                /* Enable auto-encryption on the channel */
-                self._setAutoEncrypt( true );
+            /* Apply the passwords and save the config. */
+            _configFile.passList[ _discordCrypt._getChannelId() ] = pwd;
+            _self._saveConfig();
 
-                /* Apply the passwords and save the config. */
-                _configFile.passList[ _discordCrypt._getChannelId() ] = pwd;
-                self._saveConfig();
+            /* Update the text and reset it after 1 second. */
+            $( '#dc-handshake-apply-keys-btn' ).text( 'Applied & Saved!' );
+            setTimeout( ( function () {
+                $( '#dc-handshake-apply-keys-btn' ).text( 'Apply Generated Passwords' );
 
-                /* Update the text and reset it after 1 second. */
-                $( '#dc-handshake-apply-keys-btn' ).text( 'Applied & Saved!' );
-                setTimeout( ( function () {
-                    $( '#dc-handshake-apply-keys-btn' ).text( 'Apply Generated Passwords' );
+                /* Reset quality bit length fields. */
+                $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
+                $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
 
-                    /* Reset quality bit length fields. */
-                    $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
-                    $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
+                /* Hide main background. */
+                $( '#dc-overlay' ).css( 'display', 'none' );
 
-                    /* Hide main background. */
-                    $( '#dc-overlay' ).css( 'display', 'none' );
+                /* Hide the entire exchange key menu. */
+                $( '#dc-overlay-exchange' ).css( 'display', 'none' );
 
-                    /* Hide the entire exchange key menu. */
-                    $( '#dc-overlay-exchange' ).css( 'display', 'none' );
-
-                    /* Reset the index to the info tab. */
-                    _discordCrypt._setActiveExchangeTab( 0 );
-                } ), 1000 );
-            }
+                /* Reset the index to the info tab. */
+                _discordCrypt._setActiveExchangeTab( 0 );
+            } ), 1000 );
         }
 
         /**
@@ -4130,68 +3994,62 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Saves the entered passwords for the current channel or DM.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onSavePasswordsButtonClicked( self ) {
-            return () => {
-                let btn = $( '#dc-save-pwd' );
+        static _onSavePasswordsButtonClicked() {
+            let btn = $( '#dc-save-pwd' );
 
-                /* Update the password and save it. */
-                self._updatePasswords();
+            /* Update the password and save it. */
+            _self._updatePasswords();
 
-                /* Update the text for the button. */
-                btn.text( "Saved!" );
+            /* Update the text for the button. */
+            btn.text( "Saved!" );
 
-                /* Reset the text for the password button after a 1 second delay. */
-                setTimeout( ( function () {
-                    /* Reset text. */
-                    btn.text( "Save Password" );
+            /* Reset the text for the password button after a 1 second delay. */
+            setTimeout( ( function () {
+                /* Reset text. */
+                btn.text( "Save Password" );
 
-                    /* Clear the fields. */
-                    $( "#dc-password-primary" ).val( '' );
-                    $( "#dc-password-secondary" ).val( '' );
+                /* Clear the fields. */
+                $( "#dc-password-primary" ).val( '' );
+                $( "#dc-password-secondary" ).val( '' );
 
-                    /* Close. */
-                    $( '#dc-overlay' ).css( 'display', 'none' );
-                    $( '#dc-overlay-password' ).css( 'display', 'none' );
-                } ), 1000 );
-            };
+                /* Close. */
+                $( '#dc-overlay' ).css( 'display', 'none' );
+                $( '#dc-overlay-password' ).css( 'display', 'none' );
+            } ), 1000 );
         }
 
         /**
          * @private
          * @desc Resets passwords for the current channel or DM to their defaults.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onResetPasswordsButtonClicked( self ) {
-            return () => {
-                let btn = $( '#dc-reset-pwd' );
+        static _onResetPasswordsButtonClicked() {
+            let btn = $( '#dc-reset-pwd' );
 
-                /* Disable auto-encrypt for the channel */
-                self._setAutoEncrypt( false );
+            /* Disable auto-encrypt for the channel */
+            _self._setAutoEncrypt( false );
 
-                /* Reset the configuration for this user and save the file. */
-                delete _configFile.passList[ _discordCrypt._getChannelId() ];
-                self._saveConfig();
+            /* Reset the configuration for this user and save the file. */
+            delete _configFile.passList[ _discordCrypt._getChannelId() ];
+            _self._saveConfig();
 
-                /* Update the text for the button. */
-                btn.text( "Password Reset!" );
+            /* Update the text for the button. */
+            btn.text( "Password Reset!" );
 
-                setTimeout( ( function () {
-                    /* Reset text. */
-                    btn.text( "Reset Password" );
+            setTimeout( ( function () {
+                /* Reset text. */
+                btn.text( "Reset Password" );
 
-                    /* Clear the fields. */
-                    $( "#dc-password-primary" ).val( '' );
-                    $( "#dc-password-secondary" ).val( '' );
+                /* Clear the fields. */
+                $( "#dc-password-primary" ).val( '' );
+                $( "#dc-password-secondary" ).val( '' );
 
-                    /* Close. */
-                    $( '#dc-overlay' ).css( 'display', 'none' );
-                    $( '#dc-overlay-password' ).css( 'display', 'none' );
-                } ), 1000 );
-            };
+                /* Close. */
+                $( '#dc-overlay' ).css( 'display', 'none' );
+                $( '#dc-overlay-password' ).css( 'display', 'none' );
+            } ), 1000 );
         }
 
         /**
@@ -4246,46 +4104,43 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Enables or disables automatic message encryption.
-         * @param {_discordCrypt} self
          * @returns {Function}
          */
-        static _onForceEncryptButtonClicked( self ) {
-            return () => {
-                /* Cache jQuery results. */
-                let dc_lock_btn = $( '#dc-lock-btn' ), new_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
+        static _onForceEncryptButtonClicked() {
+            /* Cache jQuery results. */
+            let dc_lock_btn = $( '#dc-lock-btn' ), new_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
-                /* Update the icon and toggle. */
-                if ( !self._getAutoEncrypt() ) {
-                    dc_lock_btn.html( Buffer.from( self._lockIcon, 'base64' ).toString( 'utf8' ) );
-                    dc_lock_btn.append( new_tooltip.text( 'Disable Message Encryption' ) );
-                    self._setAutoEncrypt( true );
-                }
-                else {
-                    dc_lock_btn.html( Buffer.from( self._unlockIcon, 'base64' ).toString( 'utf8' ) );
-                    dc_lock_btn.append( new_tooltip.text( 'Enable Message Encryption' ) );
-                    self._setAutoEncrypt( false );
-                }
+            /* Update the icon and toggle. */
+            if ( !_self._getAutoEncrypt() ) {
+                dc_lock_btn.html( Buffer.from( _self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.append( new_tooltip.text( 'Disable Message Encryption' ) );
+                _self._setAutoEncrypt( true );
+            }
+            else {
+                dc_lock_btn.html( Buffer.from( _self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.append( new_tooltip.text( 'Enable Message Encryption' ) );
+                _self._setAutoEncrypt( false );
+            }
 
-                /* Save config. */
-                self._saveConfig();
-            };
+            /* Save config. */
+            _self._saveConfig();
         }
 
         /**
          * @private
          * @desc Updates the lock icon
          */
-        static _updateLockIcon( self ) {
+        static _updateLockIcon() {
             /* Cache jQuery results. */
             let dc_lock_btn = $( '#dc-lock-btn' ), tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
             /* Update the icon based on the channel */
-            if ( self._getAutoEncrypt() ) {
-                dc_lock_btn.html( Buffer.from( self._lockIcon, 'base64' ).toString( 'utf8' ) );
+            if ( _self._getAutoEncrypt() ) {
+                dc_lock_btn.html( Buffer.from( _self._lockIcon, 'base64' ).toString( 'utf8' ) );
                 dc_lock_btn.append( tooltip.text( 'Disable Message Encryption' ) );
             }
             else {
-                dc_lock_btn.html( Buffer.from( self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.html( Buffer.from( _self._unlockIcon, 'base64' ).toString( 'utf8' ) );
                 dc_lock_btn.append( tooltip.text( 'Enable Message Encryption' ) );
             }
 
@@ -4368,6 +4223,19 @@ const discordCrypt = ( () => {
         /* ========================================================= */
 
         /* ====================== APP UTILITIES ==================== */
+
+        /**
+         * @private
+         * @desc Determines whether a string is in the correct format of a message.
+         * @param {string} message The input message.
+         * @return {boolean} Returns true if the string message is valid.
+         */
+        static _isFormattedMessage( message ) {
+            return typeof message === 'string' &&
+                message.length > 2 &&
+                message[ 0 ] === '`' &&
+                message[ message.length - 1 ] === '`';
+        }
 
         /**
          * @private
@@ -4955,41 +4823,25 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Returns the channel properties for the currently viewed channel or null.
+         * @param {string} [channel_id] If specified, retrieves the channel properties for this channel.
+         *      Else it retrieves the currently viewed channel's properties.
          * @return {object}
          */
-        static _getChannelProps() {
+        static _getChannelProps( channel_id ) {
             /* Blacklisted IDs that don't have actual properties. */
             const blacklisted_channel_props = [
                 '@me',
                 'activity'
             ];
 
-            /* Skip blacklisted channels. */
-            if( blacklisted_channel_props.indexOf( _discordCrypt._getChannelId() ) === -1 ) {
-                let elementOwner = _discordCrypt._getElementReactOwner( $( 'form' )[ 0 ] );
+            channel_id = channel_id || _discordCrypt._getChannelId();
 
-                /* Ensure the properties exist. */
-                if ( elementOwner[ 'props' ] && elementOwner.props[ 'channel' ] )
-                    /* Return the result. */
-                    return elementOwner.props.channel;
-            }
+            /* Skip blacklisted channels. */
+            if( channel_id && blacklisted_channel_props.indexOf( channel_id ) === -1 )
+                return _cachedModules.ChannelStore.getChannel( channel_id );
 
             /* Return nothing for invalid channels. */
             return null;
-        }
-
-        /**
-         * @private
-         * @desc Edits the message's content from the channel indicated.
-         *      N.B. This does not edit embeds due to the internal code Discord uses.
-         * @param {string} channel_id The channel's identifier that the message is located in.
-         * @param {string} message_id The message's identifier to delete.
-         * @param {string} content The message's new content.
-         * @param {CachedModules} cached_modules The internally cached module objects.
-         */
-        static _editMessage( channel_id, message_id, content, cached_modules ) {
-            /* Edit the message internally. */
-            cached_modules.MessageController._editMessage( channel_id, message_id, { content: content } );
         }
 
         /**
@@ -5007,57 +4859,23 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Sends either an embedded message or an inline message to Discord.
-         * @param {boolean} as_embed Whether to dispatch this message as an embed or not.
-         * @param {string} main_message The main content to send.
-         * @param {string} [message_header] The text to display at the top of an embed.
-         * @param {string} [message_footer] The text to display at the bottom of an embed.
-         * @param {int} [embedded_color] A hex color used to outline the left side of the embed if applicable.
-         * @param {string} [message_content] Message content to be attached above the main message.
+         * @param {string} message The main content to send.
          * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the
          *      current channel.
          * @param {Array<TimedMessage>} [timed_messages] Array containing timed messages to add this sent message to.
          * @param {int} [expire_time_minutes] The amount of minutes till this message is to be deleted.
          */
         static _dispatchMessage(
-            as_embed,
-            main_message,
-            message_header,
-            message_footer,
-            embedded_color = 0x551A8B,
-            message_content = '',
+            message,
             channel_id = undefined,
             timed_messages = undefined,
             expire_time_minutes = 0
         ) {
-            let mention_everyone = false;
-
-            /* Parse the message content to the required format if applicable.. */
-            if ( typeof message_content === 'string' && message_content.length ) {
-                /* Sanity check. */
-                if ( _cachedModules.MessageCreator === null ) {
-                    _discordCrypt.log( 'Could not locate the MessageCreator module!', 'error' );
-                    return;
-                }
-
-                try {
-                    /* Parse the message. */
-                    message_content = _cachedModules
-                        .MessageCreator
-                        .parse( _discordCrypt._getChannelProps(), message_content ).content;
-
-                    /* Check for @everyone or @here mentions. */
-                    if ( message_content.includes( '@everyone' ) || message_content.includes( '@here' ) )
-                        mention_everyone = true;
-                }
-                catch ( e ) {
-                    message_content = '';
-                }
-            }
-            else
-                message_content = '';
+            if( !message.length )
+                return;
 
             /* Save the Channel ID. */
-            let _channel = channel_id !== undefined ? channel_id : _discordCrypt._getChannelId();
+            let _channel = channel_id || _discordCrypt._getChannelId();
 
             /* Handles returns for messages. */
             const onDispatchResponse = ( r ) => {
@@ -5074,12 +4892,12 @@ const discordCrypt = ( () => {
                         _discordCrypt.log( `Error sending message: ${r.status}`, 'error' );
 
                         /* Sanity check. */
-                        if ( _cachedModules.MessageDispatcher === null || _cachedModules.GlobalTypes === null ) {
-                            _discordCrypt.log( 'Could not locate the MessageDispatcher module!', 'error' );
+                        if ( _cachedModules.EventDispatcher === null || _cachedModules.GlobalTypes === null ) {
+                            _discordCrypt.log( 'Could not locate the EventDispatcher module!', 'error' );
                             return;
                         }
 
-                        _cachedModules.MessageDispatcher.dispatch( {
+                        _cachedModules.EventDispatcher.dispatch( {
                             type: _cachedModules.GlobalTypes.ActionTypes.MESSAGE_SEND_FAILED,
                             messageId: r.body.id,
                             channelId: _channel
@@ -5101,70 +4919,18 @@ const discordCrypt = ( () => {
                 }
             };
 
-            /* Send this message as an embed. */
-            if ( as_embed ) {
-                /* Create the message embed object and add it to the queue. */
-                _cachedModules.MessageQueue.enqueue(
-                    {
-                        type: 'send',
-                        message: {
-                            channelId: _channel,
-                            nonce: _discordCrypt._getNonce(),
-                            content: message_content,
-                            mention_everyone: mention_everyone,
-                            tts: false,
-                            embed: {
-                                type: "rich",
-                                url: "https://gitlab.com/leogx9r/DiscordCrypt",
-                                color: embedded_color || 0x551A8B,
-                                output_mime_type: "text/x-html",
-                                timestamp: ( new Date() ).toISOString(),
-                                encoding: "utf-16",
-                                author: {
-                                    name: message_header || '-----MESSAGE-----',
-                                    icon_url:
-                                        'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/encode-logo.png',
-                                    url: 'https://discord.me/discordCrypt'
-                                },
-                                footer: {
-                                    text: message_footer || 'discordCrypt',
-                                    icon_url: 'https://gitlab.com/leogx9r/DiscordCrypt/raw/master/images/app-logo.png',
-                                },
-                                description: main_message,
-                            }
-                        }
-                    },
-                    onDispatchResponse
-                );
-
-                return;
-            }
-
-            /* Dispatch the message as normal content. */
-            [
-                main_message,
-                message_content
-            ].forEach(
-                ( ( value ) => {
-                    /* Skip empty values. */
-                    if ( !value.length )
-                        return;
-
-                    /* Create the message object and dispatch it to the queue. */
-                    _cachedModules.MessageQueue.enqueue(
-                        {
-                            type: 'send',
-                            message: {
-                                channelId: _channel,
-                                nonce: _discordCrypt._getNonce(),
-                                content: value === message_content ? value : `\`${value}\``,
-                                mention_everyone: value === message_content ? mention_everyone : false,
-                                tts: false
-                            }
-                        },
-                        onDispatchResponse
-                    );
-                } )
+            /* Create the message object and dispatch it to the queue. */
+            _cachedModules.MessageQueue.original_enqueue(
+                {
+                    type: 'send',
+                    message: {
+                        channelId: _channel,
+                        nonce: _discordCrypt._getNonce(),
+                        content: message,
+                        tts: false
+                    }
+                },
+                onDispatchResponse
             );
         }
 
@@ -5238,8 +5004,9 @@ const discordCrypt = ( () => {
          *      `what` param for logging purposes. By default, this function will try to determine name automatically.
          * @param {boolean} [options.forcePatch=true] Set to `true` to patch even if the function doesn't exist.
          *      ( Adds noop function in place. )
-         * @return {function()} Function with no arguments and no return value that should be
-         *      called to cancel this patch. You should save and run it when your plugin is stopped.
+         * @return {{original: function(), cancel: function()}} Function with no arguments and no return value
+         *      that should be called to cancel this patch. You should save and run it when your plugin is stopped.
+         *      Also returns the original function.
          */
         static _monkeyPatch( what, methodName, options ) {
             /**
@@ -5259,7 +5026,7 @@ const discordCrypt = ( () => {
             };
 
             /* Grab options. */
-            const { before, after, instead, once = false, silent = true, forcePatch = true } = options;
+            const { before, after, instead, once = false, silent = false, forcePatch = false } = options;
 
             /* Determine the display name for logging. */
             const displayName = options.displayName || what.displayName || what.name ||
@@ -5280,9 +5047,13 @@ const discordCrypt = ( () => {
                         `Can't find non-existent method '${displayName}.${methodName}' to patch.`,
                         'error'
                     );
-                    return () => {
+                    let null_fn =  () => {
                         /* Ignore. */
                     };
+                    return {
+                        original: null_fn,
+                        cancel: null_fn
+                    }
                 }
                 else {
                     /* Assign empty functions. */
@@ -5308,8 +5079,7 @@ const discordCrypt = ( () => {
             /* Apply a wrapper function that calls the callbacks based on the options. */
             what[ methodName ] = function() {
                 /**
-                 * @desc Contains the local patch state for this function.
-                 * @type {PatchData} data
+                 * @type {PatchData}
                  */
                 const data = {
                     thisObject: this,
@@ -5363,32 +5133,16 @@ const discordCrypt = ( () => {
             /* Save the unhook method to the object. */
             what[ methodName ].unpatch = cancel;
 
-            /* Return the callback necessary for cancelling. */
-            return cancel;
+            /* Return the callback necessary for cancelling and the original function. */
+            return {
+                original: origMethod,
+                cancel: cancel
+            };
         }
 
-        /**
-         * @private
-         * @desc Hooks a dispatcher from Discord's internals.
-         * @param {object} dispatcher The action dispatcher containing an array of _actionHandlers.
-         * @param {string} method_name The name of the method to hook.
-         * @param {string} options The type of hook to apply. [ 'before', 'after', 'instead', 'revert' ]
-         * @param {boolean} [options.once=false] Set to `true` if you want to automatically unhook
-         *      method after first call.
-         * @param {boolean} [options.silent=false] Set to `true` if you want to suppress log messages about patching and
-         *      unhooking. Useful to avoid clogging the console in case of frequent conditional hooking/unhooking, for
-         *      example from another monkeyPatch callback.
-         */
-        static _hookDispatcher( dispatcher, method_name, options ) {
-            /* Hook the dispatcher. */
-            let fn = _discordCrypt._monkeyPatch( dispatcher._actionHandlers, method_name, options );
+        /* ========================================================= */
 
-            /* Add it to the existing list of cancel-callbacks. */
-            _stopCallbacks.push( fn );
-
-            /* Return the callback. */
-            return fn;
-        }
+        /* ======================= UTILITIES ======================= */
 
         /**
          * @public
@@ -5425,10 +5179,6 @@ const discordCrypt = ( () => {
                 console.error( '[DiscordCrypt] - Error logging message ...' );
             }
         }
-
-        /* ========================================================= */
-
-        /* ======================= UTILITIES ======================= */
 
         /**
          * @private
@@ -5782,412 +5532,6 @@ const discordCrypt = ( () => {
                 ret.push( current );
 
             return ret;
-        }
-
-        /**
-         * @public
-         * @desc Determines if the given string is a valid username according to Discord's standards.
-         * @param {string} name The name of the user and their discriminator.
-         * @returns {boolean} Returns true if the username is valid.
-         * @example
-         * console.log( __isValidUserName( 'Person#1234' ) ); // true
-         * @example
-         * console.log( __isValidUserName( 'Person#123' ) ); // false
-         * @example
-         * console.log( __isValidUserName( 'Person#' ) ); // false
-         * @example
-         * console.log( __isValidUserName( 'Person1234' ) ); // false
-         */
-        static __isValidUserName( name ) {
-            /* Make sure this is actually a string. */
-            if ( typeof name !== 'string' )
-                return false;
-
-            /* The name must start with the '@' symbol. */
-            if ( name[ 0 ] !== '@' )
-                return false;
-
-            /* Iterate through the rest of the name and check for the correct format. */
-            for ( let i = 1; i < name.length; i++ ) {
-                /* Names can't have spaces or '@' symbols. */
-                if ( name[ i ] === ' ' || name[ i ] === '@' )
-                    return false;
-
-                /* Make sure the discriminator is present. */
-                if ( i !== 1 && name[ i ] === '#' ) {
-                    /* The discriminator is 4 characters long. */
-                    if ( name.length - i - 1 === 4 ) {
-                        try {
-                            /* Slice off the discriminator. */
-                            let n = name.slice( i + 1, i + 5 );
-                            /* Do a weak check to ensure that the Base-10 parsed integer is the same as the string. */
-                            return !isNaN( n ) && parseInt( n, 10 ) == n;
-                        }
-                        catch ( e ) {
-                            /* If parsing or slicing somehow fails, this isn't valid. */
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            /* No discriminator found means it's invalid. */
-            return false;
-        }
-
-        /**
-         * @public
-         * @desc Extracts all tags from the given message and optionally removes any tagged discriminators.
-         * @param {string} message The input message to extract all tags from.
-         * @param {object} channelProps The properties of the current channel used for parsing.
-         * @returns {UserTags}
-         */
-        static __extractTags( message, channelProps ) {
-            let split_msg = message.split( ' ' );
-            let cleaned_tags = '', cleaned_msg = '', tmp_tag;
-            let user_tags = [];
-
-            /* Iterate over each segment and check for usernames. */
-            for ( let i = 0, k = 0; i < split_msg.length; i++ ) {
-                /* Check for normal user names. */
-                if ( this.__isValidUserName( split_msg[ i ] ) ) {
-                    user_tags[ k++ ] = split_msg[ i ];
-                    cleaned_msg += `${split_msg[ i ].split( '#' )[ 0 ]} `;
-                }
-                /* Check for parsed user IDs. */
-                else if ( ( /(<@[!]*[0-9]{14,22}>)/gm ).test( split_msg[ i ] ) ) {
-                    user_tags[ k++ ] = split_msg[ i ];
-
-                    /* Convert the tag back to human-readable form if a valid channel props was passed. */
-                    tmp_tag = channelProps ?
-                        _cachedModules.MessageCreator.unparse( split_msg[ i ], channelProps ) :
-                        split_msg[ i ];
-                    cleaned_msg += `${tmp_tag.split( '#' )[ 0 ]} `;
-                }
-                /* Check for @here or @everyone. */
-                else if ( [ '@everyone', '@here', '@me' ].indexOf( split_msg[ i ] ) !== -1 ) {
-                    user_tags[ k++ ] = split_msg[ i ];
-                    cleaned_msg += `${split_msg[ i ]} `;
-                }
-                /* Check for parsed channel tags. */
-                else if ( ( /(<#[0-9]{14,22}>)/gm ).test( split_msg[ i ] ) ) {
-                    user_tags[ k++ ] = split_msg[ i ];
-
-                    /* Convert the channel tag back to human-readable form if a valid channel props was passed. */
-                    cleaned_msg += `${channelProps ?
-                        _cachedModules.MessageCreator.unparse( split_msg[ i ], channelProps ) :
-                        split_msg[ i ]} `;
-                }
-                else
-                    cleaned_msg += `${split_msg[ i ]} `;
-            }
-
-            /* Join all tags to a single string. */
-            for ( let i = 0; i < user_tags.length; i++ )
-                cleaned_tags += `${user_tags[ i ]} `;
-
-            /* Return the parsed message and user tags. */
-            return [ cleaned_msg.trim(), cleaned_tags.trim() ];
-        }
-
-        /**
-         * @public
-         * @desc Extracts raw code blocks from a message and returns a descriptive array.
-         *      N.B. This does not remove the code blocks from the message.
-         * @param {string} message The message to extract all code blocks from.
-         * @returns {Array<CodeBlockDescriptor>} Returns an array of CodeBlockDescriptor objects.
-         */
-        static __extractCodeBlocks( message ) {
-            /* This regex only extracts code blocks. */
-            let code_block_expr = new RegExp( /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm ),
-                inline_block_expr = new RegExp( /^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)/g ),
-                _matched;
-
-            /* Array to store all the extracted blocks in. */
-            let _code_blocks = [];
-
-            /* Loop through each tested RegExp result. */
-            while ( ( _matched = code_block_expr.exec( message ) ) ) {
-                /* Insert the captured data. */
-                _code_blocks.push( {
-                    start_pos: _matched.index,
-                    end_pos: _matched.index + _matched[ 1 ].length,
-                    language: _matched[ 3 ].trim().length === 0 ? 'text' : _matched[ 3 ].trim(),
-                    raw_code: _matched[ 4 ],
-                    captured_block: _matched[ 1 ]
-                } );
-            }
-
-            /* Match inline code blocks. */
-            while ( ( _matched = inline_block_expr.exec( message ) ) ) {
-                /* Insert the captured data. */
-                _code_blocks.push( {
-                    start_pos: _matched.index,
-                    end_pos: _matched.index + _matched[ 0 ].length,
-                    language: 'inline',
-                    raw_code: message
-                        .substr( _matched.index, _matched.index + _matched[ 0 ].length )
-                        .split( '`' )[ 1 ],
-                    captured_block: _matched[ 0 ]
-                } );
-            }
-
-            return _code_blocks;
-        }
-
-        /**
-         * @public
-         * @desc Detects and extracts all formatted emojis in a message.
-         *      Basically, all emojis are formatted as follows:
-         *          <:##EMOJI NAME##:##SNOWFLAKE##>
-         *
-         *      Animated emojis have the format:
-         *          <a:##EMOJI NAME##:##SNOWFLAKE##>
-         *
-         *      This translates to a valid URI always:
-         *          https://cdn.discordapp.com/emojis/##SNOWFLAKE##.png
-         *      Or:
-         *          https://cdn.discordapp.com/emojis/##SNOWFLAKE##.gif
-         *
-         *      This means it's a simple matter of extracting these from a message and building an image embed.
-         *          <img src="##URI##" class="##EMOJI CLASS##" alt=":#EMOJI NAME##:">
-         * @param {string} message The message to extract all emojis from.
-         * @param {boolean} as_html Whether to interpret anchor brackets as HTML.
-         * @return {Array<EmojiDescriptor>} Returns an array of EmojiDescriptor objects.
-         */
-        static __extractEmojis( message, as_html = false ) {
-            let _emojis = [], _matched;
-
-            /* Execute the regex for finding emojis on the message. */
-            let emoji_expr = new RegExp(
-                as_html ?
-                    /((&lt;[a]*)(:(?![\n])[-\w]+:)([0-9]{14,22})(&gt;))/gm :
-                    /((<[a]*)(:(?![\n])[-\w]+:)([0-9]{14,22})(>))/gm
-            );
-
-            /* Iterate over each matched emoji. */
-            while ( ( _matched = emoji_expr.exec( message ) ) ) {
-                /* Insert the emoji's snowflake and name. */
-                _emojis.push( {
-                    animated: _matched[ 2 ].indexOf( 'a' ) !== -1,
-                    formatted: _matched[ 0 ],
-                    name: _matched[ 3 ],
-                    snowflake: _matched[ 4 ]
-                } );
-            }
-
-            /* Return the results. */
-            return _emojis;
-        }
-
-        /**
-         * @public
-         * @desc Extracts code blocks from a message and formats them in HTML to the proper format.
-         * @param {string} message The message to format code blocks from.
-         * @returns {CodeBlockInfo} Returns whether the message contains code blocks and the formatted HTML.
-         * @example
-         * __buildCodeBlockMessage('```\nHello World!\n```');
-         * //
-         * {
-         *      "code": true,
-         *      "html": "<div class=\"markup line-scanned\" data-colour=\"true\" style=\"color: rgb(111, 0, 0);\">
-         *                  <pre class=\"hljs\">
-         *                      <code class=\"dc-code-block hljs\" style=\"position: relative;\">
-         *                          <ol><li>Hello World!</li></ol>
-         *                      </code>
-         *                  </pre>
-         *              </div>"
-         * }
-         */
-        static __buildCodeBlockMessage( message ) {
-            try {
-                /* Extract code blocks. */
-                let _extracted = _discordCrypt.__extractCodeBlocks( message );
-
-                /* Wrap the message normally. */
-                if ( !_extracted.length )
-                    return {
-                        code: false,
-                        html: message
-                    };
-
-                /* Loop over each expanded code block. */
-                for ( let i = 0; i < _extracted.length; i++ ) {
-                    let lang = _extracted[ i ].language,
-                        raw = _extracted[ i ].raw_code;
-
-                    /* Inline code blocks get styled differently. */
-                    if ( lang !== 'inline' ) {
-                        /* For multiple line blocks, new lines are also captured from above. Remove them. */
-                        if( raw[ 0 ] === '\n' )
-                            raw = raw.substr( 1 );
-                        if( raw[ raw.length - 1 ] === '\n' )
-                            raw = raw.substr( 0, raw.length - 1 );
-
-                        /* Build a <pre><code></code></pre> element for HLJS to work on. */
-                        let code_block = $( '<pre>' ).addClass( lang ).append( $( '<code>' ).html( raw ) );
-
-                        /* Highlight this block. */
-                        _cachedModules.HighlightJS.highlightBlock( code_block[ 0 ] );
-
-                        /* Replace the code with an HTML formatted code block. */
-                        message = message.split( _extracted[ i ].captured_block ).join( code_block[ 0 ].outerHTML );
-                    }
-                    else {
-                        /* Split the HTML message according to the inline markdown code block. */
-                        message = message.split( _extracted[ i ].captured_block );
-
-                        /* Replace the data with a inline code class. */
-                        message = message.join( `<code class="inline">${raw}</code>` );
-                    }
-                }
-
-                /* Return the parsed message. */
-                return {
-                    code: true,
-                    html: message
-                };
-            }
-            catch ( e ) {
-                /* Wrap the message normally. */
-                return {
-                    code: false,
-                    html: message
-                };
-            }
-        }
-
-        /**
-         * @public
-         * @desc Extracts URLs from a message and formats them accordingly.
-         * @param {string} message The input message to format URLs from.
-         * @param {string} [embed_link_prefix] Optional search link prefix for URLs to embed in frames.
-         * @returns {URLInfo} Returns whether the message contains URLs and the formatted HTML.
-         */
-        static __buildUrlMessage( message, embed_link_prefix ) {
-            try {
-                /* Split message into array for easier parsing */
-                message = message.split( ' ' );
-
-                let containsURL = false;
-
-                /* Simple detection and replacement */
-                for ( let i = 0; i < message.length; i++ ) {
-                    try {
-
-                        /* Creates URL object of every chunk in the message */
-                        let url = new URL( message[ i ] );
-
-                        /* Only allows https and http protocols */
-                        if( url.protocol === 'https:' || url.protocol === 'http:' ) {
-                            containsURL = true;
-
-                            /* If this is an Up1 host, we can directly embed it. Obviously don't embed deletion links.*/
-                            if (
-                                embed_link_prefix !== undefined &&
-                                message[ i ].startsWith( `${embed_link_prefix}/#` ) &&
-                                message[ i ].indexOf( 'del?ident=' ) === -1
-                            )
-                                message[ i ] =
-                                    `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>
-                                    <iframe src=${url.href} width="100%" height="400px"></iframe><br/><br/>`;
-
-                            else
-                                /* Replaces the inputted URL with a formatted one */
-                                message[ i ] =
-                                    `<a target="_blank" rel="noopener noreferrer" href="${url.href}">${url.href}</a>`;
-                        }
-
-                    }
-                    /* If the object creation fails, message chunk wasn't a valid URL */
-                    catch( e ) {
-                        /* Ignore. */
-                    }
-                }
-
-                /* Rejoin the message array back to normal */
-                message = message.join( ' ' );
-
-                /* Wrap the message in span tags. */
-                if( containsURL )
-                    return {
-                        url: true,
-                        html: `<span>${message}</span>`
-                    };
-
-                /* If the message didn't contain a URL return normal message */
-                else return {
-                    url: false,
-                    html: message
-                };
-            }
-            catch ( e ) {
-                /* Wrap the message normally. */
-                return {
-                    url: false,
-                    html: message
-                };
-            }
-        }
-
-        /**
-         * @public
-         * @desc Extracts emojis from a message and formats them as IMG embeds.
-         * @param {string} message The message to format.
-         * @param {string} emoji_class The class used for constructing the emoji image.
-         * @param {Object} emoji_ctx The internal context for parsing emoji surrogates.
-         * @return {EmojiInfo} Returns whether the message contains Emojis and the formatted HTML.
-         */
-        static __buildEmojiMessage( message, emoji_class, emoji_ctx ) {
-            /* Get all emojis in the message. */
-            let emojis = _discordCrypt.__extractEmojis( message, true );
-
-            /* Parse any default-emojis. */
-            typeof emoji_ctx !== 'undefined' && emoji_ctx.forEach( ( item ) => {
-                if( !item.surrogates.length )
-                    return;
-
-                message = message
-                    .split( item.surrogates )
-                    .join(
-                        '<span class="dc-tooltip dc-tooltip-delayed">' +
-                        `<img src="${item.defaultUrl}" class="${emoji_class}" alt=":${item.names[ 0 ]}:">` +
-                        `<span class="dc-tooltip-text" style="font-size: 12px">:${item.names[ 0 ]}:</span>` +
-                        '</span>'
-                    );
-            } );
-
-            /* Return the default if no emojis are defined. */
-            if( !emojis.length ) {
-                return {
-                    emoji: false,
-                    html: message
-                }
-            }
-
-            /* Loop over every emoji and format them in the message.. */
-            for( let i = 0; i < emojis.length; i++ ) {
-                let e = emojis[ i ];
-
-                /* Get the URI for this. */
-                let URI = `https://cdn.discordapp.com/emojis/${e.snowflake}.${e.animated ? 'gif' : 'png'}`;
-
-                /* Replace the message with a link. */
-                message = message
-                    .split( emojis[ i ].formatted )
-                    .join(
-                        '<span class="dc-tooltip dc-tooltip-delayed">' +
-                        `<img src="${URI}" class="${emoji_class}" alt="${e.name}">` +
-                        `<span class="dc-tooltip-text" style="font-size: 12px">${e.name}</span>` +
-                        '</span>'
-                    );
-            }
-
-            /* Return the result. */
-            return {
-                emoji: true,
-                html: message
-            }
         }
 
         /**
