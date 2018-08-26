@@ -752,6 +752,12 @@ const discordCrypt = ( () => {
          * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
          */
         load() {
+            /* Due to how BD loads the client, we need to start on this page to properly hook events. */
+            if( window.location.pathname !== '/channels/@me' ) {
+                window.location.pathname = '/channels/@me';
+                return;
+            }
+
             /* Freeze the plugin instance if required. */
             if(
                 global.bdplugins &&
@@ -1259,7 +1265,7 @@ const discordCrypt = ( () => {
          * @param {Object} event The message event object.
          * @return {Promise<void>}
          */
-        async _onIncomingMessage( event ) {
+        _onIncomingMessage( event ) {
             let message = event.methodArguments[ 0 ].message;
             let id = event.methodArguments[ 0 ].channelId || message.channel_id;
 
@@ -1269,31 +1275,54 @@ const discordCrypt = ( () => {
                 return;
             }
 
-            /* Decrypt the content. */
-            let r = await _discordCrypt._awaitParseMessage(
-                message.content.substr( 1, message.content.length - 2 ),
-                id
-            );
+            /* Pretend no message was received till the configuration is unlocked. */
+            ( async () => {
+                /* Wait for the configuration file to be loaded. */
+                while( !_configFile )
+                    await ( new Promise( r => setTimeout( r, 1000 ) ) );
 
-            /* Assign it to the object if valid. */
-            if( typeof r === 'string' ) {
-                /* Calculate any mentions. */
-                let mentioned = _discordCrypt._getMentionsForMessage( r, id );
+                let content = message.content.substr( 1, message.content.length - 2 );
 
-                /* Apply. */
-                event.methodArguments[ 0 ].message.content = r;
-                if( mentioned.mentions.length )
-                    event.methodArguments[ 0 ].message.mentions = mentioned.mentions;
-                if( mentioned.mention_roles.length )
-                    event.methodArguments[ 0 ].message.mention_roles = mentioned.mention_roles;
-                event.methodArguments[ 0 ].message.mention_everyone = mentioned.mention_everyone;
+                /* Use the default password for decryption if one hasn't been defined for this channel. */
+                let primary_key = Buffer.from(
+                    _configFile.passList[ id ] && _configFile.passList[ id ].primary ?
+                        _configFile.passList[ id ].primary :
+                        _configFile.defaultPassword
+                );
+                let secondary_key = Buffer.from(
+                    _configFile.passList[ id ] && _configFile.passList[ id ].secondary ?
+                        _configFile.passList[ id ].secondary :
+                        _configFile.defaultPassword
+                );
 
-                event.originalMethod.apply( event.thisObject, event.methodArguments );
-                return;
-            }
+                /* Decrypt the content. */
+                let r = _discordCrypt._parseMessage(
+                    content,
+                    primary_key,
+                    secondary_key,
+                    _configFile.decryptedPrefix
+                );
 
-            /* Call the original method on failure. */
-            event.callOriginalMethod();
+                /* Assign it to the object if valid. */
+                if( typeof r === 'string' ) {
+                    /* Calculate any mentions. */
+                    let mentioned = _discordCrypt._getMentionsForMessage( r, id );
+
+                    /* Apply. */
+                    event.methodArguments[ 0 ].message.content = r;
+                    if( mentioned.mentions.length )
+                        event.methodArguments[ 0 ].message.mentions = mentioned.mentions;
+                    if( mentioned.mention_roles.length )
+                        event.methodArguments[ 0 ].message.mention_roles = mentioned.mention_roles;
+                    event.methodArguments[ 0 ].message.mention_everyone = mentioned.mention_everyone;
+
+                    event.originalMethod.apply( event.thisObject, event.methodArguments );
+                    return;
+                }
+
+                /* Call the original method on failure. */
+                event.callOriginalMethod();
+            } )();
         }
 
         /**
@@ -1305,36 +1334,59 @@ const discordCrypt = ( () => {
         async _onIncomingMessages( event ) {
             let id = event.methodArguments[ 0 ].channelId;
 
-            /* Iterate all messages being received. */
-            for( let i = 0; i < event.methodArguments[ 0 ].messages.length; i++ ) {
-                let message = event.methodArguments[ 0 ].messages[ i ];
+            /* Pretend no message was received till the configuration is unlocked. */
+            await ( async () => {
+                /* Wait for the configuration file to be loaded. */
+                while ( !_configFile )
+                    await ( new Promise( r => setTimeout( r, 1000 ) ) );
 
-                /* Skip if this has no inline-code blocks. */
-                if( !_discordCrypt._isFormattedMessage( message.content ) )
-                    continue;
+                /* Iterate all messages being received. */
+                for ( let i = 0; i < event.methodArguments[ 0  ].messages.length; i++ ) {
+                    let message = event.methodArguments[ 0 ].messages[ i ];
 
-                /* Decrypt the content. */
-                let r = await _discordCrypt._awaitParseMessage(
-                    message.content.substr( 1, message.content.length - 2 ),
-                    id
-                );
+                    /* Skip if this has no inline-code blocks. */
+                    if ( !_discordCrypt._isFormattedMessage( message.content ) )
+                        continue;
 
-                /* Assign it to the object if valid. */
-                if( typeof r === 'string' ) {
-                    /* Calculate any mentions. */
-                    let mentioned = _discordCrypt._getMentionsForMessage( r, id );
+                    let content = message.content.substr( 1, message.content.length - 2 );
 
-                    event.methodArguments[ 0 ].messages[ i ].content = r;
-                    if( mentioned.mentions.length )
-                        event.methodArguments[ 0 ].messages[ i ].mentions = mentioned.mentions;
-                    if( mentioned.mention_roles.length )
-                        event.methodArguments[ 0 ].messages[ i ].mention_roles = mentioned.mention_roles;
-                    event.methodArguments[ 0 ].messages[ i ].mention_everyone = mentioned.mention_everyone;
+                    /* Use the default password for decryption if one hasn't been defined for this channel. */
+                    let primary_key = Buffer.from(
+                        _configFile.passList[ id ] && _configFile.passList[ id ].primary ?
+                            _configFile.passList[ id ].primary :
+                            _configFile.defaultPassword
+                    );
+                    let secondary_key = Buffer.from(
+                        _configFile.passList[ id ] && _configFile.passList[ id ].secondary ?
+                            _configFile.passList[ id ].secondary :
+                            _configFile.defaultPassword
+                    );
+
+                    /* Decrypt the content. */
+                    let r = _discordCrypt._parseMessage(
+                        content,
+                        primary_key,
+                        secondary_key,
+                        _configFile.decryptedPrefix
+                    );
+
+                    /* Assign it to the object if valid. */
+                    if ( typeof r === 'string' ) {
+                        /* Calculate any mentions. */
+                        let mentioned = _discordCrypt._getMentionsForMessage( r, id );
+
+                        event.methodArguments[ 0 ].messages[ i ].content = r;
+                        if ( mentioned.mentions.length )
+                            event.methodArguments[ 0 ].messages[ i ].mentions = mentioned.mentions;
+                        if ( mentioned.mention_roles.length )
+                            event.methodArguments[ 0 ].messages[ i ].mention_roles = mentioned.mention_roles;
+                        event.methodArguments[ 0 ].messages[ i ].mention_everyone = mentioned.mention_everyone;
+                    }
                 }
-            }
 
-            /* Call the original method using the modified contents. ( If any. ) */
-            event.originalMethod.apply( event.thisObject, event.methodArguments );
+                /* Call the original method using the modified contents. ( If any. ) */
+                event.originalMethod.apply( event.thisObject, event.methodArguments );
+            } )();
         }
 
         /**
@@ -1826,37 +1878,6 @@ const discordCrypt = ( () => {
             obj.css( 'color', 'blue' );
 
             return true;
-        }
-
-        /**
-         * @private
-         * @desc Awaits for the configuration to be loaded before decrypting a message.
-         * @param {string} message The text to attempt to decrypt.
-         * @param {string} id The channel ID that this message is for.
-         * @return {Promise<string|boolean>} Returns a promise that either decrypts the message's content
-         *      or false on failure.
-         */
-        static async _awaitParseMessage( message, id ) {
-            /* Wait till the configuration file has been loaded before parsing any messages. */
-            await ( async () => {
-                while( !_configFile )
-                    await ( new Promise( r => setTimeout( r, 1000 ) ) );
-            } )();
-
-            /* Use the default password for decryption if one hasn't been defined for this channel. */
-            let primary_key = Buffer.from(
-                _configFile.passList[ id ] && _configFile.passList[ id ].primary ?
-                    _configFile.passList[ id ].primary :
-                    _configFile.defaultPassword
-            );
-            let secondary_key = Buffer.from(
-                _configFile.passList[ id ] && _configFile.passList[ id ].secondary ?
-                    _configFile.passList[ id ].secondary :
-                    _configFile.defaultPassword
-            );
-
-            /* Perform parsing on the message content. */
-            return _discordCrypt._parseMessage( message, primary_key, secondary_key, _configFile.decryptedPrefix );
         }
 
         /**
@@ -3241,7 +3262,7 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Applies the update & restarts the app by performing a window.location.reload()
+         * @desc Applies the update & restarts the app by performing changing URLs to /channels/@me.
          */
         static _onUpdateRestartNowButtonClicked() {
             const replacePath = require( 'path' )
@@ -3260,8 +3281,8 @@ const discordCrypt = ( () => {
                 }
             } );
 
-            /* Window reload is simple enough. */
-            location.reload();
+            /* Reload the main URI. */
+            window.location.pathname = '/channels/@me';
         }
 
         /**
