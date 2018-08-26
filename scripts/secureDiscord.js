@@ -121,7 +121,7 @@ module.exports = ( mainWnd ) => {
          *      Useful for verifying the script works.
          * @type {boolean}
          */
-        debug: true,
+        debug: false,
         /**
          * @desc Whether to be verbose in logging events that occurred.
          * @type {boolean}
