@@ -50,17 +50,29 @@
  * @param {BrowserWindow} mainWnd Main BrowserWindow object created upon Discord's main loading event.
  */
 module.exports = ( mainWnd ) => {
-    let reloadFlag = false, hookedDom = false;
-
     /**
      * @desc Generates a random IP address.
      * @return {string}
      */
     const randomIP = () => {
-        const buf = require( 'crypto' ).pseudoRandomBytes( 4 );
+        const pseudoRandomBytes = require( 'crypto' ).pseudoRandomBytes;
+        const invalid = [
+            0, 10, 100, 127, 169, 172, 192, 198, 203, 224,
+            225, 226, 227, 228, 229, 230, 231, 232, 233, 234,
+            235, 236, 237, 238, 239, 240, 241, 242, 243, 244,
+            245, 246, 247, 248, 249, 250, 251, 252, 253, 254,
+            255
+        ];
 
-        if( buf[ 0 ] === 0 )
-            buf[ 0 ] = 1;
+        let buf = new Uint8Array( [ 0, 0, 0, 0 ] );
+        let i = 0;
+
+        do {
+            buf[ i ] = pseudoRandomBytes( 1 )[ 0 ];
+            if( invalid.indexOf( buf[ i ] ) !== -1 )
+                continue;
+            i++;
+        } while( i < 4 );
 
         return `${buf[ 0 ]}.${buf[ 1 ]}.${buf[ 2 ]}.${buf[ 3 ]}`
     };
@@ -71,6 +83,16 @@ module.exports = ( mainWnd ) => {
          * @type {BrowserWindow}
          */
         _mainWnd = mainWnd,
+        /**
+         * @desc Whether to enable developer tools upon startup ( and avoid clearing console logs. )
+         * @type {boolean}
+         */
+        debug = false,
+        /**
+         * @desc Whether to be verbose in logging.
+         * @type {boolean}
+         */
+        verbose = false,
         /**
          * @desc Log color CSS defined for logging messages.
          * @type {string}
@@ -152,7 +174,10 @@ module.exports = ( mainWnd ) => {
      * @param {string} str The output to the console.
      * @return {*}
      */
-    const log = ( str ) => execJS( `console.log( '%c[SecureDiscord]%c ${str}', '${logColor}', '' );` );
+    const log = ( str ) => {
+        if( verbose )
+            execJS( `console.log( '%c[SecureDiscord]%c ${str}', '${logColor}', '' );` );
+    };
 
     /**
      * @desc Modifies, inserts or removes any particular headers according to the `headerInfo` defined above.
@@ -188,23 +213,14 @@ module.exports = ( mainWnd ) => {
     };
 
     /**
-     * @desc Event that executes upon the DOM having finished construction.
-     *      This sets up the necessary hooks required.
+     * @desc Executes all patching necessary.
      */
-    const onDomReady = () => {
-        log( 'Initializing ...' );
-
-        hookedDom = true;
-
-        if( reloadFlag ) {
-            log( 'Detected a reload.' );
-            return;
-        }
-
-        reloadFlag = true;
-
+    const doPatch = () => {
         log( 'Setting up header patching.' );
         _mainWnd.webContents.setUserAgent( headerInfo.modify[ 'user-agent' ] );
+        _mainWnd.webContents.setUserAgent = () => {
+            /* Ignore. */
+        };
 
         /* Events in case these every get replaced by any future code. */
         _mainWnd.webContents.session.webRequest.onBeforeSendHeaders( [ targetURLs ], ( details, callback ) => {
@@ -219,6 +235,9 @@ module.exports = ( mainWnd ) => {
             { proxyRules: 'socks5://127.0.0.1:9050,direct' },
             () => log( 'Now routing all connections over Tor!' )
         );
+        _mainWnd.webContents.session.setProxy = () => {
+            /* Ignore. */
+        };
 
         /* Block specific tracking URLs. */
         log( 'Blocking known tracking URLs' );
@@ -270,7 +289,7 @@ module.exports = ( mainWnd ) => {
                 return;
             }
 
-            if( filtered )
+            if( filtered && verbose )
                 execJS(
                     `console.log( '%c[SecureDiscord]%c [%c✖%c] ${details.url}', '${logColor}', '', '${warnColor}', '' )`
                 );
@@ -280,11 +299,12 @@ module.exports = ( mainWnd ) => {
     };
 
     try {
-        /* Apply the DOM hooks. */
-        _mainWnd.webContents.on( 'dom-ready', onDomReady );
-        _mainWnd.webContents.on( 'did-finish-loading', () => {
-            !hookedDom ? onDomReady() : null;
-        } );
+        if( debug ) {
+            _mainWnd.webContents.executeJavaScript( 'console.clear = () => { };' );
+            _mainWnd.webContents.toggleDevTools();
+        }
+
+        doPatch();
     }
     catch( e ) {
         log( `Exception occurred: ${e}` );
