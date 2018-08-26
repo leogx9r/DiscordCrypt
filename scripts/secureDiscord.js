@@ -330,7 +330,7 @@ module.exports = ( mainWnd ) => {
                         /* Filter only the unique entries. */
                         _filteredHosts = _filteredHosts.concat( result ).filter( ( v, i, s ) => s.indexOf( v ) === i );
 
-                        log( `Added ${_filteredHosts.length - oldLength} hosts added to block list.` );
+                        log( `Added ${_filteredHosts.length - oldLength} hosts to block list.` );
                     }
                 }
             )
