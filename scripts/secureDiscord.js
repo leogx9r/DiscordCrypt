@@ -23,54 +23,36 @@
  ******************************************************************************/
 
 /**
- * @desc Generates a random IP address while ignoring LAN components.
- *      Ignore this and see below for actual configuration and usage.
- * @return {string}
+ * @typedef {Object} MainWindowOptions
+ * @property {string} title
+ * @property {null} backgroundColor
+ * @property {number} width
+ * @property {number} height
+ * @property {number} minWidth
+ * @property {number} minHeight
+ * @property {boolean} transparent
+ * @property {boolean} frame
+ * @property {boolean} resizable
+ * @property {boolean} show
+ * @property {{blinkFeatures: string, preload: string}} webPreferences
  */
-const randomIP = () => {
-    /* This doesn't NEED to be cryptographically strong, just random. */
-    const pseudoRandomBytes = require( 'crypto' ).pseudoRandomBytes;
-
-    /* Ignore IP parts that exist on LANs. */
-    const invalid = [
-        0, 10, 100, 127, 169, 172, 192, 198, 203, 224,
-        225, 226, 227, 228, 229, 230, 231, 232, 233, 234,
-        235, 236, 237, 238, 239, 240, 241, 242, 243, 244,
-        245, 246, 247, 248, 249, 250, 251, 252, 253, 254,
-        255
-    ];
-
-    let buf = new Uint8Array( [ 0, 0, 0, 0 ] );
-    let i = 0;
-
-    /* Gather 4 random IPv4 components. */
-    do {
-        buf[ i ] = pseudoRandomBytes( 1 )[ 0 ];
-        if( invalid.indexOf( buf[ i ] ) !== -1 )
-            continue;
-        i++;
-    } while( i < 4 );
-
-    /* Format them as a string. */
-    return `${buf[ 0 ]}.${buf[ 1 ]}.${buf[ 2 ]}.${buf[ 3 ]}`
-};
 
 /**
  * @desc Enhance Discord's desktop app for privacy.
+ *      Usage:
+ *
+ *
  *      1.) Save This File As:
  *          < discord_desktop_core >/app/secureDiscord.js
  *
  *      2.) Edit The File:
  *          < discord_desktop_core >/app/mainScreen.js
  *
- *          Below Line:
+ *          Instead Of Line:
  *              mainWindow = new _electron.BrowserWindow(mainWindowOptions);
  *
- *          If BetterDiscord Is Installed, Before:
- *              _betterDiscord2 = new _betterDiscord.BetterDiscord(mainWindow);
- *
- *          As:
- *              require( './secureDiscord.js' )( mainWindow );
+ *          Replace With:
+ *              mainWindow = require( './secureDiscord.js' )( mainWindowOptions );
  *
  *     3.) Configure the options below to change functionality of the plugin.
  *
@@ -87,9 +69,12 @@ const randomIP = () => {
  *          - Logs all interactions that occurs.
  *
  *
- * @param {BrowserWindow} mainWnd Main BrowserWindow object created upon Discord's main loading event.
+ * @param {MainWindowOptions} mainWindowOptions Main BrowserWindow object created upon Discord's main loading event.
  */
-module.exports = ( mainWnd ) => {
+module.exports = ( mainWindowOptions ) => {
+    /**
+     * @desc Configure your options here.
+     */
     const options = {
         /**
          * @desc Whether to spoof HTTP headers sent in requests to those defined below in headerInfo.
@@ -109,7 +94,7 @@ module.exports = ( mainWnd ) => {
          * @desc Whether to tunnel Discord's connections over a proxy.
          * @type {boolean}
          */
-        useProxy: false,
+        useProxy: true,
         /**
          * @desc When using a proxy, if this is enabled and a connection fails, a direct connection will be used.
          *      If not, the connection is aborted.
@@ -126,7 +111,7 @@ module.exports = ( mainWnd ) => {
          * @desc Whether to be verbose in logging events that occurred.
          * @type {boolean}
          */
-        verbose: true,
+        verbose: false,
         /**
          * @desc If useProxy is enabled, this specifies the proxy address to use for connections.
          *      N.B. This must specify the protocol of the address. Example: "socks5://"
@@ -163,29 +148,64 @@ module.exports = ( mainWnd ) => {
         headerInfo: {
             /* Headers to add to every request. */
             insert: {
+                /* @see https://en.wikipedia.org/wiki/Do_Not_Track */
                 'DNT': '1',
-                'Upgrade-Insecure-Requests': 1
+                /* @see https://www.w3.org/TR/upgrade-insecure-requests */
+                'Upgrade-Insecure-Requests': '1'
             },
             /* Headers to modify if they're present in a request. */
             modify: {
-                'if-none-match': ( Math.random() * 10 ).toString( 36 ).substr( 2, Math.random() * 11 ),
+                /* Tor Specific Headers */
                 'user-agent': 'Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0',
                 'accept-language': 'en-US,en;q=0.5',
-                'accept-encoding': 'gzip, deflate, br',
-                '"x-forwarded-for': randomIP(),
-                'via': randomIP(),
+                'accept-encoding': 'gzip, deflate, br'
             },
             /* Headers to remove if they're present in a request. */
             remove: [
-                'x-fingerprint',
+                'via',
+                'referer',
+                'if-none-match',
                 'x-debug',
+                'x-track',
+                'x-rpc-proxy',
+                'x-fingerprint',
                 'x-debug-options',
+                'x-forwarded-for',
                 'x-failed-requests',
                 'x-super-properties',
                 'x-context-properties',
-                'referer'
             ]
         },
+        /**
+         * @desc Permissions specifically disabled by default.
+         * @see https://developer.chrome.com/extensions/permission_warnings
+         * @type {string[]}
+         */
+        disabledWebPermissions: [
+            'bookmarks',
+            'geolocation',
+            'management',
+            'notifications',
+            'pageCapture',
+            'privacy',
+            'proxy',
+            'system.storage',
+            'tabCapture',
+            'topSites',
+            'webNavigation',
+        ],
+        /**
+         * @desc Direct links to HOSTS file block list for filtering bad URLs.
+         * @type {string[]}
+         */
+        blockListURLs: [
+            /* Dan Pollock's Hosts File. */
+            'https://someonewhocares.org/hosts/hosts',
+            /* HpHosts Ad & Tracker List. */
+            'https://hosts-file.net/ad_servers.txt',
+            /* Peter Lowe’s Ad & Tracking Server List. */
+            'https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts',
+        ],
         /**
          * @desc Specific domain names and paths to block access to.
          *      Can be used as a form of Ad-Blocking.
@@ -199,6 +219,9 @@ module.exports = ( mainWnd ) => {
             /* User event tracking. ( Example: When you open menus/channels. ) */
             'discordapp.com/api/science',
             'discordapp.com/api/v6/science',
+            /* Old URLs they may eventually switch back to. */
+            'discordapp.com/api/track',
+            'discordapp.com/api/v6/track',
 
             /* Various experiments that Discord makes the user participate in. */
             'discordapp.com/api/v6/experiments',
@@ -218,19 +241,7 @@ module.exports = ( mainWnd ) => {
          *              -> https://google.com
          * @type {string}
          */
-        trackingPath: 'discordapp.net/external/',
-        /**
-         * @desc Direct links to HOSTS file block list for filtering bad URLs.
-         * @type {string[]}
-         */
-        blockListURLs: [
-            /* Dan Pollock's Hosts File. */
-            'https://someonewhocares.org/hosts/hosts',
-            /* Peter Lowe’s Ad & Tracking Server List. */
-            'https://pgl.yoyo.org/adservers/serverlist.php?showintro=0;hostformat=hosts',
-            /* HpHosts Ad & Tracker List. */
-            'https://hosts-file.net/ad_servers.txt',
-        ]
+        urlTrackingPath: 'discordapp.net/external/',
     };
 
     /**
@@ -239,6 +250,29 @@ module.exports = ( mainWnd ) => {
      * @type {Array<string>}
      */
     let _filteredHosts = [].concat( options.filteredHosts );
+
+    /**
+     * @desc Electron module.
+     * @type {module:electron}
+     */
+    const electron = require( 'electron' );
+
+    /* Disable specific permissions. */
+    electron.session.defaultSession.setPermissionRequestHandler(
+        ( webContents, permission, callback ) => {
+            /* If a disabled permission is being used, reject the request. */
+            if( options.disabledWebPermissions.indexOf( permission ) !== -1 ) {
+                callback( false );
+                return;
+            }
+
+            /* Allow the permission. */
+            callback( true );
+        }
+    );
+
+    /* Recreate the main window. */
+    let mainWnd = new ( electron.BrowserWindow )( mainWindowOptions );
 
     /**
      * @desc Executes javascript code in the main window.
@@ -373,7 +407,7 @@ module.exports = ( mainWnd ) => {
     /**
      * @desc Executes all patching necessary.
      */
-    const doPatch = () => {
+    try {
         /* Patch the console. */
         if( options.debug ) {
             mainWnd.webContents.executeJavaScript( 'console.clear = () => { };' );
@@ -422,9 +456,9 @@ module.exports = ( mainWnd ) => {
                 let ext_tracking_pos;
                 if(
                     !filtered &&
-                    ( ext_tracking_pos = details.url.indexOf( options.trackingPath ), ext_tracking_pos !== -1 )
+                    ( ext_tracking_pos = details.url.indexOf( options.urlTrackingPath ), ext_tracking_pos !== -1 )
                 ) {
-                    let part_url = details.url.substr( options.trackingPath.length + ext_tracking_pos );
+                    let part_url = details.url.substr( options.urlTrackingPath.length + ext_tracking_pos );
 
                     /* Scroll past the "/" identifier part. */
                     let link_pos = part_url.indexOf( '/' );
@@ -470,13 +504,12 @@ module.exports = ( mainWnd ) => {
 
             /* Build the block list. */
             buildBlockList();
+            log( typeof window );
         }
-    };
-
-    try {
-        doPatch();
     }
     catch( e ) {
         log( `Exception occurred: ${e}` );
     }
+    return mainWnd;
 };
+
