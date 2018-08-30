@@ -1,3 +1,12 @@
+Version 1.5.12
+
+- Fixed a bug regarding Up1 embeds.
+- Updated OpenPGP.js library to v4.0.
+- Updated the user guide to explain how to use non-global, Nitro-only Emojis.
+- Improved the SecureDiscord script to allow for easier configuration and new features.
+- Added local state support. Channels will now remember if you have automatic encryption enabled.
+- Added the ability to have full-emoji auto-select support if the current channel has automatic encryption enabled.
+
 Version 1.5.11
 
 - Fixed a bug due to URL parsing allowing possibly exploitable messages from crashing the client.

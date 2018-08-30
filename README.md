@@ -573,14 +573,14 @@ While this plugin does not support, nor plan to support end-to-end voice encrypt
 
 
 
-### Why does the plugin's source so weird?
+### Why does the plugin's source look so weird?
 
-We recently added bigger libraries to the plugin (Such as OpenPGP.js), and as a result, 
+We recently added bigger libraries to the plugin ( Such as OpenPGP.js ), and as a result, 
     we started compressing the plugin to save everyone a few megabytes of bandwidth every time 
-    discordCrypt is downloaded.
+    DiscordCrypt is downloaded.
 
-Having such a large source would also make developing fairly hard. If you wish to have a look at 
-    the uncompressed source, look at the code as it is in 
+Having such a large source would increase development complexity. If you wish to have a look at 
+    the uncompressed, original source, look at the source file: 
     [src/discordCrypt.plugin.js](src/discordCrypt.plugin.js).
 
 
@@ -636,12 +636,16 @@ However, not only did we make it so that they are visible, we also gave users th
     emojis they should not be able to use. 
     ( Including animated ones, without the need to purchase Nitro. )
     
-While this does not mean you can use all of them, if a server added custom emojis for its members 
-    to use, you will be able to send those emojis anywhere using encrypted messages.
+If a server added custom emojis for its members to use, you will be able to send those emojis
+    anywhere using encrypted messages. These include animated emojis or non-global emotes that are 
+    restricted to Nitro-only users, even if you don't have a Nitro subscription.
 
 There is however, one caveat:
 
-- Autocomplete does not work for emojis you aren't supposed to use.
+- Autocomplete does not work for emojis where you do not have end-to-end encryption set up.
+- This means if you don't have custom passwords set up, the emoji picker and autocomplete won't 
+    let you choose the emojis you aren't allowed to use.
+- You can still type the emoji name, ( Example `:discordCrypt:` ) and send them though.
 
  
 
