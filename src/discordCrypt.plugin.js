@@ -2796,7 +2796,7 @@ const discordCrypt = ( () => {
                         self._saveConfig();
 
                         /* Remove the entire row. */
-                        delete_btn.parent().parent().remove();
+                        delete_btn.parent().parent().parent().remove();
                     } );
 
                     /* Handle copy clicks. */
