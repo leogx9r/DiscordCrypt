@@ -2788,8 +2788,9 @@ const discordCrypt = ( () => {
                         /* Delete the entry. */
                         delete _configFile.passList[ id ];
 
-                        /* Disable auto-encryption for the channel */
-                        _configFile.channelSettings[ id ].autoEncrypt = false;
+                        /* Disable auto-encryption for the channel if present. */
+                        if( _configFile.channelSettings[ id ] )
+                            _configFile.channelSettings[ id ].autoEncrypt = false;
 
                         /* Save the configuration. */
                         self._saveConfig();
@@ -2931,7 +2932,6 @@ const discordCrypt = ( () => {
                             'Update Info',
                             `<strong>Version</strong>: ${updateInfo.version}\n\n` +
                             `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
-                            `<strong>Size</strong>: ${size} KB\n\n` +
                             `<strong>Key ID</strong>: ${key_id}\n\n` +
                             `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
                             '<code class="hljs dc-code-block" style="background: none !important;">' +
