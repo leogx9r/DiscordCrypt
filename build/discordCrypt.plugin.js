@@ -2795,14 +2795,15 @@ const discordCrypt = ( () => {
                         /* Delete the entry. */
                         delete _configFile.passList[ id ];
 
-                        /* Disable auto-encryption for the channel */
-                        _configFile.channelSettings[ id ].autoEncrypt = false;
+                        /* Disable auto-encryption for the channel if present. */
+                        if( _configFile.channelSettings[ id ] )
+                            _configFile.channelSettings[ id ].autoEncrypt = false;
 
                         /* Save the configuration. */
                         self._saveConfig();
 
                         /* Remove the entire row. */
-                        delete_btn.parent().parent().remove();
+                        delete_btn.parent().parent().parent().remove();
                     } );
 
                     /* Handle copy clicks. */
@@ -2920,13 +2921,14 @@ const discordCrypt = ( () => {
                     } );
 
                     /* Handle the signatures button clicked. */
-                    info_btn.click( function() {
-                        let size = parseFloat( updateInfo.payload.length / 1024.0 ).toFixed( 3 );
+                    info_btn.click( async function() {
                         let key_id = Buffer.from(
-                            global
-                                .openpgp
-                                .key
-                                .readArmored( _discordCrypt.__zlibDecompress( _signingKey ) )
+                            (
+                                await global
+                                    .openpgp
+                                    .key
+                                    .readArmored( _discordCrypt.__zlibDecompress( _signingKey ) )
+                            )
                                 .keys[ 0 ]
                                 .primaryKey
                                 .fingerprint
@@ -2938,7 +2940,6 @@ const discordCrypt = ( () => {
                             'Update Info',
                             `<strong>Version</strong>: ${updateInfo.version}\n\n` +
                             `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
-                            `<strong>Size</strong>: ${size} KB\n\n` +
                             `<strong>Key ID</strong>: ${key_id}\n\n` +
                             `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
                             '<code class="hljs dc-code-block" style="background: none !important;">' +
@@ -5566,14 +5567,14 @@ const discordCrypt = ( () => {
          * @param {string} public_key The ASCII-armored public key.
          * @return {boolean} Returns true if the message is valid.
          */
-        static __validatePGPSignature( message, signature, public_key ) {
+        static async __validatePGPSignature( message, signature, public_key ) {
             if( typeof global === 'undefined' || !global.openpgp )
                 return false;
 
             let options = {
                 message: global.openpgp.message.fromText( message ),
-                signature: global.openpgp.signature.readArmored( signature ),
-                publicKeys: global.openpgp.key.readArmored( public_key ).keys
+                signature: await global.openpgp.signature.readArmored( signature ),
+                publicKeys: ( await global.openpgp.key.readArmored( public_key ) ).keys
             };
 
             return global.openpgp.verify( options ).then( ( validity ) => validity.signatures[ 0 ].valid );
