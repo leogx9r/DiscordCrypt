@@ -5302,7 +5302,7 @@ const discordCrypt = ( () => {
             what[ methodName ] = function() {
                 /**
                  * @desc Contains the local patch state for this function.
-                 * @type {PatchData} data
+                 * @type {PatchData}
                  */
                 const data = {
                     thisObject: this,
