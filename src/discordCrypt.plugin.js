@@ -489,39 +489,10 @@ const discordCrypt = ( () => {
              */
 
             /**
-             * @desc Used to scan each message for an encrypted message.
-             * @type {string}
-             */
-            this._messageMarkupClass = '.markup-2BOw-j .inline';
-
-            /**
-             * @desc Used to scan each message for an embedded encrypted message.
-             * @type {string}
-             */
-            this._embedDescriptionClass = '.embedDescription-1Cuq9a';
-
-            /**
              * @desc Used to find the search toolbar to inject all option buttons.
              * @type {string}
              */
             this._searchUiClass = '.search .search-bar';
-            /**
-             * @desc Used to hook messages being sent.
-             * @type {string}
-             */
-            this._channelTextAreaClass = '.content-yTz4x3 textarea';
-
-            /**
-             * @desc Used to assign the correct image class to parsed emojis.
-             * @type {string}
-             */
-            this._emojisClass = 'emoji jumboable da-emoji da-jumboable';
-
-            /**
-             * @desc Used to detect if the autocomplete dialog is opened.
-             * @type {string}
-             */
-            this._autoCompleteClass = '.autocomplete-1vrmpx';
 
             /* ============================================ */
 
@@ -715,9 +686,6 @@ const discordCrypt = ( () => {
             /* Nothing needs to be done since start() wouldn't have triggered. */
             if ( !_discordCrypt._validPluginName() )
                 return;
-
-            /* Remove onMessage event handler hook. */
-            $( this._channelTextAreaClass ).off( "keydown.dcrypt" );
 
             /* Unload the timed message handler. */
             clearInterval( _timedMessageInterval );
