@@ -103,13 +103,6 @@
  */
 
 /**
- * @typedef {Object} ChannelPassword
- * @desc Contains the primary and secondary keys used to encrypt or decrypt messages in a channel.
- * @property {string} primary The primary key used for the inner cipher.
- * @property {string} secondary The secondary key used for the outer cipher.
- */
-
-/**
  * @typedef {Object} PublicKeyInfo
  * @desc Contains information given an input public key.
  * @property {string} fingerprint The SHA-256 sum of the public key.
@@ -129,31 +122,39 @@
  */
 
 /**
+ * @typedef {Object} ChannelStore
+ * @desc Storage information settings relating to the channel.
+ * @property {string} [primaryKey] Primary encryption key.
+ * @property {string} [secondaryKey] Secondary encryption key.
+ * @property {string[]} ignoreIds Message IDs to exclude from parsing.
+ * @property {boolean} autoEncrypt Whether to automatically encrypt messages.
+ */
+
+/**
+ * @typedef {Object} ChannelInfo
+ * @desc Contains settings regarding all channels.
+ * @property {string} channelId Channel's specific ID number.
+ * @property {ChannelStore} store Individual storage for this channel.
+ */
+
+/**
  * @typedef {Object} Config
  * @desc Contains the configuration data used for the plugin.
  * @property {string} version The version of the configuration.
- * @property {Array<{channelId: string, autoEncrypt: boolean}>} channelSettings Settings local to a channel.
- * @property {string} defaultPassword The default key to encrypt or decrypt message with,
- *      if not specifically defined.
- * @property {string} decryptedPrefix This denotes the string that should be prepended to messages
- *      that have been successfully decrypted.
+ * @property {string} defaultPassword The default key to encrypt or decrypt message with, if not specifically defined.
+ * @property {string} decryptedPrefix The string that should be prepended to messages that have been decrypted.
  * @property {string} encodeMessageTrigger The suffix trigger which, once appended to the message,
  *      forces encryption even if a key is not specifically defined for this channel.
  * @property {number} encryptMode The index of the ciphers to use for message encryption.
  * @property {string} encryptBlockMode The block operation mode of the ciphers used to encrypt message.
- * @property {boolean} encodeAll If enabled, automatically forces all messages sent to be encrypted if a
- *      ChannelPassword object is defined for the current channel..
- * @property {boolean} localStates Localizes settings to the local channel.
- * @property {string} paddingMode The short-hand padding scheme to used to align all messages to the cipher's
- *      block length.
- * @property {{channelId: string, password: ChannelPassword}} passList Storage containing all channels with
- *      passwords defined for encryption of new messages and decryption of currently encrypted messages.
+ * @property {string} paddingMode Padding scheme to used to align all messages to the cipher's block length.
  * @property {string} up1Host The full URI host of the Up1 service to use for encrypted file uploads.
  * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
  * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
  * @property {number} timedMessageExpires How long after a message is sent should it be deleted in seconds.
  * @property {boolean} automaticUpdates Whether to automatically check for updates.
  * @property {Array<UpdateInfo>} blacklistedUpdates Updates to ignore due to being blacklisted.
+ * @property {ChannelInfo} channels Specific data per channel.
  */
 
 /**
@@ -553,7 +554,7 @@ const discordCrypt = ( () => {
              * @type {string}
              */
             this._settingsMenuHtml =
-                `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`;
+                `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`;
 
             /**
              * @desc The Base64 encoded SVG containing the unlocked status icon.
@@ -812,8 +813,8 @@ const discordCrypt = ( () => {
                 automaticUpdates: true,
                 /* Blacklisted updates. */
                 blacklistedUpdates: [],
-                /* Storage of channel settings */
-                channelSettings: {},
+                /* Storage of channel settings. */
+                channels: {},
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* How often to scan for encrypted messages. */
@@ -822,20 +823,14 @@ const discordCrypt = ( () => {
                 encryptMode: 7, /* AES(Camellia) */
                 /* Default block operation mode for ciphers. */
                 encryptBlockMode: 'CBC',
-                /* Encode all messages automatically when a password has been set. */
-                encodeAll: true,
                 /* Default password for servers not set. */
                 defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Decrypted messages have this string prefixed to it. */
                 decryptedPrefix: "🔐 ",
                 /* Decrypted messages have this color. */
                 decryptedColor: "green",
-                /* Use local channel settings */
-                localStates: false,
                 /* Default padding mode for blocks. */
                 paddingMode: 'PKC7',
-                /* Password array of objects for users or channels. */
-                passList: {},
                 /* Internal message list for time expiration. */
                 timedMessages: [],
                 /* How long after a message is sent to remove it. */
@@ -954,13 +949,13 @@ const discordCrypt = ( () => {
                 let oldVersion = _configFile.version;
 
                 /* Preserve the old password list before updating. */
-                let oldCache = _configFile.passList;
+                let oldCache = _configFile.channels;
 
                 /* Get the most recent default configuration. */
                 _configFile = this._getDefaultConfig();
 
                 /* Now restore the password list. */
-                _configFile.passList = oldCache;
+                _configFile.channels = oldCache;
 
                 /* Set the flag for saving. */
                 needs_save = true;
@@ -1025,13 +1020,13 @@ const discordCrypt = ( () => {
          */
         _resetSettings( btn ) {
             /* Preserve the old password list before resetting. */
-            let oldCache = _configFile.passList;
+            let oldCache = _configFile.channels;
 
             /* Retrieve the default configuration. */
             _configFile = this._getDefaultConfig();
 
             /* Restore the old passwords. */
-            _configFile.passList = oldCache;
+            _configFile.channels = oldCache;
 
             /* Save the configuration file to update any settings. */
             this._saveConfig();
@@ -1058,22 +1053,22 @@ const discordCrypt = ( () => {
 
             let prim = $( "#dc-password-primary" );
             let sec = $( "#dc-password-secondary" );
+            let id = _discordCrypt._getChannelId();
 
             /* Check if a primary password has actually been entered. */
             if ( !( prim.val() !== '' && prim.val().length > 1 ) ) {
-                delete _configFile.passList[ _discordCrypt._getChannelId() ];
+                _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
 
                 /* Disable auto-encrypt for that channel */
                 this._setAutoEncrypt( false );
             }
             else {
                 /* Update the password field for this id. */
-                _configFile.passList[ _discordCrypt._getChannelId() ] =
-                    _discordCrypt._createPassword( prim.val(), '' );
+                _configFile.channels[ id ].primaryKey = prim.val();
 
                 /* Only check for a secondary password if the primary password has been entered. */
                 if ( sec.val() !== '' && sec.val().length > 1 )
-                    _configFile.passList[ _discordCrypt._getChannelId() ].secondary = sec.val();
+                    _configFile.channels[ id ].secondaryKey = sec.val();
 
                 /* Update the password toolbar. */
                 prim.val( '' );
@@ -1244,13 +1239,16 @@ const discordCrypt = ( () => {
                     () => {
                         _discordCrypt.log( 'Detected chat switch.', 'debug' );
 
-                        /* Make sure localStates is enabled */
-                        if( _configFile && _configFile.localStates ) {
+                        /* Checks if channel has any settings. */
+                        if( _configFile && !_configFile.channels[ _discordCrypt._getChannelId() ] ) {
 
-                            /* Checks if channel is in channel settings storage and enables it if it isn't. */
-                            if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
-                                _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
-                                    { autoEncrypt: true };
+                            /* Create the defaults. */
+                            _configFile.channels[ _discordCrypt._getChannelId() ] = {
+                                primaryKey: null,
+                                secondaryKey: null,
+                                autoEncrypt: true,
+                                ignoreIds: []
+                            };
 
                             /* Update the lock icon since it is local to the channel */
                             _discordCrypt._updateLockIcon( _self );
@@ -1292,13 +1290,13 @@ const discordCrypt = ( () => {
 
                 /* Use the default password for decryption if one hasn't been defined for this channel. */
                 let primary_key = Buffer.from(
-                    _configFile.passList[ id ] && _configFile.passList[ id ].primary ?
-                        _configFile.passList[ id ].primary :
+                    _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
+                        _configFile.channels[ id ].primaryKey :
                         _configFile.defaultPassword
                 );
                 let secondary_key = Buffer.from(
-                    _configFile.passList[ id ] && _configFile.passList[ id ].secondary ?
-                        _configFile.passList[ id ].secondary :
+                    _configFile.channels[ id ] && _configFile.channels[ id ].secondaryKey ?
+                        _configFile.channels[ id ].secondaryKey :
                         _configFile.defaultPassword
                 );
 
@@ -1359,13 +1357,13 @@ const discordCrypt = ( () => {
 
                     /* Use the default password for decryption if one hasn't been defined for this channel. */
                     let primary_key = Buffer.from(
-                        _configFile.passList[ id ] && _configFile.passList[ id ].primary ?
-                            _configFile.passList[ id ].primary :
+                        _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
+                            _configFile.channels[ id ].primaryKey :
                             _configFile.defaultPassword
                     );
                     let secondary_key = Buffer.from(
-                        _configFile.passList[ id ] && _configFile.passList[ id ].secondary ?
-                            _configFile.passList[ id ].secondary :
+                        _configFile.channels[ id ] && _configFile.channels[ id ].secondaryKey ?
+                            _configFile.channels[ id ].secondaryKey :
                             _configFile.defaultPassword
                     );
 
@@ -1570,10 +1568,7 @@ const discordCrypt = ( () => {
          * @param {boolean} enable
          */
         _setAutoEncrypt( enable ) {
-            if( _configFile.localStates )
-                _configFile.channelSettings[ _discordCrypt._getChannelId() ].autoEncrypt = enable;
-            else
-                _configFile.encodeAll = enable;
+            _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt = enable;
         }
 
         /**
@@ -1586,11 +1581,8 @@ const discordCrypt = ( () => {
             if( !_configFile )
                 return false;
 
-            /* Fetch the current value depending on if local states are enabled. */
-            if( _configFile.localStates )
-                return _configFile.channelSettings[ _discordCrypt._getChannelId() ].autoEncrypt;
-            else
-                return _configFile.encodeAll;
+            /* Fetch the current value. */
+            return _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt || false;
         }
 
         /**
@@ -1658,7 +1650,6 @@ const discordCrypt = ( () => {
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
-            $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
 
             /* Handle clipboard upload button. */
             $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked );
@@ -1788,9 +1779,9 @@ const discordCrypt = ( () => {
          * @return {boolean} Returns true if a custom password is set.
          */
         _hasCustomPassword( channel_id ) {
-            return _configFile.passList[ channel_id ] &&
-                _configFile.passList[ channel_id ].primary &&
-                _configFile.passList[ channel_id ].secondary;
+            return _configFile.channels[ channel_id ] &&
+                _configFile.channels[ channel_id ].primaryKey &&
+                _configFile.channels[ channel_id ].secondaryKey;
         }
 
         /**
@@ -2035,8 +2026,8 @@ const discordCrypt = ( () => {
 
             /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
             if ( ignore_trigger === false &&
-                ( !_configFile.passList[ channel_id ] ||
-                    !_configFile.passList[ channel_id ].primary ||
+                ( !_configFile.channels[ channel_id ] ||
+                    !_configFile.channels[ channel_id ].primaryKey ||
                     !_self._getAutoEncrypt() )
             ) {
                 /* Try splitting via the defined split-arg. */
@@ -2064,15 +2055,14 @@ const discordCrypt = ( () => {
                 return false;
 
             /* Get the passwords. */
-            let primaryPassword = Buffer.from(
-                _configFile.passList[ id ] ?
-                    _configFile.passList[ id ].primary :
+            let primary_key = Buffer.from(
+                _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
+                    _configFile.channels[ id ].primaryKey :
                     _configFile.defaultPassword
             );
-
-            let secondaryPassword = Buffer.from(
-                _configFile.passList[ id ] ?
-                    _configFile.passList[ id ].secondary :
+            let secondary_key = Buffer.from(
+                _configFile.channels[ id ] && _configFile.channels[ id ].secondaryKey ?
+                    _configFile.channels[ id ].secondaryKey :
                     _configFile.defaultPassword
             );
 
@@ -2081,8 +2071,8 @@ const discordCrypt = ( () => {
                 /* Encrypt the message. */
                 let msg = _discordCrypt.__symmetricEncrypt(
                     cleaned,
-                    primaryPassword,
-                    secondaryPassword,
+                    primary_key,
+                    secondary_key,
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
                     _configFile.paddingMode,
@@ -2692,7 +2682,7 @@ const discordCrypt = ( () => {
             channels = _cachedModules.ChannelStore.getChannels();
 
             /* Iterate over each password in the configuration. */
-            for ( let prop in _configFile.passList ) {
+            for ( let prop in _configFile.channels ) {
                 let name, id = prop;
 
                 /* Skip channels that don't have an ID. */
@@ -2717,6 +2707,10 @@ const discordCrypt = ( () => {
                 else
                     continue;
 
+                /* Skip channels that don't have a custom password. */
+                if(  !_configFile.channels[ id ].primaryKey || !_configFile.channels[ id ].secondaryKey )
+                    continue;
+
                 /* Create the elements needed for building the row. */
                 let element =
                         $( `<tr><td>${id}</td><td>${name}</td><td><div style="display:flex;"></div></td></tr>` ),
@@ -2733,10 +2727,10 @@ const discordCrypt = ( () => {
                 /* Handle deletion clicks. */
                 delete_btn.click( function () {
                     /* Delete the entry. */
-                    delete _configFile.passList[ id ];
+                    _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
 
                     /* Disable auto-encryption for the channel */
-                    _configFile.channelSettings[ id ].autoEncrypt = false;
+                    _configFile.channels[ id ].autoEncrypt = false;
 
                     /* Save the configuration. */
                     _self._saveConfig();
@@ -2748,11 +2742,13 @@ const discordCrypt = ( () => {
                 /* Handle copy clicks. */
                 copy_btn.click( function() {
                     /* Resolve the entry. */
-                    let current_keys = _configFile.passList[ id ];
+                    let current_keys = _configFile.channels[ id ];
+                    let primary = current_keys.primaryKey || _configFile.defaultPassword;
+                    let secondary = current_keys.secondaryKey || _configFile.defaultPassword;
 
                     /* Write to the clipboard. */
                     require( 'electron' ).clipboard.writeText(
-                        `Primary Key: ${current_keys.primary}\n\nSecondary Key: ${current_keys.secondary}`
+                        `Primary Key: ${primary}\n\nSecondary Key: ${secondary}`
                     );
 
                     copy_btn.text( 'Copied Keys' );
@@ -2767,14 +2763,14 @@ const discordCrypt = ( () => {
                 /* Handle copy clicks. */
                 show_fingerprint_btn.click( function() {
                     /* Resolve the entry. */
-                    let currentKeys = _configFile.passList[ id ];
+                    let currentKeys = _configFile.channels[ id ];
 
                     /* Calculate the fingerprint using either the Guild ID & Channel or Channel & UserID. */
                     let fingerprint = _discordCrypt.__generateFingerprint(
                         id,
-                        currentKeys.primary,
+                        currentKeys.primaryKey || _configFile.defaultPassword,
                         id,
-                        currentKeys.secondary,
+                        currentKeys.secondaryKey || _configFile.defaultPassword,
                         5000
                     );
 
@@ -3011,13 +3007,26 @@ const discordCrypt = ( () => {
                         continue;
 
                     /* Determine if to count this as an import or an update which aren't counted. */
-                    if ( !_configFile.passList.hasOwnProperty( e.id ) ) {
+                    if ( !_configFile.channels.hasOwnProperty( e.id ) ) {
                         /* Update the number imported. */
                         imported++;
                     }
 
-                    /* Add it to the configuration file. */
-                    _configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
+                    /* Make sure the entry exists. */
+                    if( !_configFile.channels[ e.id ] ) {
+                        /* Add it to the configuration file. */
+                        _configFile.channels[ e.id ] = {
+                            primaryKey: e.primary,
+                            secondaryKey: e.secondary,
+                            encodeAll: true,
+                            ignoreIds: []
+                        };
+                    }
+                    else {
+                        /* Update. */
+                        _configFile.channels[ e.id ].primaryKey = e.primary;
+                        _configFile.channels[ e.id ].secondaryKey = e.secondary;
+                    }
                 }
             }
 
@@ -3073,14 +3082,14 @@ const discordCrypt = ( () => {
                 entries;
 
             /* Iterate each entry in the configuration file. */
-            for ( let prop in _configFile.passList ) {
-                let e = _configFile.passList[ prop ];
+            for ( let prop in _configFile.channels ) {
+                let e = _configFile.channels[ prop ];
 
                 /* Insert the entry to the list. */
                 data._discordCrypt_entries.push( {
                     id: prop,
-                    primary: e.primary,
-                    secondary: e.secondary
+                    primary: e.primaryKey,
+                    secondary: e.secondaryKey
                 } );
             }
 
@@ -3118,7 +3127,8 @@ const discordCrypt = ( () => {
             let erase_entries_btn = $( '#dc-erase-entries-btn' );
 
             /* Remove all entries. */
-            _configFile.passList = {};
+            for( let id in _configFile.channels )
+                _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
 
             /* Clear the table. */
             $( '#dc-database-entries' ).html( '' );
@@ -3169,21 +3179,11 @@ const discordCrypt = ( () => {
             _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
             _configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
             _configFile.paddingMode = $( '#dc-settings-padding-mode' ).val();
-            _configFile.localStates = $( '#dc-local-states' ).is( ':checked' );
             _configFile.encryptMode = _discordCrypt
                 .__cipherStringToIndex( dc_primary_cipher.val(), dc_secondary_cipher.val() );
 
             dc_primary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
             dc_secondary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
-
-            /* Remove all channel settings if disabled */
-            if( !_configFile.localStates )
-                _configFile.channelSettings = {};
-
-            /* Checks if channel is in channel settings storage and adds it*/
-            else if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
-                _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
-                    { autoEncrypt: true };
 
             /* Update icon */
             _discordCrypt._updateLockIcon();
@@ -3263,7 +3263,6 @@ const discordCrypt = ( () => {
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
-            $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
             $( '#dc-master-password' ).val( '' );
         }
 
@@ -3966,20 +3965,18 @@ const discordCrypt = ( () => {
                 !dc_handshake_secondary_key.val().length )
                 return;
 
-            /* Create the password object and nuke. */
-            let pwd = _discordCrypt._createPassword(
-                dc_handshake_primary_key.val(),
-                dc_handshake_secondary_key.val()
-            );
-            dc_handshake_primary_key.val( '' );
-            dc_handshake_secondary_key.val( '' );
-
             /* Enable auto-encryption on the channel */
             _self._setAutoEncrypt( true );
 
             /* Apply the passwords and save the config. */
-            _configFile.passList[ _discordCrypt._getChannelId() ] = pwd;
+            let id = _discordCrypt._getChannelId();
+            _configFile.channels[ id ].primaryKey = dc_handshake_primary_key.val();
+            _configFile.channels[ id ].secondaryKey = dc_handshake_secondary_key.val();
             _self._saveConfig();
+
+            /* Clear the fields. */
+            dc_handshake_primary_key.val( '' );
+            dc_handshake_secondary_key.val( '' );
 
             /* Update the text and reset it after 1 second. */
             $( '#dc-handshake-apply-keys-btn' ).text( 'Applied & Saved!' );
@@ -4051,7 +4048,8 @@ const discordCrypt = ( () => {
             _self._setAutoEncrypt( false );
 
             /* Reset the configuration for this user and save the file. */
-            delete _configFile.passList[ _discordCrypt._getChannelId() ];
+            let id = _discordCrypt._getChannelId();
+            _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
             _self._saveConfig();
 
             /* Update the text for the button. */
@@ -4094,17 +4092,17 @@ const discordCrypt = ( () => {
          * @returns {Function}
          */
         static _onCopyCurrentPasswordsButtonClicked() {
-            let currentKeys = _configFile.passList[ _discordCrypt._getChannelId() ];
+            let currentKeys = _configFile.channels[ _discordCrypt._getChannelId() ];
 
             /* If no password is currently generated, write the default key. */
-            if ( !currentKeys ) {
+            if ( !currentKeys || !currentKeys.primaryKey || !currentKeys.secondaryKey ) {
                 require( 'electron' ).clipboard.writeText( `Default Password: ${_configFile.defaultPassword}` );
                 return;
             }
 
             /* Write to the clipboard. */
             require( 'electron' ).clipboard.writeText(
-                `Primary Key: ${currentKeys.primary}\r\n\r\nSecondary Key: ${currentKeys.secondary}`
+                `Primary Key: ${currentKeys.primaryKey}\r\n\r\nSecondary Key: ${currentKeys.secondaryKey}`
             );
 
             /* Alter the button text. */
