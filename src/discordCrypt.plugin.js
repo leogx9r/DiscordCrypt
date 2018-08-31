@@ -101,13 +101,6 @@
  */
 
 /**
- * @typedef {Object} ChannelPassword
- * @desc Contains the primary and secondary keys used to encrypt or decrypt messages in a channel.
- * @property {string} primary The primary key used for the inner cipher.
- * @property {string} secondary The secondary key used for the outer cipher.
- */
-
-/**
  * @typedef {Object} PublicKeyInfo
  * @desc Contains information given an input public key.
  * @property {string} fingerprint The SHA-256 sum of the public key.
@@ -127,31 +120,39 @@
  */
 
 /**
+ * @typedef {Object} ChannelStore
+ * @desc Storage information settings relating to the channel.
+ * @property {string} [primaryKey] Primary encryption key.
+ * @property {string} [secondaryKey] Secondary encryption key.
+ * @property {string[]} ignoreIds Message IDs to exclude from parsing.
+ * @property {boolean} autoEncrypt Whether to automatically encrypt messages.
+ */
+
+/**
+ * @typedef {Object} ChannelInfo
+ * @desc Contains settings regarding all channels.
+ * @property {string} channelId Channel's specific ID number.
+ * @property {ChannelStore} store Individual storage for this channel.
+ */
+
+/**
  * @typedef {Object} Config
  * @desc Contains the configuration data used for the plugin.
  * @property {string} version The version of the configuration.
- * @property {Array<{channelId: string, autoEncrypt: boolean}>} channelSettings Settings local to a channel.
- * @property {string} defaultPassword The default key to encrypt or decrypt message with,
- *      if not specifically defined.
- * @property {string} decryptedPrefix This denotes the string that should be prepended to messages
- *      that have been successfully decrypted.
+ * @property {string} defaultPassword The default key to encrypt or decrypt message with, if not specifically defined.
+ * @property {string} decryptedPrefix The string that should be prepended to messages that have been decrypted.
  * @property {string} encodeMessageTrigger The suffix trigger which, once appended to the message,
  *      forces encryption even if a key is not specifically defined for this channel.
  * @property {number} encryptMode The index of the ciphers to use for message encryption.
  * @property {string} encryptBlockMode The block operation mode of the ciphers used to encrypt message.
- * @property {boolean} encodeAll If enabled, automatically forces all messages sent to be encrypted if a
- *      ChannelPassword object is defined for the current channel..
- * @property {boolean} localStates Localizes settings to the local channel.
- * @property {string} paddingMode The short-hand padding scheme to used to align all messages to the cipher's
- *      block length.
- * @property {{channelId: string, password: ChannelPassword}} passList Storage containing all channels with
- *      passwords defined for encryption of new messages and decryption of currently encrypted messages.
+ * @property {string} paddingMode Padding scheme to used to align all messages to the cipher's block length.
  * @property {string} up1Host The full URI host of the Up1 service to use for encrypted file uploads.
  * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
  * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
  * @property {number} timedMessageExpires How long after a message is sent should it be deleted in seconds.
  * @property {boolean} automaticUpdates Whether to automatically check for updates.
  * @property {Array<UpdateInfo>} blacklistedUpdates Updates to ignore due to being blacklisted.
+ * @property {ChannelInfo} channels Specific data per channel.
  */
 
 /**
@@ -805,8 +806,8 @@ const discordCrypt = ( () => {
                 automaticUpdates: true,
                 /* Blacklisted updates. */
                 blacklistedUpdates: [],
-                /* Storage of channel settings */
-                channelSettings: {},
+                /* Storage of channel settings. */
+                channels: {},
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* How often to scan for encrypted messages. */
@@ -815,20 +816,14 @@ const discordCrypt = ( () => {
                 encryptMode: 7, /* AES(Camellia) */
                 /* Default block operation mode for ciphers. */
                 encryptBlockMode: 'CBC',
-                /* Encode all messages automatically when a password has been set. */
-                encodeAll: true,
                 /* Default password for servers not set. */
                 defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Decrypted messages have this string prefixed to it. */
                 decryptedPrefix: "🔐 ",
                 /* Decrypted messages have this color. */
                 decryptedColor: "green",
-                /* Use local channel settings */
-                localStates: false,
                 /* Default padding mode for blocks. */
                 paddingMode: 'PKC7',
-                /* Password array of objects for users or channels. */
-                passList: {},
                 /* Internal message list for time expiration. */
                 timedMessages: [],
                 /* How long after a message is sent to remove it. */
@@ -947,13 +942,13 @@ const discordCrypt = ( () => {
                 let oldVersion = _configFile.version;
 
                 /* Preserve the old password list before updating. */
-                let oldCache = _configFile.passList;
+                let oldCache = _configFile.channels;
 
                 /* Get the most recent default configuration. */
                 _configFile = this._getDefaultConfig();
 
                 /* Now restore the password list. */
-                _configFile.passList = oldCache;
+                _configFile.channels = oldCache;
 
                 /* Set the flag for saving. */
                 needs_save = true;
@@ -1018,13 +1013,13 @@ const discordCrypt = ( () => {
          */
         _resetSettings( btn ) {
             /* Preserve the old password list before resetting. */
-            let oldCache = _configFile.passList;
+            let oldCache = _configFile.channels;
 
             /* Retrieve the default configuration. */
             _configFile = this._getDefaultConfig();
 
             /* Restore the old passwords. */
-            _configFile.passList = oldCache;
+            _configFile.channels = oldCache;
 
             /* Save the configuration file to update any settings. */
             this._saveConfig();
@@ -1051,22 +1046,22 @@ const discordCrypt = ( () => {
 
             let prim = $( "#dc-password-primary" );
             let sec = $( "#dc-password-secondary" );
+            let id = _discordCrypt._getChannelId();
 
             /* Check if a primary password has actually been entered. */
             if ( !( prim.val() !== '' && prim.val().length > 1 ) ) {
-                delete _configFile.passList[ _discordCrypt._getChannelId() ];
+                _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
 
                 /* Disable auto-encrypt for that channel */
                 this._setAutoEncrypt( false );
             }
             else {
                 /* Update the password field for this id. */
-                _configFile.passList[ _discordCrypt._getChannelId() ] =
-                    _discordCrypt._createPassword( prim.val(), '' );
+                _configFile.channels[ id ].primaryKey = prim.val();
 
                 /* Only check for a secondary password if the primary password has been entered. */
                 if ( sec.val() !== '' && sec.val().length > 1 )
-                    _configFile.passList[ _discordCrypt._getChannelId() ].secondary = sec.val();
+                    _configFile.channels[ id ].secondaryKey = sec.val();
 
                 /* Update the password toolbar. */
                 prim.val( '' );
@@ -1237,13 +1232,16 @@ const discordCrypt = ( () => {
                     () => {
                         _discordCrypt.log( 'Detected chat switch.', 'debug' );
 
-                        /* Make sure localStates is enabled */
-                        if( _configFile && _configFile.localStates ) {
+                        /* Checks if channel has any settings. */
+                        if( _configFile && !_configFile.channels[ _discordCrypt._getChannelId() ] ) {
 
-                            /* Checks if channel is in channel settings storage and enables it if it isn't. */
-                            if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
-                                _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
-                                    { autoEncrypt: true };
+                            /* Create the defaults. */
+                            _configFile.channels[ _discordCrypt._getChannelId() ] = {
+                                primaryKey: null,
+                                secondaryKey: null,
+                                autoEncrypt: true,
+                                ignoreIds: []
+                            };
 
                             /* Update the lock icon since it is local to the channel */
                             _discordCrypt._updateLockIcon( _self );
@@ -1285,13 +1283,13 @@ const discordCrypt = ( () => {
 
                 /* Use the default password for decryption if one hasn't been defined for this channel. */
                 let primary_key = Buffer.from(
-                    _configFile.passList[ id ] && _configFile.passList[ id ].primary ?
-                        _configFile.passList[ id ].primary :
+                    _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
+                        _configFile.channels[ id ].primaryKey :
                         _configFile.defaultPassword
                 );
                 let secondary_key = Buffer.from(
-                    _configFile.passList[ id ] && _configFile.passList[ id ].secondary ?
-                        _configFile.passList[ id ].secondary :
+                    _configFile.channels[ id ] && _configFile.channels[ id ].secondaryKey ?
+                        _configFile.channels[ id ].secondaryKey :
                         _configFile.defaultPassword
                 );
 
@@ -1352,13 +1350,13 @@ const discordCrypt = ( () => {
 
                     /* Use the default password for decryption if one hasn't been defined for this channel. */
                     let primary_key = Buffer.from(
-                        _configFile.passList[ id ] && _configFile.passList[ id ].primary ?
-                            _configFile.passList[ id ].primary :
+                        _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
+                            _configFile.channels[ id ].primaryKey :
                             _configFile.defaultPassword
                     );
                     let secondary_key = Buffer.from(
-                        _configFile.passList[ id ] && _configFile.passList[ id ].secondary ?
-                            _configFile.passList[ id ].secondary :
+                        _configFile.channels[ id ] && _configFile.channels[ id ].secondaryKey ?
+                            _configFile.channels[ id ].secondaryKey :
                             _configFile.defaultPassword
                     );
 
@@ -1563,10 +1561,7 @@ const discordCrypt = ( () => {
          * @param {boolean} enable
          */
         _setAutoEncrypt( enable ) {
-            if( _configFile.localStates )
-                _configFile.channelSettings[ _discordCrypt._getChannelId() ].autoEncrypt = enable;
-            else
-                _configFile.encodeAll = enable;
+            _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt = enable;
         }
 
         /**
@@ -1579,11 +1574,8 @@ const discordCrypt = ( () => {
             if( !_configFile )
                 return false;
 
-            /* Fetch the current value depending on if local states are enabled. */
-            if( _configFile.localStates )
-                return _configFile.channelSettings[ _discordCrypt._getChannelId() ].autoEncrypt;
-            else
-                return _configFile.encodeAll;
+            /* Fetch the current value. */
+            return _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt || false;
         }
 
         /**
@@ -1651,7 +1643,6 @@ const discordCrypt = ( () => {
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
-            $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
 
             /* Handle clipboard upload button. */
             $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked );
@@ -1781,9 +1772,9 @@ const discordCrypt = ( () => {
          * @return {boolean} Returns true if a custom password is set.
          */
         _hasCustomPassword( channel_id ) {
-            return _configFile.passList[ channel_id ] &&
-                _configFile.passList[ channel_id ].primary &&
-                _configFile.passList[ channel_id ].secondary;
+            return _configFile.channels[ channel_id ] &&
+                _configFile.channels[ channel_id ].primaryKey &&
+                _configFile.channels[ channel_id ].secondaryKey;
         }
 
         /**
@@ -2028,8 +2019,8 @@ const discordCrypt = ( () => {
 
             /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
             if ( ignore_trigger === false &&
-                ( !_configFile.passList[ channel_id ] ||
-                    !_configFile.passList[ channel_id ].primary ||
+                ( !_configFile.channels[ channel_id ] ||
+                    !_configFile.channels[ channel_id ].primaryKey ||
                     !_self._getAutoEncrypt() )
             ) {
                 /* Try splitting via the defined split-arg. */
@@ -2057,15 +2048,14 @@ const discordCrypt = ( () => {
                 return false;
 
             /* Get the passwords. */
-            let primaryPassword = Buffer.from(
-                _configFile.passList[ id ] ?
-                    _configFile.passList[ id ].primary :
+            let primary_key = Buffer.from(
+                _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
+                    _configFile.channels[ id ].primaryKey :
                     _configFile.defaultPassword
             );
-
-            let secondaryPassword = Buffer.from(
-                _configFile.passList[ id ] ?
-                    _configFile.passList[ id ].secondary :
+            let secondary_key = Buffer.from(
+                _configFile.channels[ id ] && _configFile.channels[ id ].secondaryKey ?
+                    _configFile.channels[ id ].secondaryKey :
                     _configFile.defaultPassword
             );
 
@@ -2074,8 +2064,8 @@ const discordCrypt = ( () => {
                 /* Encrypt the message. */
                 let msg = _discordCrypt.__symmetricEncrypt(
                     cleaned,
-                    primaryPassword,
-                    secondaryPassword,
+                    primary_key,
+                    secondary_key,
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
                     _configFile.paddingMode,
@@ -2685,7 +2675,7 @@ const discordCrypt = ( () => {
             channels = _cachedModules.ChannelStore.getChannels();
 
             /* Iterate over each password in the configuration. */
-            for ( let prop in _configFile.passList ) {
+            for ( let prop in _configFile.channels ) {
                 let name, id = prop;
 
                 /* Skip channels that don't have an ID. */
@@ -2710,6 +2700,10 @@ const discordCrypt = ( () => {
                 else
                     continue;
 
+                /* Skip channels that don't have a custom password. */
+                if(  !_configFile.channels[ id ].primaryKey || !_configFile.channels[ id ].secondaryKey )
+                    continue;
+
                 /* Create the elements needed for building the row. */
                 let element =
                         $( `<tr><td>${id}</td><td>${name}</td><td><div style="display:flex;"></div></td></tr>` ),
@@ -2726,10 +2720,10 @@ const discordCrypt = ( () => {
                 /* Handle deletion clicks. */
                 delete_btn.click( function () {
                     /* Delete the entry. */
-                    delete _configFile.passList[ id ];
+                    _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
 
                     /* Disable auto-encryption for the channel */
-                    _configFile.channelSettings[ id ].autoEncrypt = false;
+                    _configFile.channels[ id ].autoEncrypt = false;
 
                     /* Save the configuration. */
                     _self._saveConfig();
@@ -2741,11 +2735,13 @@ const discordCrypt = ( () => {
                 /* Handle copy clicks. */
                 copy_btn.click( function() {
                     /* Resolve the entry. */
-                    let current_keys = _configFile.passList[ id ];
+                    let current_keys = _configFile.channels[ id ];
+                    let primary = current_keys.primaryKey || _configFile.defaultPassword;
+                    let secondary = current_keys.secondaryKey || _configFile.defaultPassword;
 
                     /* Write to the clipboard. */
                     require( 'electron' ).clipboard.writeText(
-                        `Primary Key: ${current_keys.primary}\n\nSecondary Key: ${current_keys.secondary}`
+                        `Primary Key: ${primary}\n\nSecondary Key: ${secondary}`
                     );
 
                     copy_btn.text( 'Copied Keys' );
@@ -2760,14 +2756,14 @@ const discordCrypt = ( () => {
                 /* Handle copy clicks. */
                 show_fingerprint_btn.click( function() {
                     /* Resolve the entry. */
-                    let currentKeys = _configFile.passList[ id ];
+                    let currentKeys = _configFile.channels[ id ];
 
                     /* Calculate the fingerprint using either the Guild ID & Channel or Channel & UserID. */
                     let fingerprint = _discordCrypt.__generateFingerprint(
                         id,
-                        currentKeys.primary,
+                        currentKeys.primaryKey || _configFile.defaultPassword,
                         id,
-                        currentKeys.secondary,
+                        currentKeys.secondaryKey || _configFile.defaultPassword,
                         5000
                     );
 
@@ -3004,13 +3000,26 @@ const discordCrypt = ( () => {
                         continue;
 
                     /* Determine if to count this as an import or an update which aren't counted. */
-                    if ( !_configFile.passList.hasOwnProperty( e.id ) ) {
+                    if ( !_configFile.channels.hasOwnProperty( e.id ) ) {
                         /* Update the number imported. */
                         imported++;
                     }
 
-                    /* Add it to the configuration file. */
-                    _configFile.passList[ e.id ] = _discordCrypt._createPassword( e.primary, e.secondary );
+                    /* Make sure the entry exists. */
+                    if( !_configFile.channels[ e.id ] ) {
+                        /* Add it to the configuration file. */
+                        _configFile.channels[ e.id ] = {
+                            primaryKey: e.primary,
+                            secondaryKey: e.secondary,
+                            encodeAll: true,
+                            ignoreIds: []
+                        };
+                    }
+                    else {
+                        /* Update. */
+                        _configFile.channels[ e.id ].primaryKey = e.primary;
+                        _configFile.channels[ e.id ].secondaryKey = e.secondary;
+                    }
                 }
             }
 
@@ -3066,14 +3075,14 @@ const discordCrypt = ( () => {
                 entries;
 
             /* Iterate each entry in the configuration file. */
-            for ( let prop in _configFile.passList ) {
-                let e = _configFile.passList[ prop ];
+            for ( let prop in _configFile.channels ) {
+                let e = _configFile.channels[ prop ];
 
                 /* Insert the entry to the list. */
                 data._discordCrypt_entries.push( {
                     id: prop,
-                    primary: e.primary,
-                    secondary: e.secondary
+                    primary: e.primaryKey,
+                    secondary: e.secondaryKey
                 } );
             }
 
@@ -3111,7 +3120,8 @@ const discordCrypt = ( () => {
             let erase_entries_btn = $( '#dc-erase-entries-btn' );
 
             /* Remove all entries. */
-            _configFile.passList = {};
+            for( let id in _configFile.channels )
+                _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
 
             /* Clear the table. */
             $( '#dc-database-entries' ).html( '' );
@@ -3162,21 +3172,11 @@ const discordCrypt = ( () => {
             _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
             _configFile.defaultPassword = $( '#dc-settings-default-pwd' ).val();
             _configFile.paddingMode = $( '#dc-settings-padding-mode' ).val();
-            _configFile.localStates = $( '#dc-local-states' ).is( ':checked' );
             _configFile.encryptMode = _discordCrypt
                 .__cipherStringToIndex( dc_primary_cipher.val(), dc_secondary_cipher.val() );
 
             dc_primary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
             dc_secondary_cipher.val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
-
-            /* Remove all channel settings if disabled */
-            if( !_configFile.localStates )
-                _configFile.channelSettings = {};
-
-            /* Checks if channel is in channel settings storage and adds it*/
-            else if( !_configFile.channelSettings[ _discordCrypt._getChannelId() ] )
-                _configFile.channelSettings[ _discordCrypt._getChannelId() ] =
-                    { autoEncrypt: true };
 
             /* Update icon */
             _discordCrypt._updateLockIcon();
@@ -3256,7 +3256,6 @@ const discordCrypt = ( () => {
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
-            $( '#dc-local-states' ).prop( 'checked', _configFile.localStates );
             $( '#dc-master-password' ).val( '' );
         }
 
@@ -3959,20 +3958,18 @@ const discordCrypt = ( () => {
                 !dc_handshake_secondary_key.val().length )
                 return;
 
-            /* Create the password object and nuke. */
-            let pwd = _discordCrypt._createPassword(
-                dc_handshake_primary_key.val(),
-                dc_handshake_secondary_key.val()
-            );
-            dc_handshake_primary_key.val( '' );
-            dc_handshake_secondary_key.val( '' );
-
             /* Enable auto-encryption on the channel */
             _self._setAutoEncrypt( true );
 
             /* Apply the passwords and save the config. */
-            _configFile.passList[ _discordCrypt._getChannelId() ] = pwd;
+            let id = _discordCrypt._getChannelId();
+            _configFile.channels[ id ].primaryKey = dc_handshake_primary_key.val();
+            _configFile.channels[ id ].secondaryKey = dc_handshake_secondary_key.val();
             _self._saveConfig();
+
+            /* Clear the fields. */
+            dc_handshake_primary_key.val( '' );
+            dc_handshake_secondary_key.val( '' );
 
             /* Update the text and reset it after 1 second. */
             $( '#dc-handshake-apply-keys-btn' ).text( 'Applied & Saved!' );
@@ -4044,7 +4041,8 @@ const discordCrypt = ( () => {
             _self._setAutoEncrypt( false );
 
             /* Reset the configuration for this user and save the file. */
-            delete _configFile.passList[ _discordCrypt._getChannelId() ];
+            let id = _discordCrypt._getChannelId();
+            _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
             _self._saveConfig();
 
             /* Update the text for the button. */
@@ -4087,17 +4085,17 @@ const discordCrypt = ( () => {
          * @returns {Function}
          */
         static _onCopyCurrentPasswordsButtonClicked() {
-            let currentKeys = _configFile.passList[ _discordCrypt._getChannelId() ];
+            let currentKeys = _configFile.channels[ _discordCrypt._getChannelId() ];
 
             /* If no password is currently generated, write the default key. */
-            if ( !currentKeys ) {
+            if ( !currentKeys || !currentKeys.primaryKey || !currentKeys.secondaryKey ) {
                 require( 'electron' ).clipboard.writeText( `Default Password: ${_configFile.defaultPassword}` );
                 return;
             }
 
             /* Write to the clipboard. */
             require( 'electron' ).clipboard.writeText(
-                `Primary Key: ${currentKeys.primary}\r\n\r\nSecondary Key: ${currentKeys.secondary}`
+                `Primary Key: ${currentKeys.primaryKey}\r\n\r\nSecondary Key: ${currentKeys.secondaryKey}`
             );
 
             /* Alter the button text. */
