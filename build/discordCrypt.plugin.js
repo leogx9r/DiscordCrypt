@@ -1275,6 +1275,7 @@ const discordCrypt = ( () => {
         _onIncomingMessage( event ) {
             let message = event.methodArguments[ 0 ].message;
             let id = event.methodArguments[ 0 ].channelId || message.channel_id;
+            let mid = event.methodArguments[ 0 ].messageId || message.message_id;
 
             /* Skip if this has no inline-code blocks. */
             if( !_discordCrypt._isFormattedMessage( message.content ) ) {
@@ -1307,6 +1308,7 @@ const discordCrypt = ( () => {
                     content,
                     primary_key,
                     secondary_key,
+                    mid,
                     _configFile.decryptedPrefix
                 );
 
@@ -1340,6 +1342,7 @@ const discordCrypt = ( () => {
          */
         async _onIncomingMessages( event ) {
             let id = event.methodArguments[ 0 ].channelId;
+            let mid = event.methodArguments[ 0 ].messageId;
 
             /* Pretend no message was received till the configuration is unlocked. */
             await ( async () => {
@@ -1374,6 +1377,7 @@ const discordCrypt = ( () => {
                         content,
                         primary_key,
                         secondary_key,
+                        mid,
                         _configFile.decryptedPrefix
                     );
 
@@ -1753,9 +1757,6 @@ const discordCrypt = ( () => {
             /* Paste the data from the clipboard to the public key field. */
             $( '#dc-handshake-paste-btn' ).click( _discordCrypt._onHandshakePastePublicKeyButtonClicked );
 
-            /* Compute the primary and secondary keys. */
-            $( '#dc-handshake-compute-btn' ).click( _discordCrypt._onHandshakeComputeButtonClicked );
-
             /* Copy the primary and secondary key to the clipboard. */
             $( '#dc-handshake-cpy-keys-btn' ).click( _discordCrypt._onHandshakeCopyKeysButtonClicked );
 
@@ -1952,10 +1953,11 @@ const discordCrypt = ( () => {
          * @param {string} message Message content.
          * @param {string} primary_key The primary key used to decrypt the message.
          * @param {string} secondary_key The secondary key used to decrypt the message.
+         * @param {string} message_id The ID of this message.
          * @param {string} [prefix] Messages that are successfully decrypted should have this prefix prepended.
          * @return {string|boolean} Returns false if a message isn't in the correct format or the decrypted result.
          */
-        static _parseMessage( message, primary_key, secondary_key, prefix ) {
+        static _parseMessage( message, primary_key, secondary_key, prefix, message_id ) {
             /* Skip if the message is <= size of the total header. */
             if ( message.length <= 12 )
                 return false;
@@ -1966,6 +1968,7 @@ const discordCrypt = ( () => {
             /* If this is a public key, just add a button and continue. */
             // TODO Handle this via async function
             if ( magic === ENCODED_KEY_HEADER )
+                _onHandshakeComputeButtonClicked(message, message_id)
                 return false;
 
             /* Make sure it has the correct header. */
@@ -3601,14 +3604,17 @@ const discordCrypt = ( () => {
          * @desc Computes a shared secret and generates passwords based on a DH/ECDH key exchange.
          * @returns {Function}
          */
-        static _onHandshakeComputeButtonClicked() {
+        async _onHandshakeComputeButtonClicked(dc_handshake_ppk, message_id) {
             let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
             let isUserSaltPrimary;
+
+            if(!_configFile || _configFile[message_id])
+                return;
+            
 
             /* Cache jQuery results. */
             let dc_pub_key_ta = $( '#dc-pub-key-ta' ),
                 dc_priv_key_ta = $( '#dc-priv-key-ta' ),
-                dc_handshake_ppk = $( '#dc-handshake-ppk' ),
                 dc_handshake_compute_btn = $( '#dc-handshake-compute-btn' );
 
             /* Provide some way of showing the user the result without actually giving it away. */
@@ -3628,11 +3634,11 @@ const discordCrypt = ( () => {
 
             /* Skip if the user hasn't generated a key of their own. */
             if ( !dc_pub_key_ta.val() || !dc_pub_key_ta.val().length ) {
-                /* Update the text. */
+                /* Update the text.
                 dc_handshake_compute_btn.text( 'You Didn\'t Generate A Key!' );
                 setTimeout( ( function () {
                     dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
+                } ), 1000 );*/
                 return;
             }
 
@@ -3905,12 +3911,13 @@ const discordCrypt = ( () => {
 
             /* Update the text. */
             dc_handshake_compute_btn.text( 'Generating Keys ...' );
-
+            
             /* Finally clear all volatile information. */
             _privateExchangeKey = undefined;
             dc_handshake_ppk.val( '' );
             dc_priv_key_ta.val( '' );
             dc_pub_key_ta.val( '' );
+            _configFile[message_id] = true;
         }
 
         /**
