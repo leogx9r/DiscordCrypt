@@ -721,8 +721,8 @@ const discordCrypt = ( () => {
          * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
          */
         load() {
-            /* Due to how BD loads the client, we need to start on this page to properly hook events. */
-            if( window.location.pathname !== '/channels/@me' ) {
+            /* Due to how BD loads the client, we need to start on a non-channel page to properly hook events. */
+            if( [ '/channels/@me', '/activity', '/library', '/store' ].indexOf( window.location.pathname ) === -1 ) {
                 window.location.pathname = '/channels/@me';
                 return;
             }
@@ -1210,10 +1210,10 @@ const discordCrypt = ( () => {
                                 autoEncrypt: true,
                                 ignoreIds: []
                             };
-
-                            /* Update the lock icon since it is local to the channel */
-                            _discordCrypt._updateLockIcon( _self );
                         }
+
+                        /* Update the lock icon since it is local to the channel */
+                        _discordCrypt._updateLockIcon( _self );
 
                         /* Add the toolbar. */
                         _self._loadToolbar();
@@ -1543,7 +1543,7 @@ const discordCrypt = ( () => {
                 return false;
 
             /* Fetch the current value. */
-            return _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt || false;
+            return _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt || true;
         }
 
         /**
