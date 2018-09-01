@@ -1173,36 +1173,33 @@ const discordCrypt = ( () => {
                 { instead: _discordCrypt._onDispatchEvent }
             );
 
-            /* Hook the outgoing message queue handler to encrypt messages. */
-            let hookDefinition = _discordCrypt._monkeyPatch(
+            /* Hook the outgoing message queue handler to encrypt messages & save the original enqueue. */
+            _cachedModules.MessageQueue.original_enqueue = _discordCrypt._monkeyPatch(
                 _cachedModules.MessageQueue,
                 'enqueue',
-                { instead: _self._onOutgoingMessage }
-            );
-
-            /* Save the original enqueue. */
-            _cachedModules.MessageQueue.original_enqueue = hookDefinition.original;
+                { instead: _discordCrypt._onOutgoingMessage }
+            ).original;
 
             /* Hook CHANNEL_SWITCH for toolbar and menu reloading. */
-            _eventHooks.push( { type: 'CHANNEL_SELECT', callback: _self._onChannelSwitched } );
+            _eventHooks.push( { type: 'CHANNEL_SELECT', callback: _discordCrypt._onChannelSwitched } );
 
             /* Hook MESSAGE_CREATE function for single-load messages. */
-            _eventHooks.push( { type: 'MESSAGE_CREATE', callback: _self._onIncomingMessage } );
+            _eventHooks.push( { type: 'MESSAGE_CREATE', callback: _discordCrypt._onIncomingMessage } );
 
             /* Hook MESSAGE_UPDATE function for single-edited messages. */
-            _eventHooks.push( { type: 'MESSAGE_UPDATE', callback: _self._onIncomingMessage } );
+            _eventHooks.push( { type: 'MESSAGE_UPDATE', callback: _discordCrypt._onIncomingMessage } );
 
             /* Hook LOAD_MESSAGES_SUCCESS function for bulk-messages. */
-            _eventHooks.push( { type: 'LOAD_MESSAGES_SUCCESS', callback: _self._onIncomingMessages } );
+            _eventHooks.push( { type: 'LOAD_MESSAGES_SUCCESS', callback: _discordCrypt._onIncomingMessages } );
 
             /* Hook LOAD_MESSAGES_AROUND_SUCCESS for location-jumping decryption.  */
-            _eventHooks.push( { type: 'LOAD_MESSAGES_AROUND_SUCCESS', callback: _self._onIncomingMessages } );
+            _eventHooks.push( { type: 'LOAD_MESSAGES_AROUND_SUCCESS', callback: _discordCrypt._onIncomingMessages } );
 
             /* Hook LOAD_RECENT_MENTIONS_SUCCESS which is required to decrypt mentions. */
-            _eventHooks.push( { type: 'LOAD_RECENT_MENTIONS_SUCCESS', callback: _self._onIncomingMessages } );
+            _eventHooks.push( { type: 'LOAD_RECENT_MENTIONS_SUCCESS', callback: _discordCrypt._onIncomingMessages } );
 
             /* Hook LOAD_PINNED_MESSAGES_SUCCESS for searching encrypted messages. */
-            _eventHooks.push( { type: 'LOAD_PINNED_MESSAGES_SUCCESS', callback: _self._onIncomingMessages } );
+            _eventHooks.push( { type: 'LOAD_PINNED_MESSAGES_SUCCESS', callback: _discordCrypt._onIncomingMessages } );
 
             return true;
         }
@@ -1230,7 +1227,7 @@ const discordCrypt = ( () => {
          * @desc The event handler that fires when a channel is switched.
          * @param {Object} event The channel switching event object.
          */
-        _onChannelSwitched( event ) {
+        static _onChannelSwitched( event ) {
             /* Skip channels not currently selected. */
             if ( _discordCrypt._getChannelId() === event.methodArguments[ 0 ].channelId )
                 /* Delays are required due to windows being loaded async. */
@@ -1269,7 +1266,7 @@ const discordCrypt = ( () => {
          * @param {Object} event The message event object.
          * @return {Promise<void>}
          */
-        _onIncomingMessage( event ) {
+        static _onIncomingMessage( event ) {
             /**
              * @type {Message}
              */
@@ -1336,7 +1333,7 @@ const discordCrypt = ( () => {
          * @param {Object} event The channel loading event object.
          * @return {Promise<void>}
          */
-        async _onIncomingMessages( event ) {
+        static async _onIncomingMessages( event ) {
             let id = event.methodArguments[ 0 ].channelId;
 
             /* Pretend no message was received till the configuration is unlocked. */
@@ -1398,7 +1395,7 @@ const discordCrypt = ( () => {
          * @param {Object} event The outgoing message event object.
          * @return {Promise<void>}
          */
-        async _onOutgoingMessage( event ) {
+        static async _onOutgoingMessage( event ) {
             /* Wait till the configuration file has been loaded before parsing any messages. */
             await ( async () => {
                 while( !_configFile )
