@@ -312,8 +312,7 @@
  * @name PatchData
  * @desc Contains local patch data and state of the function.
  * @property {object} thisObject Original `this` value in current call of patched method.
- * @property {Arguments} methodArguments Original `arguments` object in current call of patched
- *      method.
+ * @property {Arguments} methodArguments Original `arguments` object in current call of patched method.
  *      Please, never change function signatures, as it may cause a lot of problems in future.
  * @property {cancelPatch} cancelPatch Function with no arguments and no return value that may be
  *      called to reverse patching of current method. Calling this function prevents running of this
@@ -324,8 +323,7 @@
  * @property {function} callOriginalMethod This is a shortcut for calling original method using
  *      `this` and `arguments` from original call.
  * @property {*} returnValue This is a value returned from original function call. This property is
- *      available only in `after` callback or in `instead` callback after calling
- *      `callOriginalMethod` function.
+ *      available only in `after` callback or in `instead` callback after calling `callOriginalMethod` function.
  */
 
 /**
@@ -1891,7 +1889,6 @@ const discordCrypt = ( () => {
             let magic = content.slice( 0, 4 );
 
             /* If this is a public key, just add a button and continue. */
-            // TODO Handle this via async function
             if ( magic === ENCODED_KEY_HEADER )
                 return _discordCrypt._parseKeyMessage( message, content );
 
