@@ -257,6 +257,44 @@
  */
 
 /**
+ * @typedef {Object} MessageAuthor
+ * @desc The author of a message.
+ * @property {string} avatar The hash name of the user's avatar.
+ * @property {string} discriminator The 4-digit discriminator value for this user.
+ * @property {string} id The snowflake ID for the user.
+ * @property {string} username The name of the user.
+ */
+
+/**
+ * @typedef {Object} MemberInfo
+ * @desc The author of a message.
+ * @property {boolean} deaf Whether this user has been deafened.
+ * @property {string} joined_at The time the user joined
+ * @property {boolean} mute Whether the user is muted.
+ * @property {string} [nick] The nickname of the user, if any.
+ */
+
+/**
+ * @typedef {Object} Message
+ * @desc An incoming or outgoing Discord message.
+ * @property {Array<Object>} attachments Message attachments, if any.
+ * @property {MessageAuthor} author The creator of the message.
+ * @property {string} channel_id The channel this message belongs to.
+ * @property {string} content The raw message content.
+ * @property {string} [edited_timestamp] If specified, when this message was edited.
+ * @property {string} [guild_id] If this message belongs to a Guild, this is the ID for it.
+ * @property {string} id The message's unique ID.
+ * @property {MemberInfo} member The statistics for the author.
+ * @property {boolean} mention_everyone Whether this message attempts to mention everyone.
+ * @property {string[]} mentions User IDs or roles mentioned in this message.
+ * @property {string} nonce The unique timestamp/snowflake for this message.
+ * @property {boolean} pinned Whether this message was pinned.
+ * @property {string} timestamp When this message was sent.
+ * @property {boolean} tts If this message should use TTS.
+ * @property {number} type The type of message this is.
+ */
+
+/**
  * @callback EventHookCallback
  * @desc This callback is executed when an event occurs.
  * @desc {Object} event The event data that has occurred.
@@ -1239,6 +1277,9 @@ const discordCrypt = ( () => {
          * @return {Promise<void>}
          */
         _onIncomingMessage( event ) {
+            /**
+             * @type {Message}
+             */
             let message = event.methodArguments[ 0 ].message;
             let id = event.methodArguments[ 0 ].channelId || message.channel_id;
 
@@ -1254,8 +1295,6 @@ const discordCrypt = ( () => {
                 while( !_configFile )
                     await ( new Promise( r => setTimeout( r, 1000 ) ) );
 
-                let content = message.content.substr( 1, message.content.length - 2 );
-
                 /* Use the default password for decryption if one hasn't been defined for this channel. */
                 let primary_key = Buffer.from(
                     _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
@@ -1270,7 +1309,7 @@ const discordCrypt = ( () => {
 
                 /* Decrypt the content. */
                 let r = _discordCrypt._parseMessage(
-                    content,
+                    message,
                     primary_key,
                     secondary_key,
                     _configFile.decryptedPrefix
@@ -1321,8 +1360,6 @@ const discordCrypt = ( () => {
                     if ( !_discordCrypt._isFormattedMessage( message.content ) )
                         continue;
 
-                    let content = message.content.substr( 1, message.content.length - 2 );
-
                     /* Use the default password for decryption if one hasn't been defined for this channel. */
                     let primary_key = Buffer.from(
                         _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
@@ -1337,7 +1374,7 @@ const discordCrypt = ( () => {
 
                     /* Decrypt the content. */
                     let r = _discordCrypt._parseMessage(
-                        content,
+                        message,
                         primary_key,
                         secondary_key,
                         _configFile.decryptedPrefix
@@ -1908,19 +1945,22 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Parses a raw message and returns the decrypted result.
-         * @param {string} message Message content.
+         * @param {Message} message The message object.
          * @param {string} primary_key The primary key used to decrypt the message.
          * @param {string} secondary_key The secondary key used to decrypt the message.
          * @param {string} [prefix] Messages that are successfully decrypted should have this prefix prepended.
          * @return {string|boolean} Returns false if a message isn't in the correct format or the decrypted result.
          */
         static _parseMessage( message, primary_key, secondary_key, prefix ) {
+            /* Get the message's content. */
+            let content = message.content.substr( 1, message.content.length - 2 );
+
             /* Skip if the message is <= size of the total header. */
-            if ( message.length <= 12 )
+            if ( content.length <= 12 )
                 return false;
 
             /* Split off the magic. */
-            let magic = message.slice( 0, 4 );
+            let magic = content.slice( 0, 4 );
 
             /* If this is a public key, just add a button and continue. */
             // TODO Handle this via async function
@@ -1932,7 +1972,7 @@ const discordCrypt = ( () => {
                 return false;
 
             /* Try to deserialize the metadata. */
-            let metadata = _discordCrypt.__metaDataDecode( message.slice( 4, 8 ) );
+            let metadata = _discordCrypt.__metaDataDecode( content.slice( 4, 8 ) );
 
             /* Try looking for an algorithm, mode and padding type. */
             /* Algorithm first. */
@@ -1948,7 +1988,7 @@ const discordCrypt = ( () => {
                 return false;
 
             /* Decrypt the message. */
-            let dataMsg = _discordCrypt.__symmetricDecrypt( message.replace( /\r?\n|\r/g, '' )
+            let dataMsg = _discordCrypt.__symmetricDecrypt( content.replace( /\r?\n|\r/g, '' )
                 .substr( 8 ), primary_key, secondary_key, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
 
             /* If successfully decrypted, add the prefix if necessary and return the result. */
@@ -4504,24 +4544,12 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Creates a password object using a primary and secondary password.
-         * @param {string} primary_password The primary password.
-         * @param {string} secondary_password The secondary password.
-         * @returns {ChannelPassword} Object containing the two passwords.
-         * console.log( _discordCrypt._createPassword( 'Hello', 'World' ) );
-         * // Object {primary: "Hello", secondary: "World"}
-         */
-        static _createPassword( primary_password, secondary_password ) {
-            return { primary: primary_password, secondary: secondary_password };
-        }
-
-        /**
-         * @private
          * @desc Returns functions to locate exported webpack modules.
          * @returns {WebpackModuleSearcher}
          */
         static _getWebpackModuleSearcher() {
             /* [ Credits to the creator. ] */
+            // noinspection JSUnresolvedFunction
             const req = typeof( webpackJsonp ) === "function" ?
                 webpackJsonp(
                     [],
