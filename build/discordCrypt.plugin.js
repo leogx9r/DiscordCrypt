@@ -108,6 +108,8 @@
  * @property {string} fingerprint The SHA-256 sum of the public key.
  * @property {string} algorithm The public key's type ( DH | ECDH ) extracted from the metadata.
  * @property {int} bit_length The length, in bits, of the public key's security.
+ * @property {Buffer} salt The unique salt for this key.
+ * @property {Buffer} key The raw key.
  */
 
 /**
@@ -792,7 +794,7 @@ const discordCrypt = ( () => {
             _discordCrypt.__loadLibraries( this._libraries );
 
             /* Hook the necessary functions required for functionality. */
-            this._hookSetup();
+            _discordCrypt._hookSetup();
         }
 
         /**
@@ -1096,7 +1098,7 @@ const discordCrypt = ( () => {
          * @private
          * @desc Sets up the hooking methods required for plugin functionality.
          */
-        _hookSetup() {
+        static _hookSetup() {
             /* Get module searcher for caching. */
             const searcher = _discordCrypt._getWebpackModuleSearcher();
 
@@ -1144,12 +1146,17 @@ const discordCrypt = ( () => {
                 'isEmojiDisabled',
                 {
                     instead: ( patchData ) => {
-                        if(
-                            _discordCrypt._getChannelId() === patchData.methodArguments[ 1 ].id &&
-                            _discordCrypt._hasCustomPassword( patchData.methodArguments[ 1 ].id ) &&
-                            _discordCrypt._getAutoEncrypt()
-                        )
-                            return false;
+                        try {
+                            if(
+                                _discordCrypt._getChannelId() === patchData.methodArguments[ 1 ].id &&
+                                _discordCrypt._hasCustomPassword( patchData.methodArguments[ 1 ].id ) &&
+                                _discordCrypt._getAutoEncrypt()
+                            )
+                                return false;
+                        }
+                        catch( e ) {
+                            /* Ignore. */
+                        }
 
                         return patchData.callOriginalMethod();
                     }
@@ -1219,11 +1226,16 @@ const discordCrypt = ( () => {
         static _onDispatchEvent( event ) {
             let handled = false;
 
-            for( let i = 0; i < _eventHooks.length; i++ )
-                if( event.methodArguments[ 0 ].type === _eventHooks[ i ].type ) {
-                    _eventHooks[ i ].callback( event );
-                    handled = true;
-                }
+            try {
+                for( let i = 0; i < _eventHooks.length; i++ )
+                    if( event.methodArguments[ 0 ].type === _eventHooks[ i ].type ) {
+                        _eventHooks[ i ].callback( event );
+                        handled = true;
+                    }
+            }
+            catch( e ) {
+                /* Ignore. */
+            }
 
             if( !handled )
                 event.callOriginalMethod();
@@ -1235,18 +1247,20 @@ const discordCrypt = ( () => {
          * @param {Object} event The channel switching event object.
          */
         static _onChannelSwitched( event ) {
+            let id = event.methodArguments[ 0 ].channelId;
+
             /* Skip channels not currently selected. */
-            if ( _discordCrypt._getChannelId() === event.methodArguments[ 0 ].channelId )
+            if ( _discordCrypt._getChannelId() === id )
                 /* Delays are required due to windows being loaded async. */
                 setTimeout(
                     () => {
                         _discordCrypt.log( 'Detected chat switch.', 'debug' );
 
                         /* Checks if channel has any settings. */
-                        if( _configFile && !_configFile.channels[ _discordCrypt._getChannelId() ] ) {
+                        if( _configFile && !_configFile.channels[ id ] ) {
 
                             /* Create the defaults. */
-                            _configFile.channels[ _discordCrypt._getChannelId() ] = {
+                            _configFile.channels[ id ] = {
                                 primaryKey: null,
                                 secondaryKey: null,
                                 autoEncrypt: true,
@@ -1788,96 +1802,20 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Parses a public key message and adds the exchange button to it if necessary.
-         * @param {Object} obj The jQuery object of the current message being examined.
-         * @returns {boolean} Returns true.
+         * @desc Parses a public key message.
+         * @param {Message} message The message object.
+         * @param {string} content The message's content.
+         * @returns {string} Returns a result string indicating the message info.
          */
-        _parseKeyMessage( obj ) {
+        static _parseKeyMessage( message, content ) {
             /* Extract the algorithm info from the message's metadata. */
-            let metadata = _discordCrypt.__extractKeyInfo( obj.text().replace( /\r?\n|\r/g, '' ), true );
+            let metadata = _discordCrypt.__extractKeyInfo( content.replace( /\r?\n|\r/g, '' ), true );
 
             /* Sanity check for invalid key messages. */
             if ( metadata === null )
-                return true;
+                return '🚫 [ ERROR ] INVALID PUBLIC KEY !!!';
 
-            /* Compute the fingerprint of our currently known public key if any to determine if to proceed. */
-            let local_fingerprint = _discordCrypt.__sha256( Buffer.from( $( '#dc-pub-key-ta' ).val(), 'hex' ), 'hex' );
-
-            /* Skip if this is our current public key. */
-            if ( metadata[ 'fingerprint' ] === local_fingerprint )
-                return true;
-
-            /* Create a button allowing the user to perform a key exchange with this public key. */
-            let button = $( "<button>Perform Key Exchange</button>" )
-                .addClass( 'dc-button' )
-                .addClass( 'dc-button-inverse' );
-
-            /* Remove margins. */
-            button.css( 'margin-left', '0' );
-            button.css( 'margin-right', '0' );
-
-            /* Move the button a bit down from the key's text. */
-            button.css( 'margin-top', '2%' );
-
-            /* Allow full width. */
-            button.css( 'width', '100%' );
-
-            /* Handle clicks. */
-            button.click( ( function () {
-
-                /* Cache jQuery results. */
-                let dc_keygen_method = $( '#dc-keygen-method' ),
-                    dc_keygen_algorithm = $( '#dc-keygen-algorithm' );
-
-                /* Simulate pressing the exchange key button. */
-                $( '#dc-exchange-btn' ).click();
-
-                /* If the current algorithm differs, change it and generate then send a new key. */
-                if (
-                    dc_keygen_method.val() !== metadata[ 'algorithm' ] ||
-                    parseInt( dc_keygen_algorithm.val() ) !== metadata[ 'bit_length' ]
-                ) {
-                    /* Switch. */
-                    dc_keygen_method.val( metadata[ 'algorithm' ] );
-
-                    /* Fire the change event so the second list updates. */
-                    dc_keygen_method.change();
-
-                    /* Update the key size. */
-                    dc_keygen_algorithm.val( metadata[ 'bit_length' ] );
-
-                    /* Generate a new key pair. */
-                    $( '#dc-keygen-gen-btn' ).click();
-
-                    /* Send the public key. */
-                    $( '#dc-keygen-send-pub-btn' ).click();
-                }
-                /* If we don't have a key yet, generate and send one. */
-                else if ( $( '#dc-pub-key-ta' ).val() === '' ) {
-                    /* Generate a new key pair. */
-                    $( '#dc-keygen-gen-btn' ).click();
-
-                    /* Send the public key. */
-                    $( '#dc-keygen-send-pub-btn' ).click();
-                }
-
-                /* Open the handshake menu. */
-                $( '#dc-tab-handshake-btn' ).click();
-
-                /* Apply the key to the field. */
-                $( '#dc-handshake-ppk' ).val( obj.text() );
-
-                /* Click compute. */
-                $( '#dc-handshake-compute-btn' ).click();
-            } ) );
-
-            /* Add the button. */
-            obj.parent().append( button );
-
-            /* Set the text to an identifiable color. */
-            obj.css( 'color', 'blue' );
-
-            return true;
+            return '';
         }
 
         /**
@@ -1962,7 +1900,7 @@ const discordCrypt = ( () => {
             /* If this is a public key, just add a button and continue. */
             // TODO Handle this via async function
             if ( magic === ENCODED_KEY_HEADER )
-                return false;
+                return _discordCrypt._parseKeyMessage( message, content );
 
             /* Make sure it has the correct header. */
             if ( magic !== ENCODED_MESSAGE_HEADER )
@@ -5350,6 +5288,19 @@ const discordCrypt = ( () => {
                 output[ 'bit_length' ] = _discordCrypt.__indexToAlgorithmBitLength( msg[ 0 ] );
                 output[ 'algorithm' ] = _discordCrypt.__indexToExchangeAlgorithmString( msg[ 0 ] )
                     .split( '-' )[ 0 ].toLowerCase();
+
+                /* Get the salt length. */
+                salt_len = msg.readInt8( 1 );
+
+                /* Make sure the salt length is valid. */
+                if ( salt_len < 16 || salt_len > 32 )
+                    return null;
+
+                /* Read the public salt. */
+                output[ 'salt' ] = Buffer.from( msg.subarray( 2, 2 + salt_len ) );
+
+                /* Read the key. */
+                output[ 'key' ] = Buffer.from( msg.subarray( 2 + salt_len ) );
 
                 return output;
             }
