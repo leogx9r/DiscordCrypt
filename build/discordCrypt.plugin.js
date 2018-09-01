@@ -1066,7 +1066,7 @@ const discordCrypt = ( () => {
                 _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
 
                 /* Disable auto-encrypt for that channel */
-                this._setAutoEncrypt( false );
+                _discordCrypt._setAutoEncrypt( false );
             }
             else {
                 /* Update the password field for this id. */
@@ -1081,7 +1081,7 @@ const discordCrypt = ( () => {
                 sec.val( '' );
 
                 /* Enable auto-encrypt for the channel */
-                this._setAutoEncrypt( true );
+                _discordCrypt._setAutoEncrypt( true );
             }
 
             /* Save the configuration file and decode any messages. */
@@ -1133,7 +1133,7 @@ const discordCrypt = ( () => {
             }
 
             /* Hook switch events as the main event processor. */
-            if ( !this._hookMessageCallbacks() ) {
+            if ( !_discordCrypt._hookMessageCallbacks() ) {
                 global.smalltalk.alert( 'Error Loading DiscordCrypt', `Failed to hook the required modules.` );
                 return;
             }
@@ -1146,8 +1146,8 @@ const discordCrypt = ( () => {
                     instead: ( patchData ) => {
                         if(
                             _discordCrypt._getChannelId() === patchData.methodArguments[ 1 ].id &&
-                            _self._hasCustomPassword( patchData.methodArguments[ 1 ].id ) &&
-                            _self._getAutoEncrypt()
+                            _discordCrypt._hasCustomPassword( patchData.methodArguments[ 1 ].id ) &&
+                            _discordCrypt._getAutoEncrypt()
                         )
                             return false;
 
@@ -1162,22 +1162,22 @@ const discordCrypt = ( () => {
          * @desc Hook Discord's internal event handlers for message decryption.
          * @return {boolean} Returns true if handler events have been hooked.
          */
-        _hookMessageCallbacks() {
+        static _hookMessageCallbacks() {
             /* Hook the event dispatchers. */
             _discordCrypt._monkeyPatch(
                 _cachedModules.EventDispatcher,
                 'dispatch',
-                { instead: _self._onDispatchEvent }
+                { instead: _discordCrypt._onDispatchEvent }
             );
             _discordCrypt._monkeyPatch(
                 _cachedModules.EventDispatcher,
                 'dirtyDispatch',
-                { instead: _self._onDispatchEvent }
+                { instead: _discordCrypt._onDispatchEvent }
             );
             _discordCrypt._monkeyPatch(
                 _cachedModules.EventDispatcher,
                 'maybeDispatch',
-                { instead: _self._onDispatchEvent }
+                { instead: _discordCrypt._onDispatchEvent }
             );
 
             /* Hook the outgoing message queue handler to encrypt messages. */
@@ -1219,7 +1219,7 @@ const discordCrypt = ( () => {
          * @desc The event handler that fires whenever a new event occurs in Discord.
          * @param {Object} event The event that occurred.
          */
-        _onDispatchEvent( event ) {
+        static _onDispatchEvent( event ) {
             let handled = false;
 
             for( let i = 0; i < _eventHooks.length; i++ )
@@ -1572,7 +1572,7 @@ const discordCrypt = ( () => {
          * @desc Updates the auto-encrypt toggle
          * @param {boolean} enable
          */
-        _setAutoEncrypt( enable ) {
+        static _setAutoEncrypt( enable ) {
             _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt = enable;
         }
 
@@ -1581,7 +1581,7 @@ const discordCrypt = ( () => {
          * @desc Returns whether or not auto-encrypt is enabled
          * @returns {boolean}
          */
-        _getAutoEncrypt() {
+        static _getAutoEncrypt() {
             /* Quick sanity check. */
             if( !_configFile )
                 return false;
@@ -1626,7 +1626,7 @@ const discordCrypt = ( () => {
 
             /* Set the initial status icon. */
             if ( dc_lock_btn.length > 0 ) {
-                if ( this._getAutoEncrypt() ) {
+                if ( _discordCrypt._getAutoEncrypt() ) {
                     dc_lock_btn.html( Buffer.from( this._lockIcon, 'base64' ).toString( 'utf8' ) );
                     dc_lock_btn.append( lock_tooltip.text( 'Disable Message Encryption' ) );
                 }
@@ -1783,7 +1783,7 @@ const discordCrypt = ( () => {
          * @param {string} channel_id The target channel's ID.
          * @return {boolean} Returns true if a custom password is set.
          */
-        _hasCustomPassword( channel_id ) {
+        static _hasCustomPassword( channel_id ) {
             return _configFile.channels[ channel_id ] &&
                 _configFile.channels[ channel_id ].primaryKey &&
                 _configFile.channels[ channel_id ].secondaryKey;
@@ -2036,7 +2036,7 @@ const discordCrypt = ( () => {
             if ( ignore_trigger === false &&
                 ( !_configFile.channels[ channel_id ] ||
                     !_configFile.channels[ channel_id ].primaryKey ||
-                    !_self._getAutoEncrypt() )
+                    !_discordCrypt._getAutoEncrypt() )
             ) {
                 /* Try splitting via the defined split-arg. */
                 message = message.split( '|' );
@@ -3974,7 +3974,7 @@ const discordCrypt = ( () => {
                 return;
 
             /* Enable auto-encryption on the channel */
-            _self._setAutoEncrypt( true );
+            _discordCrypt._setAutoEncrypt( true );
 
             /* Apply the passwords and save the config. */
             let id = _discordCrypt._getChannelId();
@@ -4053,7 +4053,7 @@ const discordCrypt = ( () => {
             let btn = $( '#dc-reset-pwd' );
 
             /* Disable auto-encrypt for the channel */
-            _self._setAutoEncrypt( false );
+            _discordCrypt._setAutoEncrypt( false );
 
             /* Reset the configuration for this user and save the file. */
             let id = _discordCrypt._getChannelId();
@@ -4136,15 +4136,15 @@ const discordCrypt = ( () => {
             let dc_lock_btn = $( '#dc-lock-btn' ), new_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
             /* Update the icon and toggle. */
-            if ( !_self._getAutoEncrypt() ) {
+            if ( !_discordCrypt._getAutoEncrypt() ) {
                 dc_lock_btn.html( Buffer.from( _self._lockIcon, 'base64' ).toString( 'utf8' ) );
                 dc_lock_btn.append( new_tooltip.text( 'Disable Message Encryption' ) );
-                _self._setAutoEncrypt( true );
+                _discordCrypt._setAutoEncrypt( true );
             }
             else {
                 dc_lock_btn.html( Buffer.from( _self._unlockIcon, 'base64' ).toString( 'utf8' ) );
                 dc_lock_btn.append( new_tooltip.text( 'Enable Message Encryption' ) );
-                _self._setAutoEncrypt( false );
+                _discordCrypt._setAutoEncrypt( false );
             }
 
             /* Save config. */
@@ -4160,7 +4160,7 @@ const discordCrypt = ( () => {
             let dc_lock_btn = $( '#dc-lock-btn' ), tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
 
             /* Update the icon based on the channel */
-            if ( _self._getAutoEncrypt() ) {
+            if ( _discordCrypt._getAutoEncrypt() ) {
                 dc_lock_btn.html( Buffer.from( _self._lockIcon, 'base64' ).toString( 'utf8' ) );
                 dc_lock_btn.append( tooltip.text( 'Disable Message Encryption' ) );
             }
