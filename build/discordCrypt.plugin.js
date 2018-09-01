@@ -1180,36 +1180,33 @@ const discordCrypt = ( () => {
                 { instead: _discordCrypt._onDispatchEvent }
             );
 
-            /* Hook the outgoing message queue handler to encrypt messages. */
-            let hookDefinition = _discordCrypt._monkeyPatch(
+            /* Hook the outgoing message queue handler to encrypt messages & save the original enqueue. */
+            _cachedModules.MessageQueue.original_enqueue = _discordCrypt._monkeyPatch(
                 _cachedModules.MessageQueue,
                 'enqueue',
-                { instead: _self._onOutgoingMessage }
-            );
-
-            /* Save the original enqueue. */
-            _cachedModules.MessageQueue.original_enqueue = hookDefinition.original;
+                { instead: _discordCrypt._onOutgoingMessage }
+            ).original;
 
             /* Hook CHANNEL_SWITCH for toolbar and menu reloading. */
-            _eventHooks.push( { type: 'CHANNEL_SELECT', callback: _self._onChannelSwitched } );
+            _eventHooks.push( { type: 'CHANNEL_SELECT', callback: _discordCrypt._onChannelSwitched } );
 
             /* Hook MESSAGE_CREATE function for single-load messages. */
-            _eventHooks.push( { type: 'MESSAGE_CREATE', callback: _self._onIncomingMessage } );
+            _eventHooks.push( { type: 'MESSAGE_CREATE', callback: _discordCrypt._onIncomingMessage } );
 
             /* Hook MESSAGE_UPDATE function for single-edited messages. */
-            _eventHooks.push( { type: 'MESSAGE_UPDATE', callback: _self._onIncomingMessage } );
+            _eventHooks.push( { type: 'MESSAGE_UPDATE', callback: _discordCrypt._onIncomingMessage } );
 
             /* Hook LOAD_MESSAGES_SUCCESS function for bulk-messages. */
-            _eventHooks.push( { type: 'LOAD_MESSAGES_SUCCESS', callback: _self._onIncomingMessages } );
+            _eventHooks.push( { type: 'LOAD_MESSAGES_SUCCESS', callback: _discordCrypt._onIncomingMessages } );
 
             /* Hook LOAD_MESSAGES_AROUND_SUCCESS for location-jumping decryption.  */
-            _eventHooks.push( { type: 'LOAD_MESSAGES_AROUND_SUCCESS', callback: _self._onIncomingMessages } );
+            _eventHooks.push( { type: 'LOAD_MESSAGES_AROUND_SUCCESS', callback: _discordCrypt._onIncomingMessages } );
 
             /* Hook LOAD_RECENT_MENTIONS_SUCCESS which is required to decrypt mentions. */
-            _eventHooks.push( { type: 'LOAD_RECENT_MENTIONS_SUCCESS', callback: _self._onIncomingMessages } );
+            _eventHooks.push( { type: 'LOAD_RECENT_MENTIONS_SUCCESS', callback: _discordCrypt._onIncomingMessages } );
 
             /* Hook LOAD_PINNED_MESSAGES_SUCCESS for searching encrypted messages. */
-            _eventHooks.push( { type: 'LOAD_PINNED_MESSAGES_SUCCESS', callback: _self._onIncomingMessages } );
+            _eventHooks.push( { type: 'LOAD_PINNED_MESSAGES_SUCCESS', callback: _discordCrypt._onIncomingMessages } );
 
             return true;
         }
@@ -1237,7 +1234,7 @@ const discordCrypt = ( () => {
          * @desc The event handler that fires when a channel is switched.
          * @param {Object} event The channel switching event object.
          */
-        _onChannelSwitched( event ) {
+        static _onChannelSwitched( event ) {
             /* Skip channels not currently selected. */
             if ( _discordCrypt._getChannelId() === event.methodArguments[ 0 ].channelId )
                 /* Delays are required due to windows being loaded async. */
@@ -1276,7 +1273,7 @@ const discordCrypt = ( () => {
          * @param {Object} event The message event object.
          * @return {Promise<void>}
          */
-        _onIncomingMessage( event ) {
+        static _onIncomingMessage( event ) {
             /**
              * @type {Message}
              */
@@ -1343,7 +1340,7 @@ const discordCrypt = ( () => {
          * @param {Object} event The channel loading event object.
          * @return {Promise<void>}
          */
-        async _onIncomingMessages( event ) {
+        static async _onIncomingMessages( event ) {
             let id = event.methodArguments[ 0 ].channelId;
 
             /* Pretend no message was received till the configuration is unlocked. */
@@ -1405,7 +1402,7 @@ const discordCrypt = ( () => {
          * @param {Object} event The outgoing message event object.
          * @return {Promise<void>}
          */
-        async _onOutgoingMessage( event ) {
+        static async _onOutgoingMessage( event ) {
             /* Wait till the configuration file has been loaded before parsing any messages. */
             await ( async () => {
                 while( !_configFile )
@@ -2727,10 +2724,7 @@ const discordCrypt = ( () => {
                         .text( 'Delete' ),
                     copy_btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                        .text( 'Copy' ),
-                    show_fingerprint_btn = $( '<button>' )
-                        .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                        .text( 'Show Fingerprint' );
+                        .text( 'Copy' );
 
                 /* Handle deletion clicks. */
                 delete_btn.click( function () {
@@ -2766,39 +2760,11 @@ const discordCrypt = ( () => {
                     }, 1000 );
                 } );
 
-                /* Handle fingerprint calculation. */
-
-                /* Handle copy clicks. */
-                show_fingerprint_btn.click( function() {
-                    /* Resolve the entry. */
-                    let currentKeys = _configFile.channels[ id ];
-
-                    /* Calculate the fingerprint using either the Guild ID & Channel or Channel & UserID. */
-                    let fingerprint = _discordCrypt.__generateFingerprint(
-                        id,
-                        currentKeys.primaryKey || _configFile.defaultPassword,
-                        id,
-                        currentKeys.secondaryKey || _configFile.defaultPassword,
-                        5000
-                    );
-
-                    global.smalltalk.prompt(
-                        'Fingerprint',
-                        "<b>N.B. VERIFY THESE OVER A NON-TEXT COMMUNICATION METHOD!</b><br/><br/><br/>" +
-                        `Your Fingerprint: [ \`${name}\` ]:\n\n`,
-                        fingerprint,
-                        { button: [ 'OK' ] }
-                    );
-                } );
-
                 /* Append the button to the Options column. */
                 $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( copy_btn );
 
                 /* Append the button to the Options column. */
                 $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( delete_btn );
-
-                /* Append the button to the Options column. */
-                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( show_fingerprint_btn );
 
                 /* Append the entire entry to the table. */
                 table.append( element );
@@ -5220,105 +5186,6 @@ const discordCrypt = ( () => {
             }
 
             return true;
-        }
-
-        /**
-         * @public
-         * @see https://github.com/signalapp/libsignal-protocol-javascript/blob/master/src/NumericFingerprint.js
-         * @desc Generates a 60-character numeric fingerprint for the identity of two pairs.
-         * @param {Buffer|Array|string} local_id The local ID.
-         * @param {Buffer|Array|string} local_pub_key The key linked to the local ID.
-         * @param {Buffer|Array|string} remote_id The remote ID.
-         * @param {Buffer|Array|string} remote_pub_key The key linked to the remote ID.
-         * @param {number} iterations The number of iterations to perform on each ID pair.
-         * @return {string} Returns a 60 character numeric representation of a fingerprint.
-         * @example
-         *      local_id = Buffer.from( "3d478a260e5d497441f1b61d321b138a", 'hex' );
-         *      local_pub_key = Buffer.from(
-         *          "e77ef936546d73dc5a1c25c8267df649c935168f24827267b1328fd22789eca9", 'hex'
-         *      );
-         *
-         *      remote_id = Buffer.from( "2c08a0666e937d115f8b05c82db8a6d0", 'hex' );
-         *      remote_pub_key = Buffer.from(
-         *          "f2f10dc9d0770e3be28298c2d4ab7a856c92bafa99ff7377ec8cd538bd9481ae", 'hex'
-         *      );
-         *
-         *      __generateFingerprint( local_id, local_pub_key, remote_id, remote_pub_key, 10000 )
-         *      > "22162 70964 05613 66992 07314 11169 62962 97838 72198 67786 04039 39461"
-         *
-         *      __generateFingerprint( local_id, local_pub_key, remote_id, remote_pub_key, 50000 )
-         *      > "30312 92326 56131 09531 10046 93930 82882 61321 64148 11774 32632 62322"
-         */
-        static __generateFingerprint( local_id, local_pub_key, remote_id, remote_pub_key, iterations = 2000 ) {
-            /* Ensures the input variable is a Buffer or can be converted to one else it throws an error. */
-            function ensure_buffer( name, variable ) {
-                /* Do a type check and throw if it isn't supported. */
-                if ( typeof( variable ) !== 'string' && !Buffer.isBuffer( variable ) && !Array.isArray( variable ) )
-                    throw new Error( `Error for ${name}. Must be a string or buffer.` );
-
-                /* Convert to a buffer. */
-                return Buffer.from( variable );
-            }
-
-            /* Performs normal iterative hashing by joining an input and a key. */
-            function iterate_hash( input, key, count ) {
-                /* Loop while iteration count isn't 0. */
-                while ( count !== 0 ) {
-                    /* Update the input with the concatenated hash of the old input + key. */
-                    input = Buffer.from( _discordCrypt.__sha256( Buffer.concat( [ input, key ] ), true ), 'hex' );
-                    count -= 1;
-                }
-
-                /* Return the result as a buffer. */
-                return input;
-            }
-
-            /* Converts a hash input into a 5-character numeric segment. */
-            function encode_chunk( hash, offset ) {
-                /* Converts 40 bits at once. */
-                let chunk = hash[ offset ] * Math.pow( 2, 32 );
-                chunk += hash[ offset + 1 ] * Math.pow( 2, 24 );
-                chunk += hash[ offset + 2 ] * Math.pow( 2, 16 );
-                chunk += hash[ offset + 3 ] * Math.pow( 2, 8 );
-                chunk += hash[ offset + 4 ];
-
-                /* Limit to a maximum of 99,999. */
-                chunk %= 100000;
-
-                /* Convert this to a string. */
-                let s = chunk.toString();
-
-                /* Left-pad with zeros if less than 5 characters. */
-                while ( s.length < 5 )
-                    s = `0${s}`;
-
-                return s;
-            }
-
-            /* Converts a 256-bit input hash to a fingerprint identifier. Ignores the last 16 bits. */
-            function hash_to_fingerprint( hash ) {
-                return `${encode_chunk( hash, 0 )} ${encode_chunk( hash, 5 )} ${encode_chunk( hash, 10 )} ` +
-                    `${encode_chunk( hash, 15 )} ${encode_chunk( hash, 20 )} ${encode_chunk( hash, 25 )} `;
-            }
-
-            /* Resolve both local and remote vars as buffers. */
-            local_id = ensure_buffer( 'local_id', local_id );
-            local_pub_key = ensure_buffer( 'local_pub_key', local_pub_key );
-            remote_id = ensure_buffer( 'remote_id', remote_id );
-            remote_pub_key = ensure_buffer( 'remote_pub_key', remote_pub_key );
-
-            /* Ensure the iteration count is valid. */
-            if ( typeof iterations !== 'number' )
-                throw new Error( 'Invalid value for iteration count.' );
-
-            /* Get the fingerprints for both pairs, sort them and join them all. */
-            return [
-                hash_to_fingerprint( iterate_hash( local_id, local_pub_key, iterations ) ),
-                hash_to_fingerprint( iterate_hash( remote_id, remote_pub_key, iterations ) )
-            ]
-                .sort()
-                .join( '' )
-                .trimRight();
         }
 
         /**
