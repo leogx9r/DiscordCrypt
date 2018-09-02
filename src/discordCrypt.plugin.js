@@ -1589,7 +1589,7 @@ const discordCrypt = ( () => {
                 return false;
 
             /* Fetch the current value. */
-            return _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt || true;
+            return _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt;
         }
 
         /**
