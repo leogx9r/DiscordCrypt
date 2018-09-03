@@ -571,7 +571,7 @@ const discordCrypt = ( () => {
              * @type {string}
              */
             this._masterPasswordHtml =
-                `eNptUc2OgyAQfhXCpkei27252lMfYF9hEFSyCATGNr79goq1Zj2MZOb7Y6iFehAlGipaNkJA6Zl9SK9hpqTVEMIyya0bqQ/4rctaaSKvU1KLf0jv44Czlg1F6yryVV6iIqmHa263VltffXRdGb9vmo0GCSIG2/KNoae3uhiuict9cVtKPAcHJlOct6PDEyUBdrQybkKCs4u+LmZ+Wv8WP/fYlnwTFpy90Kgwxb4DAocgyU+eFDkbWTe2yQYEJKkwDj7dfQ9NGnJ4ggSZAj3SEoN5QGX6fYtPJXCoSNzUYlREp5NhlPSTjoqgVW9WRz4hWnNArI2T6mdZXl4vMBlt218mtosyjubouf7W+gd7msUM`;
+                `eNptUc1ygyAQfhXGTo6M1t6M5pQH6CssgsoUgYE1qW9fUDHGqYfV+Xa/H3drLh9E8ibjLR3Bo3DUPIRTMGekVeD90knQjdSH+Q2lrdCB10mh+D+k97bHWYkmQ2Mr8lVcgiKphzLBrVHGVR9dV4TnmiWjQQAPwbZ8o++zW50PZeQyl9+WEr69BZ0o1pnR4okSB/Zpqe2EBGcbfG3I/DTuLX7C6JZ8E+aMvqZRYox9BwQGXpDv1MlTNrJubJP1CEhioQxc/Pc9NGnI4QRxZPLZkRYZ1AFK3e9bfEqOQ0XCphajPDidDIOkm1RQBCV7vRMtcB6EaDxDWdjf65qFTYhGH7grcPL7LIrL6zaTVqb9oXxbAWWoj2nW11r/ADMvzfQ=`;
 
             /**
              * @desc Defines the raw HTML used describing each option menu.
