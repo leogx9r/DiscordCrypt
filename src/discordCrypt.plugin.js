@@ -308,6 +308,32 @@
  */
 
 /**
+ * @typedef {Object} PublicKeyInfo
+ * @desc Information on a public key used for a key exchange.
+ * @property {Buffer} salt The user-generated salt used with this public key.
+ * @property {Buffer} key The raw public key buffer.
+ * @property {string} algorithm The exchange algorithm being used.
+ * @property {number} bit_length The length, in bits, of the public key.
+ * @property {string} fingerprint The SHA-256 sum of the public key.
+ */
+
+/**
+ * @typedef {Object} SessionKeyState
+ * @desc Indicates an active key exchange session.
+ * @property {PublicKeyInfo} [remoteKey] The remote party's public key.
+ * @property {PublicKeyInfo} [localKey] The local public key information for the session.
+ * @property {Object} [privateKey] The local private key corresponding to the local public key.
+ * @property {string} initiateTime The time this exchange was initiated.
+ */
+
+/**
+ * @typedef {Object} GlobalSessionState
+ * @desc Contains all session states being actively established.
+ * @property {string} channelId The channel this session establishment is taking place in.
+ * @property {SessionKeyState} state The local state for the session.
+ */
+
+/**
  * @interface
  * @name PatchData
  * @desc Contains local patch data and state of the function.
@@ -421,6 +447,13 @@ const discordCrypt = ( () => {
      * @type {Array<function>}
      */
     let _stopCallbacks = [];
+
+    /**
+     * @private
+     * @desc Contains all active sessions that are being established.
+     * @type {GlobalSessionState}
+     */
+    let _globalSessionState = {};
 
     /**
      * @private
@@ -1438,7 +1471,7 @@ const discordCrypt = ( () => {
                 MessageQueue: searcher
                     .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
                 UserStore: searcher
-                    .findByUniqueProperties( [ "getUser", "getUsers", "findByTag" ] ),
+                    .findByUniqueProperties( [ "getUser", "getUsers", "findByTag", 'getCurrentUsers' ] ),
                 GuildStore: searcher
                     .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
                 ChannelStore: searcher
@@ -1819,6 +1852,45 @@ const discordCrypt = ( () => {
             /* Sanity check for invalid key messages. */
             if ( metadata === null )
                 return '🚫 [ ERROR ] INVALID PUBLIC KEY !!!';
+
+            /* Make sure that this key wasn't somehow sent in a guild or group DM. */
+            if( message.type !== 0 )
+                return '🚫 [ ERROR ] INCOMING MESSAGE FROM A NON-DM !!!';
+
+            /* Retrieve the current user's information. */
+            let currentUser = _cachedModules.UserStore.getCurrentUser(),
+                remoteUser = _cachedModules.UserStore.getUser( message.author.id );
+
+            /* Check if the key being received is in the ignore list. */
+            if(
+                _configFile.channels[ message.channel_id ] &&
+                _configFile.channels[ message.channel_id ].ignoreIds.indexOf( message.id ) !== -1
+            )
+                return '🔏 [ INFO ] OLD KEY MESSAGE';
+
+            /* Verify this message isn't coming from us. */
+            if( message.author.id === currentUser.id )
+                return '🔏 [ SESSION ] OUTGOING KEY EXCHANGE';
+
+            /* Check if we're currently waiting for a public key. */
+            if( _globalSessionState.hasOwnProperty( message.channel_id ) ) {
+                /* Incoming public key, calculate the exchange key and alert the user. */
+            }
+
+            /* The author is attempting to initiate a key exchange. Prompt the user on whether to accept it. */
+            global.smalltalk.confirm(
+                '----- INCOMING KEY EXCHANGE -----',
+                `Incoming key exchange from @${remoteUser.name}#${remoteUser.discriminator}` +
+                '\n\n' +
+                'Do you wish to create a secure session between you two?'
+            ).then(
+                () => {
+                    /* The user accepted the request. */
+                },
+                () => {
+                    /* The user rejected the request. */
+                }
+            );
 
             return '';
         }
@@ -5229,7 +5301,7 @@ const discordCrypt = ( () => {
                     .split( '-' )[ 0 ].toLowerCase();
 
                 /* Get the salt length. */
-                salt_len = msg.readInt8( 1 );
+                let salt_len = msg.readInt8( 1 );
 
                 /* Make sure the salt length is valid. */
                 if ( salt_len < 16 || salt_len > 32 )
