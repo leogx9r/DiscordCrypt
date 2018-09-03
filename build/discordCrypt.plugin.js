@@ -443,7 +443,7 @@ const discordCrypt = ( () => {
                 _Object._freeze( object[ prop ] );
 
             /* Freeze the object. */
-            _Object.freeze( obj );
+            _Object.freeze( object );
         }
     };
 
