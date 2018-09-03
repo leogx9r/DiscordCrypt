@@ -410,13 +410,6 @@ const discordCrypt = ( () => {
 
     /**
      * @private
-     * @desc Stores the compressed PGP public key used for update verification.
-     * @type {string}
-     */
-    let _signingKey = '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */';
-
-    /**
-     * @private
      * @desc Stores the update data for applying later on.
      * @type {UpdateInfo}
      */
@@ -424,18 +417,33 @@ const discordCrypt = ( () => {
 
     /**
      * @private
-     * @desc Oddly enough, you're allowed to perform a prototype attack to override the freeze() function.
-     *      So just backup the function code here in case it gets attacked in the future.
-     * @type {function}
-     */
-    let _freeze = Object.freeze;
-
-    /**
-     * @private
      * @desc Array containing function callbacks to execute when stopping the plugin.
      * @type {Array<function>}
      */
     let _stopCallbacks = [];
+
+    /**
+     * @private
+     * @desc The original methods of the Object descriptor as well as a prototype to freeze all object's props.
+     * @type {{freeze: function, isFrozen: function, getOwnPropertyNames: function, _freeze: function}}
+     */
+    const _Object = {
+        freeze: Object.freeze,
+        isFrozen: Object.isFrozen,
+        getOwnPropertyNames: Object.getOwnPropertyNames,
+        _freeze: ( object ) => {
+            /* Skip non-objects. */
+            if( !object || typeof object !== 'object' )
+                return;
+
+            /* Recursively freeze all properties. */
+            for( let prop in _Object.getOwnPropertyNames( object ) )
+                _Object._freeze( object[ prop ] );
+
+            /* Freeze the object. */
+            _Object.freeze( obj );
+        }
+    };
 
     /**
      * @private
@@ -498,6 +506,13 @@ const discordCrypt = ( () => {
         'ISO1', /* ISO-10126 */
         'ISO9', /* ISO-97972 */
     ];
+
+    /**
+     * @private
+     * @desc Stores the compressed PGP public key used for update verification.
+     * @type {string}
+     */
+    const PGP_SIGNING_KEY = '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */';
 
     /**
      * @protected
@@ -779,7 +794,7 @@ const discordCrypt = ( () => {
             _discordCrypt._injectCSS( 'dc-css', _discordCrypt.__zlibDecompress( this._appCss ) );
 
             /* Reapply the native code for Object.freeze() right before calling these as they freeze themselves. */
-            Object.freeze = _freeze;
+            Object.freeze = _Object.freeze;
 
             /* Load necessary _libraries. */
             _discordCrypt.__loadLibraries( this._libraries );
@@ -2125,7 +2140,7 @@ const discordCrypt = ( () => {
                     else
                         obj.prototype[ name ] = fn;
 
-                    _freeze( obj.prototype );
+                    _Object._freeze( obj.prototype );
                 }
                 catch( e ) {
                     _discordCrypt.log(
@@ -2151,7 +2166,7 @@ const discordCrypt = ( () => {
                     else
                         obj[ name ] = fn;
 
-                    _freeze( obj );
+                    _Object._freeze( obj );
                 }
                 catch( e ) {
                     _discordCrypt.log(
@@ -2764,7 +2779,7 @@ const discordCrypt = ( () => {
                         global
                             .openpgp
                             .key
-                            .readArmored( _discordCrypt.__zlibDecompress( _signingKey ) )
+                            .readArmored( _discordCrypt.__zlibDecompress( PGP_SIGNING_KEY ) )
                             .keys[ 0 ]
                             .primaryKey
                             .fingerprint
@@ -4398,7 +4413,7 @@ const discordCrypt = ( () => {
                             let r = _discordCrypt.__validatePGPSignature(
                                 updateInfo.payload,
                                 updateInfo.signature,
-                                _discordCrypt.__zlibDecompress( _signingKey )
+                                _discordCrypt.__zlibDecompress( PGP_SIGNING_KEY )
                             );
 
                             /* This returns a Promise if valid or false if invalid. */
@@ -8466,10 +8481,10 @@ const discordCrypt = ( () => {
     }
 
     /* Freeze the prototype. */
-    _freeze( _discordCrypt.prototype );
+    _Object._freeze( _discordCrypt.prototype );
 
     /* Freeze the class definition. */
-    _freeze( _discordCrypt );
+    _Object._freeze( _discordCrypt );
 
     return _discordCrypt;
 } )();
