@@ -571,7 +571,7 @@ const discordCrypt = ( () => {
              * @type {string}
              */
             this._masterPasswordHtml =
-                `eNqtUs1uwyAMfhWLqUeUrLt1aS7bA+wVHKANGgUETqu+/SAJSVpNO42DY9n+fjBppL6ClkcmBb9gJBW4u6pg8M5AGIxx7JRSC81mfq5yoWzCnbQy8hfQYzvS3agjI+cP8FbvEiM0/b6UhTMuHF5Opzqdd1aEeoUyGZv9XeKZtU3V7zO2C1U7hpRHj7ZAfHAXT0+QPLBMa+sHArr7pOuT55sLD/ZLjc/OZ2LZ8XWaNGXbn0jYYVTwVTpV8QbTxmbaSEiQA+8w5LsvpuEImyfII0NkW1hG8ICk7XnZ4k1L6g+QNjUKVUnpSTBRhsEkRjT6bCfFbiBydjMxFZ5YX+t6t77AYI0T31zOF+Ud2f/QhCXj2qbfJSoG+fzhRKAVyowG2o8xb6qJYrUzfab4AyMh9Dk=`;
+                `eNptUc2OgyAQfhXCpkei27252lMfYF9hEFSyCATGNr79goq1Zj2MZOb7Y6iFehAlGipaNkJA6Zl9SK9hpqTVEMIyya0bqQ/4rctaaSKvU1KLf0jv44Czlg1F6yryVV6iIqmHa263VltffXRdGb9vmo0GCSIG2/KNoae3uhiuict9cVtKPAcHJlOct6PDEyUBdrQybkKCs4u+LmZ+Wv8WP/fYlnwTFpy90Kgwxb4DAocgyU+eFDkbWTe2yQYEJKkwDj7dfQ9NGnJ4ggSZAj3SEoN5QGX6fYtPJXCoSNzUYlREp5NhlPSTjoqgVW9WRz4hWnNArI2T6mdZXl4vMBlt218mtosyjubouf7W+gd7msUM`;
 
             /**
              * @desc Defines the raw HTML used describing each option menu.
@@ -1124,7 +1124,6 @@ const discordCrypt = ( () => {
             $( document.body ).prepend( _discordCrypt.__zlibDecompress( this._masterPasswordHtml ) );
 
             const pwd_field = $( '#dc-db-password' );
-            const cancel_btn = $( '#dc-cancel-btn' );
             const unlock_btn = $( '#dc-unlock-database-btn' );
             const master_status = $( '#dc-master-status' );
             const master_header_message = $( '#dc-header-master-msg' );
@@ -1167,9 +1166,6 @@ const discordCrypt = ( () => {
                     master_status
                 )
             );
-
-            /* Handle cancel button presses. */
-            cancel_btn.click( _discordCrypt._onMasterCancelButtonClicked );
         }
 
         /**
@@ -2361,71 +2357,6 @@ const discordCrypt = ( () => {
                     }
                 );
             }
-        }
-
-        /**
-         * @private
-         * @desc Cancels loading the plugin when the unlocking cancel button is pressed.
-         * @return {Function}
-         */
-        static _onMasterCancelButtonClicked() {
-            /* Basically we remove the prompt overlay and load the toolbar but set every element to hidden except
-                    the button to reopen the menu. */
-
-            /* These are all buttons we'll be targeting for hiding. */
-            let target_btns = [
-                '#dc-clipboard-upload-btn',
-                '#dc-file-btn',
-                '#dc-settings-btn',
-                '#dc-lock-btn',
-                '#dc-passwd-btn',
-                '#dc-exchange-btn',
-                '#dc-quick-exchange-btn'
-            ];
-
-            /* Handles reloading of the injected toolbar on switching channels. */
-            let injectedInterval;
-
-            /* Remove the prompt overlay. */
-            $( '#dc-master-overlay' ).remove();
-
-            /* Do some quick cleanup. */
-            _masterPassword = null;
-            _configFile = null;
-
-            /* Handle this on an interval for switching channels. */
-            injectedInterval = setInterval( () => {
-                /* Skip if the toolbar has already been injected. */
-                if( $( '#dc-toolbar' ).length )
-                    return;
-
-                /* Inject the toolbar. */
-                $( _self._searchUiClass )
-                    .parent()
-                    .parent()
-                    .parent()
-                    .prepend( _discordCrypt.__zlibDecompress( _self._toolbarHtml ) );
-
-                let dc_db_prompt_btn = $( '#dc-db-prompt-btn' );
-
-                /* Set the Unlock DB Prompt button to visible. */
-                dc_db_prompt_btn.css( 'display', 'inline' );
-
-                /* Hide every other button. */
-                target_btns.forEach( id => $( id ).css( 'display', 'none' ) );
-
-                /* Add the button click event to reopen the menu. */
-                dc_db_prompt_btn.click( function() {
-                    /* Clear the interval. */
-                    clearInterval( injectedInterval );
-
-                    /* Remove the toolbar. */
-                    $( '#dc-toolbar' ).remove();
-
-                    /* Reopen the prompt. */
-                    _self._loadMasterPassword();
-                } );
-            }, 1000 );
         }
 
         /**
