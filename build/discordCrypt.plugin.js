@@ -1587,16 +1587,19 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Returns whether or not auto-encrypt is enabled
+         * @desc Returns whether or not auto-encrypt is enabled.
+         * @param {string} [id] Optional channel ID to retrieve the status for.
          * @returns {boolean}
          */
-        static _getAutoEncrypt() {
+        static _getAutoEncrypt( id ) {
+            id = id || _discordCrypt._getChannelId();
+
             /* Quick sanity check. */
-            if( !_configFile )
+            if( !_configFile || !_configFile.channels[ id ] )
                 return false;
 
             /* Fetch the current value. */
-            return _configFile.channels[ _discordCrypt._getChannelId() ].autoEncrypt || true;
+            return _configFile.channels[ id ].autoEncrypt;
         }
 
         /**
