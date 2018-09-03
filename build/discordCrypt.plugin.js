@@ -679,7 +679,7 @@ const discordCrypt = ( () => {
             }
 
             /* Block tracking and analytics. */
-            this._blockTracking();
+            _discordCrypt._blockTracking();
 
             /* Setup the timed message handler to trigger every 5 seconds. */
             _timedMessageInterval = setInterval( () => {
@@ -1094,6 +1094,323 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Loads the master-password unlocking prompt.
+         */
+        _loadMasterPassword() {
+            if ( $( '#dc-master-overlay' ).length !== 0 )
+                return;
+
+            /* Check if the database exists. */
+            const cfg_exists = _self._configExists();
+
+            const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
+
+            /* Construct the password updating field. */
+            $( document.body ).prepend( _discordCrypt.__zlibDecompress( this._masterPasswordHtml ) );
+
+            const pwd_field = $( '#dc-db-password' );
+            const cancel_btn = $( '#dc-cancel-btn' );
+            const unlock_btn = $( '#dc-unlock-database-btn' );
+            const master_status = $( '#dc-master-status' );
+            const master_header_message = $( '#dc-header-master-msg' );
+            const master_prompt_message = $( '#dc-prompt-master-msg' );
+
+            /* Use these messages based on whether we're creating a database or unlocking it. */
+            master_header_message.text(
+                cfg_exists ?
+                    '---------- Database Is Locked ----------' :
+                    '---------- Database Not Found ----------'
+            );
+            master_prompt_message.text(
+                cfg_exists ?
+                    'Enter Password:' :
+                    'Enter New Password:'
+            );
+            unlock_btn.text( action_msg );
+
+            /* Force the database element to load. */
+            document.getElementById( 'dc-master-overlay' ).style.display = 'block';
+
+            /* Check for ENTER key press to execute unlocks. */
+            pwd_field.on( "keydown", ( function ( e ) {
+                let code = e.keyCode || e.which;
+
+                /* Execute on ENTER/RETURN only. */
+                if ( code !== 13 )
+                    return;
+
+                unlock_btn.click();
+            } ) );
+
+            /* Handle unlock button clicks. */
+            unlock_btn.click(
+                _discordCrypt._onMasterUnlockButtonClicked(
+                    unlock_btn,
+                    cfg_exists,
+                    pwd_field,
+                    action_msg,
+                    master_status
+                )
+            );
+
+            /* Handle cancel button presses. */
+            cancel_btn.click( _discordCrypt._onMasterCancelButtonClicked );
+        }
+
+        /**
+         * @private
+         * @desc Performs an async update checking and handles actually updating the current version if necessary.
+         */
+        _checkForUpdates() {
+            const update_check_btn = $( '#dc-update-check-btn' );
+
+            try {
+
+                /* Sanity check in case this isn't defined yet. */
+                if( update_check_btn.length ) {
+                    /* Update the checking button. */
+                    update_check_btn.attr( 'disabled', true );
+                    update_check_btn.text( 'Checking For Updates ...' );
+                }
+
+                /* Perform the update check. */
+                _discordCrypt._checkForUpdate(
+                    ( info ) => {
+
+                        /* Sanity check in case this isn't defined yet. */
+                        if( update_check_btn.length ) {
+                            /* Reset the update check button if necessary. */
+                            update_check_btn.attr( 'disabled', false );
+                            update_check_btn.text( 'Check For Updates' );
+                        }
+
+                        /* Make sure an update was received. */
+                        if( !info )
+                            return;
+
+                        /* Alert the user of the update and changelog. */
+                        $( '#dc-overlay' ).css( 'display', 'block' );
+                        $( '#dc-update-overlay' ).css( 'display', 'block' );
+
+                        /* Update the version info. */
+                        $( '#dc-new-version' ).text(
+                            `New Version: ${info.version === '' ? 'N/A' : info.version} ` +
+                            `( #${info.hash.slice( 0, 16 )} - ` +
+                            `Update ${info.valid ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
+                        );
+                        $( '#dc-old-version' ).text( `Current Version: ${_self.getVersion()} ` );
+
+                        /* Update the changelog. */
+                        let dc_changelog = $( '#dc-changelog' );
+                        dc_changelog.val(
+                            typeof info.changelog === "string" && info.changelog.length > 0 ?
+                                _discordCrypt.__tryParseChangelog( info.changelog, _self.getVersion() ) :
+                                'N/A'
+                        );
+
+                        /* Scroll to the top of the changelog. */
+                        dc_changelog.scrollTop( 0 );
+
+                        /* Store the update information in the upper scope. */
+                        _updateData = info;
+                    },
+                    _configFile.blacklistedUpdates
+                );
+            }
+            catch ( ex ) {
+                _discordCrypt.log( ex, 'warn' );
+            }
+        }
+
+        /**
+         * @private
+         * @desc Inserts the plugin's option toolbar to the current toolbar and handles all triggers.
+         */
+        static _loadToolbar() {
+
+            /* Skip if the configuration hasn't been loaded. */
+            if ( !_configFile )
+                return;
+
+            /* Skip if we're not in an active channel. */
+            if ( _discordCrypt._getChannelId() === '@me' )
+                return;
+
+            /* Add toolbar buttons and their icons if it doesn't exist. */
+            if ( $( '#dc-toolbar' ).length !== 0 )
+                return;
+
+            /* Inject the toolbar. */
+            $( _self._searchUiClass )
+                .parent()
+                .parent()
+                .parent()
+                .prepend( _discordCrypt.__zlibDecompress( _self._toolbarHtml ) );
+
+            /* Cache jQuery results. */
+            let dc_passwd_btn = $( '#dc-passwd-btn' ),
+                dc_lock_btn = $( '#dc-lock-btn' ),
+                dc_svg = $( '.dc-svg' ),
+                lock_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
+
+            /* Set the SVG button class. */
+            dc_svg.attr( 'class', 'dc-svg' );
+
+            /* Set the initial status icon. */
+            if ( dc_lock_btn.length > 0 ) {
+                if ( _discordCrypt._getAutoEncrypt() ) {
+                    dc_lock_btn.html( Buffer.from( _self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( lock_tooltip.text( 'Disable Message Encryption' ) );
+                }
+                else {
+                    dc_lock_btn.html( Buffer.from( _self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.append( lock_tooltip.text( 'Enable Message Encryption' ) );
+                }
+
+                /* Set the button class. */
+                dc_svg.attr( 'class', 'dc-svg' );
+            }
+
+            /* Inject the settings. */
+            $( document.body ).prepend( _discordCrypt.__zlibDecompress( _self._settingsMenuHtml ) );
+
+            /* Also by default, set the about tab to be shown. */
+            _discordCrypt._setActiveSettingsTab( 0 );
+            _discordCrypt._setActiveExchangeTab( 0 );
+
+            /* Update all settings from the settings panel. */
+            $( '#dc-secondary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
+            $( '#dc-primary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
+            $( '#dc-settings-cipher-mode' ).val( _configFile.encryptBlockMode.toLowerCase() );
+            $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
+            $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
+            $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
+            $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
+            $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
+
+            /* Handle clipboard upload button. */
+            $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked );
+
+            /* Handle file button clicked. */
+            $( '#dc-file-btn' ).click( _discordCrypt._onFileMenuButtonClicked );
+
+            /* Handle alter file path button. */
+            $( '#dc-select-file-path-btn' ).click( _discordCrypt._onChangeFileButtonClicked );
+
+            /* Handle file upload button. */
+            $( '#dc-file-upload-btn' ).click( _discordCrypt._onUploadFileButtonClicked );
+
+            /* Handle file button cancelled. */
+            $( '#dc-file-cancel-btn' ).click( _discordCrypt._onCloseFileMenuButtonClicked );
+
+            /* Handle Settings tab opening. */
+            $( '#dc-settings-btn' ).click( _discordCrypt._onSettingsButtonClicked );
+
+            /* Handle Plugin Settings tab selected. */
+            $( '#dc-plugin-settings-btn' ).click( _discordCrypt._onSettingsTabButtonClicked );
+
+            /* Handle Database Settings tab selected. */
+            $( '#dc-database-settings-btn' ).click( _discordCrypt._onDatabaseTabButtonClicked );
+
+            /* Handle Security Settings tab selected. */
+            $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked );
+
+            /* Handle Automatic Updates button clicked. */
+            $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged );
+
+            /* Handle checking for updates. */
+            $( '#dc-update-check-btn' ).click( _discordCrypt._onCheckForUpdatesButtonClicked );
+
+            /* Handle Database Import button. */
+            $( '#dc-import-database-btn' ).click( _discordCrypt._onImportDatabaseButtonClicked );
+
+            /* Handle Database Export button. */
+            $( '#dc-export-database-btn' ).click( _discordCrypt._onExportDatabaseButtonClicked );
+
+            /* Handle Clear Database Entries button. */
+            $( '#dc-erase-entries-btn' ).click( _discordCrypt._onClearDatabaseEntriesButtonClicked );
+
+            /* Handle Settings tab closing. */
+            $( '#dc-exit-settings-btn' ).click( _discordCrypt._onSettingsCloseButtonClicked );
+
+            /* Handle Save settings. */
+            $( '#dc-settings-save-btn' ).click( _discordCrypt._onSaveSettingsButtonClicked );
+
+            /* Handle Reset settings. */
+            $( '#dc-settings-reset-btn' ).click( _discordCrypt._onResetSettingsButtonClicked );
+
+            /* Handle Restart-Now button clicking. */
+            $( '#dc-restart-now-btn' ).click( _discordCrypt._onUpdateRestartNowButtonClicked );
+
+            /* Handle Restart-Later button clicking. */
+            $( '#dc-restart-later-btn' ).click( _discordCrypt._onUpdateRestartLaterButtonClicked );
+
+            /* Handle Ignore-Update button clicking. */
+            $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked );
+
+            /* Handle Info tab switch. */
+            $( '#dc-tab-info-btn' ).click( _discordCrypt._onExchangeInfoTabButtonClicked );
+
+            /* Handle Keygen tab switch. */
+            $( '#dc-tab-keygen-btn' ).click( _discordCrypt._onExchangeKeygenTabButtonClicked );
+
+            /* Handle Handshake tab switch. */
+            $( '#dc-tab-handshake-btn' ).click( _discordCrypt._onExchangeHandshakeButtonClicked );
+
+            /* Handle exit tab button. */
+            $( '#dc-exit-exchange-btn' ).click( _discordCrypt._onExchangeCloseButtonClicked );
+
+            /* Open exchange menu. */
+            $( '#dc-exchange-btn' ).click( _discordCrypt._onOpenExchangeMenuButtonClicked );
+
+            /* Quickly generate and send a public key. */
+            $( '#dc-quick-exchange-btn' ).click( _discordCrypt._onQuickHandshakeButtonClicked );
+
+            /* Repopulate the bit length options for the generator when switching handshake algorithms. */
+            $( '#dc-keygen-method' ).change( _discordCrypt._onExchangeAlgorithmChanged );
+
+            /* Generate a new key-pair on clicking. */
+            $( '#dc-keygen-gen-btn' ).click( _discordCrypt._onExchangeGenerateKeyPairButtonClicked );
+
+            /* Clear the public & private key fields. */
+            $( '#dc-keygen-clear-btn' ).click( _discordCrypt._onExchangeClearKeyButtonClicked );
+
+            /* Send the public key to the current channel. */
+            $( '#dc-keygen-send-pub-btn' ).click( _discordCrypt._onExchangeSendPublicKeyButtonClicked );
+
+            /* Paste the data from the clipboard to the public key field. */
+            $( '#dc-handshake-paste-btn' ).click( _discordCrypt._onHandshakePastePublicKeyButtonClicked );
+
+            /* Compute the primary and secondary keys. */
+            $( '#dc-handshake-compute-btn' ).click( _discordCrypt._onHandshakeComputeButtonClicked );
+
+            /* Copy the primary and secondary key to the clipboard. */
+            $( '#dc-handshake-cpy-keys-btn' ).click( _discordCrypt._onHandshakeCopyKeysButtonClicked );
+
+            /* Apply generated keys to the current channel. */
+            $( '#dc-handshake-apply-keys-btn' ).click( _discordCrypt._onHandshakeApplyKeysButtonClicked );
+
+            /* Show the overlay when clicking the password button. */
+            dc_passwd_btn.click( _discordCrypt._onOpenPasswordMenuButtonClicked );
+
+            /* Update the password for the user once clicked. */
+            $( '#dc-save-pwd' ).click( _discordCrypt._onSavePasswordsButtonClicked );
+
+            /* Reset the password for the user to the default. */
+            $( '#dc-reset-pwd' ).click( _discordCrypt._onResetPasswordsButtonClicked );
+
+            /* Hide the overlay when clicking cancel. */
+            $( '#dc-cancel-btn' ).click( _discordCrypt._onClosePasswordMenuButtonClicked );
+
+            /* Copy the current passwords to the clipboard. */
+            $( '#dc-cpy-pwds-btn' ).click( _discordCrypt._onCopyCurrentPasswordsButtonClicked );
+
+            /* Set whether auto-encryption is enabled or disabled. */
+            dc_lock_btn.click( _discordCrypt._onForceEncryptButtonClicked );
+        }
+
+        /**
+         * @private
          * @desc Sets up the hooking methods required for plugin functionality.
          */
         static _hookSetup() {
@@ -1270,7 +1587,7 @@ const discordCrypt = ( () => {
                         _discordCrypt._updateLockIcon( _self );
 
                         /* Add the toolbar. */
-                        _self._loadToolbar();
+                        _discordCrypt._loadToolbar();
                     },
                     1
                 );
@@ -1448,136 +1765,6 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Loads the master-password unlocking prompt.
-         */
-        _loadMasterPassword() {
-            if ( $( '#dc-master-overlay' ).length !== 0 )
-                return;
-
-            /* Check if the database exists. */
-            const cfg_exists = _self._configExists();
-
-            const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
-
-            /* Construct the password updating field. */
-            $( document.body ).prepend( _discordCrypt.__zlibDecompress( this._masterPasswordHtml ) );
-
-            const pwd_field = $( '#dc-db-password' );
-            const cancel_btn = $( '#dc-cancel-btn' );
-            const unlock_btn = $( '#dc-unlock-database-btn' );
-            const master_status = $( '#dc-master-status' );
-            const master_header_message = $( '#dc-header-master-msg' );
-            const master_prompt_message = $( '#dc-prompt-master-msg' );
-
-            /* Use these messages based on whether we're creating a database or unlocking it. */
-            master_header_message.text(
-                cfg_exists ?
-                    '---------- Database Is Locked ----------' :
-                    '---------- Database Not Found ----------'
-            );
-            master_prompt_message.text(
-                cfg_exists ?
-                    'Enter Password:' :
-                    'Enter New Password:'
-            );
-            unlock_btn.text( action_msg );
-
-            /* Force the database element to load. */
-            document.getElementById( 'dc-master-overlay' ).style.display = 'block';
-
-            /* Check for ENTER key press to execute unlocks. */
-            pwd_field.on( "keydown", ( function ( e ) {
-                let code = e.keyCode || e.which;
-
-                /* Execute on ENTER/RETURN only. */
-                if ( code !== 13 )
-                    return;
-
-                unlock_btn.click();
-            } ) );
-
-            /* Handle unlock button clicks. */
-            unlock_btn.click(
-                _discordCrypt._onMasterUnlockButtonClicked(
-                    unlock_btn,
-                    cfg_exists,
-                    pwd_field,
-                    action_msg,
-                    master_status
-                )
-            );
-
-            /* Handle cancel button presses. */
-            cancel_btn.click( _discordCrypt._onMasterCancelButtonClicked );
-        }
-
-        /**
-         * @private
-         * @desc Performs an async update checking and handles actually updating the current version if necessary.
-         */
-        _checkForUpdates() {
-            const update_check_btn = $( '#dc-update-check-btn' );
-
-            try {
-
-                /* Sanity check in case this isn't defined yet. */
-                if( update_check_btn.length ) {
-                    /* Update the checking button. */
-                    update_check_btn.attr( 'disabled', true );
-                    update_check_btn.text( 'Checking For Updates ...' );
-                }
-
-                /* Perform the update check. */
-                _discordCrypt._checkForUpdate(
-                    ( info ) => {
-
-                        /* Sanity check in case this isn't defined yet. */
-                        if( update_check_btn.length ) {
-                            /* Reset the update check button if necessary. */
-                            update_check_btn.attr( 'disabled', false );
-                            update_check_btn.text( 'Check For Updates' );
-                        }
-
-                        /* Make sure an update was received. */
-                        if( !info )
-                            return;
-
-                        /* Alert the user of the update and changelog. */
-                        $( '#dc-overlay' ).css( 'display', 'block' );
-                        $( '#dc-update-overlay' ).css( 'display', 'block' );
-
-                        /* Update the version info. */
-                        $( '#dc-new-version' ).text(
-                            `New Version: ${info.version === '' ? 'N/A' : info.version} ` +
-                            `( #${info.hash.slice( 0, 16 )} - ` +
-                            `Update ${info.valid ? 'Verified' : 'Contains Invalid Signature. BE CAREFUL'}! )`
-                        );
-                        $( '#dc-old-version' ).text( `Current Version: ${_self.getVersion()} ` );
-
-                        /* Update the changelog. */
-                        let dc_changelog = $( '#dc-changelog' );
-                        dc_changelog.val(
-                            typeof info.changelog === "string" && info.changelog.length > 0 ?
-                                _discordCrypt.__tryParseChangelog( info.changelog, _self.getVersion() ) :
-                                'N/A'
-                        );
-
-                        /* Scroll to the top of the changelog. */
-                        dc_changelog.scrollTop( 0 );
-
-                        /* Store the update information in the upper scope. */
-                        _updateData = info;
-                    },
-                    _configFile.blacklistedUpdates
-                );
-            }
-            catch ( ex ) {
-                _discordCrypt.log( ex, 'warn' );
-            }
-        }
-
-        /**
-         * @private
          * @desc Updates the auto-encrypt toggle
          * @param {boolean} enable
          */
@@ -1596,197 +1783,10 @@ const discordCrypt = ( () => {
 
             /* Quick sanity check. */
             if( !_configFile || !_configFile.channels[ id ] )
-                return false;
+                return true;
 
             /* Fetch the current value. */
             return _configFile.channels[ id ].autoEncrypt;
-        }
-
-        /**
-         * @private
-         * @desc Inserts the plugin's option toolbar to the current toolbar and handles all triggers.
-         */
-        _loadToolbar() {
-
-            /* Skip if the configuration hasn't been loaded. */
-            if ( !_configFile )
-                return;
-
-            /* Skip if we're not in an active channel. */
-            if ( _discordCrypt._getChannelId() === '@me' )
-                return;
-
-            /* Add toolbar buttons and their icons if it doesn't exist. */
-            if ( $( '#dc-toolbar' ).length !== 0 )
-                return;
-
-            /* Inject the toolbar. */
-            $( this._searchUiClass )
-                .parent()
-                .parent()
-                .parent()
-                .prepend( _discordCrypt.__zlibDecompress( this._toolbarHtml ) );
-
-            /* Cache jQuery results. */
-            let dc_passwd_btn = $( '#dc-passwd-btn' ),
-                dc_lock_btn = $( '#dc-lock-btn' ),
-                dc_svg = $( '.dc-svg' ),
-                lock_tooltip = $( '<span>' ).addClass( 'dc-tooltip-text' );
-
-            /* Set the SVG button class. */
-            dc_svg.attr( 'class', 'dc-svg' );
-
-            /* Set the initial status icon. */
-            if ( dc_lock_btn.length > 0 ) {
-                if ( _discordCrypt._getAutoEncrypt() ) {
-                    dc_lock_btn.html( Buffer.from( this._lockIcon, 'base64' ).toString( 'utf8' ) );
-                    dc_lock_btn.append( lock_tooltip.text( 'Disable Message Encryption' ) );
-                }
-                else {
-                    dc_lock_btn.html( Buffer.from( this._unlockIcon, 'base64' ).toString( 'utf8' ) );
-                    dc_lock_btn.append( lock_tooltip.text( 'Enable Message Encryption' ) );
-                }
-
-                /* Set the button class. */
-                dc_svg.attr( 'class', 'dc-svg' );
-            }
-
-            /* Inject the settings. */
-            $( document.body ).prepend( _discordCrypt.__zlibDecompress( this._settingsMenuHtml ) );
-
-            /* Also by default, set the about tab to be shown. */
-            _discordCrypt._setActiveSettingsTab( 0 );
-            _discordCrypt._setActiveExchangeTab( 0 );
-
-            /* Update all settings from the settings panel. */
-            $( '#dc-secondary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
-            $( '#dc-primary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
-            $( '#dc-settings-cipher-mode' ).val( _configFile.encryptBlockMode.toLowerCase() );
-            $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
-            $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
-            $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
-            $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
-            $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
-
-            /* Handle clipboard upload button. */
-            $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked );
-
-            /* Handle file button clicked. */
-            $( '#dc-file-btn' ).click( _discordCrypt._onFileMenuButtonClicked );
-
-            /* Handle alter file path button. */
-            $( '#dc-select-file-path-btn' ).click( _discordCrypt._onChangeFileButtonClicked );
-
-            /* Handle file upload button. */
-            $( '#dc-file-upload-btn' ).click( _discordCrypt._onUploadFileButtonClicked );
-
-            /* Handle file button cancelled. */
-            $( '#dc-file-cancel-btn' ).click( _discordCrypt._onCloseFileMenuButtonClicked );
-
-            /* Handle Settings tab opening. */
-            $( '#dc-settings-btn' ).click( _discordCrypt._onSettingsButtonClicked );
-
-            /* Handle Plugin Settings tab selected. */
-            $( '#dc-plugin-settings-btn' ).click( _discordCrypt._onSettingsTabButtonClicked );
-
-            /* Handle Database Settings tab selected. */
-            $( '#dc-database-settings-btn' ).click( _discordCrypt._onDatabaseTabButtonClicked );
-
-            /* Handle Security Settings tab selected. */
-            $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked );
-
-            /* Handle Automatic Updates button clicked. */
-            $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged );
-
-            /* Handle checking for updates. */
-            $( '#dc-update-check-btn' ).click( _discordCrypt._onCheckForUpdatesButtonClicked );
-
-            /* Handle Database Import button. */
-            $( '#dc-import-database-btn' ).click( _discordCrypt._onImportDatabaseButtonClicked );
-
-            /* Handle Database Export button. */
-            $( '#dc-export-database-btn' ).click( _discordCrypt._onExportDatabaseButtonClicked );
-
-            /* Handle Clear Database Entries button. */
-            $( '#dc-erase-entries-btn' ).click( _discordCrypt._onClearDatabaseEntriesButtonClicked );
-
-            /* Handle Settings tab closing. */
-            $( '#dc-exit-settings-btn' ).click( _discordCrypt._onSettingsCloseButtonClicked );
-
-            /* Handle Save settings. */
-            $( '#dc-settings-save-btn' ).click( _discordCrypt._onSaveSettingsButtonClicked );
-
-            /* Handle Reset settings. */
-            $( '#dc-settings-reset-btn' ).click( _discordCrypt._onResetSettingsButtonClicked );
-
-            /* Handle Restart-Now button clicking. */
-            $( '#dc-restart-now-btn' ).click( _discordCrypt._onUpdateRestartNowButtonClicked );
-
-            /* Handle Restart-Later button clicking. */
-            $( '#dc-restart-later-btn' ).click( _discordCrypt._onUpdateRestartLaterButtonClicked );
-
-            /* Handle Ignore-Update button clicking. */
-            $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked );
-
-            /* Handle Info tab switch. */
-            $( '#dc-tab-info-btn' ).click( _discordCrypt._onExchangeInfoTabButtonClicked );
-
-            /* Handle Keygen tab switch. */
-            $( '#dc-tab-keygen-btn' ).click( _discordCrypt._onExchangeKeygenTabButtonClicked );
-
-            /* Handle Handshake tab switch. */
-            $( '#dc-tab-handshake-btn' ).click( _discordCrypt._onExchangeHandshakeButtonClicked );
-
-            /* Handle exit tab button. */
-            $( '#dc-exit-exchange-btn' ).click( _discordCrypt._onExchangeCloseButtonClicked );
-
-            /* Open exchange menu. */
-            $( '#dc-exchange-btn' ).click( _discordCrypt._onOpenExchangeMenuButtonClicked );
-
-            /* Quickly generate and send a public key. */
-            $( '#dc-quick-exchange-btn' ).click( _discordCrypt._onQuickHandshakeButtonClicked );
-
-            /* Repopulate the bit length options for the generator when switching handshake algorithms. */
-            $( '#dc-keygen-method' ).change( _discordCrypt._onExchangeAlgorithmChanged );
-
-            /* Generate a new key-pair on clicking. */
-            $( '#dc-keygen-gen-btn' ).click( _discordCrypt._onExchangeGenerateKeyPairButtonClicked );
-
-            /* Clear the public & private key fields. */
-            $( '#dc-keygen-clear-btn' ).click( _discordCrypt._onExchangeClearKeyButtonClicked );
-
-            /* Send the public key to the current channel. */
-            $( '#dc-keygen-send-pub-btn' ).click( _discordCrypt._onExchangeSendPublicKeyButtonClicked );
-
-            /* Paste the data from the clipboard to the public key field. */
-            $( '#dc-handshake-paste-btn' ).click( _discordCrypt._onHandshakePastePublicKeyButtonClicked );
-
-            /* Compute the primary and secondary keys. */
-            $( '#dc-handshake-compute-btn' ).click( _discordCrypt._onHandshakeComputeButtonClicked );
-
-            /* Copy the primary and secondary key to the clipboard. */
-            $( '#dc-handshake-cpy-keys-btn' ).click( _discordCrypt._onHandshakeCopyKeysButtonClicked );
-
-            /* Apply generated keys to the current channel. */
-            $( '#dc-handshake-apply-keys-btn' ).click( _discordCrypt._onHandshakeApplyKeysButtonClicked );
-
-            /* Show the overlay when clicking the password button. */
-            dc_passwd_btn.click( _discordCrypt._onOpenPasswordMenuButtonClicked );
-
-            /* Update the password for the user once clicked. */
-            $( '#dc-save-pwd' ).click( _discordCrypt._onSavePasswordsButtonClicked );
-
-            /* Reset the password for the user to the default. */
-            $( '#dc-reset-pwd' ).click( _discordCrypt._onResetPasswordsButtonClicked );
-
-            /* Hide the overlay when clicking cancel. */
-            $( '#dc-cancel-btn' ).click( _discordCrypt._onClosePasswordMenuButtonClicked );
-
-            /* Copy the current passwords to the clipboard. */
-            $( '#dc-cpy-pwds-btn' ).click( _discordCrypt._onCopyCurrentPasswordsButtonClicked );
-
-            /* Set whether auto-encryption is enabled or disabled. */
-            dc_lock_btn.click( _discordCrypt._onForceEncryptButtonClicked );
         }
 
         /**
@@ -2082,7 +2082,7 @@ const discordCrypt = ( () => {
          * @param {int} [channel_id] If specified, sends the message to this channel instead of the current channel.
          * @returns {boolean} Returns false if the message failed to be parsed correctly and 0 on success.
          */
-        _sendEncryptedMessage( message, force_send = false, channel_id = undefined ) {
+        static _sendEncryptedMessage( message, force_send = false, channel_id = undefined ) {
             /* Attempt to encrypt the message. */
             let packets = _discordCrypt._tryEncryptMessage(
                 message,
@@ -2105,7 +2105,7 @@ const discordCrypt = ( () => {
                 );
             }
             /* Save the configuration file and store the new message(s). */
-            this._saveConfig();
+            _self._saveConfig();
 
             return true;
         }
@@ -2114,7 +2114,7 @@ const discordCrypt = ( () => {
          * @private
          * @desc Block all forms of tracking.
          */
-        _blockTracking() {
+        static _blockTracking() {
             /**
              * @protected
              * @desc Patches a specific prototype with the new function.
@@ -2472,7 +2472,7 @@ const discordCrypt = ( () => {
                     }
 
                     /* Format and send the message. */
-                    _self._sendEncryptedMessage( `${file_url}`, true, channel_id );
+                    _discordCrypt._sendEncryptedMessage( `${file_url}`, true, channel_id );
 
                     /* Copy the deletion link to the clipboard. */
                     require( 'electron' ).clipboard.writeText( `Delete URL: ${deletion_link}` );
@@ -2496,7 +2496,7 @@ const discordCrypt = ( () => {
 
             /* Send the additional text first if it's valid. */
             if ( message_textarea.val().length > 0 )
-                _self._sendEncryptedMessage( message_textarea.val(), true );
+                _discordCrypt._sendEncryptedMessage( message_textarea.val(), true );
 
             /* Since this is an async operation, we need to backup the channel ID before doing this. */
             let channel_id = _discordCrypt._getChannelId();
@@ -2544,7 +2544,7 @@ const discordCrypt = ( () => {
                     }
 
                     /* Format and send the message. */
-                    _self._sendEncryptedMessage(
+                    _discordCrypt._sendEncryptedMessage(
                         `${file_url}${send_deletion_link ? '\n\nDelete URL: ' + deletion_link : ''}`,
                         true,
                         channel_id
