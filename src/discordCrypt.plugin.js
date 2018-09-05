@@ -64,18 +64,12 @@
 /**
  * @typedef {Object} WebpackModuleSearcher
  * @desc Returns various functions that can scan for webpack modules.
- * @property {WebpackFinder} find Recursively iterates all webpack modules to
- *      the callback function.
- * @property {WebpackPrototypeFinder} findByUniquePrototypes Iterates all modules looking for the
- *      defined prototypes.
- * @property {WebpackPropertyFinder} findByUniqueProperties Iterates all modules look for the
- *      defined properties.
- * @property {WebpackDisplayNameFinder} findByDisplayName Iterates all modules looking for the specified
- *      display name.
- * @property {WebpackModuleIdFinder} findByDispatchToken Iterates all modules looking for the specified dispatch
- *      token by its ID.
- * @property {WebpackDispatchFinder} findByDispatchNames Iterates all modules looking for the specified
- *      dispatch names.
+ * @property {WebpackFinder} find Recursively iterates all webpack modules to the callback function.
+ * @property {WebpackPrototypeFinder} findByUniquePrototypes Iterates all modules looking for the defined prototypes.
+ * @property {WebpackPropertyFinder} findByUniqueProperties Iterates all modules look for the defined properties.
+ * @property {WebpackDisplayNameFinder} findByDisplayName Iterates all modules looking for the specified display name.
+ * @property {WebpackModuleIdFinder} findByDispatchToken Iterates all modules looking for the dispatch token by its ID.
+ * @property {WebpackDispatchFinder} findByDispatchNames Iterates all modules looking for the specified dispatch names.
  */
 
 /**
@@ -103,6 +97,7 @@
 /**
  * @typedef {Object} PublicKeyInfo
  * @desc Contains information given an input public key.
+ * @property {number} index The index of the exchange algorithm.
  * @property {string} fingerprint The SHA-256 sum of the public key.
  * @property {string} algorithm The public key's type ( DH | ECDH ) extracted from the metadata.
  * @property {int} bit_length The length, in bits, of the public key's security.
@@ -1680,6 +1675,10 @@ const discordCrypt = ( () => {
 
                 /* Assign it to the object if valid. */
                 if( typeof r === 'string' ) {
+                    /* Make sure the string has an actual length or pretend the message doesn't exist. */
+                    if( !r.length )
+                        return;
+
                     /* Calculate any mentions. */
                     let mentioned = _discordCrypt._getMentionsForMessage( r, id );
 
@@ -1846,53 +1845,134 @@ const discordCrypt = ( () => {
          * @returns {string} Returns a result string indicating the message info.
          */
         static _parseKeyMessage( message, content ) {
+            let encodedKey, remoteKeyInfo;
+
             /* Extract the algorithm info from the message's metadata. */
-            let metadata = _discordCrypt.__extractKeyInfo( content.replace( /\r?\n|\r/g, '' ), true );
+            remoteKeyInfo = _discordCrypt.__extractExchangeKeyInfo( content, true );
 
             /* Sanity check for invalid key messages. */
-            if ( metadata === null )
-                return '🚫 [ ERROR ] INVALID PUBLIC KEY !!!';
+            if ( remoteKeyInfo === null )
+                return '🚫 **[ ERROR ]** *INVALID PUBLIC KEY* !!!';
 
             /* Make sure that this key wasn't somehow sent in a guild or group DM. */
             if( message.type !== 0 )
-                return '🚫 [ ERROR ] INCOMING MESSAGE FROM A NON-DM !!!';
+                return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE FROM A NON-DM* !!!';
+
+            /* Validate functions. */
+            if(
+                !_cachedModules.UserStore ||
+                typeof _cachedModules.UserStore.getCurrentUser !== 'function' ||
+                typeof _cachedModules.UserStore.getUser !== 'function'
+            )
+                return '🚫 **[ ERROR ]** *CANNOT RESOLVE DEPENDENCY MODULE* !!!';
 
             /* Retrieve the current user's information. */
             let currentUser = _cachedModules.UserStore.getCurrentUser(),
                 remoteUser = _cachedModules.UserStore.getUser( message.author.id );
 
-            /* Check if the key being received is in the ignore list. */
+            /* Check if the key being received is in the ignore list and just make it invisible. */
             if(
                 _configFile.channels[ message.channel_id ] &&
                 _configFile.channels[ message.channel_id ].ignoreIds.indexOf( message.id ) !== -1
             )
-                return '🔏 [ INFO ] OLD KEY MESSAGE';
+                return '';
 
             /* Verify this message isn't coming from us. */
             if( message.author.id === currentUser.id )
-                return '🔏 [ SESSION ] OUTGOING KEY EXCHANGE';
+                return '🔏 **[ SESSION ]** *OUTGOING KEY EXCHANGE*';
+
+            /* Be sure to add the message ID to the ignore list. */
+            _configFile.channels[ message.channel_id ].ignoreIds.push( message.id );
+            _self._saveConfig();
 
             /* Check if we're currently waiting for a public key. */
-            if( _globalSessionState.hasOwnProperty( message.channel_id ) ) {
-                /* Incoming public key, calculate the exchange key and alert the user. */
-            }
+            if( _globalSessionState.hasOwnProperty( message.channel_id ) )
+                return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE WITH EXISTING KEY* !!!';
+
+            /* Actually just the return string for the message. */
+            let returnValue = '';
 
             /* The author is attempting to initiate a key exchange. Prompt the user on whether to accept it. */
-            global.smalltalk.confirm(
-                '----- INCOMING KEY EXCHANGE -----',
-                `Incoming key exchange from @${remoteUser.name}#${remoteUser.discriminator}` +
-                '\n\n' +
-                'Do you wish to create a secure session between you two?'
-            ).then(
-                () => {
-                    /* The user accepted the request. */
-                },
-                () => {
-                    /* The user rejected the request. */
-                }
-            );
+            ( async function() {
+                await global.smalltalk.confirm(
+                    '----- INCOMING KEY EXCHANGE REQUEST -----',
+                    `Incoming key exchange from @${remoteUser.username}#${remoteUser.discriminator}` +
+                    '\n\n' +
+                    `Algorithm: ${remoteKeyInfo.algorithm.toUpperCase()}-${remoteKeyInfo.bit_length}` +
+                    '\n' +
+                    `Checksum: ${remoteKeyInfo.fingerprint}` +
+                    '\n\n' +
+                    'Do you wish to start a new secure session with them?'
+                ).then(
+                    () => {
+                        /* The user accepted the request. */
+                        /* Create the session object. */
+                        _globalSessionState[ message.channel_id ] = {};
 
-            return '';
+                        /* Generate a local key pair. */
+                        if( remoteKeyInfo.algorithm.toLowerCase() === 'dh' )
+                            _globalSessionState[ message.channel_id ].privateKey =
+                                _discordCrypt.__generateDH( remoteKeyInfo.bit_length );
+                        else
+                            _globalSessionState[ message.channel_id ].privateKey =
+                                _discordCrypt.__generateECDH( remoteKeyInfo.bit_length );
+
+                        /* Get the public key for this private key. */
+                        encodedKey = _discordCrypt.__encodeExchangeKey(
+                            Buffer.from(
+                                _globalSessionState[ message.channel_id ].privateKey.getPublicKey(
+                                    'hex',
+                                    remoteKeyInfo.algorithm.toLowerCase() === 'ecdh' ? 'compressed' : null
+                                ),
+                                'hex'
+                            ),
+                            remoteKeyInfo.index
+                        );
+
+                        /* Get the local key info. */
+                        _globalSessionState[ message.channel_id ].localKey = _discordCrypt.__extractExchangeKeyInfo(
+                            encodedKey,
+                            true
+                        );
+
+                        /* Save the remote key's information. */
+                        _globalSessionState[ message.channel_id ].remoteKey = remoteKeyInfo;
+
+                        /* Try deriving the key. */
+                        let keys = _discordCrypt._deriveExchangeKeys( message.channel_id );
+
+                        /* Remove the entry. */
+                        delete _globalSessionState[ message.channel_id ];
+
+                        /* Validate the keys. */
+                        if( !keys || !keys.primaryKey || !keys.secondaryKey ) {
+                            _discordCrypt.log(
+                                `Failed to establish a session in channel: ${message.channel_id}`,
+                                'error'
+                            );
+
+                            /* Display a message to the user. */
+                            returnValue = '🚫 **[ ERROR ]** FAILED TO ESTABLISH A SESSION !!!';
+                        }
+
+                        /* Apply the keys. */
+                        _configFile.channels[ message.channel_id ].primaryKey = keys.primaryKey;
+                        _configFile.channels[ message.channel_id ].secondaryKey = keys.secondaryKey;
+                        _self._saveConfig();
+
+                        /* Set the new message text. */
+                        returnValue = '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n' +
+                            `Primary Entropy Level: ${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits\n` +
+                            `Secondary Entropy Level: ${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits`;
+                    },
+                    () => {
+                        /* The user rejected the request. */
+                        returnValue = '🔏 **[ INFO ]** *IGNORED EXCHANGE MESSAGE*';
+                    }
+                )
+            } )();
+
+            return returnValue;
         }
 
         /**
@@ -4166,6 +4246,44 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Derives a primary and secondary key from a session state.
+         * @param {string} channelId The channel that this exchange is being computed for.
+         * @param {number} outputBitLength The length in bits of the output keys.
+         * @return {{primaryKey: string, secondaryKey: string}|null}
+         */
+        static _deriveExchangeKeys( channelId, outputBitLength = 2048 ) {
+            /* Defined customization parameters for the KMAC-256 derivation. */
+            const primaryMAC = new Uint8Array( Buffer.from( 'discordCrypt-primary-secret' ) ),
+                secondaryMAC = new Uint8Array( Buffer.from( 'discordCrypt-secondary-secret' ) );
+
+            /* Converts a hex-encoded string to a Base64 encoded string. */
+            const convert = ( k ) => Buffer.from( k, 'hex' ).toString( 'base64' );
+
+            /* Store the state for easier manipulation. */
+            let _state = _globalSessionState[ channelId ];
+
+            /* Calculate the derived secret as a hex encoded string. */
+            let derivedKey = _discordCrypt.__computeExchangeSharedSecret( _state.privateKey, _state.remoteKey.key );
+
+            /* Make sure a key was derived. */
+            if( !derivedKey )
+                return null;
+
+            /* Retrieve the primary and secondary salts. */
+            let primarySalt = _discordCrypt.__binaryCompare( _state.localKey.salt, _state.remoteKey.salt ),
+                secondarySalt = primarySalt.compare( _state.localKey.salt ) === 0 ?
+                    _state.remoteKey.salt :
+                    _state.localKey.salt;
+
+            /* Calculate the KMACs for the primary and secondary key. */
+            return {
+                primaryKey: convert( global.sha3.kmac256( primarySalt, derivedKey, outputBitLength, primaryMAC ) ),
+                secondaryKey: convert( global.sha3.kmac256( secondarySalt, derivedKey, outputBitLength, secondaryMAC ) )
+            }
+        }
+
+        /**
+         * @private
          * @desc Determines whether a string is in the correct format of a message.
          * @param {string} message The input message.
          * @return {boolean} Returns true if the string message is valid.
@@ -5110,6 +5228,28 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Determines which of the two buffers specified contains a larger value.
+         * @param {Buffer|Uint8Array} a The first buffer.
+         * @param {Buffer|Uint8Array} b The second buffer.
+         */
+        static __binaryCompare( a, b ) {
+            /* Do a simple comparison on the buffers. */
+            switch( a.compare( b ) ) {
+            /* b > a */
+            case 1:
+                return b;
+            /* a > b */
+            case -1:
+                return a;
+            /* a === b */
+            case 0:
+            default:
+                return a;
+            }
+        }
+
+        /**
+         * @private
          * @desc Checks if the input password is at least 8 characters long,
          *      is alpha-numeric with both upper and lowercase as well as contains at least one symbol.
          *      Alternatively checks if the input is at least 64 characters to bypass the above check.
@@ -5263,20 +5403,60 @@ const discordCrypt = ( () => {
         }
 
         /**
+         * @private
+         * @desc Encodes a public key buffer into the format required.
+         * @param {Buffer|Uint8Array} rawKey The raw public key buffer.
+         * @param {number} index The algorithm's index related to the public key being encoded.
+         * @return {string}
+         */
+        static __encodeExchangeKey( rawKey, index ) {
+            const MAX_SALT_LEN = 32;
+            const MIN_SALT_LEN = 16;
+
+            /* Required for generating a random salt. */
+            const crypto = require( 'crypto' );
+
+            /* Calculate a random salt length. */
+            let saltLen = (
+                parseInt( crypto.randomBytes( 1 ).toString( 'hex' ), 16 ) % ( MAX_SALT_LEN - MIN_SALT_LEN )
+            ) + MIN_SALT_LEN;
+
+            /* Create a blank payload. */
+            let rawBuffer = Buffer.alloc( 2 + saltLen + rawKey.length );
+
+            /* Write the algorithm index. */
+            rawBuffer.writeInt8( index, 0 );
+
+            /* Write the salt length. */
+            rawBuffer.writeInt8( saltLen, 1 );
+
+            /* Generate a random salt and copy it to the buffer. */
+            crypto.randomBytes( saltLen ).copy( rawBuffer, 2 );
+
+            /* Copy the public key to the buffer. */
+            rawKey.copy( rawBuffer, 2 + saltLen );
+
+            /* Split the message by adding a new line every 32 characters like a standard PGP message. */
+            return (
+                ENCODED_KEY_HEADER + _discordCrypt.__substituteMessage( rawBuffer, true )
+            ).replace( /(.{32})/g, e => `${e}\n` );
+        }
+
+        /**
          * @public
          * @desc Returns the exchange algorithm and bit size for the given metadata as well as a fingerprint.
-         * @param {string} key_message The encoded metadata to extract the information from.
+         * @param {string|Buffer} key_message The encoded metadata to extract the information from.
          * @param {boolean} [header_present] Whether the message's magic string is attached to the input.
          * @returns {PublicKeyInfo|null} Returns the algorithm's bit length and name or null.
          * @example
-         * __extractKeyInfo( public_key, true );
+         * __extractExchangeKeyInfo( public_key, true );
          * @example
-         * __extractKeyInfo( public_key, false );
+         * __extractExchangeKeyInfo( public_key, false );
          */
-        static __extractKeyInfo( key_message, header_present = false ) {
+        static __extractExchangeKeyInfo( key_message, header_present = false ) {
             try {
                 let output = [];
-                let msg = key_message;
+                let msg = key_message.replace( /\r?\n|\r/g, '' );
 
                 /* Strip the header if necessary. */
                 if ( header_present )
@@ -5296,6 +5476,7 @@ const discordCrypt = ( () => {
                 output[ 'fingerprint' ] = _discordCrypt.__sha256( msg, true );
 
                 /* Buffer[0] contains the algorithm type. Reverse it. */
+                output[ 'index' ] = parseInt( msg[ 0 ] );
                 output[ 'bit_length' ] = _discordCrypt.__indexToAlgorithmBitLength( msg[ 0 ] );
                 output[ 'algorithm' ] = _discordCrypt.__indexToExchangeAlgorithmString( msg[ 0 ] )
                     .split( '-' )[ 0 ].toLowerCase();
