@@ -1478,7 +1478,7 @@ const discordCrypt = ( () => {
                 MessageQueue: searcher
                     .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
                 UserStore: searcher
-                    .findByUniqueProperties( [ "getUser", "getUsers", "findByTag", 'getCurrentUsers' ] ),
+                    .findByUniqueProperties( [ "getUser", "getUsers", "findByTag", 'getCurrentUser' ] ),
                 GuildStore: searcher
                     .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
                 ChannelStore: searcher
