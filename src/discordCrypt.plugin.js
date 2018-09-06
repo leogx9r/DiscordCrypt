@@ -3133,6 +3133,10 @@ const discordCrypt = ( () => {
             for ( let prop in _configFile.channels ) {
                 let e = _configFile.channels[ prop ];
 
+                /* Skip entries without a primary and secondary key. */
+                if( !e || !e.primaryKey || !e.secondaryKey )
+                    continue;
+
                 /* Insert the entry to the list. */
                 data._discordCrypt_entries.push( {
                     id: prop,
