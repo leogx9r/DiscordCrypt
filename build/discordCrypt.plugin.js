@@ -144,6 +144,7 @@
  *      forces encryption even if a key is not specifically defined for this channel.
  * @property {number} encryptMode The index of the ciphers to use for message encryption.
  * @property {string} encryptBlockMode The block operation mode of the ciphers used to encrypt message.
+ * @property {number} exchangeBitSize The size in bits of the exchange algorithm to use.
  * @property {string} paddingMode Padding scheme to used to align all messages to the cipher's block length.
  * @property {string} up1Host The full URI host of the Up1 service to use for encrypted file uploads.
  * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
@@ -418,13 +419,6 @@ const discordCrypt = ( () => {
 
     /**
      * @private
-     * @desc Stores the private key object used in key exchanges.
-     * @type {Object}
-     */
-    let _privateExchangeKey;
-
-    /**
-     * @private
      * @desc Stores the update data for applying later on.
      * @type {UpdateInfo}
      */
@@ -487,6 +481,20 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const ENCODED_KEY_HEADER = "⢻⢼⢽⢾";
+
+    /**
+     * @private
+     * @desc How long after a key-exchange message has been sent should it be ignored in milliseconds.
+     * @type {number}
+     */
+    const KEY_IGNORE_TIMEOUT = 6 * 60 * 60 * 1000;
+
+    /**
+     * @private
+     * @desc How long after a key exchange message is sent should a client attempt to delete it in minutes.
+     * @type {number}
+     */
+    const KEY_DELETE_TIMEOUT = 6 * 60;
 
     /**
      * @private
@@ -571,7 +579,7 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const TOOLBAR_HTML =
-        `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`;
+        `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`;
 
     /**
      * @desc Contains the raw HTML injected into the overlay to prompt for the master password for database unlocking.
@@ -585,7 +593,7 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const MENU_HTML =
-        `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`;
+        `eNrVWv1u47gRf5WpD9e7A1Zxku3ebhyvgayTBXK9/cB6b1HcPwUl0RYRWhREKrYPfY7+1afrk3SGpGRJlh3HcYo2AWKFHzPDmd98cORhLO5BxG97cRSoe55LtupBJJnWjaERDDcXBkUmFYs71gcRTw3Pp4JLnNZmJTlOC53h3CBVKb9Eio7kem9eSJ4HTIpZSrMwFGlWGDCrDDcbvjR1RnYu8Ay8WFMheZAxk/TA/XjGCxGbZABnp6ffX2YsjkU6G8B5trycs3wm0kDyqRnAX3CgBzlnsUrlCowwtPc90oTPRLNvZQoLY1RaE8QPVE8oGepA854X3I1WMmoueWTWogahSXt1YY3KBhC8IWGIIQx1xur8jFLSiMxNbpsNrLpGE8sMrsCe4quC36zBhn3a5Qic2F+iVA0O+05mslAfTUSfRI+hbuqs/BDqTC1w6PwU7aMkPp2dv2naZM61ZjNe22J/EA0RT5SMef62d0OAAZaugCxkBOqUloNRoHkaw0KYBFaqyMFTg5OTkx7M2VLydGYSZPsGRRgN+yWX3Qgr9T1VqQm0+IMPzggB4AEShAp1MB+cnZaW8HCsnytG/ZKkQZTw6C5UyzpC12MOCOv/G+BsYPDUs7JWbS6wuHhlMboFDLuxYHneToGnLJQ8fgEMSvFBivQOFSwlhJy0bYBJlc6czk3CgU7rVpmEGYiQD64sNI8tWbSRpcXXi8V8zmPBDJerFrxgQua8Lnn/SlRr8xXkntd0KZvzIGdprOb/l9YjRbvwa/X9gwY6UWVEdzJUTQzozIA0eKpJ3eWCO56ZtmG+lJtcvPhIBB+wjDYIB/oThCyvnV7E8BYqZTtBA1pX6F59L21DMxg0W68VrlGb/f3wsCswt6jaHNAMTl44isOjMj5uBsDDuHelhYfkQeeKuHTykFXGUmm+KVL50ZGWMxRiofInJGZr8c+5QPSuMPs5coM1EuqZuYtbOdZK0NVw5kj3mimAAnp/NAzzfiXDhEcqjZ9JCl0S3ynHobgrEz67x0y/iAlcMcbD6iC6ZtNHAcgTzrnmxlH+Qo9HI1wH4Ng+dznEoYiHJuSjbEVn0BXexypbwbjIc0pDHUfqwH1hFbujfO1EfYh0eY7yZEvQSor4Ev5AmWO+xEh9enp6CaVfADnG2i+uhY5w7zhfZRj0vVWv7pmQFJvX8HwAONrklGPXK/wxmmBN+SIgNWLsflQ43I86Av4ZqI/GCUtnXJOr2oWjfekeXGZGlqNUs1oF31FkemN5+cA5eh3U+RE8Hh0TJTZBqhauum/i/+XL731p/4Xb/P1RLZ4eCixHiYfL9+L5K618IldUiMp5afpuro7prV3pXeVRqQzjGtUGusup50ykGzkMOm+XhoW1G5gjGdDg5tF/IMyxMKBq94cqZciCqrhqqw1Wn+0glrNucLs2O0miKljING8RvfbDh5LFnFbkwqxaZCd++FCyfClMk2RVhCOezCAXs8Sg2v/9r38+UD0RaUy7WI+a3jb1WnO1DRtKFd35CjurbssYHZxvDsAF+fLaHDbidP3c7o6buZPnVaJ/yO/b864DgTGfy15VK41FlmBSKQ9OodLdwXd3Lnw9FER2e69sPjSplld+ldmL0z2TBaWxKarK8uDx6J1Ui6nQCfwIr87Og3fCwE/DvtvQuZtx3Rtd3Uxww/mrn/fYEOGlQFJdgB9SsL33mZg4fc1FJvm15Xd2sY+AIsbQP7q9vrmiLedvOrZglrHnd3b1im8ZKxGpv0UNs9HXRGjATC8iDEfaXqWc4t2NFm+zPI0samhKpCnOuAW2I6GmeHf2TYiTEkhb+D4KROti90AYVQVtG0htyluh9D+MoAYSjgu6Z0aQKsx/CUHOulg220YIfFAxPwBEPgqX7ZQ5UqmQ1OIwiRI+591wyu6i1xgZ/zqewHevd2Mo1ecIoo+TW/jbxcn5y9040OoMcTD5hDeJs/OfH1p74dZevL54fXZ0o5etSK8q0FYdDgRTlUOoTOINr5/D0O8oJ8KnjFMLBY/9NIM7QTvt3cWo2+pRGLXEw2pbpMhgd1SYhtW295zHIcOdxGXnLkW7PhWG+gDbdx3D0rb6AFINea+qFPGsVr7mU1ZIAzcumBC/WhuksvJj35NUBo8dfdtE8Nel0u47WPs3Ifsr0mnQM4Oy/VKFypi7UOmdiTQPdJ9LudS2BY3xE+NltS/k1tW4ObKurRQo0gfv1J9zPhXLIynaE8dKj4huarub+aNVXWF2QX36stmL0cmpmuxgr4ouBVViVckIxq61z+eZWR1Vv+XBMBvPZs3a5mC1+iQbGEezClotXo/SIiqomKLqgbnkTS8rrLJIvkpRpMxS2ahrbihutdI+HaVUIdG+WbI5FiIDGBbOWiWt0kx+M49P/nHzcTzsF6NjGuCrmNfwdbPMhAth2yyRFvOQdLqnLQyRx3sikuVteG9jfTi8E7UA+4qKTd1rw7XyKrXiBnqX9QI0RhAZA5Z9IfcvqmIKMnORYmWm6zZC0+BNEc1HQUtB77RnI5TQ1NoDe8YqTp0c20If+QI+ME0HqtoAD8X7rr53l53mlm7t1UDTQrtYP8JKt1PQGY8E8o5f+Le1jmoVvUuwu7aRj0rigLzpmxZtHNp+u21QbDToRhOcgz/DVZbJVb0BspWY67F3UutojLkSxTXjO/ssjz3b5glcEcTK9kekpMoH8N10OoU/iXmmcsNSc1lZN8Es8raXGJPpQR+524YIy7KTSM37KLYwvP/t9zcXv/yOOGf5jJu3vb+HkqV3vdEvippbRUZE8Tj5PTUMmS+oOnR3ZGFnCEwWWkElV7PlRd6vN3Q25f0mNHr4BDEXcTRCpvBfla+6ZF4bour/1DtB+7atNlt4VUtxvwZVR69vz+aUjnIlJfGTHndD+1xvnK/ncDLhLC6fc/dAo0jfdutT+5KHvjyRNCfpJXD3zCdbFermJD7l1VOdZ6ji1YbeUB+5oCs6tCTDx3j0ed25R2LxnlP7N7JrI3rOpK0B7ZcYblCsdXyoMWicjk7kkWVVvQVYT3H3qtNunWWtN9vSvbWDVbj+Uf+0l1vuaOhj8t5kc7NssHkyj7xmeM+BhqzScajLTff1x83e9+P8satJvtUfM/KBd4jDOyk0JTL3dsP7Q/bMPvvNvbQ7tmeW73LKY7U8tC5G3HCMxr/P5SY7Sqerwqg51pQR+vEKxvRlHXiPV3NvlG3V0+5v/nilsJK2Vw/dO+y3cNpF1G8EYyya7W3LV7tOdc8UF7y5rMT+fX375Dv9qSv7uUn39z8HfNw6`;
 
     /**
      * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
@@ -859,6 +867,8 @@ const discordCrypt = ( () => {
                 encryptMode: 7, /* AES(Camellia) */
                 /* Default block operation mode for ciphers. */
                 encryptBlockMode: 'CBC',
+                /* The bit size of the exchange algorithm to use. */
+                exchangeBitSize: 571,
                 /* Default password for servers not set. */
                 defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Decrypted messages have this string prefixed to it. */
@@ -1374,47 +1384,8 @@ const discordCrypt = ( () => {
             /* Handle Ignore-Update button clicking. */
             $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked );
 
-            /* Handle Info tab switch. */
-            $( '#dc-tab-info-btn' ).click( _discordCrypt._onExchangeInfoTabButtonClicked );
-
-            /* Handle Keygen tab switch. */
-            $( '#dc-tab-keygen-btn' ).click( _discordCrypt._onExchangeKeygenTabButtonClicked );
-
-            /* Handle Handshake tab switch. */
-            $( '#dc-tab-handshake-btn' ).click( _discordCrypt._onExchangeHandshakeButtonClicked );
-
-            /* Handle exit tab button. */
-            $( '#dc-exit-exchange-btn' ).click( _discordCrypt._onExchangeCloseButtonClicked );
-
-            /* Open exchange menu. */
-            $( '#dc-exchange-btn' ).click( _discordCrypt._onOpenExchangeMenuButtonClicked );
-
             /* Quickly generate and send a public key. */
             $( '#dc-quick-exchange-btn' ).click( _discordCrypt._onQuickHandshakeButtonClicked );
-
-            /* Repopulate the bit length options for the generator when switching handshake algorithms. */
-            $( '#dc-keygen-method' ).change( _discordCrypt._onExchangeAlgorithmChanged );
-
-            /* Generate a new key-pair on clicking. */
-            $( '#dc-keygen-gen-btn' ).click( _discordCrypt._onExchangeGenerateKeyPairButtonClicked );
-
-            /* Clear the public & private key fields. */
-            $( '#dc-keygen-clear-btn' ).click( _discordCrypt._onExchangeClearKeyButtonClicked );
-
-            /* Send the public key to the current channel. */
-            $( '#dc-keygen-send-pub-btn' ).click( _discordCrypt._onExchangeSendPublicKeyButtonClicked );
-
-            /* Paste the data from the clipboard to the public key field. */
-            $( '#dc-handshake-paste-btn' ).click( _discordCrypt._onHandshakePastePublicKeyButtonClicked );
-
-            /* Compute the primary and secondary keys. */
-            $( '#dc-handshake-compute-btn' ).click( _discordCrypt._onHandshakeComputeButtonClicked );
-
-            /* Copy the primary and secondary key to the clipboard. */
-            $( '#dc-handshake-cpy-keys-btn' ).click( _discordCrypt._onHandshakeCopyKeysButtonClicked );
-
-            /* Apply generated keys to the current channel. */
-            $( '#dc-handshake-apply-keys-btn' ).click( _discordCrypt._onHandshakeApplyKeysButtonClicked );
 
             /* Show the overlay when clicking the password button. */
             dc_passwd_btn.click( _discordCrypt._onOpenPasswordMenuButtonClicked );
@@ -1853,13 +1824,10 @@ const discordCrypt = ( () => {
          * @returns {string} Returns a result string indicating the message info.
          */
         static _parseKeyMessage( message, content ) {
-            const IGNORE_TIMEOUT = 6 * 60 * 60 * 1000;
-            const DELETE_TIMEOUT_SEC = 6 * 60;
-
             let encodedKey, remoteKeyInfo;
 
             /* Ignore messages that are older than 6 hours. */
-            if( message.timestamp && ( Date.now() - ( new Date( message.timestamp ) ) ) > IGNORE_TIMEOUT )
+            if( message.timestamp && ( Date.now() - ( new Date( message.timestamp ) ) ) > KEY_IGNORE_TIMEOUT )
                 return '';
 
             /* Extract the algorithm info from the message's metadata. */
@@ -1879,6 +1847,7 @@ const discordCrypt = ( () => {
                 return '🚫 **[ ERROR ]** *CANNOT RESOLVE DEPENDENCY MODULE* !!!';
 
             /* Make sure that this key wasn't somehow sent in a guild or group DM. */
+            // noinspection JSUnresolvedFunction
             let channels = _cachedModules.ChannelStore.getChannels();
             if( channels && channels[ message.channel_id ] && channels[ message.channel_id ].type !== 1 )
                 return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE FROM A NON-DM* !!!';
@@ -1964,7 +1933,7 @@ const discordCrypt = ( () => {
                             _discordCrypt._dispatchMessage(
                                 `\`${encodedKey}\``,
                                 message.channel_id,
-                                DELETE_TIMEOUT_SEC
+                                KEY_DELETE_TIMEOUT
                             );
 
                             /* Get the local key info. */
@@ -3409,654 +3378,58 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Switches assets to the Info tab.
-         */
-        static _onExchangeInfoTabButtonClicked() {
-            /* Switch to tab 0. */
-            _discordCrypt._setActiveExchangeTab( 0 );
-        }
-
-        /**
-         * @private
-         * @desc Switches assets to the Key Exchange tab.
-         */
-        static _onExchangeKeygenTabButtonClicked() {
-            /* Switch to tab 1. */
-            _discordCrypt._setActiveExchangeTab( 1 );
-        }
-
-        /**
-         * @private
-         * @desc Switches assets to the Handshake tab.
-         */
-        static _onExchangeHandshakeButtonClicked() {
-            /* Switch to tab 2. */
-            _discordCrypt._setActiveExchangeTab( 2 );
-        }
-
-        /**
-         * @private
-         * @desc Closes the key exchange menu.
-         */
-        static _onExchangeCloseButtonClicked() {
-            /* Hide main background. */
-            $( '#dc-overlay' ).css( 'display', 'none' );
-
-            /* Hide the entire exchange key menu. */
-            $( '#dc-overlay-exchange' ).css( 'display', 'none' );
-        }
-
-        /**
-         * @private
-         * @desc Opens the key exchange menu.
-         */
-        static _onOpenExchangeMenuButtonClicked() {
-            /* Show background. */
-            $( '#dc-overlay' ).css( 'display', 'block' );
-
-            /* Show main menu. */
-            $( '#dc-overlay-exchange' ).css( 'display', 'block' );
-        }
-
-        /**
-         * @private
          * @desc Generates and sends a new public key.
          */
         static _onQuickHandshakeButtonClicked() {
-            /* Don't bother opening a menu. Just generate the key. */
-            $( '#dc-keygen-gen-btn' ).click();
-
-            /* Now send it. */
-            $( '#dc-keygen-send-pub-btn' ).click();
-        }
-
-        /**
-         * @private
-         * @desc Switches the key lengths to their correct values.
-         */
-        static _onExchangeAlgorithmChanged() {
-            /* Variable bit lengths. */
-            let dh_bl = _discordCrypt.__getDHBitSizes(), ecdh_bl = _discordCrypt.__getECDHBitSizes();
-
-            /* Cache jQuery results. */
-            let dc_keygen_method = $( '#dc-keygen-method' ),
-                dc_keygen_algorithm = $( '#dc-keygen-algorithm' );
-
-            /* Clear the old select list. */
-            $( '#dc-keygen-algorithm option' ).each( ( function () {
-                $( this ).remove();
-            } ) );
-
-            /* Repopulate the entries. */
-            switch ( dc_keygen_method.val() )
-            {
-            case 'dh':
-                for ( let i = 0; i < dh_bl.length; i++ ) {
-                    let v = dh_bl[ i ];
-                    dc_keygen_algorithm.append( new Option( v, v, i === ( dh_bl.length - 1 ) ) );
-                }
-                break;
-            case 'ecdh':
-                for ( let i = 0; i < ecdh_bl.length; i++ ) {
-                    let v = ecdh_bl[ i ];
-                    dc_keygen_algorithm.append( new Option( v, v, i === ( ecdh_bl.length - 1 ) ) );
-                }
-                break;
-            default:
-                return;
-            }
-        }
-
-        /**
-         * @private
-         * @desc Generates a new key pair using the selected algorithm.
-         */
-        static _onExchangeGenerateKeyPairButtonClicked() {
-            let dh_bl = _discordCrypt.__getDHBitSizes(), ecdh_bl = _discordCrypt.__getECDHBitSizes();
-            let max_salt_len = 32, min_salt_len = 16, salt_len;
-            let index, raw_buffer, pub_buffer;
-            let key, crypto = require( 'crypto' );
-
-            let dc_keygen_method = $( '#dc-keygen-method' ),
-                dc_keygen_algorithm = $( '#dc-keygen-algorithm' );
-
-            /* Get the current algorithm. */
-            switch ( dc_keygen_method.val() ) {
-            case 'dh':
-                /* Generate a new Diffie-Hellman RSA key from the bit size specified. */
-                key = _discordCrypt.__generateDH( parseInt( dc_keygen_algorithm.val() ) );
-
-                /* Calculate the index number starting from 0. */
-                index = dh_bl.indexOf( parseInt( dc_keygen_algorithm.val() ) );
-                break;
-            case 'ecdh':
-                /* Generate a new Elliptic-Curve Diffie-Hellman key from the bit size specified. */
-                key = _discordCrypt.__generateECDH( parseInt( dc_keygen_algorithm.val() ) );
-
-                /* Calculate the index number starting from dh_bl.length. */
-                index = ( ecdh_bl.indexOf( parseInt( dc_keygen_algorithm.val() ) ) + dh_bl.length );
-                break;
-            default:
-                /* Should never happen. */
-                return;
-            }
-
-            /* Sanity check. */
-            if (
-                !key ||
-                key === undefined ||
-                typeof key.getPrivateKey === 'undefined' ||
-                typeof key.getPublicKey === 'undefined'
-            )
-                return;
-
-            /* Copy the private key to this instance. */
-            _privateExchangeKey = key;
-
-            /*****************************************************************************************
-             *   [ PUBLIC PAYLOAD STRUCTURE ]
-             *   +0x00 - Algorithm + Bit size [ 0-6 = DH ( 768, 1024, 1536, 2048, 3072, 4096, 8192 ) |
-             *                                  7-12 = ECDH ( 224, 256, 384, 409, 521, 571 ) ]
-             *   +0x01 - Salt length
-             *   +0x02 - Salt[ Salt.length ]
-             *   +0x02 + Salt.length - Public key
-             ****************************************************************************************/
-
-            /* Calculate a random salt length. */
-            salt_len = ( parseInt( crypto.randomBytes( 1 ).toString( 'hex' ), 16 ) % ( max_salt_len - min_salt_len ) ) +
-                min_salt_len;
-
-            /* Copy the buffer. */
-            pub_buffer = Buffer.from(
-                key.getPublicKey( 'hex', dc_keygen_method.val() === 'ecdh' ?
-                    'compressed' :
-                    undefined
-                ),
-                'hex'
-            );
-
-            /* Create a blank payload. */
-            raw_buffer = Buffer.alloc( 2 + salt_len + pub_buffer.length );
-
-            /* Write the algorithm index. */
-            raw_buffer.writeInt8( index, 0 );
-
-            /* Write the salt length. */
-            raw_buffer.writeInt8( salt_len, 1 );
-
-            /* Generate a random salt and copy it to the buffer. */
-            crypto.randomBytes( salt_len ).copy( raw_buffer, 2 );
-
-            /* Copy the public key to the buffer. */
-            pub_buffer.copy( raw_buffer, 2 + salt_len );
-
-            /* Get the public key then display it. */
-            $( '#dc-pub-key-ta' ).val( raw_buffer.toString( 'hex' ) );
-
-            /* Get the private key then display it. */
-            $( '#dc-priv-key-ta' ).val( key.getPrivateKey( 'hex' ) );
-        }
-
-        /**
-         * @private
-         * @desc Clears any public and private keys generated.
-         */
-        static _onExchangeClearKeyButtonClicked() {
-            /* Clear the key textareas. */
-            $( '#dc-pub-key-ta' ).val( '' );
-            $( '#dc-priv-key-ta' ).val( '' );
-        }
-
-        /**
-         * @private
-         * @desc Sends the currently generate public key in the correct format.
-         * @returns {Function}
-         */
-        static _onExchangeSendPublicKeyButtonClicked() {
-            /* Cache jQuery results. */
-            let dc_pub_key_ta = $( '#dc-pub-key-ta' );
-
-            /* Don't bother if it's empty. */
-            if ( dc_pub_key_ta.val() === '' )
-                return;
-
-            /* The text area stores a hex encoded binary. Convert it to a buffer prior to encoding. */
-            let message = Buffer.from( dc_pub_key_ta.val(), 'hex' );
-
-            /* Add the header to the message and encode it. */
-            message = ENCODED_KEY_HEADER + _discordCrypt.__substituteMessage( message, true );
-
-            /* Split the message by adding a new line every 32 characters like a standard PGP message. */
-            let formatted_message = message.replace( /(.{32})/g, e => `${e}\n` );
-
-            /* Send the message. */
-            _discordCrypt._dispatchMessage( `\`${formatted_message}\``, _discordCrypt._getChannelId() );
-
-            /* Save the configuration file and store the new message. */
-            _discordCrypt._saveConfig();
-
-            /* Update the button text & reset after 1 second.. */
-            $( '#dc-keygen-send-pub-btn' ).text( 'Sent The Public Key!' );
-
-            setTimeout( ( function () {
-                $( '#dc-keygen-send-pub-btn' ).text( 'Send Public Key' );
-            } ), 1000 );
-        }
-
-        /**
-         * @private
-         * @desc Pastes what is stored in the clipboard to the handshake public key field.
-         */
-        static _onHandshakePastePublicKeyButtonClicked() {
-            // noinspection JSUnresolvedFunction
-            $( '#dc-handshake-ppk' ).val( require( 'electron' ).clipboard.readText() );
-        }
-
-        /**
-         * @private
-         * @desc Computes a shared secret and generates passwords based on a DH/ECDH key exchange.
-         * @returns {Function}
-         */
-        static _onHandshakeComputeButtonClicked() {
-            let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
-            let isUserSaltPrimary;
-
-            /* Cache jQuery results. */
-            let dc_pub_key_ta = $( '#dc-pub-key-ta' ),
-                dc_priv_key_ta = $( '#dc-priv-key-ta' ),
-                dc_handshake_ppk = $( '#dc-handshake-ppk' ),
-                dc_handshake_compute_btn = $( '#dc-handshake-compute-btn' );
-
-            /* Provide some way of showing the user the result without actually giving it away. */
-            function displaySecret( input_hex ) {
-                const charset = _discordCrypt.__getBraille().splice( 16, 64 );
-                let output = '';
-
-                for ( let i = 0; i < parseInt( input_hex.length / 2 ); i++ )
-                    output += charset[ parseInt( input_hex.substr( i * 2, 2 ) ) & ( charset.length - 1 ) ];
-
-                return output;
-            }
-
-            /* Skip if no public key was entered. */
-            if ( !dc_handshake_ppk.val() || !dc_handshake_ppk.val().length )
-                return;
-
-            /* Skip if the user hasn't generated a key of their own. */
-            if ( !dc_pub_key_ta.val() || !dc_pub_key_ta.val().length ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'You Didn\'t Generate A Key!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Check if the message header is valid. */
-            if (
-                dc_handshake_ppk.val().replace( /\r?\n|\r/g, "" )
-                    .slice( 0, 4 ) !== ENCODED_KEY_HEADER
-            )
-                return;
-
-            /* Snip off the header. */
-            let blob = dc_handshake_ppk.val().replace( /\r?\n|\r/g, "" ).slice( 4 );
-
-            /* Skip if invalid braille encoded message. */
-            if ( !_discordCrypt.__isValidBraille( blob ) )
-                return;
-
-            try {
-                /* Decode the message. */
-                value = Buffer.from( _discordCrypt.__substituteMessage( blob ), 'hex' );
-            }
-            catch ( e ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Invalid Public Key!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Check the algorithm they're using is the same as ours. */
-            algorithm = value.readInt8( 0 );
-
-            /* Check the algorithm is valid. */
-            if ( !_discordCrypt.__isValidExchangeAlgorithm( algorithm ) ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Invalid Algorithm!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Read the user's generated public key. */
-            let user_pub_key = Buffer.from( dc_pub_key_ta.val(), 'hex' );
-
-            /* Check the algorithm used is the same as ours. */
-            if ( user_pub_key.readInt8( 0 ) !== algorithm ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Mismatched Algorithm!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Update the algorithm text. */
-            $( '#dc-handshake-algorithm' ).text(
-                `Exchange Algorithm: ${_discordCrypt.__indexToExchangeAlgorithmString( algorithm )}`
-            );
-
-            /* Get the salt length. */
-            salt_len = value.readInt8( 1 );
-
-            /* Make sure the salt length is valid. */
-            if ( salt_len < 16 || salt_len > 32 ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Invalid Salt Length!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Read the public salt. */
-            // noinspection JSUnresolvedFunction
-            salt = Buffer.from( value.subarray( 2, 2 + salt_len ) );
-
-            /* Read the user's salt length. */
-            user_salt_len = user_pub_key.readInt8( 1 );
-
-            /* Read the user salt. */
-            user_salt = Buffer.from( user_pub_key.subarray( 2, 2 + user_salt_len ) );
-
-            /* Update the salt text. */
-            $( '#dc-handshake-salts' ).text(
-                `Salts: [ ${displaySecret( salt.toString( 'hex' ) )}, ` +
-                `${displaySecret( user_salt.toString( 'hex' ) )} ]`
-            );
-
-            /* Read the public key and convert it to a hex string. */
-            // noinspection JSUnresolvedFunction
-            payload = Buffer.from( value.subarray( 2 + salt_len ) ).toString( 'hex' );
-
-            /* Return if invalid. */
-            if ( !_privateExchangeKey || _privateExchangeKey === undefined ||
-                typeof _privateExchangeKey.computeSecret === 'undefined' ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Failed To Calculate Private Key!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Compute the local secret as a hex string. */
-            let derived_secret = _discordCrypt.__computeExchangeSharedSecret(
-                _privateExchangeKey,
-                payload,
-                false,
-                false
-            );
-
-            /* Show error and quit if derivation fails. */
-            if ( !derived_secret || !derived_secret.length ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Failed To Derive Key!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Display the first 64 characters of it. */
-            $( '#dc-handshake-secret' ).text(
-                `Derived Secret: [ ${displaySecret( derived_secret.length > 64 ?
-                    derived_secret.substring( 0, 64 ) :
-                    derived_secret )
-                } ]`
-            );
-
-            /* We have two salts. We can't know which one is our primary salt so just do a simple check on which
-         Salt32 is bigger. */
-            if ( user_salt_len === salt_len ) {
-                for ( let i = 2; i < parseInt( user_salt_len / 4 ); i += 4 ) {
-                    let usl = user_salt.readUInt32BE( i ), sl = salt.readUInt32BE( i );
-
-                    if ( usl === sl )
-                        continue;
-
-                    isUserSaltPrimary = usl > sl;
-                    break;
-                }
-
-                /* Salts are equal, should never happen. */
-                if ( isUserSaltPrimary === undefined ) {
-                    /* Update the text. */
-                    dc_handshake_compute_btn.text( 'Both Salts Are Equal ?!' );
-                    setTimeout(
-                        ( function () {
-                            dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                        } ),
-                        1000
-                    );
-                    return;
-                }
-            }
-            else
-                isUserSaltPrimary = user_salt_len > salt_len;
-
-            /* Create hashed salt from the two user-generated salts. */
-            // noinspection JSUnresolvedFunction
-            let primary_hash = Buffer.from(
-                    global.sha3.sha3_256( isUserSaltPrimary ? user_salt : salt, true ),
-                    'hex'
-                ),
-                secondary_hash = Buffer.from(
-                    global.sha3.sha3_512( isUserSaltPrimary ? salt : user_salt, true ),
-                    'hex'
+            const DH_S = _discordCrypt.__getDHBitSizes(),
+                ECDH_S = _discordCrypt.__getECDHBitSizes();
+
+            let channelId = _discordCrypt._getChannelId();
+
+            /* Ensure no other keys exist. */
+            if( _globalSessionState.hasOwnProperty( channelId ) ) {
+                global.smalltalk.alert(
+                    '----- WARNING -----',
+                    'Cannot start a new session while an existing handshake is pending ...'
                 );
-
-            /* Global progress for async callbacks. */
-            let primary_progress = 0, secondary_progress = 0;
-
-            /* Calculate the primary key. */
-            _discordCrypt.__scrypt(
-                Buffer.from( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
-                primary_hash,
-                256,
-                3072,
-                16,
-                2,
-                ( error, progress, key ) => {
-                    if ( error ) {
-                        /* Update the text. */
-                        dc_handshake_compute_btn.text( 'Failed Generating Primary Key!' );
-                        setTimeout(
-                            ( function () {
-                                dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                            } ),
-                            1000
-                        );
-                        return true;
-                    }
-
-                    /* Update progress. */
-                    if ( progress ) {
-                        primary_progress = progress * 50;
-
-                        $( '#dc-exchange-status' )
-                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
-                    }
-
-                    if ( key ) {
-                        /* Generate a quality report and apply the password. */
-                        $( '#dc-handshake-prim-lbl' ).text( `Primary Key: ( Quality - ${
-                            _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
-                        } Bits )` );
-                        $( '#dc-handshake-primary-key' ).val( key.toString( 'base64' ) );
-
-                        /* Since more iterations are done for the primary key, this takes 4x as long thus will
-                       always finish second. We can thus restore the original Generate text for the button once
-                       this is done. */
-                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-
-                        /* Now we clear the additional information. */
-                        $( '#dc-handshake-algorithm' ).text( '...' );
-                        $( '#dc-handshake-secret' ).text( '...' );
-                        $( '#dc-handshake-salts' ).text( '...' );
-                        $( '#dc-exchange-status' ).css( 'width', '0%' );
-                    }
-
-                    return false;
-                }
-            );
-
-            /* Calculate all salts needed. */
-            let primary_salt = isUserSaltPrimary ? user_salt : salt;
-            let secondary_salt = isUserSaltPrimary ? salt : user_salt;
-            let secondary_password = Buffer.from(
-                primary_salt.toString( 'hex' ) + derived_secret + secondary_salt.toString( 'hex' ),
-                'hex'
-            );
-
-            /* Calculate the secondary key. */
-            _discordCrypt.__scrypt(
-                secondary_password,
-                secondary_hash,
-                256,
-                3072,
-                8,
-                1,
-                ( error, progress, key ) => {
-                    if ( error ) {
-                        /* Update the text. */
-                        dc_handshake_compute_btn.text( 'Failed Generating Secondary Key!' );
-                        setTimeout(
-                            ( function () {
-                                dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                            } ),
-                            1000
-                        );
-                        return true;
-                    }
-
-                    if ( progress ) {
-                        secondary_progress = progress * 50;
-                        $( '#dc-exchange-status' )
-                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
-                    }
-
-                    if ( key ) {
-                        /* Generate a quality report and apply the password. */
-                        $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
-                            _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
-                        } Bits )` );
-                        $( '#dc-handshake-secondary-key' ).val( key.toString( 'base64' ) );
-                    }
-
-                    return false;
-                }
-            );
-
-            /* Update the text. */
-            dc_handshake_compute_btn.text( 'Generating Keys ...' );
-
-            /* Finally clear all volatile information. */
-            _privateExchangeKey = undefined;
-            dc_handshake_ppk.val( '' );
-            dc_priv_key_ta.val( '' );
-            dc_pub_key_ta.val( '' );
-        }
-
-        /**
-         * @private
-         * @desc Copies the currently generated passwords from a key exchange to the clipboard then erases them.
-         */
-        static _onHandshakeCopyKeysButtonClicked() {
-            /* Cache jQuery results. */
-            let dc_handshake_primary_key = $( '#dc-handshake-primary-key' ),
-                dc_handshake_secondary_key = $( '#dc-handshake-secondary-key' );
-
-            /* Don't bother if it's empty. */
-            if ( dc_handshake_primary_key.val() === '' ||
-                dc_handshake_secondary_key.val() === '' )
                 return;
+            }
 
-            /* Format the text and copy it to the clipboard. */
-            // noinspection JSUnresolvedFunction
-            require( 'electron' ).clipboard.writeText(
-                `Primary Key: ${dc_handshake_primary_key.val()}\r\n\r\n` +
-                `Secondary Key: ${dc_handshake_secondary_key.val()}`
+            /* Create the session object. */
+            _globalSessionState[ channelId ] = {};
+            let isECDH = DH_S.indexOf( _configFile.exchangeBitSize ) === -1;
+
+            /* Generate a local key pair. */
+            if( isECDH )
+                _globalSessionState[ channelId ].privateKey =
+                    _discordCrypt.__generateDH( _configFile.exchangeBitSize );
+            else
+                _globalSessionState[ channelId ].privateKey =
+                    _discordCrypt.__generateECDH( _configFile.exchangeBitSize );
+
+            /* Get the public key for this private key. */
+            let encodedKey = _discordCrypt.__encodeExchangeKey(
+                Buffer.from(
+                    _globalSessionState[ channelId ].privateKey.getPublicKey( 'hex', isECDH ? 'compressed' : null ),
+                    'hex'
+                ),
+                isECDH ?
+                    DH_S.length + ECDH_S.indexOf( _configFile.exchangeBitSize ) :
+                    DH_S.indexOf( _configFile.exchangeBitSize )
             );
 
-            /* Nuke. */
-            dc_handshake_primary_key.val( '' );
-            dc_handshake_secondary_key.val( '' );
+            /* Dispatch the public key. */
+            _discordCrypt._dispatchMessage(
+                `\`${encodedKey}\``,
+                channelId,
+                KEY_DELETE_TIMEOUT
+            );
 
-            /* Update the button text & reset after 1 second. */
-            $( '#dc-handshake-cpy-keys-btn' ).text( 'Coped Keys To Clipboard!' );
-
-            setTimeout( ( function () {
-                $( '#dc-handshake-cpy-keys-btn' ).text( 'Copy Keys & Nuke' );
-                $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
-                $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
-            } ), 1000 );
-        }
-
-        /**
-         * @private
-         * @desc Applies the generate passwords to the current channel or DM.
-         * @returns {Function}
-         */
-        static _onHandshakeApplyKeysButtonClicked() {
-            /* Cache jQuery results. */
-            let dc_handshake_primary_key = $( '#dc-handshake-primary-key' ),
-                dc_handshake_secondary_key = $( '#dc-handshake-secondary-key' );
-
-            /* Skip if no primary key was generated. */
-            if ( !dc_handshake_primary_key.val() || !dc_handshake_primary_key.val().length )
-                return;
-
-            /* Skip if no secondary key was generated. */
-            if ( !dc_handshake_secondary_key.val() ||
-                !dc_handshake_secondary_key.val().length )
-                return;
-
-            /* Enable auto-encryption on the channel */
-            _discordCrypt._setAutoEncrypt( true );
-
-            /* Apply the passwords and save the config. */
-            let id = _discordCrypt._getChannelId();
-            _configFile.channels[ id ].primaryKey = dc_handshake_primary_key.val();
-            _configFile.channels[ id ].secondaryKey = dc_handshake_secondary_key.val();
-            _discordCrypt._saveConfig();
-
-            /* Clear the fields. */
-            dc_handshake_primary_key.val( '' );
-            dc_handshake_secondary_key.val( '' );
-
-            /* Update the text and reset it after 1 second. */
-            $( '#dc-handshake-apply-keys-btn' ).text( 'Applied & Saved!' );
-            setTimeout( ( function () {
-                $( '#dc-handshake-apply-keys-btn' ).text( 'Apply Generated Passwords' );
-
-                /* Reset quality bit length fields. */
-                $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
-                $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
-
-                /* Hide main background. */
-                $( '#dc-overlay' ).css( 'display', 'none' );
-
-                /* Hide the entire exchange key menu. */
-                $( '#dc-overlay-exchange' ).css( 'display', 'none' );
-
-                /* Reset the index to the info tab. */
-                _discordCrypt._setActiveExchangeTab( 0 );
-            } ), 1000 );
+            /* Get the local key info. */
+            _globalSessionState[ channelId ].localKey = _discordCrypt.__extractExchangeKeyInfo(
+                encodedKey,
+                true
+            );
         }
 
         /**
