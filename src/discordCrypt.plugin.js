@@ -1849,7 +1849,13 @@ const discordCrypt = ( () => {
          * @returns {string} Returns a result string indicating the message info.
          */
         static _parseKeyMessage( message, content ) {
+            const IGNORE_TIMEOUT = 6 * 60 * 60 * 1000;
+
             let encodedKey, remoteKeyInfo;
+
+            /* Ignore messages that are older than 6 hours. */
+            if( message.timestamp && ( Date.now() - ( new Date( message.timestamp ) ) ) > IGNORE_TIMEOUT )
+                return '';
 
             /* Extract the algorithm info from the message's metadata. */
             remoteKeyInfo = _discordCrypt.__extractExchangeKeyInfo( content, true );
