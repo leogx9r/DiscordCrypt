@@ -1744,6 +1744,10 @@ const discordCrypt = ( () => {
 
                     /* Assign it to the object if valid. */
                     if ( typeof r === 'string' ) {
+                        /* Make sure the string has an actual length or pretend the message doesn't exist. */
+                        if( !r.length )
+                            return;
+
                         /* Calculate any mentions. */
                         let mentioned = _discordCrypt._getMentionsForMessage( r, id );
 
@@ -1789,14 +1793,8 @@ const discordCrypt = ( () => {
             if( r.length === 1 )
                 return;
 
-            for( let i = 1; i < r.length; i++ ) {
-                _discordCrypt._dispatchMessage(
-                    r[ i ].message,
-                    message.channelId,
-                    _configFile.timedMessages,
-                    _configFile.timedMessageExpires
-                );
-            }
+            for( let i = 1; i < r.length; i++ )
+                _discordCrypt._dispatchMessage( r[ i ].message, message.channelId );
         }
 
         /**
@@ -1958,12 +1956,17 @@ const discordCrypt = ( () => {
                         /* Apply the keys. */
                         _configFile.channels[ message.channel_id ].primaryKey = keys.primaryKey;
                         _configFile.channels[ message.channel_id ].secondaryKey = keys.secondaryKey;
+
+                        /* Dispatch the public key. */
+                        _discordCrypt._dispatchMessage( `\`${encodedKey}\``, message.channel_id );
+
+                        /* Save the configuration to update the keys and timed messages. */
                         _self._saveConfig();
 
                         /* Set the new message text. */
                         returnValue = '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n' +
-                            `Primary Entropy Level: ${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits\n` +
-                            `Secondary Entropy Level: ${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits`;
+                            `Primary Entropy: **${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits**\n` +
+                            `Secondary Entropy: **${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits**`;
                     },
                     () => {
                         /* The user rejected the request. */
@@ -2253,12 +2256,7 @@ const discordCrypt = ( () => {
             /* Dispatch all messages. */
             for ( let i = 0; i < packets.length; i++ ) {
                 /* Send the message. */
-                _discordCrypt._dispatchMessage(
-                    packets[ i ].message,
-                    channel_id,
-                    _configFile.timedMessages,
-                    _configFile.timedMessageExpires
-                );
+                _discordCrypt._dispatchMessage( packets[ i ].message, channel_id );
             }
             /* Save the configuration file and store the new message(s). */
             _self._saveConfig();
@@ -3572,12 +3570,7 @@ const discordCrypt = ( () => {
             let formatted_message = message.replace( /(.{32})/g, e => `${e}\n` );
 
             /* Send the message. */
-            _discordCrypt._dispatchMessage(
-                `\`${formatted_message}\``,
-                _discordCrypt._getChannelId(),
-                _configFile.timedMessages,
-                _configFile.timedMessageExpires
-            );
+            _discordCrypt._dispatchMessage( `\`${formatted_message}\``, _discordCrypt._getChannelId() );
 
             /* Save the configuration file and store the new message. */
             _self._saveConfig();
@@ -4908,15 +4901,8 @@ const discordCrypt = ( () => {
          * @param {string} message The main content to send.
          * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the
          *      current channel.
-         * @param {Array<TimedMessage>} [timed_messages] Array containing timed messages to add this sent message to.
-         * @param {int} [expire_time_minutes] The amount of minutes till this message is to be deleted.
          */
-        static _dispatchMessage(
-            message,
-            channel_id = undefined,
-            timed_messages = undefined,
-            expire_time_minutes = 0
-        ) {
+        static _dispatchMessage( message, channel_id = undefined ) {
             if( !message.length )
                 return;
 
@@ -4955,11 +4941,11 @@ const discordCrypt = ( () => {
                     _cachedModules.MessageController.receiveMessage( _channel, r.body );
 
                     /* Add the message to the TimedMessage array. */
-                    if ( timed_messages && expire_time_minutes > 0 ) {
-                        timed_messages.push( {
+                    if ( _configFile.timedMessages && _configFile.timedMessageExpires > 0 ) {
+                        _configFile.timedMessages.push( {
                             messageId: r.body.id,
                             channelId: _channel,
-                            expireTime: Date.now() + ( expire_time_minutes * 60000 )
+                            expireTime: Date.now() + ( _configFile.timedMessageExpires * 60000 )
                         } );
                     }
                 }
