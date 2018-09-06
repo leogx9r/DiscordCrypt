@@ -1818,20 +1818,103 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Handles a key exchange request that has been accepted.
+         * @param {Message} message The input message object.
+         * @param {PublicKeyInfo} remoteKeyInfo The public key's information.
+         * @return {string} Returns the resulting message string.
+         */
+        static _handleAcceptedKeyRequest( message, remoteKeyInfo ) {
+            let encodedKey;
+
+            /* If a local key doesn't exist, generate one and send it. */
+            if(
+                !_globalSessionState.hasOwnProperty( message.channel_id ) ||
+                !_globalSessionState[ message.channel_id ].privateKey
+            ) {
+                /* Create the session object. */
+                _globalSessionState[ message.channel_id ] = {};
+
+                /* Generate a local key pair. */
+                if( remoteKeyInfo.algorithm.toLowerCase() === 'dh' )
+                    _globalSessionState[ message.channel_id ].privateKey =
+                        _discordCrypt.__generateDH( remoteKeyInfo.bit_length );
+                else
+                    _globalSessionState[ message.channel_id ].privateKey =
+                        _discordCrypt.__generateECDH( remoteKeyInfo.bit_length );
+
+                /* Get the public key for this private key. */
+                encodedKey = _discordCrypt.__encodeExchangeKey(
+                    Buffer.from(
+                        _globalSessionState[ message.channel_id ].privateKey.getPublicKey(
+                            'hex',
+                            remoteKeyInfo.algorithm.toLowerCase() === 'ecdh' ? 'compressed' : null
+                        ),
+                        'hex'
+                    ),
+                    remoteKeyInfo.index
+                );
+
+                /* Dispatch the public key. */
+                _discordCrypt._dispatchMessage(
+                    `\`${encodedKey}\``,
+                    message.channel_id,
+                    KEY_DELETE_TIMEOUT
+                );
+
+                /* Get the local key info. */
+                _globalSessionState[ message.channel_id ].localKey = _discordCrypt.__extractExchangeKeyInfo(
+                    encodedKey,
+                    true
+                );
+            }
+
+            /* Save the remote key's information. */
+            _globalSessionState[ message.channel_id ].remoteKey = remoteKeyInfo;
+
+            /* Try deriving the key. */
+            let keys = _discordCrypt._deriveExchangeKeys( message.channel_id );
+
+            /* Remove the entry. */
+            delete _globalSessionState[ message.channel_id ];
+
+            /* Validate the keys. */
+            if( !keys || !keys.primaryKey || !keys.secondaryKey ) {
+                _discordCrypt.log(
+                    `Failed to establish a session in channel: ${message.channel_id}`,
+                    'error'
+                );
+
+                /* Display a message to the user. */
+                return '🚫 **[ ERROR ]** FAILED TO ESTABLISH A SESSION !!!';
+            }
+
+            /* Apply the keys. */
+            _configFile.channels[ message.channel_id ].primaryKey = keys.primaryKey;
+            _configFile.channels[ message.channel_id ].secondaryKey = keys.secondaryKey;
+
+            /* Save the configuration to update the keys and timed messages. */
+            _discordCrypt._saveConfig();
+
+            /* Set the new message text. */
+            return '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n' +
+                `Primary Entropy: **${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits**\n` +
+                `Secondary Entropy: **${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits**`;
+        }
+
+        /**
+         * @private
          * @desc Parses a public key message.
          * @param {Message} message The message object.
          * @param {string} content The message's content.
          * @returns {string} Returns a result string indicating the message info.
          */
         static _parseKeyMessage( message, content ) {
-            let encodedKey, remoteKeyInfo;
-
             /* Ignore messages that are older than 6 hours. */
             if( message.timestamp && ( Date.now() - ( new Date( message.timestamp ) ) ) > KEY_IGNORE_TIMEOUT )
                 return '';
 
             /* Extract the algorithm info from the message's metadata. */
-            remoteKeyInfo = _discordCrypt.__extractExchangeKeyInfo( content, true );
+            let remoteKeyInfo = _discordCrypt.__extractExchangeKeyInfo( content, true );
 
             /* Sanity check for invalid key messages. */
             if ( remoteKeyInfo === null )
@@ -1880,9 +1963,9 @@ const discordCrypt = ( () => {
             _configFile.channels[ message.channel_id ].ignoreIds.push( message.id );
             _discordCrypt._saveConfig();
 
-            /* Check if we're currently waiting for a public key. */
+            /* Check if this is an incoming key exchange or a resulting message. */
             if( _globalSessionState.hasOwnProperty( message.channel_id ) )
-                return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE WITH EXISTING KEY* !!!';
+                return _discordCrypt._handleAcceptedKeyRequest( message, remoteKeyInfo );
 
             /* Actually just the return string for the message. */
             let returnValue = '';
@@ -1900,80 +1983,8 @@ const discordCrypt = ( () => {
                     'Do you wish to start a new secure session with them using these parameters?'
                 ).then(
                     () => {
-                        /* The user accepted the request. */
-                        /* If a local key doesn't exist, generate one and send it. */
-                        if(
-                            !_globalSessionState.hasOwnProperty( message.channel_id ) ||
-                            !_globalSessionState[ message.channel_id ].privateKey
-                        ) {
-                            /* Create the session object. */
-                            _globalSessionState[ message.channel_id ] = {};
-
-                            /* Generate a local key pair. */
-                            if( remoteKeyInfo.algorithm.toLowerCase() === 'dh' )
-                                _globalSessionState[ message.channel_id ].privateKey =
-                                    _discordCrypt.__generateDH( remoteKeyInfo.bit_length );
-                            else
-                                _globalSessionState[ message.channel_id ].privateKey =
-                                    _discordCrypt.__generateECDH( remoteKeyInfo.bit_length );
-
-                            /* Get the public key for this private key. */
-                            encodedKey = _discordCrypt.__encodeExchangeKey(
-                                Buffer.from(
-                                    _globalSessionState[ message.channel_id ].privateKey.getPublicKey(
-                                        'hex',
-                                        remoteKeyInfo.algorithm.toLowerCase() === 'ecdh' ? 'compressed' : null
-                                    ),
-                                    'hex'
-                                ),
-                                remoteKeyInfo.index
-                            );
-
-                            /* Dispatch the public key. */
-                            _discordCrypt._dispatchMessage(
-                                `\`${encodedKey}\``,
-                                message.channel_id,
-                                KEY_DELETE_TIMEOUT
-                            );
-
-                            /* Get the local key info. */
-                            _globalSessionState[ message.channel_id ].localKey = _discordCrypt.__extractExchangeKeyInfo(
-                                encodedKey,
-                                true
-                            );
-                        }
-
-                        /* Save the remote key's information. */
-                        _globalSessionState[ message.channel_id ].remoteKey = remoteKeyInfo;
-
-                        /* Try deriving the key. */
-                        let keys = _discordCrypt._deriveExchangeKeys( message.channel_id );
-
-                        /* Remove the entry. */
-                        delete _globalSessionState[ message.channel_id ];
-
-                        /* Validate the keys. */
-                        if( !keys || !keys.primaryKey || !keys.secondaryKey ) {
-                            _discordCrypt.log(
-                                `Failed to establish a session in channel: ${message.channel_id}`,
-                                'error'
-                            );
-
-                            /* Display a message to the user. */
-                            returnValue = '🚫 **[ ERROR ]** FAILED TO ESTABLISH A SESSION !!!';
-                        }
-
-                        /* Apply the keys. */
-                        _configFile.channels[ message.channel_id ].primaryKey = keys.primaryKey;
-                        _configFile.channels[ message.channel_id ].secondaryKey = keys.secondaryKey;
-
-                        /* Save the configuration to update the keys and timed messages. */
-                        _discordCrypt._saveConfig();
-
-                        /* Set the new message text. */
-                        returnValue = '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n' +
-                            `Primary Entropy: **${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits**\n` +
-                            `Secondary Entropy: **${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits**`;
+                        /* The user accepted the request. Handle the key exchange.  */
+                        returnValue = _discordCrypt._handleAcceptedKeyRequest( message, remoteKeyInfo );
                     },
                     () => {
                         /* The user rejected the request. */
@@ -3400,7 +3411,7 @@ const discordCrypt = ( () => {
             let isECDH = DH_S.indexOf( _configFile.exchangeBitSize ) === -1;
 
             /* Generate a local key pair. */
-            if( isECDH )
+            if( !isECDH )
                 _globalSessionState[ channelId ].privateKey =
                     _discordCrypt.__generateDH( _configFile.exchangeBitSize );
             else
