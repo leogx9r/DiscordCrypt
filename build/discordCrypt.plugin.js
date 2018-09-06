@@ -1869,17 +1869,19 @@ const discordCrypt = ( () => {
             if ( remoteKeyInfo === null )
                 return '🚫 **[ ERROR ]** *INVALID PUBLIC KEY* !!!';
 
-            /* Make sure that this key wasn't somehow sent in a guild or group DM. */
-            if( message.type !== 1 )
-                return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE FROM A NON-DM* !!!';
-
             /* Validate functions. */
             if(
                 !_cachedModules.UserStore ||
                 typeof _cachedModules.UserStore.getCurrentUser !== 'function' ||
-                typeof _cachedModules.UserStore.getUser !== 'function'
+                typeof _cachedModules.UserStore.getUser !== 'function' ||
+                typeof _cachedModules.ChannelStore.getChannels !== 'function'
             )
                 return '🚫 **[ ERROR ]** *CANNOT RESOLVE DEPENDENCY MODULE* !!!';
+
+            /* Make sure that this key wasn't somehow sent in a guild or group DM. */
+            let channels = _cachedModules.ChannelStore.getChannels();
+            if( channels && channels[ message.channel_id ] && channels[ message.channel_id ].type !== 1 )
+                return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE FROM A NON-DM* !!!';
 
             /* Retrieve the current user's information. */
             // noinspection JSUnresolvedFunction
