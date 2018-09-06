@@ -142,6 +142,7 @@
  *      forces encryption even if a key is not specifically defined for this channel.
  * @property {number} encryptMode The index of the ciphers to use for message encryption.
  * @property {string} encryptBlockMode The block operation mode of the ciphers used to encrypt message.
+ * @property {number} exchangeBitSize The size in bits of the exchange algorithm to use.
  * @property {string} paddingMode Padding scheme to used to align all messages to the cipher's block length.
  * @property {string} up1Host The full URI host of the Up1 service to use for encrypted file uploads.
  * @property {string} up1ApiKey If specified, contains the API key used for authentication with the up1Host.
@@ -416,13 +417,6 @@ const discordCrypt = ( () => {
 
     /**
      * @private
-     * @desc Stores the private key object used in key exchanges.
-     * @type {Object}
-     */
-    let _privateExchangeKey;
-
-    /**
-     * @private
      * @desc Stores the update data for applying later on.
      * @type {UpdateInfo}
      */
@@ -485,6 +479,20 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const ENCODED_KEY_HEADER = "⢻⢼⢽⢾";
+
+    /**
+     * @private
+     * @desc How long after a key-exchange message has been sent should it be ignored in milliseconds.
+     * @type {number}
+     */
+    const KEY_IGNORE_TIMEOUT = 6 * 60 * 60 * 1000;
+
+    /**
+     * @private
+     * @desc How long after a key exchange message is sent should a client attempt to delete it in minutes.
+     * @type {number}
+     */
+    const KEY_DELETE_TIMEOUT = 6 * 60;
 
     /**
      * @private
@@ -852,6 +860,8 @@ const discordCrypt = ( () => {
                 encryptMode: 7, /* AES(Camellia) */
                 /* Default block operation mode for ciphers. */
                 encryptBlockMode: 'CBC',
+                /* The bit size of the exchange algorithm to use. */
+                exchangeBitSize: 571,
                 /* Default password for servers not set. */
                 defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Decrypted messages have this string prefixed to it. */
@@ -1367,47 +1377,8 @@ const discordCrypt = ( () => {
             /* Handle Ignore-Update button clicking. */
             $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked );
 
-            /* Handle Info tab switch. */
-            $( '#dc-tab-info-btn' ).click( _discordCrypt._onExchangeInfoTabButtonClicked );
-
-            /* Handle Keygen tab switch. */
-            $( '#dc-tab-keygen-btn' ).click( _discordCrypt._onExchangeKeygenTabButtonClicked );
-
-            /* Handle Handshake tab switch. */
-            $( '#dc-tab-handshake-btn' ).click( _discordCrypt._onExchangeHandshakeButtonClicked );
-
-            /* Handle exit tab button. */
-            $( '#dc-exit-exchange-btn' ).click( _discordCrypt._onExchangeCloseButtonClicked );
-
-            /* Open exchange menu. */
-            $( '#dc-exchange-btn' ).click( _discordCrypt._onOpenExchangeMenuButtonClicked );
-
             /* Quickly generate and send a public key. */
             $( '#dc-quick-exchange-btn' ).click( _discordCrypt._onQuickHandshakeButtonClicked );
-
-            /* Repopulate the bit length options for the generator when switching handshake algorithms. */
-            $( '#dc-keygen-method' ).change( _discordCrypt._onExchangeAlgorithmChanged );
-
-            /* Generate a new key-pair on clicking. */
-            $( '#dc-keygen-gen-btn' ).click( _discordCrypt._onExchangeGenerateKeyPairButtonClicked );
-
-            /* Clear the public & private key fields. */
-            $( '#dc-keygen-clear-btn' ).click( _discordCrypt._onExchangeClearKeyButtonClicked );
-
-            /* Send the public key to the current channel. */
-            $( '#dc-keygen-send-pub-btn' ).click( _discordCrypt._onExchangeSendPublicKeyButtonClicked );
-
-            /* Paste the data from the clipboard to the public key field. */
-            $( '#dc-handshake-paste-btn' ).click( _discordCrypt._onHandshakePastePublicKeyButtonClicked );
-
-            /* Compute the primary and secondary keys. */
-            $( '#dc-handshake-compute-btn' ).click( _discordCrypt._onHandshakeComputeButtonClicked );
-
-            /* Copy the primary and secondary key to the clipboard. */
-            $( '#dc-handshake-cpy-keys-btn' ).click( _discordCrypt._onHandshakeCopyKeysButtonClicked );
-
-            /* Apply generated keys to the current channel. */
-            $( '#dc-handshake-apply-keys-btn' ).click( _discordCrypt._onHandshakeApplyKeysButtonClicked );
 
             /* Show the overlay when clicking the password button. */
             dc_passwd_btn.click( _discordCrypt._onOpenPasswordMenuButtonClicked );
@@ -1846,13 +1817,10 @@ const discordCrypt = ( () => {
          * @returns {string} Returns a result string indicating the message info.
          */
         static _parseKeyMessage( message, content ) {
-            const IGNORE_TIMEOUT = 6 * 60 * 60 * 1000;
-            const DELETE_TIMEOUT_SEC = 6 * 60;
-
             let encodedKey, remoteKeyInfo;
 
             /* Ignore messages that are older than 6 hours. */
-            if( message.timestamp && ( Date.now() - ( new Date( message.timestamp ) ) ) > IGNORE_TIMEOUT )
+            if( message.timestamp && ( Date.now() - ( new Date( message.timestamp ) ) ) > KEY_IGNORE_TIMEOUT )
                 return '';
 
             /* Extract the algorithm info from the message's metadata. */
@@ -1872,6 +1840,7 @@ const discordCrypt = ( () => {
                 return '🚫 **[ ERROR ]** *CANNOT RESOLVE DEPENDENCY MODULE* !!!';
 
             /* Make sure that this key wasn't somehow sent in a guild or group DM. */
+            // noinspection JSUnresolvedFunction
             let channels = _cachedModules.ChannelStore.getChannels();
             if( channels && channels[ message.channel_id ] && channels[ message.channel_id ].type !== 1 )
                 return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE FROM A NON-DM* !!!';
@@ -1957,7 +1926,7 @@ const discordCrypt = ( () => {
                             _discordCrypt._dispatchMessage(
                                 `\`${encodedKey}\``,
                                 message.channel_id,
-                                DELETE_TIMEOUT_SEC
+                                KEY_DELETE_TIMEOUT
                             );
 
                             /* Get the local key info. */
@@ -3402,654 +3371,58 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Switches assets to the Info tab.
-         */
-        static _onExchangeInfoTabButtonClicked() {
-            /* Switch to tab 0. */
-            _discordCrypt._setActiveExchangeTab( 0 );
-        }
-
-        /**
-         * @private
-         * @desc Switches assets to the Key Exchange tab.
-         */
-        static _onExchangeKeygenTabButtonClicked() {
-            /* Switch to tab 1. */
-            _discordCrypt._setActiveExchangeTab( 1 );
-        }
-
-        /**
-         * @private
-         * @desc Switches assets to the Handshake tab.
-         */
-        static _onExchangeHandshakeButtonClicked() {
-            /* Switch to tab 2. */
-            _discordCrypt._setActiveExchangeTab( 2 );
-        }
-
-        /**
-         * @private
-         * @desc Closes the key exchange menu.
-         */
-        static _onExchangeCloseButtonClicked() {
-            /* Hide main background. */
-            $( '#dc-overlay' ).css( 'display', 'none' );
-
-            /* Hide the entire exchange key menu. */
-            $( '#dc-overlay-exchange' ).css( 'display', 'none' );
-        }
-
-        /**
-         * @private
-         * @desc Opens the key exchange menu.
-         */
-        static _onOpenExchangeMenuButtonClicked() {
-            /* Show background. */
-            $( '#dc-overlay' ).css( 'display', 'block' );
-
-            /* Show main menu. */
-            $( '#dc-overlay-exchange' ).css( 'display', 'block' );
-        }
-
-        /**
-         * @private
          * @desc Generates and sends a new public key.
          */
         static _onQuickHandshakeButtonClicked() {
-            /* Don't bother opening a menu. Just generate the key. */
-            $( '#dc-keygen-gen-btn' ).click();
-
-            /* Now send it. */
-            $( '#dc-keygen-send-pub-btn' ).click();
-        }
-
-        /**
-         * @private
-         * @desc Switches the key lengths to their correct values.
-         */
-        static _onExchangeAlgorithmChanged() {
-            /* Variable bit lengths. */
-            let dh_bl = _discordCrypt.__getDHBitSizes(), ecdh_bl = _discordCrypt.__getECDHBitSizes();
-
-            /* Cache jQuery results. */
-            let dc_keygen_method = $( '#dc-keygen-method' ),
-                dc_keygen_algorithm = $( '#dc-keygen-algorithm' );
-
-            /* Clear the old select list. */
-            $( '#dc-keygen-algorithm option' ).each( ( function () {
-                $( this ).remove();
-            } ) );
-
-            /* Repopulate the entries. */
-            switch ( dc_keygen_method.val() )
-            {
-            case 'dh':
-                for ( let i = 0; i < dh_bl.length; i++ ) {
-                    let v = dh_bl[ i ];
-                    dc_keygen_algorithm.append( new Option( v, v, i === ( dh_bl.length - 1 ) ) );
-                }
-                break;
-            case 'ecdh':
-                for ( let i = 0; i < ecdh_bl.length; i++ ) {
-                    let v = ecdh_bl[ i ];
-                    dc_keygen_algorithm.append( new Option( v, v, i === ( ecdh_bl.length - 1 ) ) );
-                }
-                break;
-            default:
-                return;
-            }
-        }
-
-        /**
-         * @private
-         * @desc Generates a new key pair using the selected algorithm.
-         */
-        static _onExchangeGenerateKeyPairButtonClicked() {
-            let dh_bl = _discordCrypt.__getDHBitSizes(), ecdh_bl = _discordCrypt.__getECDHBitSizes();
-            let max_salt_len = 32, min_salt_len = 16, salt_len;
-            let index, raw_buffer, pub_buffer;
-            let key, crypto = require( 'crypto' );
-
-            let dc_keygen_method = $( '#dc-keygen-method' ),
-                dc_keygen_algorithm = $( '#dc-keygen-algorithm' );
-
-            /* Get the current algorithm. */
-            switch ( dc_keygen_method.val() ) {
-            case 'dh':
-                /* Generate a new Diffie-Hellman RSA key from the bit size specified. */
-                key = _discordCrypt.__generateDH( parseInt( dc_keygen_algorithm.val() ) );
-
-                /* Calculate the index number starting from 0. */
-                index = dh_bl.indexOf( parseInt( dc_keygen_algorithm.val() ) );
-                break;
-            case 'ecdh':
-                /* Generate a new Elliptic-Curve Diffie-Hellman key from the bit size specified. */
-                key = _discordCrypt.__generateECDH( parseInt( dc_keygen_algorithm.val() ) );
-
-                /* Calculate the index number starting from dh_bl.length. */
-                index = ( ecdh_bl.indexOf( parseInt( dc_keygen_algorithm.val() ) ) + dh_bl.length );
-                break;
-            default:
-                /* Should never happen. */
-                return;
-            }
-
-            /* Sanity check. */
-            if (
-                !key ||
-                key === undefined ||
-                typeof key.getPrivateKey === 'undefined' ||
-                typeof key.getPublicKey === 'undefined'
-            )
-                return;
-
-            /* Copy the private key to this instance. */
-            _privateExchangeKey = key;
-
-            /*****************************************************************************************
-             *   [ PUBLIC PAYLOAD STRUCTURE ]
-             *   +0x00 - Algorithm + Bit size [ 0-6 = DH ( 768, 1024, 1536, 2048, 3072, 4096, 8192 ) |
-             *                                  7-12 = ECDH ( 224, 256, 384, 409, 521, 571 ) ]
-             *   +0x01 - Salt length
-             *   +0x02 - Salt[ Salt.length ]
-             *   +0x02 + Salt.length - Public key
-             ****************************************************************************************/
-
-            /* Calculate a random salt length. */
-            salt_len = ( parseInt( crypto.randomBytes( 1 ).toString( 'hex' ), 16 ) % ( max_salt_len - min_salt_len ) ) +
-                min_salt_len;
-
-            /* Copy the buffer. */
-            pub_buffer = Buffer.from(
-                key.getPublicKey( 'hex', dc_keygen_method.val() === 'ecdh' ?
-                    'compressed' :
-                    undefined
-                ),
-                'hex'
-            );
-
-            /* Create a blank payload. */
-            raw_buffer = Buffer.alloc( 2 + salt_len + pub_buffer.length );
-
-            /* Write the algorithm index. */
-            raw_buffer.writeInt8( index, 0 );
-
-            /* Write the salt length. */
-            raw_buffer.writeInt8( salt_len, 1 );
-
-            /* Generate a random salt and copy it to the buffer. */
-            crypto.randomBytes( salt_len ).copy( raw_buffer, 2 );
-
-            /* Copy the public key to the buffer. */
-            pub_buffer.copy( raw_buffer, 2 + salt_len );
-
-            /* Get the public key then display it. */
-            $( '#dc-pub-key-ta' ).val( raw_buffer.toString( 'hex' ) );
-
-            /* Get the private key then display it. */
-            $( '#dc-priv-key-ta' ).val( key.getPrivateKey( 'hex' ) );
-        }
-
-        /**
-         * @private
-         * @desc Clears any public and private keys generated.
-         */
-        static _onExchangeClearKeyButtonClicked() {
-            /* Clear the key textareas. */
-            $( '#dc-pub-key-ta' ).val( '' );
-            $( '#dc-priv-key-ta' ).val( '' );
-        }
-
-        /**
-         * @private
-         * @desc Sends the currently generate public key in the correct format.
-         * @returns {Function}
-         */
-        static _onExchangeSendPublicKeyButtonClicked() {
-            /* Cache jQuery results. */
-            let dc_pub_key_ta = $( '#dc-pub-key-ta' );
-
-            /* Don't bother if it's empty. */
-            if ( dc_pub_key_ta.val() === '' )
-                return;
-
-            /* The text area stores a hex encoded binary. Convert it to a buffer prior to encoding. */
-            let message = Buffer.from( dc_pub_key_ta.val(), 'hex' );
-
-            /* Add the header to the message and encode it. */
-            message = ENCODED_KEY_HEADER + _discordCrypt.__substituteMessage( message, true );
-
-            /* Split the message by adding a new line every 32 characters like a standard PGP message. */
-            let formatted_message = message.replace( /(.{32})/g, e => `${e}\n` );
-
-            /* Send the message. */
-            _discordCrypt._dispatchMessage( `\`${formatted_message}\``, _discordCrypt._getChannelId() );
-
-            /* Save the configuration file and store the new message. */
-            _discordCrypt._saveConfig();
-
-            /* Update the button text & reset after 1 second.. */
-            $( '#dc-keygen-send-pub-btn' ).text( 'Sent The Public Key!' );
-
-            setTimeout( ( function () {
-                $( '#dc-keygen-send-pub-btn' ).text( 'Send Public Key' );
-            } ), 1000 );
-        }
-
-        /**
-         * @private
-         * @desc Pastes what is stored in the clipboard to the handshake public key field.
-         */
-        static _onHandshakePastePublicKeyButtonClicked() {
-            // noinspection JSUnresolvedFunction
-            $( '#dc-handshake-ppk' ).val( require( 'electron' ).clipboard.readText() );
-        }
-
-        /**
-         * @private
-         * @desc Computes a shared secret and generates passwords based on a DH/ECDH key exchange.
-         * @returns {Function}
-         */
-        static _onHandshakeComputeButtonClicked() {
-            let value, algorithm, payload, salt_len, salt, user_salt_len, user_salt;
-            let isUserSaltPrimary;
-
-            /* Cache jQuery results. */
-            let dc_pub_key_ta = $( '#dc-pub-key-ta' ),
-                dc_priv_key_ta = $( '#dc-priv-key-ta' ),
-                dc_handshake_ppk = $( '#dc-handshake-ppk' ),
-                dc_handshake_compute_btn = $( '#dc-handshake-compute-btn' );
-
-            /* Provide some way of showing the user the result without actually giving it away. */
-            function displaySecret( input_hex ) {
-                const charset = _discordCrypt.__getBraille().splice( 16, 64 );
-                let output = '';
-
-                for ( let i = 0; i < parseInt( input_hex.length / 2 ); i++ )
-                    output += charset[ parseInt( input_hex.substr( i * 2, 2 ) ) & ( charset.length - 1 ) ];
-
-                return output;
-            }
-
-            /* Skip if no public key was entered. */
-            if ( !dc_handshake_ppk.val() || !dc_handshake_ppk.val().length )
-                return;
-
-            /* Skip if the user hasn't generated a key of their own. */
-            if ( !dc_pub_key_ta.val() || !dc_pub_key_ta.val().length ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'You Didn\'t Generate A Key!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Check if the message header is valid. */
-            if (
-                dc_handshake_ppk.val().replace( /\r?\n|\r/g, "" )
-                    .slice( 0, 4 ) !== ENCODED_KEY_HEADER
-            )
-                return;
-
-            /* Snip off the header. */
-            let blob = dc_handshake_ppk.val().replace( /\r?\n|\r/g, "" ).slice( 4 );
-
-            /* Skip if invalid braille encoded message. */
-            if ( !_discordCrypt.__isValidBraille( blob ) )
-                return;
-
-            try {
-                /* Decode the message. */
-                value = Buffer.from( _discordCrypt.__substituteMessage( blob ), 'hex' );
-            }
-            catch ( e ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Invalid Public Key!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Check the algorithm they're using is the same as ours. */
-            algorithm = value.readInt8( 0 );
-
-            /* Check the algorithm is valid. */
-            if ( !_discordCrypt.__isValidExchangeAlgorithm( algorithm ) ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Invalid Algorithm!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Read the user's generated public key. */
-            let user_pub_key = Buffer.from( dc_pub_key_ta.val(), 'hex' );
-
-            /* Check the algorithm used is the same as ours. */
-            if ( user_pub_key.readInt8( 0 ) !== algorithm ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Mismatched Algorithm!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Update the algorithm text. */
-            $( '#dc-handshake-algorithm' ).text(
-                `Exchange Algorithm: ${_discordCrypt.__indexToExchangeAlgorithmString( algorithm )}`
-            );
-
-            /* Get the salt length. */
-            salt_len = value.readInt8( 1 );
-
-            /* Make sure the salt length is valid. */
-            if ( salt_len < 16 || salt_len > 32 ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Invalid Salt Length!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Read the public salt. */
-            // noinspection JSUnresolvedFunction
-            salt = Buffer.from( value.subarray( 2, 2 + salt_len ) );
-
-            /* Read the user's salt length. */
-            user_salt_len = user_pub_key.readInt8( 1 );
-
-            /* Read the user salt. */
-            user_salt = Buffer.from( user_pub_key.subarray( 2, 2 + user_salt_len ) );
-
-            /* Update the salt text. */
-            $( '#dc-handshake-salts' ).text(
-                `Salts: [ ${displaySecret( salt.toString( 'hex' ) )}, ` +
-                `${displaySecret( user_salt.toString( 'hex' ) )} ]`
-            );
-
-            /* Read the public key and convert it to a hex string. */
-            // noinspection JSUnresolvedFunction
-            payload = Buffer.from( value.subarray( 2 + salt_len ) ).toString( 'hex' );
-
-            /* Return if invalid. */
-            if ( !_privateExchangeKey || _privateExchangeKey === undefined ||
-                typeof _privateExchangeKey.computeSecret === 'undefined' ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Failed To Calculate Private Key!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Compute the local secret as a hex string. */
-            let derived_secret = _discordCrypt.__computeExchangeSharedSecret(
-                _privateExchangeKey,
-                payload,
-                false,
-                false
-            );
-
-            /* Show error and quit if derivation fails. */
-            if ( !derived_secret || !derived_secret.length ) {
-                /* Update the text. */
-                dc_handshake_compute_btn.text( 'Failed To Derive Key!' );
-                setTimeout( ( function () {
-                    dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                } ), 1000 );
-                return;
-            }
-
-            /* Display the first 64 characters of it. */
-            $( '#dc-handshake-secret' ).text(
-                `Derived Secret: [ ${displaySecret( derived_secret.length > 64 ?
-                    derived_secret.substring( 0, 64 ) :
-                    derived_secret )
-                } ]`
-            );
-
-            /* We have two salts. We can't know which one is our primary salt so just do a simple check on which
-         Salt32 is bigger. */
-            if ( user_salt_len === salt_len ) {
-                for ( let i = 2; i < parseInt( user_salt_len / 4 ); i += 4 ) {
-                    let usl = user_salt.readUInt32BE( i ), sl = salt.readUInt32BE( i );
-
-                    if ( usl === sl )
-                        continue;
-
-                    isUserSaltPrimary = usl > sl;
-                    break;
-                }
-
-                /* Salts are equal, should never happen. */
-                if ( isUserSaltPrimary === undefined ) {
-                    /* Update the text. */
-                    dc_handshake_compute_btn.text( 'Both Salts Are Equal ?!' );
-                    setTimeout(
-                        ( function () {
-                            dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                        } ),
-                        1000
-                    );
-                    return;
-                }
-            }
-            else
-                isUserSaltPrimary = user_salt_len > salt_len;
-
-            /* Create hashed salt from the two user-generated salts. */
-            // noinspection JSUnresolvedFunction
-            let primary_hash = Buffer.from(
-                    global.sha3.sha3_256( isUserSaltPrimary ? user_salt : salt, true ),
-                    'hex'
-                ),
-                secondary_hash = Buffer.from(
-                    global.sha3.sha3_512( isUserSaltPrimary ? salt : user_salt, true ),
-                    'hex'
+            const DH_S = _discordCrypt.__getDHBitSizes(),
+                ECDH_S = _discordCrypt.__getECDHBitSizes();
+
+            let channelId = _discordCrypt._getChannelId();
+
+            /* Ensure no other keys exist. */
+            if( _globalSessionState.hasOwnProperty( channelId ) ) {
+                global.smalltalk.alert(
+                    '----- WARNING -----',
+                    'Cannot start a new session while an existing handshake is pending ...'
                 );
-
-            /* Global progress for async callbacks. */
-            let primary_progress = 0, secondary_progress = 0;
-
-            /* Calculate the primary key. */
-            _discordCrypt.__scrypt(
-                Buffer.from( derived_secret + secondary_hash.toString( 'hex' ), 'hex' ),
-                primary_hash,
-                256,
-                3072,
-                16,
-                2,
-                ( error, progress, key ) => {
-                    if ( error ) {
-                        /* Update the text. */
-                        dc_handshake_compute_btn.text( 'Failed Generating Primary Key!' );
-                        setTimeout(
-                            ( function () {
-                                dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                            } ),
-                            1000
-                        );
-                        return true;
-                    }
-
-                    /* Update progress. */
-                    if ( progress ) {
-                        primary_progress = progress * 50;
-
-                        $( '#dc-exchange-status' )
-                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
-                    }
-
-                    if ( key ) {
-                        /* Generate a quality report and apply the password. */
-                        $( '#dc-handshake-prim-lbl' ).text( `Primary Key: ( Quality - ${
-                            _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
-                        } Bits )` );
-                        $( '#dc-handshake-primary-key' ).val( key.toString( 'base64' ) );
-
-                        /* Since more iterations are done for the primary key, this takes 4x as long thus will
-                       always finish second. We can thus restore the original Generate text for the button once
-                       this is done. */
-                        dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-
-                        /* Now we clear the additional information. */
-                        $( '#dc-handshake-algorithm' ).text( '...' );
-                        $( '#dc-handshake-secret' ).text( '...' );
-                        $( '#dc-handshake-salts' ).text( '...' );
-                        $( '#dc-exchange-status' ).css( 'width', '0%' );
-                    }
-
-                    return false;
-                }
-            );
-
-            /* Calculate all salts needed. */
-            let primary_salt = isUserSaltPrimary ? user_salt : salt;
-            let secondary_salt = isUserSaltPrimary ? salt : user_salt;
-            let secondary_password = Buffer.from(
-                primary_salt.toString( 'hex' ) + derived_secret + secondary_salt.toString( 'hex' ),
-                'hex'
-            );
-
-            /* Calculate the secondary key. */
-            _discordCrypt.__scrypt(
-                secondary_password,
-                secondary_hash,
-                256,
-                3072,
-                8,
-                1,
-                ( error, progress, key ) => {
-                    if ( error ) {
-                        /* Update the text. */
-                        dc_handshake_compute_btn.text( 'Failed Generating Secondary Key!' );
-                        setTimeout(
-                            ( function () {
-                                dc_handshake_compute_btn.text( 'Compute Secret Keys' );
-                            } ),
-                            1000
-                        );
-                        return true;
-                    }
-
-                    if ( progress ) {
-                        secondary_progress = progress * 50;
-                        $( '#dc-exchange-status' )
-                            .css( 'width', `${parseInt( primary_progress + secondary_progress )}%` );
-                    }
-
-                    if ( key ) {
-                        /* Generate a quality report and apply the password. */
-                        $( '#dc-handshake-sec-lbl' ).text( `Secondary Key: ( Quality - ${
-                            _discordCrypt.__entropicBitLength( key.toString( 'base64' ) )
-                        } Bits )` );
-                        $( '#dc-handshake-secondary-key' ).val( key.toString( 'base64' ) );
-                    }
-
-                    return false;
-                }
-            );
-
-            /* Update the text. */
-            dc_handshake_compute_btn.text( 'Generating Keys ...' );
-
-            /* Finally clear all volatile information. */
-            _privateExchangeKey = undefined;
-            dc_handshake_ppk.val( '' );
-            dc_priv_key_ta.val( '' );
-            dc_pub_key_ta.val( '' );
-        }
-
-        /**
-         * @private
-         * @desc Copies the currently generated passwords from a key exchange to the clipboard then erases them.
-         */
-        static _onHandshakeCopyKeysButtonClicked() {
-            /* Cache jQuery results. */
-            let dc_handshake_primary_key = $( '#dc-handshake-primary-key' ),
-                dc_handshake_secondary_key = $( '#dc-handshake-secondary-key' );
-
-            /* Don't bother if it's empty. */
-            if ( dc_handshake_primary_key.val() === '' ||
-                dc_handshake_secondary_key.val() === '' )
                 return;
+            }
 
-            /* Format the text and copy it to the clipboard. */
-            // noinspection JSUnresolvedFunction
-            require( 'electron' ).clipboard.writeText(
-                `Primary Key: ${dc_handshake_primary_key.val()}\r\n\r\n` +
-                `Secondary Key: ${dc_handshake_secondary_key.val()}`
+            /* Create the session object. */
+            _globalSessionState[ channelId ] = {};
+            let isECDH = DH_S.indexOf( _configFile.exchangeBitSize ) === -1;
+
+            /* Generate a local key pair. */
+            if( isECDH )
+                _globalSessionState[ channelId ].privateKey =
+                    _discordCrypt.__generateDH( _configFile.exchangeBitSize );
+            else
+                _globalSessionState[ channelId ].privateKey =
+                    _discordCrypt.__generateECDH( _configFile.exchangeBitSize );
+
+            /* Get the public key for this private key. */
+            let encodedKey = _discordCrypt.__encodeExchangeKey(
+                Buffer.from(
+                    _globalSessionState[ channelId ].privateKey.getPublicKey( 'hex', isECDH ? 'compressed' : null ),
+                    'hex'
+                ),
+                isECDH ?
+                    DH_S.length + ECDH_S.indexOf( _configFile.exchangeBitSize ) :
+                    DH_S.indexOf( _configFile.exchangeBitSize )
             );
 
-            /* Nuke. */
-            dc_handshake_primary_key.val( '' );
-            dc_handshake_secondary_key.val( '' );
+            /* Dispatch the public key. */
+            _discordCrypt._dispatchMessage(
+                `\`${encodedKey}\``,
+                channelId,
+                KEY_DELETE_TIMEOUT
+            );
 
-            /* Update the button text & reset after 1 second. */
-            $( '#dc-handshake-cpy-keys-btn' ).text( 'Coped Keys To Clipboard!' );
-
-            setTimeout( ( function () {
-                $( '#dc-handshake-cpy-keys-btn' ).text( 'Copy Keys & Nuke' );
-                $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
-                $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
-            } ), 1000 );
-        }
-
-        /**
-         * @private
-         * @desc Applies the generate passwords to the current channel or DM.
-         * @returns {Function}
-         */
-        static _onHandshakeApplyKeysButtonClicked() {
-            /* Cache jQuery results. */
-            let dc_handshake_primary_key = $( '#dc-handshake-primary-key' ),
-                dc_handshake_secondary_key = $( '#dc-handshake-secondary-key' );
-
-            /* Skip if no primary key was generated. */
-            if ( !dc_handshake_primary_key.val() || !dc_handshake_primary_key.val().length )
-                return;
-
-            /* Skip if no secondary key was generated. */
-            if ( !dc_handshake_secondary_key.val() ||
-                !dc_handshake_secondary_key.val().length )
-                return;
-
-            /* Enable auto-encryption on the channel */
-            _discordCrypt._setAutoEncrypt( true );
-
-            /* Apply the passwords and save the config. */
-            let id = _discordCrypt._getChannelId();
-            _configFile.channels[ id ].primaryKey = dc_handshake_primary_key.val();
-            _configFile.channels[ id ].secondaryKey = dc_handshake_secondary_key.val();
-            _discordCrypt._saveConfig();
-
-            /* Clear the fields. */
-            dc_handshake_primary_key.val( '' );
-            dc_handshake_secondary_key.val( '' );
-
-            /* Update the text and reset it after 1 second. */
-            $( '#dc-handshake-apply-keys-btn' ).text( 'Applied & Saved!' );
-            setTimeout( ( function () {
-                $( '#dc-handshake-apply-keys-btn' ).text( 'Apply Generated Passwords' );
-
-                /* Reset quality bit length fields. */
-                $( '#dc-handshake-prim-lbl' ).text( 'Primary Key: ' );
-                $( '#dc-handshake-sec-lbl' ).text( 'Secondary Key: ' );
-
-                /* Hide main background. */
-                $( '#dc-overlay' ).css( 'display', 'none' );
-
-                /* Hide the entire exchange key menu. */
-                $( '#dc-overlay-exchange' ).css( 'display', 'none' );
-
-                /* Reset the index to the info tab. */
-                _discordCrypt._setActiveExchangeTab( 0 );
-            } ), 1000 );
+            /* Get the local key info. */
+            _globalSessionState[ channelId ].localKey = _discordCrypt.__extractExchangeKeyInfo(
+                encodedKey,
+                true
+            );
         }
 
         /**
