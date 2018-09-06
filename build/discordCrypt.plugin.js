@@ -1857,6 +1857,7 @@ const discordCrypt = ( () => {
          */
         static _parseKeyMessage( message, content ) {
             const IGNORE_TIMEOUT = 6 * 60 * 60 * 1000;
+            const DELETE_TIMEOUT_SEC = 6 * 60;
 
             let encodedKey, remoteKeyInfo;
 
@@ -1977,7 +1978,7 @@ const discordCrypt = ( () => {
                         _configFile.channels[ message.channel_id ].secondaryKey = keys.secondaryKey;
 
                         /* Dispatch the public key. */
-                        _discordCrypt._dispatchMessage( `\`${encodedKey}\``, message.channel_id );
+                        _discordCrypt._dispatchMessage( `\`${encodedKey}\``, message.channel_id, DELETE_TIMEOUT_SEC );
 
                         /* Save the configuration to update the keys and timed messages. */
                         _self._saveConfig();
@@ -4920,8 +4921,9 @@ const discordCrypt = ( () => {
          * @param {string} message The main content to send.
          * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the
          *      current channel.
+         * @param {number} [timeout] Optional timeout to delete this message in minutes.
          */
-        static _dispatchMessage( message, channel_id = undefined ) {
+        static _dispatchMessage( message, channel_id = null, timeout = null ) {
             if( !message.length )
                 return;
 
@@ -4959,12 +4961,15 @@ const discordCrypt = ( () => {
                     /* Receive the message normally. */
                     _cachedModules.MessageController.receiveMessage( _channel, r.body );
 
+                    /* Calculate the timeout. */
+                    timeout = timeout || _configFile.timedMessageExpires;
+
                     /* Add the message to the TimedMessage array. */
                     if ( _configFile.timedMessages && _configFile.timedMessageExpires > 0 ) {
                         _configFile.timedMessages.push( {
                             messageId: r.body.id,
                             channelId: _channel,
-                            expireTime: Date.now() + ( _configFile.timedMessageExpires * 60000 )
+                            expireTime: Date.now() + ( timeout * 60000 )
                         } );
                     }
                 }
