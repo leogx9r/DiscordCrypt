@@ -388,14 +388,6 @@ const discordCrypt = ( () => {
 
     /**
      * @private
-     * @desc The index of the handler used to reload the toolbar.
-     *      Defined only if hooking of modules failed.
-     * @type {int}
-     */
-    let _toolbarReloadInterval;
-
-    /**
-     * @private
      * @desc The index of the handler used for automatic update checking.
      * @type {int}
      */
@@ -543,6 +535,65 @@ const discordCrypt = ( () => {
     const PGP_SIGNING_KEY = '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */';
 
     /**
+     * @desc The Base64 encoded SVG containing the unlocked status icon.
+     * @type {string}
+     */
+    const UNLOCK_ICON = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwI" +
+        "DI0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xI" +
+        "DAgMi0uOSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgN" +
+        "yA2aDEuOWMwLTEuNzEgMS4zOS0zLjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAyd" +
+        "jEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6bTAgMTJINlYxMGgxMnYxMHoiPjwvc" +
+        "GF0aD48L3N2Zz4=";
+
+    /**
+     * @desc The Base64 encoded SVG containing the locked status icon.
+     * @type {string}
+     */
+    const LOCK_ICON = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI" +
+        "0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI" +
+        "0djI0SDBWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJ" +
+        "lZj0iI2EiLz48L2NsaXBQYXRoPjxwYXRoIGNsaXAtcGF0aD0idXJsKCNiKSIgZD0iTTEyIDE3YzEuMSAwIDItLjkgMi0ycy0uOS0" +
+        "yLTItMi0yIC45LTIgMiAuOSAyIDIgMnptNi05aC0xVjZjMC0yLjc2LTIuMjQtNS01LTVTNyAzLjI0IDcgNnYySDZjLTEuMSAwLTI" +
+        "gLjktMiAydjEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6TTguOSA2YzAtMS43MSA" +
+        "xLjM5LTMuMSAzLjEtMy4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlWNnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=";
+
+    /**
+     * @desc Defines the CSS for the application overlays.
+     * @type {string}
+     */
+    const APP_STYLE =
+        `/* ----- APPLICATION CSS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
+
+    /**
+     * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
+     * @type {string}
+     */
+    const TOOLBAR_HTML =
+        `/* ----- APPLICATION TOOLBAR GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
+
+    /**
+     * @desc Contains the raw HTML injected into the overlay to prompt for the master password for database unlocking.
+     * @type {string}
+     */
+    const UNLOCK_HTML =
+        `/* ----- APPLICATION UNLOCKING GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
+
+    /**
+     * @desc Defines the raw HTML used describing each option menu.
+     * @type {string}
+     */
+    const MENU_HTML =
+        `/* ----- SETTINGS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
+
+    /**
+     * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
+     * @type {LibraryDefinition}
+     */
+    const EXTERNAL_LIBRARIES = {
+        /* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */
+    };
+
+    /**
      * @protected
      * @class
      * @desc Main plugin prototype.
@@ -576,66 +627,6 @@ const discordCrypt = ( () => {
             this._searchUiClass = '.search .search-bar';
 
             /* ============================================ */
-
-            /**
-             * @desc Defines the CSS for the application overlays.
-             * @type {string}
-             */
-            this._appCss =
-                `/* ----- APPLICATION CSS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
-
-            /**
-             * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
-             * @type {string}
-             */
-            this._toolbarHtml =
-                `/* ----- APPLICATION TOOLBAR GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
-
-            /**
-             * @desc Contains the raw HTML injected into the overlay to prompt for the master password for database
-             *      unlocking.
-             * @type {string}
-             */
-            this._masterPasswordHtml =
-                `/* ----- APPLICATION UNLOCKING GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
-
-            /**
-             * @desc Defines the raw HTML used describing each option menu.
-             * @type {string}
-             */
-            this._settingsMenuHtml =
-                `/* ----- SETTINGS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`;
-
-            /**
-             * @desc The Base64 encoded SVG containing the unlocked status icon.
-             * @type {string}
-             */
-            this._unlockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwI" +
-                "DI0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMTdjMS4xI" +
-                "DAgMi0uOSAyLTJzLS45LTItMi0yLTIgLjktMiAyIC45IDIgMiAyem02LTloLTFWNmMwLTIuNzYtMi4yNC01LTUtNVM3IDMuMjQgN" +
-                "yA2aDEuOWMwLTEuNzEgMS4zOS0zLjEgMy4xLTMuMSAxLjcxIDAgMy4xIDEuMzkgMy4xIDMuMXYySDZjLTEuMSAwLTIgLjktMiAyd" +
-                "jEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6bTAgMTJINlYxMGgxMnYxMHoiPjwvc" +
-                "GF0aD48L3N2Zz4=";
-
-            /**
-             * @desc The Base64 encoded SVG containing the locked status icon.
-             * @type {string}
-             */
-            this._lockIcon = "PHN2ZyBjbGFzcz0iZGMtc3ZnIiBmaWxsPSJsaWdodGdyZXkiIGhlaWdodD0iMjBweCIgdmlld0JveD0iMCAwIDI" +
-                "0IDI0IiB3aWR0aD0iMjBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0aCBkPSJNMCAwaDI" +
-                "0djI0SDBWMHoiIGlkPSJhIi8+PC9kZWZzPjxjbGlwUGF0aCBpZD0iYiI+PHVzZSBvdmVyZmxvdz0idmlzaWJsZSIgeGxpbms6aHJ" +
-                "lZj0iI2EiLz48L2NsaXBQYXRoPjxwYXRoIGNsaXAtcGF0aD0idXJsKCNiKSIgZD0iTTEyIDE3YzEuMSAwIDItLjkgMi0ycy0uOS0" +
-                "yLTItMi0yIC45LTIgMiAuOSAyIDIgMnptNi05aC0xVjZjMC0yLjc2LTIuMjQtNS01LTVTNyAzLjI0IDcgNnYySDZjLTEuMSAwLTI" +
-                "gLjktMiAydjEwYzAgMS4xLjkgMiAyIDJoMTJjMS4xIDAgMi0uOSAyLTJWMTBjMC0xLjEtLjktMi0yLTJ6TTguOSA2YzAtMS43MSA" +
-                "xLjM5LTMuMSAzLjEtMy4xczMuMSAxLjM5IDMuMSAzLjF2Mkg4LjlWNnpNMTggMjBINlYxMGgxMnYxMHoiLz48L3N2Zz4=";
-
-            /**
-             * @desc These contain all _libraries that will be loaded dynamically in the current JS VM.
-             * @type {LibraryDefinition}
-             */
-            this._libraries = {
-                /* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */
-            };
         }
 
         /* ==================== STANDARD CALLBACKS ================= */
@@ -768,15 +759,16 @@ const discordCrypt = ( () => {
             if ( !_discordCrypt._validPluginName() )
                 return;
 
+            /* Remove all hooks & clear the storage. */
+            for( let i = 0; i < _stopCallbacks.length; i++ )
+                _stopCallbacks[ i ]();
+            _stopCallbacks = [];
+
             /* Unload the timed message handler. */
             clearInterval( _timedMessageInterval );
 
             /* Unload the update handler. */
             clearInterval( _updateHandlerInterval );
-
-            /* Unload the toolbar reload interval if necessary. */
-            if( _toolbarReloadInterval )
-                clearInterval( _toolbarReloadInterval );
 
             /* Unload elements. */
             $( "#dc-overlay" ).remove();
@@ -787,11 +779,6 @@ const discordCrypt = ( () => {
             $( '#dc-settings-btn' ).remove();
             $( '#dc-quick-exchange-btn' ).remove();
             $( '#dc-clipboard-upload-btn' ).remove();
-
-            /* Remove all hooks & clear the storage. */
-            for( let i = 0; i < _stopCallbacks.length; i++ )
-                _stopCallbacks[ i ]();
-            _stopCallbacks = [];
 
             /* Clear the configuration file. */
             _configFile = null;
@@ -819,13 +806,13 @@ const discordCrypt = ( () => {
             }
 
             /* Inject application CSS. */
-            _discordCrypt._injectCSS( 'dc-css', _discordCrypt.__zlibDecompress( this._appCss ) );
+            _discordCrypt._injectCSS( 'dc-css', _discordCrypt.__zlibDecompress( APP_STYLE ) );
 
             /* Reapply the native code for Object.freeze() right before calling these as they freeze themselves. */
             Object.freeze = _Object.freeze;
 
-            /* Load necessary _libraries. */
-            _discordCrypt.__loadLibraries( this._libraries );
+            /* Load necessary libraries. */
+            _discordCrypt.__loadLibraries();
 
             /* Hook the necessary functions required for functionality. */
             _discordCrypt._hookSetup();
@@ -1142,7 +1129,7 @@ const discordCrypt = ( () => {
             const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
 
             /* Construct the password updating field. */
-            $( document.body ).prepend( _discordCrypt.__zlibDecompress( this._masterPasswordHtml ) );
+            $( document.body ).prepend( _discordCrypt.__zlibDecompress( UNLOCK_HTML ) );
 
             const pwd_field = $( '#dc-db-password' );
             const unlock_btn = $( '#dc-unlock-database-btn' );
@@ -1277,7 +1264,7 @@ const discordCrypt = ( () => {
                 .parent()
                 .parent()
                 .parent()
-                .prepend( _discordCrypt.__zlibDecompress( _self._toolbarHtml ) );
+                .prepend( _discordCrypt.__zlibDecompress( TOOLBAR_HTML ) );
 
             /* Cache jQuery results. */
             let dc_passwd_btn = $( '#dc-passwd-btn' ),
@@ -1291,11 +1278,11 @@ const discordCrypt = ( () => {
             /* Set the initial status icon. */
             if ( dc_lock_btn.length > 0 ) {
                 if ( _discordCrypt._getAutoEncrypt() ) {
-                    dc_lock_btn.html( Buffer.from( _self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.html( Buffer.from( LOCK_ICON, 'base64' ).toString( 'utf8' ) );
                     dc_lock_btn.append( lock_tooltip.text( 'Disable Message Encryption' ) );
                 }
                 else {
-                    dc_lock_btn.html( Buffer.from( _self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                    dc_lock_btn.html( Buffer.from( UNLOCK_ICON, 'base64' ).toString( 'utf8' ) );
                     dc_lock_btn.append( lock_tooltip.text( 'Enable Message Encryption' ) );
                 }
 
@@ -1304,7 +1291,7 @@ const discordCrypt = ( () => {
             }
 
             /* Inject the settings. */
-            $( document.body ).prepend( _discordCrypt.__zlibDecompress( _self._settingsMenuHtml ) );
+            $( document.body ).prepend( _discordCrypt.__zlibDecompress( MENU_HTML ) );
 
             /* Also by default, set the about tab to be shown. */
             _discordCrypt._setActiveSettingsTab( 0 );
@@ -1446,69 +1433,77 @@ const discordCrypt = ( () => {
          * @desc Sets up the hooking methods required for plugin functionality.
          */
         static _hookSetup() {
-            /* Get module searcher for caching. */
-            const searcher = _discordCrypt._getWebpackModuleSearcher();
+            try {
+                /* Get module searcher for caching. */
+                const searcher = _discordCrypt._getWebpackModuleSearcher();
 
-            /* Resolve and cache all modules needed. */
-            _cachedModules = {
-                NonceGenerator: searcher
-                    .findByUniqueProperties( [ "extractTimestamp", "fromTimestamp" ] ),
-                MessageCreator: searcher
-                    .findByUniqueProperties( [ "createMessage", "parse", "unparse" ] ),
-                MessageController: searcher
-                    .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
-                MarkdownParser: searcher
-                    .findByUniqueProperties( [ "parseInline", "defaultParseBlock" ] ),
-                GlobalTypes: searcher
-                    .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
-                EventDispatcher: searcher
-                    .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
-                MessageQueue: searcher
-                    .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
-                UserStore: searcher
-                    .findByUniqueProperties( [ "getUser", "getUsers", "findByTag", 'getCurrentUser' ] ),
-                GuildStore: searcher
-                    .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
-                ChannelStore: searcher
-                    .findByUniqueProperties( [ "getChannel", "getChannels", "getDMFromUserId", 'getDMUserIds' ] ),
-            };
+                /* Resolve and cache all modules needed. */
+                _cachedModules = {
+                    NonceGenerator: searcher
+                        .findByUniqueProperties( [ "extractTimestamp", "fromTimestamp" ] ),
+                    MessageCreator: searcher
+                        .findByUniqueProperties( [ "createMessage", "parse", "unparse" ] ),
+                    MessageController: searcher
+                        .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
+                    MarkdownParser: searcher
+                        .findByUniqueProperties( [ "parseInline", "defaultParseBlock" ] ),
+                    GlobalTypes: searcher
+                        .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
+                    EventDispatcher: searcher
+                        .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
+                    MessageQueue: searcher
+                        .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
+                    UserStore: searcher
+                        .findByUniqueProperties( [ "getUser", "getUsers", "findByTag", 'getCurrentUser' ] ),
+                    GuildStore: searcher
+                        .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
+                    ChannelStore: searcher
+                        .findByUniqueProperties( [ "getChannel", "getChannels", "getDMFromUserId", 'getDMUserIds' ] ),
+                };
 
-            /* Throw an error if a cached module can't be found. */
-            for ( let prop in _cachedModules ) {
-                if ( typeof _cachedModules[ prop ] !== 'object' ) {
-                    global.smalltalk.alert( 'Error Loading DiscordCrypt', `Could not find requisite module: ${prop}` );
-                    return;
-                }
-            }
-
-            /* Hook switch events as the main event processor. */
-            if ( !_discordCrypt._hookMessageCallbacks() ) {
-                global.smalltalk.alert( 'Error Loading DiscordCrypt', `Failed to hook the required modules.` );
-                return;
-            }
-
-            /* Patch emoji selection to force it to be enabled for full-encryption messages. */
-            _discordCrypt._monkeyPatch(
-                searcher.findByUniqueProperties( [ 'isEmojiDisabled' ] ),
-                'isEmojiDisabled',
-                {
-                    instead: ( patchData ) => {
-                        try {
-                            if(
-                                _discordCrypt._getChannelId() === patchData.methodArguments[ 1 ].id &&
-                                _discordCrypt._hasCustomPassword( patchData.methodArguments[ 1 ].id ) &&
-                                _discordCrypt._getAutoEncrypt()
-                            )
-                                return false;
-                        }
-                        catch( e ) {
-                            /* Ignore. */
-                        }
-
-                        return patchData.callOriginalMethod();
+                /* Throw an error if a cached module can't be found. */
+                for ( let prop in _cachedModules ) {
+                    if ( typeof _cachedModules[ prop ] !== 'object' ) {
+                        global.smalltalk.alert(
+                            'Error Loading DiscordCrypt',
+                            `Could not find requisite module: ${prop}`
+                        );
+                        return;
                     }
                 }
-            )
+
+                /* Hook switch events as the main event processor. */
+                if ( !_discordCrypt._hookMessageCallbacks() ) {
+                    global.smalltalk.alert( 'Error Loading DiscordCrypt', `Failed to hook the required modules.` );
+                    return;
+                }
+
+                /* Patch emoji selection to force it to be enabled for full-encryption messages. */
+                _discordCrypt._monkeyPatch(
+                    searcher.findByUniqueProperties( [ 'isEmojiDisabled' ] ),
+                    'isEmojiDisabled',
+                    {
+                        instead: ( patchData ) => {
+                            try {
+                                if(
+                                    _discordCrypt._getChannelId() === patchData.methodArguments[ 1 ].id &&
+                                    _discordCrypt._hasCustomPassword( patchData.methodArguments[ 1 ].id ) &&
+                                    _discordCrypt._getAutoEncrypt()
+                                )
+                                    return false;
+                            }
+                            catch( e ) {
+                                /* Ignore. */
+                            }
+
+                            return patchData.callOriginalMethod();
+                        }
+                    }
+                )
+            }
+            catch( e ) {
+                _discordCrypt.log( 'Could not hook the required methods. If this is a test, that\'s fine.', 'warn' );
+            }
         }
 
         /**
@@ -4138,12 +4133,12 @@ const discordCrypt = ( () => {
 
             /* Update the icon and toggle. */
             if ( !_discordCrypt._getAutoEncrypt() ) {
-                dc_lock_btn.html( Buffer.from( _self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.html( Buffer.from( LOCK_ICON, 'base64' ).toString( 'utf8' ) );
                 dc_lock_btn.append( new_tooltip.text( 'Disable Message Encryption' ) );
                 _discordCrypt._setAutoEncrypt( true );
             }
             else {
-                dc_lock_btn.html( Buffer.from( _self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.html( Buffer.from( UNLOCK_ICON, 'base64' ).toString( 'utf8' ) );
                 dc_lock_btn.append( new_tooltip.text( 'Enable Message Encryption' ) );
                 _discordCrypt._setAutoEncrypt( false );
             }
@@ -4162,11 +4157,11 @@ const discordCrypt = ( () => {
 
             /* Update the icon based on the channel */
             if ( _discordCrypt._getAutoEncrypt() ) {
-                dc_lock_btn.html( Buffer.from( _self._lockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.html( Buffer.from( LOCK_ICON, 'base64' ).toString( 'utf8' ) );
                 dc_lock_btn.append( tooltip.text( 'Disable Message Encryption' ) );
             }
             else {
-                dc_lock_btn.html( Buffer.from( _self._unlockIcon, 'base64' ).toString( 'utf8' ) );
+                dc_lock_btn.html( Buffer.from( UNLOCK_ICON, 'base64' ).toString( 'utf8' ) );
                 dc_lock_btn.append( tooltip.text( 'Enable Message Encryption' ) );
             }
 
@@ -5182,6 +5177,9 @@ const discordCrypt = ( () => {
             /* Save the unhook method to the object. */
             what[ methodName ].unpatch = cancel;
 
+            /* Store the cancel callback. */
+            _stopCallbacks.push( cancel );
+
             /* Return the callback necessary for cancelling and the original function. */
             return {
                 original: origMethod,
@@ -5343,15 +5341,15 @@ const discordCrypt = ( () => {
 
         /**
          * @public
-         * @desc Loads all compiled _libraries as needed.
-         * @param {LibraryDefinition} libraries A list of all _libraries to load.
+         * @desc Loads all compiled libraries as needed.
+         * @param {LibraryDefinition} libs A list of all libraries to load.
          */
-        static __loadLibraries( libraries ) {
+        static __loadLibraries( libs = EXTERNAL_LIBRARIES ) {
             const vm = require( 'vm' );
 
-            /* Inject all compiled _libraries based on if they're needed */
-            for ( let name in libraries ) {
-                let libInfo = libraries[ name ];
+            /* Inject all compiled libraries based on if they're needed */
+            for ( let name in libs ) {
+                let libInfo = libs[ name ];
 
                 /* Browser code requires a window object to be defined. */
                 if ( libInfo.requiresBrowser && typeof window === 'undefined' ) {
