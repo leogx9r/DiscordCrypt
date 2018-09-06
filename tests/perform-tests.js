@@ -886,7 +886,7 @@ class testRunner {
 
             // noinspection JSAccessibilityCheck
             this.discordCrypt.log(
-                `Configuration:\n${JSON.stringify( this.discordCrypt_instance._getDefaultConfig(), undefined, ' ' )}`
+                `Configuration:\n${JSON.stringify( this.discordCrypt._getDefaultConfig(), undefined, ' ' )}`
             );
 
             // noinspection JSAccessibilityCheck
