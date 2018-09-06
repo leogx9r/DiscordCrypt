@@ -1745,8 +1745,10 @@ const discordCrypt = ( () => {
                     /* Assign it to the object if valid. */
                     if ( typeof r === 'string' ) {
                         /* Make sure the string has an actual length or pretend the message doesn't exist. */
-                        if( !r.length )
-                            return;
+                        if( !r.length ) {
+                            delete event.methodArguments[ 0 ].messages[ i ];
+                            continue;
+                        }
 
                         /* Calculate any mentions. */
                         let mentioned = _discordCrypt._getMentionsForMessage( r, id );
@@ -1759,6 +1761,10 @@ const discordCrypt = ( () => {
                         event.methodArguments[ 0 ].messages[ i ].mention_everyone = mentioned.mention_everyone;
                     }
                 }
+
+                /* Filter out any deleted messages. */
+                event.methodArguments[ 0 ].messages =
+                    event.methodArguments[ 0 ].messages.filter( ( i ) => i );
 
                 /* Call the original method using the modified contents. ( If any. ) */
                 event.originalMethod.apply( event.thisObject, event.methodArguments );
