@@ -1913,13 +1913,13 @@ const discordCrypt = ( () => {
             ( async function() {
                 await global.smalltalk.confirm(
                     '----- INCOMING KEY EXCHANGE REQUEST -----',
-                    `Incoming key exchange from @${remoteUser.username}#${remoteUser.discriminator}` +
+                    `User @${remoteUser.username}#${remoteUser.discriminator} wants to perform a key exchange.` +
                     '\n\n' +
                     `Algorithm: ${remoteKeyInfo.algorithm.toUpperCase()}-${remoteKeyInfo.bit_length}` +
                     '\n' +
                     `Checksum: ${remoteKeyInfo.fingerprint}` +
                     '\n\n' +
-                    'Do you wish to start a new secure session with them?'
+                    'Do you wish to start a new secure session with them using these parameters?'
                 ).then(
                     () => {
                         /* The user accepted the request. */
