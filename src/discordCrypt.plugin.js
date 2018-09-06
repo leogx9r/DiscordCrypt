@@ -721,7 +721,7 @@ const discordCrypt = ( () => {
                         _configFile.timedMessages.splice( i, 1 );
 
                         /* Update the configuration to the disk. */
-                        _self._saveConfig();
+                        _discordCrypt._saveConfig();
                     }
 
                     /* Only continue if the message has been expired. */
@@ -742,7 +742,7 @@ const discordCrypt = ( () => {
                         _configFile.timedMessages.splice( i, 1 );
 
                         /* Update the configuration to the disk. */
-                        _self._saveConfig();
+                        _discordCrypt._saveConfig();
                     }
                 } );
 
@@ -836,7 +836,7 @@ const discordCrypt = ( () => {
          * @desc Returns the default settings for the plugin.
          * @returns {Config}
          */
-        _getDefaultConfig() {
+        static _getDefaultConfig() {
             return {
                 /* Automatically check for updates. */
                 automaticUpdates: true,
@@ -869,7 +869,7 @@ const discordCrypt = ( () => {
                 /* Contains the API key used for transactions with the Up1 host. */
                 up1ApiKey: '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
                 /* Current Version. */
-                version: this.getVersion(),
+                version: _self.getVersion(),
             };
         }
 
@@ -878,9 +878,9 @@ const discordCrypt = ( () => {
          * @desc Checks if the configuration file exists.
          * @returns {boolean} Returns true if the configuration file exists.
          */
-        _configExists() {
+        static _configExists() {
             /* Attempt to parse the configuration file. */
-            let data = bdPluginStorage.get( this.getName(), 'config' );
+            let data = bdPluginStorage.get( _self.getName(), 'config' );
 
             /* The returned data must be defined and non-empty. */
             return data && data !== null && data !== '';
@@ -892,16 +892,16 @@ const discordCrypt = ( () => {
          *      adds or removes any properties required.
          * @returns {boolean}
          */
-        _loadConfig() {
+        static _loadConfig() {
             _discordCrypt.log( 'Loading configuration file ...' );
 
             /* Attempt to parse the configuration file. */
-            let config = bdPluginStorage.get( this.getName(), 'config' );
+            let config = bdPluginStorage.get( _self.getName(), 'config' );
 
             /* Check if the config file exists. */
             if ( !config || config === null || config === '' ) {
                 /* File doesn't exist, create a new one. */
-                _configFile = this._getDefaultConfig();
+                _configFile = _discordCrypt._getDefaultConfig();
 
                 /* Save the config. */
                 this._saveConfig();
@@ -932,7 +932,7 @@ const discordCrypt = ( () => {
             }
 
             /* Try checking for each property within the config file and make sure it exists. */
-            let defaultConfig = this._getDefaultConfig(), needs_save = false;
+            let defaultConfig = _discordCrypt._getDefaultConfig(), needs_save = false;
 
             /* Iterate all defined properties in the default configuration file. */
             for ( let prop in defaultConfig ) {
@@ -973,7 +973,7 @@ const discordCrypt = ( () => {
             }
 
             /* Check for version mismatch. */
-            if ( _configFile.version !== this.getVersion() ) {
+            if ( _configFile.version !== _self.getVersion() ) {
                 /* Preserve the old version for logging. */
                 let oldVersion = _configFile.version;
 
@@ -981,7 +981,7 @@ const discordCrypt = ( () => {
                 let oldCache = _configFile.channels;
 
                 /* Get the most recent default configuration. */
-                _configFile = this._getDefaultConfig();
+                _configFile = _discordCrypt._getDefaultConfig();
 
                 /* Now restore the password list. */
                 _configFile.channels = oldCache;
@@ -990,7 +990,7 @@ const discordCrypt = ( () => {
                 needs_save = true;
 
                 /* Alert. */
-                _discordCrypt.log( `Updated plugin version from v${oldVersion} to v${this.getVersion()}.` );
+                _discordCrypt.log( `Updated plugin version from v${oldVersion} to v${_self.getVersion()}.` );
             }
 
             /* Save the configuration file if necessary. */
@@ -1006,9 +1006,9 @@ const discordCrypt = ( () => {
          * @private
          * @desc Saves the configuration file with the current password using AES-256 in GCM mode.
          */
-        _saveConfig() {
+        static _saveConfig() {
             /* Encrypt the message using the master password and save the encrypted data. */
-            bdPluginStorage.set( this.getName(), 'config', {
+            bdPluginStorage.set( _self.getName(), 'config', {
                 data:
                     _discordCrypt.__aes256_encrypt_gcm(
                         _discordCrypt.__zlibCompress(
@@ -1027,9 +1027,9 @@ const discordCrypt = ( () => {
          * @desc Updates and saves the configuration data used and updates a given button's text.
          * @param {Object} [btn] The jQuery button to set the update text for.
          */
-        _saveSettings( btn ) {
+        static _saveSettings( btn ) {
             /* Save the configuration file. */
-            this._saveConfig();
+            _discordCrypt._saveConfig();
 
             if( btn ) {
                 /* Tell the user that their settings were applied. */
@@ -1047,18 +1047,18 @@ const discordCrypt = ( () => {
          * @desc Resets the default configuration data used and updates a given button's text.
          * @param {Object} [btn] The jQuery button to set the update text for.
          */
-        _resetSettings( btn ) {
+        static _resetSettings( btn ) {
             /* Preserve the old password list before resetting. */
             let oldCache = _configFile.channels;
 
             /* Retrieve the default configuration. */
-            _configFile = this._getDefaultConfig();
+            _configFile = _discordCrypt._getDefaultConfig();
 
             /* Restore the old passwords. */
             _configFile.channels = oldCache;
 
             /* Save the configuration file to update any settings. */
-            this._saveConfig();
+            _discordCrypt._saveConfig();
 
             if( btn ) {
                 /* Tell the user that their settings were reset. */
@@ -1075,7 +1075,7 @@ const discordCrypt = ( () => {
          * @private
          * @desc Update the current password field and save the config file.
          */
-        _updatePasswords() {
+        static _updatePasswords() {
             /* Don't save if the password overlay is not open. */
             if ( $( '#dc-overlay-password' ).css( 'display' ) !== 'block' )
                 return;
@@ -1108,7 +1108,7 @@ const discordCrypt = ( () => {
             }
 
             /* Save the configuration file and decode any messages. */
-            this._saveConfig();
+            _discordCrypt._saveConfig();
         }
 
         /* ========================================================= */
@@ -1124,7 +1124,7 @@ const discordCrypt = ( () => {
                 return;
 
             /* Check if the database exists. */
-            const cfg_exists = _self._configExists();
+            const cfg_exists = _discordCrypt._configExists();
 
             const action_msg = cfg_exists ? 'Unlock Database' : 'Create Database';
 
@@ -1772,30 +1772,32 @@ const discordCrypt = ( () => {
          * @param {Object} event The outgoing message event object.
          * @return {Promise<void>}
          */
-        static async _onOutgoingMessage( event ) {
-            /* Wait till the configuration file has been loaded before parsing any messages. */
-            await ( async () => {
-                while( !_configFile )
-                    await ( new Promise( r => setTimeout( r, 1000 ) ) );
+        static _onOutgoingMessage( event ) {
+            ( async () => {
+                /* Wait till the configuration file has been loaded before parsing any messages. */
+                await ( async () => {
+                    while( !_configFile )
+                        await ( new Promise( r => setTimeout( r, 1000 ) ) );
+                } )();
+
+                let message = event.methodArguments[ 0 ].message;
+
+                let r = _discordCrypt._tryEncryptMessage( message.content, false, message.channelId );
+
+                if( typeof r === 'boolean' ) {
+                    event.callOriginalMethod();
+                    return;
+                }
+
+                event.methodArguments[ 0 ].message.content = r[ 0 ].message;
+                event.originalMethod.apply( event.thisObject, event.methodArguments );
+
+                if( r.length === 1 )
+                    return;
+
+                for( let i = 1; i < r.length; i++ )
+                    _discordCrypt._dispatchMessage( r[ i ].message, message.channelId );
             } )();
-
-            let message = event.methodArguments[ 0 ].message;
-
-            let r = _discordCrypt._tryEncryptMessage( message.content, false, message.channelId );
-
-            if( typeof r === 'boolean' ) {
-                event.callOriginalMethod();
-                return;
-            }
-
-            event.methodArguments[ 0 ].message.content = r[ 0 ].message;
-            event.originalMethod.apply( event.thisObject, event.methodArguments );
-
-            if( r.length === 1 )
-                return;
-
-            for( let i = 1; i < r.length; i++ )
-                _discordCrypt._dispatchMessage( r[ i ].message, message.channelId );
         }
 
         /**
@@ -1873,6 +1875,7 @@ const discordCrypt = ( () => {
                 return '🚫 **[ ERROR ]** *CANNOT RESOLVE DEPENDENCY MODULE* !!!';
 
             /* Retrieve the current user's information. */
+            // noinspection JSUnresolvedFunction
             let currentUser = _cachedModules.UserStore.getCurrentUser(),
                 remoteUser = _cachedModules.UserStore.getUser( message.author.id );
 
@@ -1889,7 +1892,7 @@ const discordCrypt = ( () => {
 
             /* Be sure to add the message ID to the ignore list. */
             _configFile.channels[ message.channel_id ].ignoreIds.push( message.id );
-            _self._saveConfig();
+            _discordCrypt._saveConfig();
 
             /* Check if we're currently waiting for a public key. */
             if( _globalSessionState.hasOwnProperty( message.channel_id ) )
@@ -1969,7 +1972,7 @@ const discordCrypt = ( () => {
                         _discordCrypt._dispatchMessage( `\`${encodedKey}\``, message.channel_id, DELETE_TIMEOUT_SEC );
 
                         /* Save the configuration to update the keys and timed messages. */
-                        _self._saveConfig();
+                        _discordCrypt._saveConfig();
 
                         /* Set the new message text. */
                         returnValue = '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n' +
@@ -2267,7 +2270,7 @@ const discordCrypt = ( () => {
                 _discordCrypt._dispatchMessage( packets[ i ].message, channel_id );
             }
             /* Save the configuration file and store the new message(s). */
-            _self._saveConfig();
+            _discordCrypt._saveConfig();
 
             return true;
         }
@@ -2464,7 +2467,7 @@ const discordCrypt = ( () => {
                             _masterPassword = Buffer.from( pwd, 'hex' );
 
                             /* Attempt to load the database with this password. */
-                            if ( !_self._loadConfig() ) {
+                            if ( !_discordCrypt._loadConfig() ) {
                                 _configFile = null;
 
                                 /* Update the button's text. */
@@ -2528,6 +2531,7 @@ const discordCrypt = ( () => {
          */
         static _onChangeFileButtonClicked() {
             /* Create an input element. */
+            // noinspection JSUnresolvedFunction
             let file = require( 'electron' ).remote.dialog.showOpenDialog( {
                 title: 'Select a file to encrypt and upload',
                 buttonLabel: 'Select',
@@ -2572,6 +2576,7 @@ const discordCrypt = ( () => {
                     _discordCrypt._sendEncryptedMessage( `${file_url}`, true, channel_id );
 
                     /* Copy the deletion link to the clipboard. */
+                    // noinspection JSUnresolvedFunction
                     require( 'electron' ).clipboard.writeText( `Delete URL: ${deletion_link}` );
                 }
             );
@@ -2708,18 +2713,17 @@ const discordCrypt = ( () => {
          * @return {Function}
          */
         static _onDatabaseTabButtonClicked() {
-            let users, guilds, channels, table;
-
             /* Cache the table. */
-            table = $( '#dc-database-entries' );
+            let table = $( '#dc-database-entries' );
 
             /* Clear all entries. */
             table.html( '' );
 
             /* Resolve all users, guilds and channels the current user is a part of. */
-            users = _cachedModules.UserStore.getUsers();
-            guilds = _cachedModules.GuildStore.getGuilds();
-            channels = _cachedModules.ChannelStore.getChannels();
+            // noinspection JSUnresolvedFunction
+            let users = _cachedModules.UserStore.getUsers(),
+                guilds = _cachedModules.GuildStore.getGuilds(),
+                channels = _cachedModules.ChannelStore.getChannels();
 
             /* Iterate over each password in the configuration. */
             for ( let prop in _configFile.channels ) {
@@ -2770,7 +2774,7 @@ const discordCrypt = ( () => {
                     _configFile.channels[ id ].autoEncrypt = false;
 
                     /* Save the configuration. */
-                    _self._saveConfig();
+                    _discordCrypt._saveConfig();
 
                     /* Remove the entire row. */
                     delete_btn.parent().parent().remove();
@@ -2784,6 +2788,7 @@ const discordCrypt = ( () => {
                     let secondary = current_keys.secondaryKey || _configFile.defaultPassword;
 
                     /* Write to the clipboard. */
+                    // noinspection JSUnresolvedFunction
                     require( 'electron' ).clipboard.writeText(
                         `Primary Key: ${primary}\n\nSecondary Key: ${secondary}`
                     );
@@ -2847,7 +2852,7 @@ const discordCrypt = ( () => {
                     _configFile.blacklistedUpdates = _configFile.blacklistedUpdates.filter( e => e );
 
                     /* Save the configuration. */
-                    _self._saveConfig();
+                    _discordCrypt._saveConfig();
 
                     /* Remove the entire row. */
                     remove_btn.parent().parent().parent().remove();
@@ -2915,7 +2920,7 @@ const discordCrypt = ( () => {
                 .is( ':checked' );
 
             /* Save the configuration. */
-            _self._saveConfig();
+            _discordCrypt._saveConfig();
 
             /* Log. */
             _discordCrypt.log( `${_configFile.automaticUpdates ? 'En' : 'Dis'}abled automatic updates.`, 'debug' );
@@ -2961,6 +2966,7 @@ const discordCrypt = ( () => {
             const fs = require( 'fs' );
 
             /* Create an input element. */
+            // noinspection JSUnresolvedFunction
             let files = require( 'electron' ).remote.dialog.showOpenDialog( {
                 title: 'Import Database',
                 message: 'Select the configuration file(s) to import',
@@ -3056,7 +3062,7 @@ const discordCrypt = ( () => {
                 _discordCrypt._onDatabaseTabButtonClicked();
 
                 /* Save the configuration. */
-                _self._saveConfig();
+                _discordCrypt._saveConfig();
             }
         }
 
@@ -3066,6 +3072,7 @@ const discordCrypt = ( () => {
          */
         static _onExportDatabaseButtonClicked() {
             /* Create an input element. */
+            // noinspection JSUnresolvedFunction
             let file = require( 'electron' ).remote.dialog.showSaveDialog( {
                 title: 'Export Database',
                 message: 'Select the destination file',
@@ -3143,7 +3150,7 @@ const discordCrypt = ( () => {
             $( '#dc-database-entries' ).html( '' );
 
             /* Save the database. */
-            _self._saveConfig();
+            _discordCrypt._saveConfig();
 
             /* Update the button's text. */
             erase_entries_btn.text( 'Cleared Entries' );
@@ -3241,7 +3248,7 @@ const discordCrypt = ( () => {
                             _masterPassword = Buffer.from( pwd, 'hex' );
 
                             /* Save the configuration file and update the button text. */
-                            _self._saveSettings( dc_save_settings_btn );
+                            _discordCrypt._saveSettings( dc_save_settings_btn );
                         }
 
                         return false;
@@ -3250,7 +3257,7 @@ const discordCrypt = ( () => {
             }
             else {
                 /* Save the configuration file and update the button text. */
-                _self._saveSettings( dc_save_settings_btn );
+                _discordCrypt._saveSettings( dc_save_settings_btn );
             }
         }
 
@@ -3261,7 +3268,7 @@ const discordCrypt = ( () => {
          */
         static _onResetSettingsButtonClicked() {
             /* Resets the configuration file and update the button text. */
-            _self._resetSettings( $( '#dc-settings-reset-btn' ) );
+            _discordCrypt._resetSettings( $( '#dc-settings-reset-btn' ) );
 
             /* Update all settings from the settings panel. */
             $( '#dc-secondary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
@@ -3344,7 +3351,7 @@ const discordCrypt = ( () => {
             _configFile.blacklistedUpdates.push( _updateData );
 
             /* Save the configuration. */
-            _self._saveConfig();
+            _discordCrypt._saveConfig();
 
             /* Also reset any opened tabs. */
             _discordCrypt._setActiveSettingsTab( 0 );
@@ -3581,7 +3588,7 @@ const discordCrypt = ( () => {
             _discordCrypt._dispatchMessage( `\`${formatted_message}\``, _discordCrypt._getChannelId() );
 
             /* Save the configuration file and store the new message. */
-            _self._saveConfig();
+            _discordCrypt._saveConfig();
 
             /* Update the button text & reset after 1 second.. */
             $( '#dc-keygen-send-pub-btn' ).text( 'Sent The Public Key!' );
@@ -3596,6 +3603,7 @@ const discordCrypt = ( () => {
          * @desc Pastes what is stored in the clipboard to the handshake public key field.
          */
         static _onHandshakePastePublicKeyButtonClicked() {
+            // noinspection JSUnresolvedFunction
             $( '#dc-handshake-ppk' ).val( require( 'electron' ).clipboard.readText() );
         }
 
@@ -3711,6 +3719,7 @@ const discordCrypt = ( () => {
             }
 
             /* Read the public salt. */
+            // noinspection JSUnresolvedFunction
             salt = Buffer.from( value.subarray( 2, 2 + salt_len ) );
 
             /* Read the user's salt length. */
@@ -3726,6 +3735,7 @@ const discordCrypt = ( () => {
             );
 
             /* Read the public key and convert it to a hex string. */
+            // noinspection JSUnresolvedFunction
             payload = Buffer.from( value.subarray( 2 + salt_len ) ).toString( 'hex' );
 
             /* Return if invalid. */
@@ -3795,14 +3805,15 @@ const discordCrypt = ( () => {
                 isUserSaltPrimary = user_salt_len > salt_len;
 
             /* Create hashed salt from the two user-generated salts. */
+            // noinspection JSUnresolvedFunction
             let primary_hash = Buffer.from(
-                global.sha3.sha3_256( isUserSaltPrimary ? user_salt : salt, true ),
-                'hex'
-            );
-            let secondary_hash = Buffer.from(
-                global.sha3.sha3_512( isUserSaltPrimary ? salt : user_salt, true ),
-                'hex'
-            );
+                    global.sha3.sha3_256( isUserSaltPrimary ? user_salt : salt, true ),
+                    'hex'
+                ),
+                secondary_hash = Buffer.from(
+                    global.sha3.sha3_512( isUserSaltPrimary ? salt : user_salt, true ),
+                    'hex'
+                );
 
             /* Global progress for async callbacks. */
             let primary_progress = 0, secondary_progress = 0;
@@ -3931,6 +3942,7 @@ const discordCrypt = ( () => {
                 return;
 
             /* Format the text and copy it to the clipboard. */
+            // noinspection JSUnresolvedFunction
             require( 'electron' ).clipboard.writeText(
                 `Primary Key: ${dc_handshake_primary_key.val()}\r\n\r\n` +
                 `Secondary Key: ${dc_handshake_secondary_key.val()}`
@@ -3976,7 +3988,7 @@ const discordCrypt = ( () => {
             let id = _discordCrypt._getChannelId();
             _configFile.channels[ id ].primaryKey = dc_handshake_primary_key.val();
             _configFile.channels[ id ].secondaryKey = dc_handshake_secondary_key.val();
-            _self._saveConfig();
+            _discordCrypt._saveConfig();
 
             /* Clear the fields. */
             dc_handshake_primary_key.val( '' );
@@ -4020,7 +4032,7 @@ const discordCrypt = ( () => {
             let btn = $( '#dc-save-pwd' );
 
             /* Update the password and save it. */
-            _self._updatePasswords();
+            _discordCrypt._updatePasswords();
 
             /* Update the text for the button. */
             btn.text( "Saved!" );
@@ -4054,7 +4066,7 @@ const discordCrypt = ( () => {
             /* Reset the configuration for this user and save the file. */
             let id = _discordCrypt._getChannelId();
             _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
-            _self._saveConfig();
+            _discordCrypt._saveConfig();
 
             /* Update the text for the button. */
             btn.text( "Password Reset!" );
@@ -4096,18 +4108,17 @@ const discordCrypt = ( () => {
          * @returns {Function}
          */
         static _onCopyCurrentPasswordsButtonClicked() {
-            let currentKeys = _configFile.channels[ _discordCrypt._getChannelId() ];
+            let currentKeys = _configFile.channels[ _discordCrypt._getChannelId() ],
+                writeText = require( 'electron' ).clipboard.writeText;
 
             /* If no password is currently generated, write the default key. */
             if ( !currentKeys || !currentKeys.primaryKey || !currentKeys.secondaryKey ) {
-                require( 'electron' ).clipboard.writeText( `Default Password: ${_configFile.defaultPassword}` );
+                writeText( `Default Password: ${_configFile.defaultPassword}` );
                 return;
             }
 
             /* Write to the clipboard. */
-            require( 'electron' ).clipboard.writeText(
-                `Primary Key: ${currentKeys.primaryKey}\r\n\r\nSecondary Key: ${currentKeys.secondaryKey}`
-            );
+            writeText( `Primary Key: ${currentKeys.primaryKey}\r\n\r\nSecondary Key: ${currentKeys.secondaryKey}` );
 
             /* Alter the button text. */
             $( '#dc-cpy-pwds-btn' ).text( 'Copied Keys To Clipboard!' );
@@ -4144,7 +4155,7 @@ const discordCrypt = ( () => {
             }
 
             /* Save config. */
-            _self._saveConfig();
+            _discordCrypt._saveConfig();
         }
 
         /**
@@ -4277,6 +4288,7 @@ const discordCrypt = ( () => {
                     _state.localKey.salt;
 
             /* Calculate the KMACs for the primary and secondary key. */
+            // noinspection JSUnresolvedFunction
             return {
                 primaryKey: convert( global.sha3.kmac256( primarySalt, derivedKey, outputBitLength, primaryMAC ) ),
                 secondaryKey: convert( global.sha3.kmac256( secondarySalt, derivedKey, outputBitLength, secondaryMAC ) )
@@ -4302,6 +4314,7 @@ const discordCrypt = ( () => {
          * @return {string} The string representation of the integer nonce.
          */
         static _getNonce() {
+            // noinspection JSUnresolvedFunction
             return _cachedModules.NonceGenerator.fromTimestamp( Date.now() );
         }
 
@@ -4856,11 +4869,14 @@ const discordCrypt = ( () => {
                 return ( name !== null && !!( filter.includes( name ) ^ excluding ) );
             }
 
-            for ( let c = getOwnerReactInstance( element ).return; !_.isNil( c ); c = c.return ) {
-                if ( _.isNil( c ) )
+            for ( let c = getOwnerReactInstance( element ).return; c !== null && c !== undefined; c = c.return ) {
+                if ( c !== null && c !== undefined )
                     continue;
 
-                if ( !_.isNil( c.stateNode ) && !( c.stateNode instanceof HTMLElement ) && classFilter( c ) )
+                if (
+                    c.stateNode !== null && c.stateNode !== undefined &&
+                    !( c.stateNode instanceof HTMLElement ) && classFilter( c )
+                )
                     return c.stateNode;
             }
 
@@ -4885,6 +4901,7 @@ const discordCrypt = ( () => {
 
             /* Skip blacklisted channels. */
             if( channel_id && blacklisted_channel_props.indexOf( channel_id ) === -1 )
+                // noinspection JSUnresolvedFunction
                 return _cachedModules.ChannelStore.getChannel( channel_id );
 
             /* Return nothing for invalid channels. */
@@ -4900,6 +4917,7 @@ const discordCrypt = ( () => {
          */
         static _deleteMessage( channel_id, message_id, cached_modules ) {
             /* Delete the message internally. */
+            // noinspection JSUnresolvedFunction
             cached_modules.MessageController.deleteMessage( channel_id, message_id );
         }
 
@@ -4923,6 +4941,7 @@ const discordCrypt = ( () => {
                 /* Check if an error occurred and inform Clyde bot about it. */
                 if ( !r.ok ) {
                     /* Perform Clyde dispatch if necessary. */
+                    // noinspection JSUnresolvedFunction
                     if (
                         r.status >= 400 &&
                         r.status < 500 &&
@@ -4947,6 +4966,7 @@ const discordCrypt = ( () => {
                 }
                 else {
                     /* Receive the message normally. */
+                    // noinspection JSUnresolvedFunction
                     _cachedModules.MessageController.receiveMessage( _channel, r.body );
 
                     /* Calculate the timeout. */
@@ -5235,6 +5255,7 @@ const discordCrypt = ( () => {
          */
         static __binaryCompare( a, b ) {
             /* Do a simple comparison on the buffers. */
+            // noinspection JSUnresolvedFunction
             switch( a.compare( b ) ) {
             /* b > a */
             case 1:
@@ -5490,9 +5511,11 @@ const discordCrypt = ( () => {
                     return null;
 
                 /* Read the public salt. */
+                // noinspection JSUnresolvedFunction
                 output[ 'salt' ] = Buffer.from( msg.subarray( 2, 2 + salt_len ) );
 
                 /* Read the key. */
+                // noinspection JSUnresolvedFunction
                 output[ 'key' ] = Buffer.from( msg.subarray( 2 + salt_len ) );
 
                 return output;
@@ -5617,10 +5640,12 @@ const discordCrypt = ( () => {
                 path = require( 'path' );
 
             /* The clipboard must have at least one type available. */
+            // noinspection JSUnresolvedFunction
             if ( clipboard.availableFormats().length === 0 )
                 return { mime_type: '', name: '', data: null };
 
             /* Get all available formats. */
+            // noinspection JSUnresolvedFunction
             let mime_type = clipboard.availableFormats();
             let data, tmp = '', name = '', is_file = false;
 
@@ -5634,14 +5659,17 @@ const discordCrypt = ( () => {
                     /* Convert the image type. */
                     switch ( format[ 1 ].toLowerCase() ) {
                     case 'png':
+                        // noinspection JSUnresolvedFunction
                         data = clipboard.readImage().toPNG();
                         break;
                     case 'bmp':
                     case 'bitmap':
+                        // noinspection JSUnresolvedFunction
                         data = clipboard.readImage().toBitmap();
                         break;
                     case 'jpg':
                     case 'jpeg':
+                        // noinspection JSUnresolvedFunction
                         data = clipboard.readImage().toJPEG( 100 );
                         break;
                     default:
@@ -5650,6 +5678,7 @@ const discordCrypt = ( () => {
                     break;
                 case 'text':
                     /* Resolve what's in the clipboard. */
+                    // noinspection JSUnresolvedFunction
                     tmp = clipboard.readText();
 
                     try {
@@ -6213,6 +6242,7 @@ const discordCrypt = ( () => {
                 } );
             else
                 try {
+                    // noinspection JSUnresolvedFunction
                     return crypto.pbkdf2Sync( _input, _salt, iterations, key_length, algorithm )
                         .toString( to_hex ? 'hex' : 'base64' );
                 }
@@ -6907,10 +6937,12 @@ const discordCrypt = ( () => {
 
             /* Parse the next 8 bits. */
             if ( typeof cipher_mode_index === 'string' )
+                // noinspection JSUnresolvedFunction
                 cipher_mode_index = [ 'cbc', 'cfb', 'ofb' ].indexOf( cipher_mode_index.toLowerCase() );
 
             /* Parse the next 8 bits. */
             if ( typeof padding_scheme_index === 'string' )
+                // noinspection JSUnresolvedFunction
                 padding_scheme_index = [ 'pkc7', 'ans2', 'iso1', 'iso9' ].indexOf( padding_scheme_index.toLowerCase() );
 
             /* Buffered word. */
@@ -7209,7 +7241,8 @@ const discordCrypt = ( () => {
                 throw `Unknown cipher selected: ${cipher_index}`;
 
             /* Get MAC tag as a hex string. */
-            let tag = sha3.kmac256(
+            // noinspection JSUnresolvedFunction
+            let tag = global.sha3.kmac256(
                 new Uint8Array( Buffer.concat( [ primary_key, secondary_key ] ) ),
                 new Uint8Array( Buffer.from( msg, 'hex' ) ),
                 256,
@@ -7320,14 +7353,17 @@ const discordCrypt = ( () => {
                 message = Buffer.from( _discordCrypt.__substituteMessage( message ), 'hex' );
 
                 /* Pull off the first 32 bytes as a buffer. */
+                // noinspection JSUnresolvedFunction
                 let tag = Buffer.from( message.subarray( 0, 32 ) );
 
                 /* Strip off the authentication tag. */
+                // noinspection JSUnresolvedFunction
                 message = Buffer.from( message.subarray( 32 ) );
 
                 /* Compute the HMAC-SHA3-256 of the cipher text as hex. */
+                // noinspection JSUnresolvedFunction
                 let computed_tag = Buffer.from(
-                    sha3.kmac256(
+                    global.sha3.kmac256(
                         new Uint8Array( Buffer.concat( [ primary_key, secondary_key ] ) ),
                         new Uint8Array( message ),
                         256,
