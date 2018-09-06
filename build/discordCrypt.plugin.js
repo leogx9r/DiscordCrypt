@@ -1870,7 +1870,7 @@ const discordCrypt = ( () => {
                 return '🚫 **[ ERROR ]** *INVALID PUBLIC KEY* !!!';
 
             /* Make sure that this key wasn't somehow sent in a guild or group DM. */
-            if( message.type !== 0 )
+            if( message.type !== 1 )
                 return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE FROM A NON-DM* !!!';
 
             /* Validate functions. */
@@ -1920,13 +1920,13 @@ const discordCrypt = ( () => {
             ( async function() {
                 await global.smalltalk.confirm(
                     '----- INCOMING KEY EXCHANGE REQUEST -----',
-                    `Incoming key exchange from @${remoteUser.username}#${remoteUser.discriminator}` +
+                    `User @${remoteUser.username}#${remoteUser.discriminator} wants to perform a key exchange.` +
                     '\n\n' +
                     `Algorithm: ${remoteKeyInfo.algorithm.toUpperCase()}-${remoteKeyInfo.bit_length}` +
                     '\n' +
                     `Checksum: ${remoteKeyInfo.fingerprint}` +
                     '\n\n' +
-                    'Do you wish to start a new secure session with them?'
+                    'Do you wish to start a new secure session with them using these parameters?'
                 ).then(
                     () => {
                         /* The user accepted the request. */
@@ -2760,7 +2760,7 @@ const discordCrypt = ( () => {
 
                 /* Check for the correct channel type. */
                 if ( channels[ id ].type === 0 ) {
-                    /* Guild Channel */
+                    /* GUILD_TEXT */
                     let guild = guilds[ channels[ id ].guild_id ];
 
                     /* Resolve the name as a "Guild @ #Channel" format. */
@@ -2772,6 +2772,20 @@ const discordCrypt = ( () => {
 
                     /* Indicate this is a DM and give the full user name. */
                     name = `DM @${user.username}#${user.discriminator}`;
+                }
+                else if ( channels[ id ].type === 3 ) {
+                    /* GROUP_DM */
+                    let max = channels[ id ].recipients.length > 3 ? 3 : channels[ id ].recipients.length,
+                        participants = '';
+
+                    /* Iterate the maximum number of users we can display. */
+                    for( let i = 0; i < max; i++ ) {
+                        let user = users[ channels[ id ].recipients[ i ] ];
+                        participants += `@${user.username}#${user.discriminator} `;
+                    }
+
+                    /* Indicate this is a DM and give the full user name. */
+                    name = `Group DM ${participants}`;
                 }
                 else
                     continue;

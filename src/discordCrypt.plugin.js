@@ -2753,7 +2753,7 @@ const discordCrypt = ( () => {
 
                 /* Check for the correct channel type. */
                 if ( channels[ id ].type === 0 ) {
-                    /* Guild Channel */
+                    /* GUILD_TEXT */
                     let guild = guilds[ channels[ id ].guild_id ];
 
                     /* Resolve the name as a "Guild @ #Channel" format. */
@@ -2765,6 +2765,20 @@ const discordCrypt = ( () => {
 
                     /* Indicate this is a DM and give the full user name. */
                     name = `DM @${user.username}#${user.discriminator}`;
+                }
+                else if ( channels[ id ].type === 3 ) {
+                    /* GROUP_DM */
+                    let max = channels[ id ].recipients.length > 3 ? 3 : channels[ id ].recipients.length,
+                        participants = '';
+
+                    /* Iterate the maximum number of users we can display. */
+                    for( let i = 0; i < max; i++ ) {
+                        let user = users[ channels[ id ].recipients[ i ] ];
+                        participants += `@${user.username}#${user.discriminator} `;
+                    }
+
+                    /* Indicate this is a DM and give the full user name. */
+                    name = `Group DM ${participants}`;
                 }
                 else
                     continue;
