@@ -1700,11 +1700,11 @@ const discordCrypt = ( () => {
          * @param {Object} event The channel loading event object.
          * @return {Promise<void>}
          */
-        static async _onIncomingMessages( event ) {
+        static _onIncomingMessages( event ) {
             let id = event.methodArguments[ 0 ].channelId;
 
             /* Pretend no message was received till the configuration is unlocked. */
-            await ( async () => {
+            ( async () => {
                 /* Wait for the configuration file to be loaded. */
                 while ( !_configFile )
                     await ( new Promise( r => setTimeout( r, 1000 ) ) );
