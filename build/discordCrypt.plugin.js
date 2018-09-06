@@ -1894,8 +1894,16 @@ const discordCrypt = ( () => {
                 return '';
 
             /* Verify this message isn't coming from us. */
-            if( message.author.id === currentUser.id )
+            if( message.author.id === currentUser.id ) {
+                /* If it is, ensure we have a private key for it. */
+                if(
+                    !_globalSessionState.hasOwnProperty( message.channel_id ) ||
+                    !_globalSessionState[ message.channel_id ].privateKey
+                )
+                    return '🔏 **[ SESSION ERROR ]** *OUTGOING KEY EXCHANGE WITH NO PRIVATE KEY* !!!';
+
                 return '🔏 **[ SESSION ]** *OUTGOING KEY EXCHANGE*';
+            }
 
             /* Be sure to add the message ID to the ignore list. */
             _configFile.channels[ message.channel_id ].ignoreIds.push( message.id );
@@ -1922,34 +1930,47 @@ const discordCrypt = ( () => {
                 ).then(
                     () => {
                         /* The user accepted the request. */
-                        /* Create the session object. */
-                        _globalSessionState[ message.channel_id ] = {};
+                        /* If a local key doesn't exist, generate one and send it. */
+                        if(
+                            !_globalSessionState.hasOwnProperty( message.channel_id ) ||
+                            !_globalSessionState[ message.channel_id ].privateKey
+                        ) {
+                            /* Create the session object. */
+                            _globalSessionState[ message.channel_id ] = {};
 
-                        /* Generate a local key pair. */
-                        if( remoteKeyInfo.algorithm.toLowerCase() === 'dh' )
-                            _globalSessionState[ message.channel_id ].privateKey =
-                                _discordCrypt.__generateDH( remoteKeyInfo.bit_length );
-                        else
-                            _globalSessionState[ message.channel_id ].privateKey =
-                                _discordCrypt.__generateECDH( remoteKeyInfo.bit_length );
+                            /* Generate a local key pair. */
+                            if( remoteKeyInfo.algorithm.toLowerCase() === 'dh' )
+                                _globalSessionState[ message.channel_id ].privateKey =
+                                    _discordCrypt.__generateDH( remoteKeyInfo.bit_length );
+                            else
+                                _globalSessionState[ message.channel_id ].privateKey =
+                                    _discordCrypt.__generateECDH( remoteKeyInfo.bit_length );
 
-                        /* Get the public key for this private key. */
-                        encodedKey = _discordCrypt.__encodeExchangeKey(
-                            Buffer.from(
-                                _globalSessionState[ message.channel_id ].privateKey.getPublicKey(
-                                    'hex',
-                                    remoteKeyInfo.algorithm.toLowerCase() === 'ecdh' ? 'compressed' : null
+                            /* Get the public key for this private key. */
+                            encodedKey = _discordCrypt.__encodeExchangeKey(
+                                Buffer.from(
+                                    _globalSessionState[ message.channel_id ].privateKey.getPublicKey(
+                                        'hex',
+                                        remoteKeyInfo.algorithm.toLowerCase() === 'ecdh' ? 'compressed' : null
+                                    ),
+                                    'hex'
                                 ),
-                                'hex'
-                            ),
-                            remoteKeyInfo.index
-                        );
+                                remoteKeyInfo.index
+                            );
 
-                        /* Get the local key info. */
-                        _globalSessionState[ message.channel_id ].localKey = _discordCrypt.__extractExchangeKeyInfo(
-                            encodedKey,
-                            true
-                        );
+                            /* Dispatch the public key. */
+                            _discordCrypt._dispatchMessage(
+                                `\`${encodedKey}\``,
+                                message.channel_id,
+                                DELETE_TIMEOUT_SEC
+                            );
+
+                            /* Get the local key info. */
+                            _globalSessionState[ message.channel_id ].localKey = _discordCrypt.__extractExchangeKeyInfo(
+                                encodedKey,
+                                true
+                            );
+                        }
 
                         /* Save the remote key's information. */
                         _globalSessionState[ message.channel_id ].remoteKey = remoteKeyInfo;
@@ -1974,9 +1995,6 @@ const discordCrypt = ( () => {
                         /* Apply the keys. */
                         _configFile.channels[ message.channel_id ].primaryKey = keys.primaryKey;
                         _configFile.channels[ message.channel_id ].secondaryKey = keys.secondaryKey;
-
-                        /* Dispatch the public key. */
-                        _discordCrypt._dispatchMessage( `\`${encodedKey}\``, message.channel_id, DELETE_TIMEOUT_SEC );
 
                         /* Save the configuration to update the keys and timed messages. */
                         _discordCrypt._saveConfig();
