@@ -1863,7 +1863,7 @@ const discordCrypt = ( () => {
                 return '🚫 **[ ERROR ]** *INVALID PUBLIC KEY* !!!';
 
             /* Make sure that this key wasn't somehow sent in a guild or group DM. */
-            if( message.type !== 0 )
+            if( message.type !== 1 )
                 return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE FROM A NON-DM* !!!';
 
             /* Validate functions. */
