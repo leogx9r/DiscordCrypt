@@ -771,7 +771,11 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
         * We do not plan to fix this, but feel free to contribute if you wish to do so yourself.
         * For a list of known problematic themes and plugins, see
             [here](https://gitlab.com/leogx9r/DiscordCrypt/issues/5).
+ 
 
+
+* Discord Compact message display *may* cause issues with **DiscordCrypt**.
+    * To switch to Cozy mode: Settings -> Appearance -> Message Display
  
 
 # Support And Discussion
