@@ -696,11 +696,11 @@ const discordCrypt = ( () => {
                 return;
             }
 
-            /* Hook the necessary functions required for functionality. */
-            _discordCrypt._hookSetup();
-
             /* Perform startup and load the config file if not already loaded. */
             if ( !_configFile ) {
+                /* Hook the necessary functions required for functionality. */
+                _discordCrypt._hookSetup();
+
                 /* Load the master password. */
                 _discordCrypt._loadMasterPassword();
 
@@ -1408,6 +1408,18 @@ const discordCrypt = ( () => {
          * @desc Sets up the hooking methods required for plugin functionality.
          */
         static _hookSetup() {
+            /* Scan for any existing method hooks. */
+            if( !global.discordCrypt__hooked ) {
+                /* Hooks can only be done once. Define a global property that indicates this. */
+                global.discordCrypt__hooked = {};
+                _Object.freeze( global.discordCrypt__hooked );
+            }
+            else {
+                /* Reload since we need fresh hooks. */
+                window.location.pathname = '/channels/@me';
+                return;
+            }
+
             try {
                 /* Get module searcher for caching. */
                 const searcher = _discordCrypt._getWebpackModuleSearcher();
