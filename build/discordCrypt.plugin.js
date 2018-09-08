@@ -1092,34 +1092,28 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Update the current password field and save the config file.
+         * @property {string} primary The primary password.
+         * @property {string} secondary The secondary password.
          */
-        static _updatePasswords() {
+        static _updatePasswords( primary, secondary ) {
             /* Don't save if the password overlay is not open. */
             if ( $( '#dc-overlay-password' ).css( 'display' ) !== 'block' )
                 return;
 
-            let prim = $( "#dc-password-primary" );
-            let sec = $( "#dc-password-secondary" );
             let id = _discordCrypt._getChannelId();
 
-            /* Check if a primary password has actually been entered. */
-            if ( !( prim.val() !== '' && prim.val().length > 1 ) ) {
-                _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
+            /* Check if a primary & secondary password has actually been entered. */
+            if ( !primary || !primary.length || !secondary || !secondary.length ) {
+                _configFile.channels[ id ].primaryKey =
+                    _configFile.channels[ id ].secondaryKey = null;
 
                 /* Disable auto-encrypt for that channel */
                 _discordCrypt._setAutoEncrypt( false );
             }
             else {
                 /* Update the password field for this id. */
-                _configFile.channels[ id ].primaryKey = prim.val();
-
-                /* Only check for a secondary password if the primary password has been entered. */
-                if ( sec.val() !== '' && sec.val().length > 1 )
-                    _configFile.channels[ id ].secondaryKey = sec.val();
-
-                /* Update the password toolbar. */
-                prim.val( '' );
-                sec.val( '' );
+                _configFile.channels[ id ].primaryKey = primary;
+                _configFile.channels[ id ].secondaryKey = secondary;
 
                 /* Enable auto-encrypt for the channel */
                 _discordCrypt._setAutoEncrypt( true );
@@ -3509,22 +3503,37 @@ const discordCrypt = ( () => {
          * @returns {Function}
          */
         static _onSavePasswordsButtonClicked() {
-            let btn = $( '#dc-save-pwd' );
+            let save_btn = $( '#dc-save-pwd' ),
+                primary_password = $( "#dc-password-primary" ),
+                secondary_password = $( "#dc-password-secondary" );
+
+            /* Ensure both the primary and secondary password fields are specified. */
+            if( !primary_password.val().length || !secondary_password.val().length ) {
+                save_btn.text( 'Please Fill In Both Fields !' );
+
+                /* Reset the button text after. */
+                setTimeout( () => {
+                    /* Reset text. */
+                    save_btn.text( "Save Password" );
+                }, 1000 );
+
+                return;
+            }
 
             /* Update the password and save it. */
-            _discordCrypt._updatePasswords();
+            _discordCrypt._updatePasswords( primary_password.val(), secondary_password.val() );
 
             /* Update the text for the button. */
-            btn.text( "Saved!" );
+            save_btn.text( "Saved!" );
 
             /* Reset the text for the password button after a 1 second delay. */
             setTimeout( ( function () {
                 /* Reset text. */
-                btn.text( "Save Password" );
+                save_btn.text( "Save Password" );
 
                 /* Clear the fields. */
-                $( "#dc-password-primary" ).val( '' );
-                $( "#dc-password-secondary" ).val( '' );
+                primary_password.val( '' );
+                secondary_password.val( '' );
 
                 /* Close. */
                 $( '#dc-overlay' ).css( 'display', 'none' );
@@ -3538,22 +3547,26 @@ const discordCrypt = ( () => {
          * @returns {Function}
          */
         static _onResetPasswordsButtonClicked() {
-            let btn = $( '#dc-reset-pwd' );
+            let reset_btn = $( '#dc-reset-pwd' );
 
             /* Disable auto-encrypt for the channel */
             _discordCrypt._setAutoEncrypt( false );
 
-            /* Reset the configuration for this user and save the file. */
             let id = _discordCrypt._getChannelId();
-            _configFile.channels[ id ].primaryKey = _configFile.channels[ id ].secondaryKey = null;
+
+            /* Reset the configuration for this user and save the file. */
+            _configFile.channels[ id ].primaryKey =
+                _configFile.channels[ id ].secondaryKey = null;
+
+            /* Save them. */
             _discordCrypt._saveConfig();
 
             /* Update the text for the button. */
-            btn.text( "Password Reset!" );
+            reset_btn.text( "Password Reset!" );
 
             setTimeout( ( function () {
                 /* Reset text. */
-                btn.text( "Reset Password" );
+                reset_btn.text( "Reset Password" );
 
                 /* Clear the fields. */
                 $( "#dc-password-primary" ).val( '' );
