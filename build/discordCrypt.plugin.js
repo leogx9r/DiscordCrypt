@@ -2855,6 +2855,9 @@ const discordCrypt = ( () => {
             /* Get the table to show blacklisted updates. */
             let table = $( '#dc-update-blacklist-entries' );
 
+            /* Clear all entries. */
+            table.html( '' );
+
             /* Iterate over all entries. */
             for ( let i = 0; i < _configFile.blacklistedUpdates.length; i++ ) {
                 /* Get the update info. */
