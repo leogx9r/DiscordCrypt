@@ -1567,24 +1567,22 @@ const discordCrypt = ( () => {
             let id = event.methodArguments[ 0 ].channelId;
 
             /* Skip channels not currently selected. */
-            if ( _discordCrypt._getChannelId() === id )
+            if ( _discordCrypt._getChannelId() === id ) {
+                /* Checks if channel has any settings. */
+                if( _configFile && !_configFile.channels[ id ] ) {
+
+                    /* Create the defaults. */
+                    _configFile.channels[ id ] = {
+                        primaryKey: null,
+                        secondaryKey: null,
+                        autoEncrypt: true,
+                        ignoreIds: []
+                    };
+                }
+
                 /* Delays are required due to windows being loaded async. */
                 setTimeout(
                     () => {
-                        _discordCrypt.log( 'Detected chat switch.', 'debug' );
-
-                        /* Checks if channel has any settings. */
-                        if( _configFile && !_configFile.channels[ id ] ) {
-
-                            /* Create the defaults. */
-                            _configFile.channels[ id ] = {
-                                primaryKey: null,
-                                secondaryKey: null,
-                                autoEncrypt: true,
-                                ignoreIds: []
-                            };
-                        }
-
                         /* Update the lock icon since it is local to the channel */
                         _discordCrypt._updateLockIcon( _self );
 
@@ -1593,6 +1591,7 @@ const discordCrypt = ( () => {
                     },
                     1
                 );
+            }
 
             /* Call the original method. */
             event.callOriginalMethod();
