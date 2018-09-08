@@ -1824,7 +1824,7 @@ const discordCrypt = ( () => {
          * @return {string} Returns the resulting message string.
          */
         static _handleAcceptedKeyRequest( message, remoteKeyInfo ) {
-            let encodedKey;
+            let encodedKey, algorithm;
 
             /* If a local key doesn't exist, generate one and send it. */
             if(
@@ -1871,6 +1871,10 @@ const discordCrypt = ( () => {
             /* Save the remote key's information. */
             _globalSessionState[ message.channel_id ].remoteKey = remoteKeyInfo;
 
+            /* Extract the algorithm for later logging. */
+            algorithm = `${_globalSessionState[ message.channel_id ].localKey.algorithm.toUpperCase()}-`;
+            algorithm += `${_globalSessionState[ message.channel_id ].localKey.bit_length}`;
+
             /* Try deriving the key. */
             let keys = _discordCrypt._deriveExchangeKeys( message.channel_id );
 
@@ -1896,9 +1900,10 @@ const discordCrypt = ( () => {
             _discordCrypt._saveConfig();
 
             /* Set the new message text. */
-            return '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n' +
+            return '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n\n' +
+                `Algorithm: **${algorithm}**\n` +
                 `Primary Entropy: **${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits**\n` +
-                `Secondary Entropy: **${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits**`;
+                `Secondary Entropy: **${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits**\n`;
         }
 
         /**
@@ -1954,9 +1959,15 @@ const discordCrypt = ( () => {
                     !_globalSessionState.hasOwnProperty( message.channel_id ) ||
                     !_globalSessionState[ message.channel_id ].privateKey
                 )
-                    return '🔏 **[ SESSION ERROR ]** *OUTGOING KEY EXCHANGE WITH NO PRIVATE KEY* !!!';
+                    /* This is a local public key that has already been ACK'd. We can ignore it. */
+                    return '';
 
-                return '🔏 **[ SESSION ]** *OUTGOING KEY EXCHANGE*';
+                /* Extract the algorithm for logging. */
+                let algorithm = `${_globalSessionState[ message.channel_id ].localKey.algorithm.toUpperCase()}-`;
+                algorithm += `${_globalSessionState[ message.channel_id ].localKey.bit_length}`;
+
+                return '🔏 **[ SESSION ]** *OUTGOING KEY EXCHANGE*\n\n' +
+                    `Algorithm: **${algorithm}**\n`;
             }
 
             /* Be sure to add the message ID to the ignore list. */
