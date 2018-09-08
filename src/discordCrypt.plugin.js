@@ -680,7 +680,10 @@ const discordCrypt = ( () => {
          * @desc Starts the script execution. This is called by BetterDiscord if the plugin is enabled.
          */
         start() {
-            /* Perform idiot-proof check to make sure the user named the plugin `_discordCrypt.plugin.js` */
+            /* Validate location startup. */
+            _discordCrypt._ensureProperStartup();
+
+            /* Perform idiot-proof check to make sure the user named the plugin `discordCrypt.plugin.js` */
             if ( !_discordCrypt._validPluginName() ) {
                 global.smalltalk.alert(
                     'Hi There! - DiscordCrypt',
@@ -693,10 +696,13 @@ const discordCrypt = ( () => {
                 return;
             }
 
+            /* Hook the necessary functions required for functionality. */
+            _discordCrypt._hookSetup();
+
             /* Perform startup and load the config file if not already loaded. */
             if ( !_configFile ) {
                 /* Load the master password. */
-                this._loadMasterPassword();
+                _discordCrypt._loadMasterPassword();
 
                 /* Don't do anything further till we have a configuration file. */
                 return;
@@ -705,11 +711,11 @@ const discordCrypt = ( () => {
             /* Don't check for updates if running a debug version. */
             if ( !_discordCrypt._shouldIgnoreUpdates( this.getVersion() ) && _configFile.automaticUpdates ) {
                 /* Check for any new updates. */
-                this._checkForUpdates();
+                _discordCrypt._checkForUpdates();
 
                 /* Add an update handler to check for updates every 60 minutes. */
                 _updateHandlerInterval = setInterval( () => {
-                    _self._checkForUpdates();
+                    _discordCrypt._checkForUpdates();
                 }, 3600000 );
             }
 
@@ -797,11 +803,8 @@ const discordCrypt = ( () => {
          * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
          */
         load() {
-            /* Due to how BD loads the client, we need to start on a non-channel page to properly hook events. */
-            if( [ '/channels/@me', '/activity', '/library', '/store' ].indexOf( window.location.pathname ) === -1 ) {
-                window.location.pathname = '/channels/@me';
-                return;
-            }
+            /* Validate location startup. */
+            _discordCrypt._ensureProperStartup();
 
             /* Freeze the plugin instance if required. */
             if(
@@ -821,9 +824,6 @@ const discordCrypt = ( () => {
 
             /* Load necessary libraries. */
             _discordCrypt.__loadLibraries();
-
-            /* Hook the necessary functions required for functionality. */
-            _discordCrypt._hookSetup();
         }
 
         /**
@@ -1127,9 +1127,19 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Ensures the client starts up on a non-channel location for proper functioning.
+         */
+        static _ensureProperStartup() {
+            /* Due to how BD loads the client, we need to start on a non-channel page to properly hook events. */
+            if( [ '/channels/@me', '/activity', '/library', '/store' ].indexOf( window.location.pathname ) === -1 )
+                window.location.pathname = '/channels/@me';
+        }
+
+        /**
+         * @private
          * @desc Loads the master-password unlocking prompt.
          */
-        _loadMasterPassword() {
+        static _loadMasterPassword() {
             if ( $( '#dc-master-overlay' ).length !== 0 )
                 return;
 
@@ -1164,7 +1174,7 @@ const discordCrypt = ( () => {
             document.getElementById( 'dc-master-overlay' ).style.display = 'block';
 
             /* Check for ENTER key press to execute unlocks. */
-            pwd_field.on( "keydown", ( function ( e ) {
+            pwd_field.on( "keydown", ( e => {
                 let code = e.keyCode || e.which;
 
                 /* Execute on ENTER/RETURN only. */
@@ -1190,7 +1200,7 @@ const discordCrypt = ( () => {
          * @private
          * @desc Performs an async update checking and handles actually updating the current version if necessary.
          */
-        _checkForUpdates() {
+        static _checkForUpdates() {
             const update_check_btn = $( '#dc-update-check-btn' );
 
             try {
@@ -2987,7 +2997,7 @@ const discordCrypt = ( () => {
                     if( !_updateHandlerInterval ) {
                         /* Add an update handler to check for updates every 60 minutes. */
                         _updateHandlerInterval = setInterval( () => {
-                            _self._checkForUpdates();
+                            _discordCrypt._checkForUpdates();
                         }, 3600000 );
                     }
                 }
@@ -3007,7 +3017,7 @@ const discordCrypt = ( () => {
          */
         static _onCheckForUpdatesButtonClicked() {
             /* Simply call the wrapper, everything else will be handled by this. */
-            _self._checkForUpdates();
+            _discordCrypt._checkForUpdates();
         }
 
         /**
