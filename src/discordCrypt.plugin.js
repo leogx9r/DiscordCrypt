@@ -672,7 +672,7 @@ const discordCrypt = ( () => {
          * @returns {string}
          */
         getVersion() {
-            return '1.5.11';
+            return '2.0.0';
         }
 
         /**
