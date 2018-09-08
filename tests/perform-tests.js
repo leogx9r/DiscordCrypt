@@ -28,6 +28,30 @@ class testRunner {
      * @constructor
      */
     constructor() {
+
+        /**
+         * @private
+         * @desc Symmetric block modes of operation.
+         * @type {string[]}
+         */
+        this.ENCRYPT_BLOCK_MODES = [
+            'CBC', /* Cipher Block-Chaining */
+            'CFB', /* Cipher Feedback Mode */
+            'OFB', /* Output Feedback Mode */
+        ];
+
+        /**
+         * @private
+         * @desc Shorthand padding modes for block ciphers referred to in the code.
+         * @type {string[]}
+         */
+        this.PADDING_SCHEMES = [
+            'PKC7', /* PKCS #7 */
+            'ANS2', /* ANSI X.923 */
+            'ISO1', /* ISO-10126 */
+            'ISO9', /* ISO-97972 */
+        ];
+
         /* Cache required modules. */
         this.process = require( 'process' );
         this.nodeunit = require( 'nodeunit' );
@@ -731,8 +755,8 @@ class testRunner {
                                     primary_key,
                                     secondary_key,
                                     cipher_index,
-                                    this.discordCrypt_instance._encryptBlockModes.indexOf( block_mode.toUpperCase() ),
-                                    this.discordCrypt_instance._paddingModes.indexOf( padding_scheme.toUpperCase() ),
+                                    this.ENCRYPT_BLOCK_MODES.indexOf( block_mode.toUpperCase() ),
+                                    this.PADDING_SCHEMES.indexOf( padding_scheme.toUpperCase() ),
                                     true
                                 ),
                                 `Encoding error during decryption of ${cipher_string}`
@@ -754,8 +778,8 @@ class testRunner {
                                     primary_key,
                                     secondary_key,
                                     cipher_index,
-                                    this.discordCrypt_instance._encryptBlockModes.indexOf( block_mode.toUpperCase() ),
-                                    this.discordCrypt_instance._paddingModes.indexOf( padding_scheme.toUpperCase() ),
+                                    this.ENCRYPT_BLOCK_MODES.indexOf( block_mode.toUpperCase() ),
+                                    this.PADDING_SCHEMES.indexOf( padding_scheme.toUpperCase() ),
                                     true
                                 ),
                                 `Encoding error during encryption of ${cipher_string}`
@@ -862,7 +886,7 @@ class testRunner {
 
             // noinspection JSAccessibilityCheck
             this.discordCrypt.log(
-                `Configuration:\n${JSON.stringify( this.discordCrypt_instance._getDefaultConfig(), undefined, ' ' )}`
+                `Configuration:\n${JSON.stringify( this.discordCrypt._getDefaultConfig(), undefined, ' ' )}`
             );
 
             // noinspection JSAccessibilityCheck

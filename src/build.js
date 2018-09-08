@@ -1,3 +1,29 @@
+const LICENSE =
+
+`/*******************************************************************************
+ * MIT License
+ *
+ * Copyright (c) 2018 Leonardo Gates
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ ******************************************************************************/\n\n`;
+
 /**
  * @public
  * @desc Compiles the plugin and adds all necessary _libraries to it.
@@ -356,30 +382,6 @@ class Compiler {
         sign_key_id
     ) {
         const metadata = `//META{"name":"discordCrypt"}*//\n\n`;
-        const license =
-`/*******************************************************************************
- * MIT License
- *
- * Copyright (c) 2018 Leonardo Gates
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- ******************************************************************************/\n\n`;
 
         /* Read the plugin file. */
         let data = this.fs.readFileSync( plugin_path );
@@ -408,7 +410,7 @@ class Compiler {
         try {
             this.fs.mkdirSync( output_dir );
         } catch ( e ) {
-            console.info( 'Directory already exists. Skipping creation ...' );
+            /* Ignored. */
         }
 
         /* Add all assets. */
@@ -418,7 +420,7 @@ class Compiler {
         let finalizeBuild = ( data ) => {
             /* Only do this if we're compressing the plugin. */
             if ( compress )
-                data = license + this.tryMinify( data, true );
+                data = LICENSE + this.tryMinify( data, true );
 
             try {
                 /* Write the file to the output. */
@@ -515,6 +517,7 @@ class Compiler {
             library_info: {
                 'sjcl.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'sha3.js': { requiresNode: true, requiresBrowser: false, minify: true },
+                'sidh.js': { requiresNode: false, requiresBrowser: true, minify: false },
                 'smalltalk.js': { requiresNode: false, requiresBrowser: true, minify: true },
                 'currify.js': { requiresNode: false, requiresBrowser: true, minify: true },
                 'curve25519.js': { requiresNode: true, requiresBrowser: false, minify: true },
