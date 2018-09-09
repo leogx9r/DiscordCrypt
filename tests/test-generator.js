@@ -318,52 +318,6 @@ class testGenerator {
     }
 
     /**
-     * @desc Generate HMAC test vectors.
-     * @param {int} num_tests The number of tests to generate.
-     * @param {string} output_path The output path of the JSON file containing the generated test vectors.
-     */
-    generateHMACTests( num_tests = 25,  output_path = './tests/vectors/hmac-test-vectors.json' ) {
-        let unit_tests = [];
-        const hmac_list = [
-            {
-                name: 'hmac_sha256',
-                length: 32,
-                hash: this.discordCrypt.__hmac_sha256,
-            },
-            {
-                name: 'hmac_sha512',
-                length: 64,
-                hash: this.discordCrypt.__hmac_sha512,
-            },
-            {
-                name: 'hmac_whirlpool',
-                length: 64,
-                hash: this.discordCrypt.__hmac_whirlpool,
-            }
-        ];
-
-        for ( let i = 0; i < hmac_list.length; i++ ) {
-            unit_tests[ i ] = {};
-
-            unit_tests[ i ].name = hmac_list[ i ].name;
-            unit_tests[ i ].length = hmac_list[ i ].length;
-            unit_tests[ i ].tests = [];
-
-            for ( let j = 0; j < num_tests; j++ ) {
-                let input = this.crypto.randomBytes( hmac_list[ i ].length * ( j + 1 ) + j );
-                let salt = this.crypto.randomBytes( hmac_list[ i ].length * ( j + 1 ) + j );
-
-                unit_tests[ i ].tests[ j ] = {};
-                unit_tests[ i ].tests[ j ].input = input.toString( 'hex' );
-                unit_tests[ i ].tests[ j ].salt = salt.toString( 'hex' );
-                unit_tests[ i ].tests[ j ].output = hmac_list[ i ].hash( input, salt, true );
-            }
-        }
-
-        this.fs.writeFileSync( output_path, JSON.stringify( unit_tests, undefined, ' ' ) );
-    }
-
-    /**
      * @desc Generate symmetric encryption & decryption tests which includes encoding.
      * @param {int} num_tests The number of tests to generate.
      * @param {string} output_path The output path of the JSON file containing the generated test vectors.
