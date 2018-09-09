@@ -35,15 +35,14 @@
 - Supports Windows, MAC and Linux. ( No mobile support, sorry! )
 - All messages in DMs, group DMs and channels are end-to-end encrypted. ( More below. )
 - Uses a dual encryption mode with multiple ciphers. ( Defaults to AES-256 and Camellia-256 )
-- Supports embedded messages for extra spice if you want to look unique.
 - Optional timed messages which are deleted after a certain period passes.
 - Emojis ( including animated ) are supported even if you're not a nitro user.
 - Encrypted database with a password of your choosing protects all your keys.
 - Ability to backup and restore all passwords in the database.
-- Strong key exchange for easily exchanging keys with your friends.
+- Strong and automatic key exchanges for easily starting secure sessions your friends.
 - Supports encrypted file uploads up to 50 MB which are automatically deleted after 7 days.
 - Automatic updates which are verified ensures you always get the latest features.
-- Blocks various tracking elements used by Discord. ( Experiments, voice reports etc. )
+- Blocks various tracking elements used by Discord via SecureDiscord. ( Experiments, voice reports etc. )
 - Designed to provide the maximum security and privacy.
 - Extensively tested for reliability and stability.
 
