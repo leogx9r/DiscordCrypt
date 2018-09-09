@@ -1998,6 +1998,10 @@ const discordCrypt = ( () => {
             if( _globalSessionState.hasOwnProperty( message.channel_id ) )
                 return _discordCrypt._handleAcceptedKeyRequest( message, remoteKeyInfo );
 
+            /* Check if we need to prompt. */
+            if( _configFile.autoAcceptKeyExchanges )
+                return _discordCrypt._handleAcceptedKeyRequest( message, remoteKeyInfo );
+
             /* Actually just the return string for the message. */
             let returnValue = '';
 

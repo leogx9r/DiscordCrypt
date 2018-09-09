@@ -151,6 +151,7 @@
  * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
  * @property {number} timedMessageExpires How long after a message is sent should it be deleted in seconds.
  * @property {boolean} automaticUpdates Whether to automatically check for updates.
+ * @property {boolean} autoAcceptKeyExchanges Whether to automatically accept incoming key exchange requests.
  * @property {Array<UpdateInfo>} blacklistedUpdates Updates to ignore due to being blacklisted.
  * @property {ChannelInfo} channels Specific data per channel.
  */
@@ -600,7 +601,7 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const MENU_HTML =
-        `eNrVWv1u2zgSfxWeFnvdBar4o0mTOK6BNEmB7G0/UHeLw/5zoCTaIkKLgkjH9mKf4/66p7snuRmSkiVZlh3HOdylQKNQ5Mxw5jcfHGoY8UfCo3deFPrykWWCrjwSCqpUZWhEhpsT/XkqJI0a5vshSzTLJpwJeK30SjB4zVUK7waJTNgVULQk12uzuWCZTwWfJviWDHmSzjXRqxQWa7bUZUbmne8YOLEmXDA/pTr2iP1xjBc80vGA9LrdH69SGkU8mQ5IP11ezWg25Ykv2EQPyCkMeCRjNJKJWBHNNa79ADTJF6TZMTIFc61lUhLEDRRPIBnoQDHPCW5HCxkVEyzUa1H9QCdeWVgt0wHxL1AYZEiGKqVlflpKoXlqX2576xt1jcaGGbkmZhffJPnNGGzYwVWWwIn5h5SKwWHHyowW6oCJ8DfSo6CbMis3BDqTCxjqd8E+UsBTr39RtcmMKUWnrLTE/AAaQhZLEbHsnXeHgCE0WRG0kOagU5xOtCSKJRFZcB2TlZxnxFEjJycnHpnRpWDJVMfA9gJEGA07OZd2hOX6nshE+4r/wQY9RABxAPEDCTqYDXrd3BIOjuV9RaBflNQPYxY+BHJZRuh6zAJh/XcFnBUMdh0rY9XqBIOLM4PRLWBox4LheT8hLKGBYNFrQkkuPhE8eQAFC0EChtrWhAqZTK3OdcwI7tbO0jHVJAQ+MHOuWGTIgo0MLbaezGczFnGqmVjV4EXGaM7bnPevSLX0voDcy5ouoTPmZzSJ5Oz/0nqoaBt+jb5fKYI7KoxodwaqiQg4MwEaLFGo7nzCA0t13TBf80U2XnxCgjssozTAAf/zA5qVds8j8o4UyraC+jhvrrzyWlwGZtBgNq8WrkGbnf3w0BaYa1RNDqgGJyccxuFRHh83A+Bh3JvSwi55wLlCJqw8aJUbIRXbFCn/1ZCWUxBiIbNnJGZj8S8ZB/SuIPtZcoM1EsqZuYlbPlZL0MVwakl71RSAAb0zGgZZp5BhzEKZRC8khcqJt8pxKO7yhE8fIdMvIgRXBPGw2Igq2fRJAHKEM6aYtpS/4uPRCJcBeGOemxziUMSTKuTDdIV7UAXeb2S6IjfzLMM01LClFtzPjYL3RX0AdFkG8qRLoqTg0RX5A2SO2BIidbfbvSK5XxB0jLVf3HIVwtqbbJVC0HdWvX6kXGBsXsNzB3CUzjDHrmdY8WtgTdjCRzVC7H5SONyPOgD+BaiPbmKaTJlCVzUTR/vSPbjMDA1HIaelCr6hyHTGcvIR6+hlUGdH8HhwTJBY+4lc2Oq+iv83b350pf1XZvL3J7l4figwHAVsLtuL568485lcQSEyY7npm7lapvdmpnOVJ6UyiGtYG6gmp55RnmzkMNJ4utQ0KJ3ALEkfBze3/goxRwMfq91XRcoQc6ziiqUmWH0xg1DO2sHt2mwkCaqgAVWsRvTWDR9KFnLaPON6VSM7dsOHkmVLrqskiyIc8KQHGZ/GGtT+73/9c0f1hKQh7UI9qr1t6jXmqhs2EDJ8cBV2WpyWITpY3xwQG+TzY3NQidPlfdszbmp3nhWJfpff19/bDgTEfCa8ola64WkMSSXfOIZKewZv71y4esgPzXIvbz5UqeZHfpmag9MjFXNMYxNQleHBotF7IRcTrmLyEznr9f33XJOfhx27oHE1ZcobXd+NYUH/7O0eC0I4FAisC+CX4HTvdTpCTt8yngp2a/j1LvcRkEcQ+kf3t3fXuKR/0bAEsozZv7WrU3zNWDFP3ClqmI6+xVwRyPQ8hHCkzFHKKt6eaOE0y5LQoAZf8SSBN3aC6UjICZydXRPiJAfSFr5PAtG62D0QRkVBWwdSnfJWKP0PI6iChOOC7oURJOf6v4Qga10om00jhHyUETsARC4K5+2UGVApkFTjMA5jNmPNcEofwnOIjH+7GZMfztsxlKg+gOjT+J78/fKk/6YdB0r2AAfjz3CS6PXf7pp7aedenl+e945u9LwV6VRFlFGHBcFEZiSQOnaGVy9h6PeYE8nnlGELBbb9PINbQRvt3cSo2ephENbEg2qbJ8CgPSpMgmLZB8aigMJK5NK6SuKqz3ONfYDtq45haVN9EFQNeq8sFPGiVr5b2nMNuRZTCeVbPDvcuMzRqpp3k0OzVfv9U28E6SWFh4deq00gNHsjqDYfWf/srHfZOvfNhSMLD1k72dPupZmq4WGHBGf9nqUKDzuonp3bqRoedlA9f3vhjUB5afu0XhdVhfP67fPO3ry1887a1dk9zfmetuuye953E892adJx7rVHz7e9U7eVXnv8voC06iZeHN3zIjahc4FXEg6h6/AK0I1UTB/Ycd3u1nG8szkcN1rqPhb+99TrycIV3Y5M7851KXJ/bGHtLiD312JVfXnXs6hQImYrFJfDUO0Eg0HChDI3P1C2QJlSrAuYyXBMH1nXRgoQ6aPLpV8yNuHLIynaEYcDFhLd1HYz8yerugDsAq/H8jsWKAqsqtEOpkNjK79CrKIGJDf2Ro3NUr06qn7zjUERPJ1WjxQHq9XVtr62NItkUuP1JC2CguYTUD2htmbGO0KjLJSvUBQqM1c26JppLBdq1TZuJVch0r5b0hnU/wMynFtr5bRyM7nFLDr58+7TzbAzHx3TAN/4rISvu2XKbeWwzRLJfBagTve0hUbykNyBLKvDexvrw+EdywUxN8N0Ym/r18or1AoL8Ar5NVEQQURE4LQVMHc/HGGQmfEEDkSqbCMwzZih+TBoSeJ1PROhuMKOOjF7LOLUybEt9IktyEeqcENF921XvG+6bmqy08zQLd3IVS3UxvoJVrqfEJWykAPv6LX7SMJSLaJ3DnbbrXVRiR+QN12vsI5Dc81l+oIbffHRGN6Rv5LrNBWrct9xKzF7tdVIraEfbUsSewfW2N586t42d2CLHpp3HUMpZDYgP0wmE/IXPktlpmmirwrrxpBF3nmx1qkadIC76UPSND0J5awDYnPNOt9/v7j85XfAOc2mTL/z/hEImjx4o18k9pTnKRKF7UAZnQ071FVTDbo7srBTACYNjKCCyenyMuuU+6ib8n7nCjx8DJgLGRghlfCnzFZNMq8NUbRdyw3YfbvFm53zopO/X1+4ocW+Z09YhZkUAvkJh7uheS7fV63fwcuY0Sh/zuwDjgJ9c0mWmLtV/GYprr7Eby+a33w2VaGqvoSnrHgq8wxktNrQG+gj49gZIzXJ4DEafVlfmAGxaM9X+98flUbUjApTA5pvh+5ArHV8KDGo7A535JBlVL0FWM9x9+KCyzjLWm/mJuXeDBbh+if1815u2XKPBsl7k83dssLm2TyykuEdBxwySoehJjfd1x83r5ye5o9Nd1Nb/TFFH3gPOHwQXGEis5eKzh/SF/bZ7/au/NiemV+h5tuqeWhZjKjiGJU/X8pNWkqn67mWM6gpQ/DjFbnBb+TIBziYO6Nsq57aP7hzSqE5bacePHeYj9/qRdRvCGMoms1py1W7VnUvFBecuYzE7jOZ+s5b/akp+9mX9v//APwu9Ss=`;
+        `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`;
 
     /**
      * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
@@ -861,6 +862,8 @@ const discordCrypt = ( () => {
          */
         static _getDefaultConfig() {
             return {
+                /* Whether to automatically accept incoming key exchanges. */
+                autoAcceptKeyExchanges: true,
                 /* Automatically check for updates. */
                 automaticUpdates: true,
                 /* Blacklisted updates. */
@@ -1329,6 +1332,7 @@ const discordCrypt = ( () => {
             /* Update all settings from the settings panel. */
             $( '#dc-secondary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
             $( '#dc-primary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
+            $( '#dc-auto-accept-keys' ).prop( 'checked', _configFile.autoAcceptKeyExchanges );
             $( '#dc-settings-cipher-mode' ).val( _configFile.encryptBlockMode.toLowerCase() );
             $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
             $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
@@ -2000,6 +2004,10 @@ const discordCrypt = ( () => {
 
             /* Check if this is an incoming key exchange or a resulting message. */
             if( _globalSessionState.hasOwnProperty( message.channel_id ) )
+                return _discordCrypt._handleAcceptedKeyRequest( message, remoteKeyInfo );
+
+            /* Check if we need to prompt. */
+            if( _configFile.autoAcceptKeyExchanges )
                 return _discordCrypt._handleAcceptedKeyRequest( message, remoteKeyInfo );
 
             /* Actually just the return string for the message. */
@@ -3279,7 +3287,8 @@ const discordCrypt = ( () => {
 
             /* Update all settings from the settings panel. */
             _configFile.timedMessageExpires = parseInt( $( '#dc-settings-timed-expire' ).val() );
-            _configFile.exchangeBitSize = parseInt( $( '#dc-setting-exchange-mode' ).val() );
+            _configFile.autoAcceptKeyExchanges = $( '#dc-auto-accept-keys' ).is( ':checked' );
+            _configFile.exchangeBitSize = parseInt( $( '#dc-settings-exchange-mode' ).val() );
             _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
             _configFile.decryptedPrefix = $( '#dc-settings-decrypted-prefix' ).val();
             _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
@@ -3363,6 +3372,7 @@ const discordCrypt = ( () => {
             /* Update all settings from the settings panel. */
             $( '#dc-secondary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
             $( '#dc-primary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
+            $( '#dc-auto-accept-keys' ).prop( 'checked', _configFile.autoAcceptKeyExchanges );
             $( '#dc-settings-cipher-mode' ).val( _configFile.encryptBlockMode.toLowerCase() );
             $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
             $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
