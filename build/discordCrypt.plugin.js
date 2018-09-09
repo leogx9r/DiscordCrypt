@@ -484,6 +484,13 @@ const discordCrypt = ( () => {
 
     /**
      * @private
+     * @desc The Nothing-Up-My-Sleeve magic for KMAC key derivation.
+     * @type {Buffer}
+     */
+    const ENCRYPT_PARAMETER = Buffer.from( 'DiscordCrypt KEY GENERATION PARAMETER' );
+
+    /**
+     * @private
      * @desc How long after a key-exchange message has been sent should it be ignored in milliseconds.
      * @type {number}
      */
@@ -2465,7 +2472,7 @@ const discordCrypt = ( () => {
                 _discordCrypt.__scrypt
                 (
                     Buffer.from( password ),
-                    Buffer.from( _discordCrypt.__whirlpool( password, true ), 'hex' ),
+                    Buffer.from( global.sha3.sha3_256( password ), 'hex' ),
                     32,
                     4096,
                     8,
@@ -3303,7 +3310,7 @@ const discordCrypt = ( () => {
                 _discordCrypt.__scrypt
                 (
                     Buffer.from( password ),
-                    Buffer.from( _discordCrypt.__whirlpool( password, true ), 'hex' ),
+                    Buffer.from( global.sha3.sha3_256( password ), 'hex' ),
                     32,
                     4096,
                     8,
@@ -3976,8 +3983,8 @@ const discordCrypt = ( () => {
                     }
 
                     /* Read the current hash of the plugin and compare them.. */
-                    let currentHash = _discordCrypt.__sha256( localFile.replace( '\r', '' ), true );
-                    updateInfo.hash = _discordCrypt.__sha256( data.replace( '\r', '' ), true );
+                    let currentHash = global.sha3.sha3_256( localFile.replace( '\r', '' ) );
+                    updateInfo.hash = global.sha3.sha3_256( data.replace( '\r', '' ) );
 
                     /* If the hash equals the retrieved one, no update is needed. */
                     if ( updateInfo.hash === currentHash ) {
@@ -5003,7 +5010,7 @@ const discordCrypt = ( () => {
                     return null;
 
                 /* Create a fingerprint for the blob. */
-                output[ 'fingerprint' ] = _discordCrypt.__sha256( msg, true );
+                output[ 'fingerprint' ] = global.sha3.sha3_256( msg );
 
                 /* Buffer[0] contains the algorithm type. Reverse it. */
                 output[ 'index' ] = parseInt( msg[ 0 ] );
@@ -5949,43 +5956,33 @@ const discordCrypt = ( () => {
          *      blockSize.
          * @param {string|Buffer|Array} key The key to perform validation on.
          * @param {int} key_size_bits The bit length of the desired key.
-         * @param {boolean} [use_whirlpool] If the key length is 512-bits, use Whirlpool or SHA-512 hashing.
          * @returns {Buffer} Returns a Buffer() object containing the key of the desired length.
          */
-        static __validateKeyIV( key, key_size_bits = 256, use_whirlpool = undefined ) {
+        static __validateKeyIV( key, key_size_bits = 256 ) {
             /* Get the designed hashing algorithm. */
             let keyBytes = key_size_bits / 8;
 
             /* If the length of the key isn't of the desired size, hash it. */
             if ( key.length !== keyBytes ) {
                 let hash;
-
                 /* Get the appropriate hash algorithm for the key size. */
                 switch ( keyBytes ) {
                 case 8:
-                    hash = _discordCrypt.__whirlpool64;
-                    break;
                 case 16:
-                    hash = _discordCrypt.__sha512_128;
-                    break;
                 case 20:
-                    hash = _discordCrypt.__sha160;
-                    break;
                 case 24:
-                    hash = _discordCrypt.__whirlpool192;
-                    break;
                 case 32:
-                    hash = _discordCrypt.__sha256;
+                    hash = global.sha3.sha3_512( key ).slice( 0, keyBytes * 2 );
                     break;
                 case 64:
-                    hash = use_whirlpool !== undefined ? _discordCrypt.__sha512 : _discordCrypt.__whirlpool;
+                    hash = global.sha3.sha3_512( key );
                     break;
                 default:
                     throw 'Invalid block size specified for key or iv. Only 64, 128, 160, 192, 256 and 512 bit keys' +
                     ' are supported.';
                 }
                 /* Hash the key and return it as a buffer. */
-                return Buffer.from( hash( key, true ), 'hex' );
+                return Buffer.from( hash, 'hex' );
             }
             else
                 return Buffer.from( key );
@@ -6490,7 +6487,6 @@ const discordCrypt = ( () => {
          * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
          * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
          *      Key used to encrypt the message.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {Buffer|null} Returns a Buffer() object containing the ciphertext or null if the chosen options are
          *      invalid.
          * @throws Exception indicating the error that occurred.
@@ -6505,8 +6501,7 @@ const discordCrypt = ( () => {
             is_message_hex,
             key_size_bits = 256,
             block_cipher_size = 128,
-            one_time_salt = undefined,
-            kdf_iteration_rounds = 1000
+            one_time_salt
         ) {
             const cipher_name = `${symmetric_cipher}${block_mode === undefined ? '' : '-' + block_mode}`;
             const crypto = require( 'crypto' );
@@ -6538,7 +6533,10 @@ const discordCrypt = ( () => {
 
                 /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
                 if ( _salt.length !== 8 )
-                    _salt = Buffer.from( _discordCrypt.__whirlpool64( _salt, true ), 'hex' );
+                    _salt = Buffer.from(
+                        global.sha3.sha3_256( _salt ).slice( 0, 16 ),
+                        'hex'
+                    );
             }
             else {
                 /* Generate a random salt to derive the key and IV. */
@@ -6546,8 +6544,15 @@ const discordCrypt = ( () => {
             }
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
-                ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+            _derived = Buffer.from(
+                global.sha3.kmac_256(
+                    _key,
+                    _salt,
+                    block_cipher_size + key_size_bits,
+                    ENCRYPT_PARAMETER
+                ),
+                'hex'
+            );
 
             /* Slice off the IV. */
             _iv = _derived.slice( 0, block_cipher_size / 8 );
@@ -6587,7 +6592,6 @@ const discordCrypt = ( () => {
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
          * @param {int} [key_size_bits] The size of the input key required for the chosen cipher. Defaults to 256 bits.
          * @param {int} [block_cipher_size] The size block cipher in bits. Defaults to 128 bits.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
          * options are invalid.
          * @throws Exception indicating the error that occurred.
@@ -6601,8 +6605,7 @@ const discordCrypt = ( () => {
             output_format,
             is_message_hex,
             key_size_bits = 256,
-            block_cipher_size = 128,
-            kdf_iteration_rounds = 1000
+            block_cipher_size = 128
         ) {
             const cipher_name = `${symmetric_cipher}${block_mode === undefined ? '' : '-' + block_mode}`;
             const crypto = require( 'crypto' );
@@ -6625,8 +6628,15 @@ const discordCrypt = ( () => {
             _salt = _message.slice( 0, 8 );
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
-                ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+            _derived = Buffer.from(
+                global.sha3.kmac_256(
+                    _key,
+                    _salt,
+                    block_cipher_size + key_size_bits,
+                    ENCRYPT_PARAMETER
+                ),
+                'hex'
+            );
 
             /* Slice off the IV. */
             _iv = _derived.slice( 0, block_cipher_size / 8 );
@@ -7287,282 +7297,6 @@ const discordCrypt = ( () => {
             return false;
         }
 
-        /**
-         * @public
-         * @desc Returns the first 64 bits of a Whirlpool digest of the message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __whirlpool64( message, to_hex ) {
-            return Buffer.from( _discordCrypt.__whirlpool( message, true ), 'hex' )
-                .slice( 0, 8 ).toString( to_hex ? 'hex' : 'base64' );
-        }
-
-        /**
-         * @public
-         * @desc Returns the first 128 bits of an SHA-512 digest of a message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __sha512_128( message, to_hex ) {
-            return Buffer.from( _discordCrypt.__sha512( message, true ), 'hex' )
-                .slice( 0, 16 ).toString( to_hex ? 'hex' : 'base64' );
-        }
-
-        /**
-         * @public
-         * @desc Returns the first 192 bits of a Whirlpool digest of the message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __whirlpool192( message, to_hex ) {
-            return Buffer.from( _discordCrypt.__sha512( message, true ), 'hex' )
-                .slice( 0, 24 ).toString( to_hex ? 'hex' : 'base64' );
-        }
-
-        /**
-         * @public
-         * @desc Returns an SHA-160 digest of the message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __sha160( message, to_hex ) {
-            return _discordCrypt.__createHash( message, 'sha1', to_hex );
-        }
-
-        /**
-         * @public
-         * @desc Returns an SHA-256 digest of the message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __sha256( message, to_hex ) {
-            return _discordCrypt.__createHash( message, 'sha256', to_hex );
-        }
-
-        /**
-         * @public
-         * @desc Returns an SHA-512 digest of the message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __sha512( message, to_hex ) {
-            return _discordCrypt.__createHash( message, 'sha512', to_hex );
-        }
-
-        /**
-         * @public
-         * @desc Returns a Whirlpool-512 digest of the message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __whirlpool( message, to_hex ) {
-            return _discordCrypt.__createHash( message, 'whirlpool', to_hex );
-        }
-
-        /**
-         * @public
-         * @desc Returns a HMAC-SHA-256 digest of the message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {Buffer|Array|string} secret The secret input used with the message.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __hmac_sha256( message, secret, to_hex ) {
-            return _discordCrypt.__createHash( message, 'sha256', to_hex, true, secret );
-        }
-
-        /**
-         * @public
-         * @desc Returns an HMAC-SHA-512 digest of the message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {Buffer|Array|string} secret The secret input used with the message.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __hmac_sha512( message, secret, to_hex ) {
-            return _discordCrypt.__createHash( message, 'sha512', to_hex, true, secret );
-        }
-
-        /**
-         * @public
-         * @desc Returns an HMAC-Whirlpool-512 digest of the message.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {Buffer|Array|string} secret The secret input used with the message.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @returns {string} Returns the hex or Base64 encoded result.
-         */
-        static __hmac_whirlpool( message, secret, to_hex ) {
-            return _discordCrypt.__createHash( message, 'whirlpool', to_hex, true, secret );
-        }
-
-        /**
-         * @public
-         * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-160 as primitives.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {Buffer|Array|string} salt The random salting input used with the message.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {int} [key_length] The desired key length size in bytes. Default: 32.
-         * @param {int} [iterations] The number of iterations to perform. Default: 5000.
-         * @param {HashCallback} [callback] If defined, an async call is made that the result is passed to this when
-         *      completed. If undefined, a sync call is made instead.
-         * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
-         *      encoded result.
-         */
-        static __pbkdf2_sha160(
-            message,
-            salt,
-            to_hex,
-            message_is_hex = undefined,
-            salt_is_hex = undefined,
-            key_length = 32,
-            iterations = 5000,
-            callback = undefined
-        ) {
-            return _discordCrypt.__pbkdf2(
-                message,
-                salt,
-                to_hex,
-                message_is_hex,
-                salt_is_hex,
-                callback,
-                'sha1',
-                key_length,
-                iterations
-            );
-        }
-
-        /**
-         * @public
-         * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-256 as primitives.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {Buffer|Array|string} salt The random salting input used with the message.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {int} [key_length] The desired key length size in bytes. Default: 32.
-         * @param {int} [iterations] The number of iterations to perform. Default: 5000.
-         * @param {HashCallback} [callback] If defined, an async call is made that the result is passed to this when
-         *      completed. If undefined, a sync call is made instead.
-         * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
-         *      encoded result.
-         */
-        static __pbkdf2_sha256(
-            message,
-            salt,
-            to_hex,
-            message_is_hex = undefined,
-            salt_is_hex = undefined,
-            key_length = 32,
-            iterations = 5000,
-            callback = undefined
-        ) {
-            return _discordCrypt.__pbkdf2(
-                message,
-                salt,
-                to_hex,
-                message_is_hex,
-                salt_is_hex,
-                callback,
-                'sha256',
-                key_length,
-                iterations
-            );
-        }
-
-        /**
-         * @public
-         * @desc Computes a derived digest using the PBKDF2 algorithm and SHA-512 as primitives.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {Buffer|Array|string} salt The random salting input used with the message.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {int} [key_length] The desired key length size in bytes. Default: 32.
-         * @param {int} [iterations] The number of iterations to perform. Default: 5000.
-         * @param {HashCallback} [callback] If defined, an async call is made that the result is passed to this when
-         *      completed. If undefined, a sync call is made instead.
-         * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
-         *      encoded result.
-         */
-        static __pbkdf2_sha512(
-            message,
-            salt,
-            to_hex,
-            message_is_hex = undefined,
-            salt_is_hex = undefined,
-            key_length = 32,
-            iterations = 5000,
-            callback = undefined
-        ) {
-            return _discordCrypt.__pbkdf2(
-                message,
-                salt,
-                to_hex,
-                message_is_hex,
-                salt_is_hex,
-                callback,
-                'sha512',
-                key_length,
-                iterations
-            );
-        }
-
-        /**
-         * @public
-         * @desc Computes a derived digest using the PBKDF2 algorithm and Whirlpool-512 as primitives.
-         * @param {Buffer|Array|string} message The input message to hash.
-         * @param {Buffer|Array|string} salt The random salting input used with the message.
-         * @param {boolean} to_hex Whether to convert the result to hex or Base64.
-         * @param {boolean} [message_is_hex] Whether to treat the message as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {boolean} [salt_is_hex] Whether to treat the salt as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {int} [key_length] The desired key length size in bytes. Default: 32.
-         * @param {int} [iterations] The number of iterations to perform. Default: 5000.
-         * @param {HashCallback} [callback] If defined, an async call is made that the result is passed to this when
-         *      completed. If undefined, a sync call is made instead.
-         * @returns {string|null} If a callback is defined, this returns nothing else it returns either a Base64 or hex
-         *      encoded result.
-         */
-        static __pbkdf2_whirlpool(
-            message,
-            salt,
-            to_hex,
-            message_is_hex = undefined,
-            salt_is_hex = undefined,
-            key_length = 32,
-            iterations = 5000,
-            callback = undefined
-        ) {
-            return _discordCrypt.__pbkdf2(
-                message,
-                salt,
-                to_hex,
-                message_is_hex,
-                salt_is_hex,
-                callback,
-                'whirlpool',
-                key_length,
-                iterations
-            );
-        }
-
 
         /**
          * @public
@@ -7579,7 +7313,6 @@ const discordCrypt = ( () => {
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
          * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
          *      Key used to encrypt the message.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
@@ -7590,8 +7323,7 @@ const discordCrypt = ( () => {
             padding_mode,
             to_hex = false,
             is_message_hex = undefined,
-            one_time_salt = undefined,
-            kdf_iteration_rounds = 1000
+            one_time_salt = undefined
         ) {
             /* Size constants for Blowfish. */
             const keySize = 512, blockSize = 64;
@@ -7607,8 +7339,7 @@ const discordCrypt = ( () => {
                 is_message_hex,
                 keySize,
                 blockSize,
-                one_time_salt,
-                kdf_iteration_rounds
+                one_time_salt
             );
         }
 
@@ -7625,7 +7356,6 @@ const discordCrypt = ( () => {
          *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
          * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
@@ -7636,8 +7366,7 @@ const discordCrypt = ( () => {
             cipher_mode,
             padding_mode,
             output_format = 'utf8',
-            is_message_hex = undefined,
-            kdf_iteration_rounds = 1000
+            is_message_hex = undefined
         ) {
             /* Size constants for Blowfish. */
             const keySize = 512, blockSize = 64;
@@ -7652,8 +7381,7 @@ const discordCrypt = ( () => {
                 output_format,
                 is_message_hex,
                 keySize,
-                blockSize,
-                kdf_iteration_rounds
+                blockSize
             );
         }
 
@@ -7672,7 +7400,6 @@ const discordCrypt = ( () => {
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
          * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
          *      Key used to encrypt the message.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
@@ -7683,8 +7410,7 @@ const discordCrypt = ( () => {
             padding_mode,
             to_hex = false,
             is_message_hex = undefined,
-            one_time_salt = undefined,
-            kdf_iteration_rounds = 1000
+            one_time_salt = undefined
         ) {
             /* Size constants for AES-256. */
             const keySize = 256, blockSize = 128;
@@ -7700,8 +7426,7 @@ const discordCrypt = ( () => {
                 is_message_hex,
                 keySize,
                 blockSize,
-                one_time_salt,
-                kdf_iteration_rounds
+                one_time_salt
             );
         }
 
@@ -7718,7 +7443,6 @@ const discordCrypt = ( () => {
          *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
          * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
@@ -7729,8 +7453,7 @@ const discordCrypt = ( () => {
             cipher_mode,
             padding_mode,
             output_format = 'utf8',
-            is_message_hex = undefined,
-            kdf_iteration_rounds = 1000
+            is_message_hex = undefined
         ) {
             /* Size constants for AES-256. */
             const keySize = 256, blockSize = 128;
@@ -7745,8 +7468,7 @@ const discordCrypt = ( () => {
                 output_format,
                 is_message_hex,
                 keySize,
-                blockSize,
-                kdf_iteration_rounds
+                blockSize
             );
         }
 
@@ -7766,7 +7488,6 @@ const discordCrypt = ( () => {
          *      authentication.
          * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
          *      Key used to encrypt the message.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
@@ -7777,8 +7498,7 @@ const discordCrypt = ( () => {
             to_hex = false,
             is_message_hex = undefined,
             additional_data = undefined,
-            one_time_salt = undefined,
-            kdf_iteration_rounds = 1000
+            one_time_salt = undefined
         ) {
             const block_cipher_size = 128, key_size_bits = 256;
             const cipher_name = 'aes-256-gcm';
@@ -7803,7 +7523,10 @@ const discordCrypt = ( () => {
 
                 /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
                 if ( _salt.length !== 8 )
-                    _salt = Buffer.from( _discordCrypt.__whirlpool64( _salt, true ), 'hex' );
+                    _salt = Buffer.from(
+                        global.sha3.sha3_256( _salt ).slice( 0, 16 ),
+                        'hex'
+                    );
             }
             else {
                 /* Generate a random salt to derive the key and IV. */
@@ -7811,8 +7534,15 @@ const discordCrypt = ( () => {
             }
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
-                ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+            _derived = Buffer.from(
+                global.sha3.kmac_256(
+                    _key,
+                    _salt,
+                    block_cipher_size + key_size_bits,
+                    ENCRYPT_PARAMETER
+                ),
+                'hex'
+            );
 
             /* Slice off the IV. */
             _iv = _derived.slice( 0, block_cipher_size / 8 );
@@ -7854,7 +7584,6 @@ const discordCrypt = ( () => {
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
          * @param {string|Buffer|Array} [additional_data] If specified, this additional data is used during GCM
          *      authentication.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
@@ -7865,8 +7594,7 @@ const discordCrypt = ( () => {
             padding_mode,
             output_format = 'utf8',
             is_message_hex = undefined,
-            additional_data = undefined,
-            kdf_iteration_rounds = 1000
+            additional_data = undefined
         ) {
             const block_cipher_size = 128, key_size_bits = 256;
             const cipher_name = 'aes-256-gcm';
@@ -7894,8 +7622,15 @@ const discordCrypt = ( () => {
             _message = _message.slice( 8 );
 
             /* Derive the key length and IV length. */
-            _derived = _discordCrypt.__pbkdf2_sha256( _key.toString( 'hex' ), _salt.toString( 'hex' ), true, true, true,
-                ( block_cipher_size / 8 ) + ( key_size_bits / 8 ), kdf_iteration_rounds );
+            _derived = Buffer.from(
+                global.sha3.kmac_256(
+                    _key,
+                    _salt,
+                    block_cipher_size + key_size_bits,
+                    ENCRYPT_PARAMETER
+                ),
+                'hex'
+            );
 
             /* Slice off the IV. */
             _iv = _derived.slice( 0, block_cipher_size / 8 );
@@ -7942,7 +7677,6 @@ const discordCrypt = ( () => {
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
          * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
          *      Key used to encrypt the message.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
@@ -7953,8 +7687,7 @@ const discordCrypt = ( () => {
             padding_mode,
             to_hex = false,
             is_message_hex = undefined,
-            one_time_salt = undefined,
-            kdf_iteration_rounds = 1000
+            one_time_salt = undefined
         ) {
             /* Size constants for Camellia-256. */
             const keySize = 256, blockSize = 128;
@@ -7970,8 +7703,7 @@ const discordCrypt = ( () => {
                 is_message_hex,
                 keySize,
                 blockSize,
-                one_time_salt,
-                kdf_iteration_rounds
+                one_time_salt
             );
         }
 
@@ -7988,7 +7720,6 @@ const discordCrypt = ( () => {
          *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
          * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
@@ -7999,8 +7730,7 @@ const discordCrypt = ( () => {
             cipher_mode,
             padding_mode,
             output_format = 'utf8',
-            is_message_hex = undefined,
-            kdf_iteration_rounds = 1000
+            is_message_hex = undefined
         ) {
             /* Size constants for Camellia-256. */
             const keySize = 256, blockSize = 128;
@@ -8015,8 +7745,7 @@ const discordCrypt = ( () => {
                 output_format,
                 is_message_hex,
                 keySize,
-                blockSize,
-                kdf_iteration_rounds
+                blockSize
             );
         }
 
@@ -8035,7 +7764,6 @@ const discordCrypt = ( () => {
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
          * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
          *      Key used to encrypt the message.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
@@ -8046,8 +7774,7 @@ const discordCrypt = ( () => {
             padding_mode,
             to_hex = false,
             is_message_hex = undefined,
-            one_time_salt = undefined,
-            kdf_iteration_rounds = 1000
+            one_time_salt = undefined
         ) {
             /* Size constants for TripleDES-192. */
             const keySize = 192, blockSize = 64;
@@ -8063,8 +7790,7 @@ const discordCrypt = ( () => {
                 is_message_hex,
                 keySize,
                 blockSize,
-                one_time_salt,
-                kdf_iteration_rounds
+                one_time_salt
             );
         }
 
@@ -8081,7 +7807,6 @@ const discordCrypt = ( () => {
          *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
          * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
@@ -8092,8 +7817,7 @@ const discordCrypt = ( () => {
             cipher_mode,
             padding_mode,
             output_format = 'utf8',
-            is_message_hex = undefined,
-            kdf_iteration_rounds = 1000
+            is_message_hex = undefined
         ) {
             /* Size constants for TripleDES-192. */
             const keySize = 192, blockSize = 64;
@@ -8108,8 +7832,7 @@ const discordCrypt = ( () => {
                 output_format,
                 is_message_hex,
                 keySize,
-                blockSize,
-                kdf_iteration_rounds
+                blockSize
             );
         }
 
@@ -8128,7 +7851,6 @@ const discordCrypt = ( () => {
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
          * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
          *      Key used to encrypt the message.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
          * @throws An exception indicating the error that occurred.
          */
@@ -8139,8 +7861,7 @@ const discordCrypt = ( () => {
             padding_mode,
             to_hex = false,
             is_message_hex = undefined,
-            one_time_salt = undefined,
-            kdf_iteration_rounds = 1000
+            one_time_salt = undefined
         ) {
             /* Size constants for IDEA-128. */
             const keySize = 128, blockSize = 64;
@@ -8156,8 +7877,7 @@ const discordCrypt = ( () => {
                 is_message_hex,
                 keySize,
                 blockSize,
-                one_time_salt,
-                kdf_iteration_rounds
+                one_time_salt
             );
         }
 
@@ -8174,7 +7894,6 @@ const discordCrypt = ( () => {
          *      This can be either: [ 'hex', 'base64', 'latin1', 'utf8' ].
          * @param {boolean} [is_message_hex] If true, the message is treated as a hex string, if false, it is treated as
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
-         * @param {int} [kdf_iteration_rounds] The number of rounds used to derive the actual key and IV via sha256.
          * @returns {string|null} Returns a string of the desired format containing the plaintext or null if the chosen
          *      options are invalid.
          * @throws Exception indicating the error that occurred.
@@ -8185,8 +7904,7 @@ const discordCrypt = ( () => {
             cipher_mode,
             padding_mode,
             output_format = 'utf8',
-            is_message_hex = undefined,
-            kdf_iteration_rounds = 1000
+            is_message_hex = undefined
         ) {
             /* Size constants for IDEA-128. */
             const keySize = 128, blockSize = 64;
@@ -8201,8 +7919,7 @@ const discordCrypt = ( () => {
                 output_format,
                 is_message_hex,
                 keySize,
-                blockSize,
-                kdf_iteration_rounds
+                blockSize
             );
         }
 
