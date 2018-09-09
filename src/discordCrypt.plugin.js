@@ -1230,7 +1230,7 @@ const discordCrypt = ( () => {
 
                         /* Alert the user of the update and changelog. */
                         $( '#dc-overlay' ).css( 'display', 'block' );
-                        $( '#dc-update-overlay' ).css( 'display', 'block' );
+                        $( '#dc-overlay-update' ).css( 'display', 'block' );
 
                         /* Update the version info. */
                         $( '#dc-new-version' ).text(
@@ -3414,7 +3414,7 @@ const discordCrypt = ( () => {
 
             /* Hide the update and changelog. */
             $( '#dc-overlay' ).css( 'display', 'none' );
-            $( '#dc-update-overlay' ).css( 'display', 'none' );
+            $( '#dc-overlay-update' ).css( 'display', 'none' );
         }
 
         /**
@@ -3439,7 +3439,7 @@ const discordCrypt = ( () => {
 
             /* Hide the update and changelog. */
             $( '#dc-overlay' ).css( 'display', 'none' );
-            $( '#dc-update-overlay' ).css( 'display', 'none' );
+            $( '#dc-overlay-update' ).css( 'display', 'none' );
         }
 
         /**
