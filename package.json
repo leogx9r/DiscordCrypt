@@ -1,20 +1,24 @@
 {
   "name": "discordcrypt",
-  "version": "1.0.0",
-  "description": "Secure messaging for the Discord app.",
+  "version": "2.0.0",
+  "description": "End To End File & Message Encryption For The Discord Client",
   "repository": "https://gitlab.com/leogx9r/DiscordCrypt",
-  "main": "",
+  "main": "build/discordCrypt.plugin.js",
   "scripts": {
     "build": "node src/build.js -o build",
+    "build_signed": "node src/build.js -o build -s B8EC0775960AEB2E4C11F084DA613E753787CE3F -c",
+
     "coverage": "npm run build && node node_modules/.bin/istanbul cover tests/perform-tests.js coverage",
+
+    "test": "npm run build && node tests/perform-tests.js",
+    "test_hash": "npm run build && node tests/perform-tests.js hash",
     "test_scrypt": "npm run build && node tests/perform-tests.js scrypt",
-    "test_pbkdf2": "npm run build && node tests/perform-tests.js pbkdf2",
     "test_ciphers": "npm run build && node tests/perform-tests.js cipher",
     "test_general": "npm run build && node tests/perform-tests.js general",
-    "test_exchange": "npm run build && node tests/perform-tests.js exchange",
-    "test": "npm run build && node tests/perform-tests.js"
+    "test_encoding": "npm run build && node tests/perform-tests.js encoding",
+    "test_exchange": "npm run build && node tests/perform-tests.js exchange"
   },
-  "author": "Leonardo Gates",
+  "author": "leogx9r",
   "license": "MIT",
   "dependencies": {
     "crypto": "^1.0.1",
