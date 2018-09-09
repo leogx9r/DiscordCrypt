@@ -834,15 +834,6 @@ const discordCrypt = ( () => {
             _discordCrypt.__loadLibraries();
         }
 
-        /**
-         * @public
-         * @desc Triggered when the script needs to unload its resources. This is called during Discord shutdown.
-         */
-        unload() {
-            /* Clear the injected CSS. */
-            _discordCrypt._clearCSS( 'dc-css' );
-        }
-
         /* ========================================================= */
 
         /* ================= CONFIGURATION DATA CBS ================ */
