@@ -32,7 +32,7 @@ class testGenerator {
         this.crypto = require( 'crypto' );
         this.discordCrypt = require( '../build/discordCrypt.plugin.js' ).discordCrypt;
         this.discordCrypt_instance = new ( this.discordCrypt )();
-        this.cipherModeCount = this.discordCrypt_instance._encryptModes.length;
+        this.cipherModeCount = 25;
 
         this.ciphers = [
             {
@@ -262,39 +262,24 @@ class testGenerator {
         let unit_tests = [];
         const hash_list = [
             {
-                name: 'sha1',
-                length: 20,
-                hash: this.discordCrypt.__sha160,
+                name: 'sha3-224',
+                length: 28,
+                hash: global.sha3.sha3_224,
             },
             {
-                name: 'sha256',
+                name: 'sha3-256',
                 length: 32,
-                hash: this.discordCrypt.__sha256,
+                hash: global.sha3.sha3_256,
             },
             {
-                name: 'sha512',
+                name: 'sha3-384',
+                length: 48,
+                hash: global.sha3.sha3_384,
+            },
+            {
+                name: 'sha3-512',
                 length: 64,
-                hash: this.discordCrypt.__sha512,
-            },
-            {
-                name: 'sha512_128',
-                length: 16,
-                hash: this.discordCrypt.__sha512_128,
-            },
-            {
-                name: 'whirlpool',
-                length: 64,
-                hash: this.discordCrypt.__whirlpool,
-            },
-            {
-                name: 'whirlpool64',
-                length: 8,
-                hash: this.discordCrypt.__whirlpool64,
-            },
-            {
-                name: 'whirlpool192',
-                length: 24,
-                hash: this.discordCrypt.__whirlpool192,
+                hash: global.sha3.sha3_512,
             }
         ];
 
@@ -310,7 +295,7 @@ class testGenerator {
 
                 unit_tests[ i ].tests[ j ] = {};
                 unit_tests[ i ].tests[ j ].input = input.toString( 'hex' );
-                unit_tests[ i ].tests[ j ].output = hash_list[ i ].hash( input, true );
+                unit_tests[ i ].tests[ j ].output = hash_list[ i ].hash( input );
             }
         }
 
@@ -432,3 +417,11 @@ class testGenerator {
 }
 
 module.exports = { testGenerator };
+
+let generator = new testGenerator();
+generator.generateSJCLTests();
+generator.generateSJCLTests()
+generator.generateCipherTests();
+generator.generateFullEncryptionTests();
+generator.generateHashTests();
+

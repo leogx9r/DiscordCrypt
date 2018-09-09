@@ -96,17 +96,9 @@ class testRunner {
                 /* Run Scrypt tests. */
                 this.addScryptTests( unit_tests );
                 break;
-            case 'pbkdf2':
-                /* Run PBKDF2 tests. */
-                this.addPBKDF2Tests( unit_tests );
-                break;
             case 'hash':
                 /* Run hash tests. */
                 this.addHashTests( unit_tests );
-                break;
-            case 'hmac':
-                /* Run HMAC tests. */
-                this.addHMACTests( unit_tests );
                 break;
             case 'cipher':
                 /* Run cipher tests. */
@@ -131,14 +123,8 @@ class testRunner {
                 /* Run one Scrypt test. */
                 this.addScryptTests( unit_tests, true );
 
-                /* Run a single Hash/PBKDF2 test of each type. */
-                this.addPBKDF2Tests( unit_tests, true );
-
                 /* Run hash tests. */
                 this.addHashTests( unit_tests, true );
-
-                /* Run HMAC tests. */
-                this.addHMACTests( unit_tests, true );
 
                 /* Run only a single test of each cipher type. */
                 this.addCipherTests( unit_tests, undefined, true );
@@ -161,14 +147,8 @@ class testRunner {
             /* Run Scrypt tests. */
             this.addScryptTests( unit_tests );
 
-            /* Run Hash/PBKDF2 tests. */
-            this.addPBKDF2Tests( unit_tests );
-
             /* Run hash tests. */
             this.addHashTests( unit_tests );
-
-            /* Run HMAC tests. */
-            this.addHMACTests( unit_tests );
 
             /* Run cipher tests. */
             this.addCipherTests( unit_tests );
@@ -230,76 +210,6 @@ class testRunner {
     }
 
     /**
-     * @desc Adds PBKDF2() based tests to the array specified.
-     * @param {Array} unit_tests An array of unit tests to run.
-     * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
-     */
-    addPBKDF2Tests( unit_tests, coverage ) {
-
-        /* Load the test units. */
-        const hash_vectors = require( './vectors/pbkdf2-test-vectors.json' );
-        const hash_list = [
-            {
-                name: 'sha1',
-                length: 20,
-                fn: this.discordCrypt.__pbkdf2_sha160
-            },
-            {
-                name: 'sha256',
-                length: 32,
-                fn: this.discordCrypt.__pbkdf2_sha256
-            },
-            {
-                name: 'sha512',
-                length: 64,
-                fn: this.discordCrypt.__pbkdf2_sha512
-            },
-            {
-                name: 'whirlpool',
-                length: 64,
-                fn: this.discordCrypt.__pbkdf2_whirlpool
-            }
-        ];
-
-        /* Prepare the unit tests. */
-        unit_tests.discordCrypt_pbkdf2 = {};
-
-        /**
-         * @desc Adds the given PBKDF2 class of tests to the array.
-         * @param {testRunner} instance A reference to the current implementation of the test runner.
-         * @param {string} name The name of the hash class to run.
-         * @param {int} hash_size The size of the hash generated in bytes.
-         * @param {function} fn The PBKDF2 function for this hash.
-         * @param {Array} v The array of test vectors to run for this hash function.
-         */
-        function prepare_run( instance, name, hash_size, fn, v ) {
-            for ( let i = 0; i < ( coverage === undefined ? v.length : 1 ); i++ ) {
-                let format =
-                    `${name}: Test #${Object.keys( unit_tests.discordCrypt_pbkdf2 ).length}`;
-
-                unit_tests.discordCrypt_pbkdf2[ format ] = ( ut ) => {
-                    let hash = fn(
-                        new Buffer( v[ i ].password, 'utf8' ),
-                        new Buffer( v[ i ].salt, 'utf8' ),
-                        true,
-                        undefined,
-                        undefined,
-                        hash_size,
-                        v[ i ].iterations
-                    );
-
-                    ut.equal( hash, v[ i ][ name ], `Hash mismatch for ${name}.` );
-                    ut.done();
-                };
-            }
-        }
-
-        /* Register all tests. */
-        for ( let i = 0; i < hash_list.length; i++ )
-            prepare_run( this, hash_list[ i ].name, hash_list[ i ].length, hash_list[ i ].fn, hash_vectors );
-    }
-
-    /**
      * @desc Adds hash based tests to the array specified.
      * @param {Array} unit_tests An array of unit tests to run.
      * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
@@ -308,41 +218,27 @@ class testRunner {
 
         /* Load the test units. */
         const hash_vectors = require( './vectors/hash-test-vectors.json' );
+
         const hash_list = [
             {
-                name: 'sha1',
-                length: 20,
-                hash: this.discordCrypt.__sha160,
+                name: 'sha3-224',
+                length: 28,
+                hash: global.sha3.sha3_224,
             },
             {
-                name: 'sha256',
+                name: 'sha3-256',
                 length: 32,
-                hash: this.discordCrypt.__sha256,
+                hash: global.sha3.sha3_256,
             },
             {
-                name: 'sha512',
+                name: 'sha3-384',
+                length: 48,
+                hash: global.sha3.sha3_384,
+            },
+            {
+                name: 'sha3-512',
                 length: 64,
-                hash: this.discordCrypt.__sha512,
-            },
-            {
-                name: 'sha512_128',
-                length: 16,
-                hash: this.discordCrypt.__sha512_128,
-            },
-            {
-                name: 'whirlpool',
-                length: 64,
-                hash: this.discordCrypt.__whirlpool,
-            },
-            {
-                name: 'whirlpool64',
-                length: 8,
-                hash: this.discordCrypt.__whirlpool64,
-            },
-            {
-                name: 'whirlpool192',
-                length: 24,
-                hash: this.discordCrypt.__whirlpool192,
+                hash: global.sha3.sha3_512,
             }
         ];
 
@@ -375,73 +271,6 @@ class testRunner {
                 unit_tests.discordCrypt_hash[ format ] = ( ut ) => {
                     let hash = hash_algorithm(
                         new Buffer( v[ j ].input, 'hex' ),
-                        true,
-                    );
-
-                    ut.equal( hash, v[ j ].output, `Hash mismatch for ${name}.` );
-                    ut.done();
-                };
-            }
-        }
-    }
-
-    /**
-     * @desc Adds HMAC based tests to the array specified.
-     * @param {Array} unit_tests An array of unit tests to run.
-     * @param {boolean} coverage If enabled, only a single test is run. For coverage generation only.
-     */
-    addHMACTests( unit_tests, coverage ) {
-
-        /* Load the test units. */
-        const hash_vectors = require( './vectors/hmac-test-vectors.json' );
-        const hmac_list = [
-            {
-                name: 'hmac_sha256',
-                length: 32,
-                hash: this.discordCrypt.__hmac_sha256,
-            },
-            {
-                name: 'hmac_sha512',
-                length: 64,
-                hash: this.discordCrypt.__hmac_sha512,
-            },
-            {
-                name: 'hmac_whirlpool',
-                length: 64,
-                hash: this.discordCrypt.__hmac_whirlpool,
-            }
-        ];
-
-        /* Prepare the unit tests. */
-        unit_tests.discordCrypt_hmac = {};
-
-        /**
-         * @desc Finds the HMAC algorithm used for the given hash name.
-         * @param {string} name The name of the hash algorithm.
-         * @returns {function} The hash function used for this hash name.
-         */
-        function find_hmac_algorithm( name ) {
-            for ( let i = 0; i < hmac_list.length; i++ )
-                if ( name == hmac_list[ i ].name )
-                    return hmac_list[ i ].hash;
-            return null;
-        }
-
-        /* Register all tests types. */
-        for ( let i = 0; i < hash_vectors.length; i++ ) {
-            let name = hash_vectors[ i ].name;
-            let hash_algorithm = find_hmac_algorithm( name );
-            let v = hash_vectors[ i ].tests;
-
-            /* Run each test. */
-            for ( let j = 0; j < ( coverage === undefined ? v.length : 1 ); j++ ) {
-                let format =
-                    `${name}: Test #${Object.keys( unit_tests.discordCrypt_hmac ).length}`;
-
-                unit_tests.discordCrypt_hmac[ format ] = ( ut ) => {
-                    let hash = hash_algorithm(
-                        new Buffer( v[ j ].input, 'hex' ),
-                        new Buffer( v[ j ].salt, 'hex' ),
                         true,
                     );
 
