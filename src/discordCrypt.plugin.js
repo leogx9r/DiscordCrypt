@@ -149,6 +149,7 @@
  * @property {Array<TimedMessage>} timedMessages Contains all logged timed messages pending deletion.
  * @property {number} timedMessageExpires How long after a message is sent should it be deleted in seconds.
  * @property {boolean} automaticUpdates Whether to automatically check for updates.
+ * @property {boolean} autoAcceptKeyExchanges Whether to automatically accept incoming key exchange requests.
  * @property {Array<UpdateInfo>} blacklistedUpdates Updates to ignore due to being blacklisted.
  * @property {ChannelInfo} channels Specific data per channel.
  */
@@ -853,6 +854,8 @@ const discordCrypt = ( () => {
          */
         static _getDefaultConfig() {
             return {
+                /* Whether to automatically accept incoming key exchanges. */
+                autoAcceptKeyExchanges: true,
                 /* Automatically check for updates. */
                 automaticUpdates: true,
                 /* Blacklisted updates. */
@@ -1321,6 +1324,7 @@ const discordCrypt = ( () => {
             /* Update all settings from the settings panel. */
             $( '#dc-secondary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
             $( '#dc-primary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
+            $( '#dc-auto-accept-keys' ).prop( 'checked', _configFile.autoAcceptKeyExchanges );
             $( '#dc-settings-cipher-mode' ).val( _configFile.encryptBlockMode.toLowerCase() );
             $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
             $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
@@ -3271,7 +3275,8 @@ const discordCrypt = ( () => {
 
             /* Update all settings from the settings panel. */
             _configFile.timedMessageExpires = parseInt( $( '#dc-settings-timed-expire' ).val() );
-            _configFile.exchangeBitSize = parseInt( $( '#dc-setting-exchange-mode' ).val() );
+            _configFile.autoAcceptKeyExchanges = $( '#dc-auto-accept-keys' ).is( ':checked' );
+            _configFile.exchangeBitSize = parseInt( $( '#dc-settings-exchange-mode' ).val() );
             _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
             _configFile.decryptedPrefix = $( '#dc-settings-decrypted-prefix' ).val();
             _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
@@ -3355,6 +3360,7 @@ const discordCrypt = ( () => {
             /* Update all settings from the settings panel. */
             $( '#dc-secondary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, true ) );
             $( '#dc-primary-cipher' ).val( _discordCrypt.__cipherIndexToString( _configFile.encryptMode, false ) );
+            $( '#dc-auto-accept-keys' ).prop( 'checked', _configFile.autoAcceptKeyExchanges );
             $( '#dc-settings-cipher-mode' ).val( _configFile.encryptBlockMode.toLowerCase() );
             $( '#dc-settings-padding-mode' ).val( _configFile.paddingMode.toLowerCase() );
             $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
