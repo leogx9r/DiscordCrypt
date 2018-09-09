@@ -15,7 +15,6 @@
         * [*Diffie-Hellman*](#diffie-hellman)
         * [*Elliptic Curve Diffie-Hellman*](#elliptic-curve-diffie-hellman)
     * [***Hash Algorithms***](#hash-algorithms)
-        * [*Native Hash Algorithms*](#native-hash-algorithms)
         * [*Scrypt Hashing Algorithm*](#scrypt-hashing-algorithm)
         * [*SHA3 Hashing Algorithm*](#sha3-hashing-algorithm)
 * [**Message Format**](#message-format)
@@ -67,6 +66,7 @@ Every algorithm used in this plugin is directly provided by NodeJS. The only thi
 
 * [OpenPGP.js](https://openpgpjs.org) ( License: [LGPL](https://www.gnu.org/copyleft/lesser.html) )
 * [SJCL](https://crypto.stanford.edu/sjcl) ( License: [BSD](https://opensource.org/licenses/BSD-2-Clause) )
+* [SIDH.js](https://github.com/cyph/sidh.js) ( License: [MIT](https://opensource.org/licenses/MIT) )
 * [Currify](https://www.npmjs.com/package/currify) ( License: [MIT](https://opensource.org/licenses/MIT) )
 * [JS-SHA3](https://www.npmjs.com/package/js-sha3) ( License: [MIT](https://opensource.org/licenses/MIT) )
 * [Smalltalk](https://www.npmjs.com/package/smalltalk) ( License: [MIT](https://opensource.org/licenses/MIT) )
@@ -305,23 +305,18 @@ Please see [here](http://www.secg.org/sec2-v2.pdf) for more information on curve
 For information regarding the specifics of Curve25519, see its introductory paper 
     [here](https://cr.yp.to/ecdh/curve25519-20060209.pdf).
 
+With the advancements of quantum computers, the need for 
+    [Post-Quantum Cryptography](https://en.wikipedia.org/wiki/Post-quantum_cryptography) is actively 
+    being explored. At this time, we're looking into implementing the quantum-resistant elliptic curve 
+    handshake known as 
+    "[Supersingular Isogeny Diffie-Hellman](https://en.wikipedia.org/wiki/Supersingular_isogeny_key_exchange)"
+
+While this is not immediately available, it is actively being worked on.
+
 #### Hash Algorithms
 
-A variety of one-way hash functions are supported by **DiscordCrypt**. With the exception of 
-    the [Scrypt](#scrypt-hashing-algorithm) and [SHA3](https://en.wikipedia.org/wiki/SHA-3) methods, 
-    all functions are implemented internally via NodeJS.
-    
-##### Native Hash Algorithms
-
-The following algorithms are natively supported and used:
-
-* Whirlpool ( 512 Bits )
-* SHA2-160 ( 160 Bits )
-* SHA2-256 ( 256 Bits )
-* SHA2-512 ( 512 Bits )
-* HMAC ( SHA2-256, SHA2-512, Whirlpool )
-
-These algorithms are mainly used for compressing input entropy into sizes required by a cipher.
+**DiscordCrypt** internally uses the `scrypt` hashing method for deriving keys from passwords and SHA3 
+    for other requirements.
 
 ##### Scrypt Hashing Algorithm
 
@@ -440,6 +435,8 @@ Additionally, the Keccak ( SHA3 ) family also has a
     this library under the name of KMAC ( Keccak-MAC ) providing authentication tags of either 
     128 bits or 256-bits.
 
+Internally, the KMAC method is used mainly to derive encryption keys for ciphers by combining the 
+    password with a 64 bit unique salt.
 
 ### Meta Data Encoding
 
@@ -517,9 +514,9 @@ A user message is expressed in the following format:
 
 #### User Message Authentication
 
-All user messages contain a [HMAC](https://en.wikipedia.org/wiki/HMAC) tag prepended to it.
+All user messages contain a [KMAC](https://en.wikipedia.org/wiki/HMAC) tag prepended to it.
 
-This HMAC uses SHA-256 along with the primary message key to form a hash of the outer 
+This KMAC uses SHA3 along with the primary message key to form a hash of the outer 
     ciphertext of the message.
 
 This is prepended such that the variable length message now follows the following format:
@@ -588,8 +585,7 @@ return Array.from(
 Encryption and decryption follows [OpenSSL](https://en.wikipedia.org/wiki/OpenSSL)'s 
     method of deriving keys.
 
-A random 64-bit salt is generated and is used in conjunction with an SHA-256 based PBKDF 
-    over 1000 rounds to generate a unique 
+A random 64-bit salt is generated and is used in conjunction with a `KMAC` to generate a unique 
     [Initialization Vector](https://en.wikipedia.org/wiki/Initialization_vector) and 
     a derived encryption key.
 
@@ -771,7 +767,7 @@ That is:
 - `script_password = scrypt( input: password, salt: whirlpool_hash( password ), N: 4096, r: 8, p: 1, dkLen: 32 )`
 - `random_salt = crypto.randomBytes( size: 8 )`
 - `derived_length = aes_block_size + aes_256_key_size`
-- `derived_string = PBKF2_SHA256( input: scrypt_password, salt: random_salt, length: derived_length, iterations: 1000 )`
+- `derived_string = SHA3_KMAC( input: scrypt_password, salt: random_salt, length: derived_length )`
 - `derived_iv = derived_string.slice( 0, aes_block_size )`
 - `derived_key = derived_string.slice( aes_block_size )`
 
@@ -804,7 +800,7 @@ return _ct.toString('base64');
 During decryption, the authentication tag is stripped off as well as the random salt.
 
 The `scrypt` derived password is then used with the one-time salt to derive a `key` and 
-    `iv` using the same `PBKDF-SHA256` process.
+    `iv` using the same `SHA3_KMAC` process.
 
 Finally, the authentication tag is assigned to `GCM` and verified which either throws an 
     error if message authentication fails or returns the plaintext message.
@@ -830,10 +826,12 @@ The way these keys are produced follows:
 * Derive a shared secret using the Diffie-Hellman algorithm.
 * Extract both salts attached to each public key message.
 * Choose a primary salt by checking which salt is larger than the other.
+* Define KMAC parameters used for key derivation as:
+    * `discordCrypt-primary-secret` & `discordCrypt-secondary-secret`
 * Calculate the primary key as:
-    * `PrimaryKey = Base64Encode( Scrypt( Input: SharedSecret + Whirlpool( SecondarySalt ), Salt: SHA512( PrimarySalt ), dkLen: 256, N: 3072, r: 16, p: 2 ) )`
+    * `PrimaryKey = Base64Encode( KMAC( PrimarySalt, DerivedSecret, 2048, KMAC_PRIMARY_PARAM ) )`
 * Calculate the secondary key as:
-    * `SecondaryKey = Base64Encode( Scrypt( Input: PrimarySalt + SharedSecret + SecondarySalt, Salt: Whirlpool( SecondarySalt ), dkLen: 256, N: 3072, r: 8, p: 1 ) )`
+    * `SecondaryKey = Base64Encode( KMAC( SecondarySalt, DerivedSecret, 2048, KMAC_SECONDARY_PARAM ) )`
 
 These steps generate two keys containing roughly `2000` bits of 
     [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)), which is 
