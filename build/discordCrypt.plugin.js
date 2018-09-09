@@ -1951,7 +1951,7 @@ const discordCrypt = ( () => {
 
             /* Sanity check for invalid key messages. */
             if ( remoteKeyInfo === null )
-                return '🚫 **[ ERROR ]** *INVALID PUBLIC KEY* !!!';
+                return '🚫 **[ ERROR ]** `INVALID PUBLIC KEY !!!`';
 
             /* Validate functions. */
             if(
@@ -1960,13 +1960,13 @@ const discordCrypt = ( () => {
                 typeof _cachedModules.UserStore.getUser !== 'function' ||
                 typeof _cachedModules.ChannelStore.getChannels !== 'function'
             )
-                return '🚫 **[ ERROR ]** *CANNOT RESOLVE DEPENDENCY MODULE* !!!';
+                return '🚫 **[ ERROR ]** `CANNOT RESOLVE DEPENDENCY MODULE !!!`';
 
             /* Make sure that this key wasn't somehow sent in a guild or group DM. */
             // noinspection JSUnresolvedFunction
             let channels = _cachedModules.ChannelStore.getChannels();
             if( channels && channels[ message.channel_id ] && channels[ message.channel_id ].type !== 1 )
-                return '🚫 **[ ERROR ]** *INCOMING KEY EXCHANGE FROM A NON-DM* !!!';
+                return '🚫 **[ ERROR ]** `INCOMING KEY EXCHANGE FROM A NON-DM !!!`';
 
             /* Retrieve the current user's information. */
             // noinspection JSUnresolvedFunction
@@ -1982,20 +1982,23 @@ const discordCrypt = ( () => {
 
             /* Verify this message isn't coming from us. */
             if( message.author.id === currentUser.id ) {
+                /* By default, we use the locally defined key to retrieve the information. */
+                let k;
+
                 /* If it is, ensure we have a private key for it. */
                 if(
                     !_globalSessionState.hasOwnProperty( message.channel_id ) ||
                     !_globalSessionState[ message.channel_id ].privateKey
-                )
+                ) {
                     /* This is a local public key that has already been ACK'd. We can ignore it. */
-                    return '';
-
-                /* Extract the algorithm for logging. */
-                let algorithm = `${_globalSessionState[ message.channel_id ].localKey.algorithm.toUpperCase()}-`;
-                algorithm += `${_globalSessionState[ message.channel_id ].localKey.bit_length}`;
+                    k = remoteKeyInfo;
+                }
+                else
+                    k = _globalSessionState[ message.channel_id ].localKey;
 
                 return '🔏 **[ SESSION ]** *OUTGOING KEY EXCHANGE*\n\n' +
-                    `Algorithm: **${algorithm}**\n`;
+                    `Algorithm: **${k.algorithm.toUpperCase()}-${k.bit_length}**\n` +
+                    `Checksum: **${k.fingerprint}**`;
             }
 
             /* Be sure to add the message ID to the ignore list. */
@@ -2158,11 +2161,11 @@ const discordCrypt = ( () => {
 
             switch( dataMsg ) {
             case 1:
-                return '🚫 [ ERROR ] AUTHENTICATION OF CIPHER TEXT FAILED !!!';
+                return '🚫 **[ ERROR ]** `AUTHENTICATION OF CIPHER TEXT FAILED !!!`';
             case 2:
-                return '🚫 [ ERROR ] FAILED TO DECRYPT CIPHER TEXT !!!';
+                return '🚫 **[ ERROR ]** `FAILED TO DECRYPT CIPHER TEXT !!!`';
             default:
-                return '🚫 [ ERROR ] DECRYPTION FAILURE. INVALID KEY OR MALFORMED MESSAGE !!!';
+                return '🚫 **[ ERROR ]** `DECRYPTION FAILURE. INVALID KEY OR MALFORMED MESSAGE !!!`';
             }
         }
 
