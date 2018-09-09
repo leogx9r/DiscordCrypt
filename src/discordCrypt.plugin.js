@@ -2337,8 +2337,8 @@ const discordCrypt = ( () => {
                 }
                 catch( e ) {
                     _discordCrypt.log(
-                        `Failed to patch prototype: ${Array.isArray( name ) ? name[ 0 ] : name}\n${e}`,
-                        'error'
+                        `Failed to hook method: ${Array.isArray( name ) ? name[ 0 ] : name}\n${e}`,
+                        'warn'
                     );
                 }
             };
@@ -2363,8 +2363,8 @@ const discordCrypt = ( () => {
                 }
                 catch( e ) {
                     _discordCrypt.log(
-                        `Failed to patch property: ${Array.isArray( name ) ? name[ 0 ] : name}\n${e}`,
-                        'error'
+                        `Failed to hook method: ${Array.isArray( name ) ? name[ 0 ] : name}\n${e}`,
+                        'warn'
                     );
                 }
             };
@@ -4524,22 +4524,6 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Clears an injected element via its ID tag.
-         * @param {string} id The HTML ID string used to identify this CSS style segment.
-         * @example
-         * _clearCSS( 'my-css' );
-         */
-        static _clearCSS( id ) {
-            /* Make sure the ID is a valid string. */
-            if ( !id || typeof id !== 'string' || !id.length )
-                return;
-
-            /* Remove the element. */
-            $( `#${id.replace( /^[^a-z]+|[^\w-]+/gi, "" )}` ).remove();
-        }
-
-        /**
-         * @private
          * @author samogot
          * @desc This function monkey-patches a method on an object.
          *      The patching callback may be run before, after or instead of target method.
@@ -4608,7 +4592,7 @@ const discordCrypt = ( () => {
 
             /* Log if required. */
             if ( !silent )
-                _discordCrypt.log( `Patching ${methodName} ...` );
+                _discordCrypt.log( `Hooking ${methodName} ...` );
 
             /* Backup the original method for unpatching or restoring. */
             let origMethod = what[ methodName ];
@@ -4618,7 +4602,7 @@ const discordCrypt = ( () => {
                 if ( !forcePatch ) {
                     /* Log and bail out. */
                     _discordCrypt.log(
-                        `Can't find non-existent method '${displayName}.${methodName}' to patch.`,
+                        `Can't find non-existent method '${displayName}.${methodName}' to hook.`,
                         'error'
                     );
                     let null_fn =  () => {
@@ -4644,7 +4628,7 @@ const discordCrypt = ( () => {
             const cancel = () => {
                 /* Log if appropriate. */
                 if ( !silent )
-                    _discordCrypt.log( `Removing patched method: '${displayName}.${methodName}' ...` );
+                    _discordCrypt.log( `Unhooking method: '${displayName}.${methodName}' ...` );
 
                 /* Restore the original method thus removing the patch. */
                 what[ methodName ] = origMethod;
@@ -4653,10 +4637,7 @@ const discordCrypt = ( () => {
             /* Apply a wrapper function that calls the callbacks based on the options. */
             what[ methodName ] = function() {
                 /**
-<<<<<<< HEAD
                  * @desc Contains the local patch state for this function.
-=======
->>>>>>> hooked_message_encryption
                  * @type {PatchData}
                  */
                 const data = {
@@ -4704,9 +4685,9 @@ const discordCrypt = ( () => {
                 return data.returnValue;
             };
 
-            /* Make sure the method is marked as patched. */
+            /* Make sure the method is marked as hooked. */
             what[ methodName ].__monkeyPatched = true;
-            what[ methodName ].displayName = `patched ${what[ methodName ].displayName || methodName}`;
+            what[ methodName ].displayName = `Hooked ${what[ methodName ].displayName || methodName}`;
 
             /* Save the unhook method to the object. */
             what[ methodName ].unpatch = cancel;
@@ -4898,6 +4879,7 @@ const discordCrypt = ( () => {
                 /* Determine how to run this. */
                 if ( libInfo.requiresBrowser || libInfo.requiresNode ) {
                     /* Run in the current context as it operates on currently defined objects. */
+                    _discordCrypt.log( `Running ${name} in current VM context ...` );
                     vm.runInThisContext(
                         code,
                         {
@@ -4908,6 +4890,7 @@ const discordCrypt = ( () => {
                 }
                 else {
                     /* Run in a new sandbox and store the result in a global object. */
+                    _discordCrypt.log( `Running ${name} in isolated VM context ...` );
                     global[ name.replace( '.js', '' ) ] =
                         vm.runInNewContext(
                             code,
@@ -5661,111 +5644,6 @@ const discordCrypt = ( () => {
         /* ========================================================= */
 
         /* =================== CRYPTO PRIMITIVES =================== */
-
-        /**
-         * @public
-         * @desc Creates a hash of the specified algorithm and returns either a hex-encoded or base64-encoded digest.
-         * @param {string|Buffer|Array} message The message to perform the hash on.
-         * @param {string} algorithm The specified hash algorithm to use.
-         * @param {boolean} [to_hex] If true, converts the output to hex else it converts it to Base64.
-         * @param {boolean} hmac If this is true, an HMAC hash is created using a secret.
-         * @param {string|Buffer|Array} secret The input secret used for the creation of an HMAC object.
-         * @returns {string} Returns either a Base64 or hex string on success and an empty string on failure.
-         * @example
-         * console.log( __createHash( 'Hello World!', 'sha256', true ) );
-         * // "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
-         * @example
-         * console.log( __createHash( 'Hello World', 'sha256', true, true, 'My Secret' ) );
-         * // "852f78f917c4408000a8a94be61687865000bec5b2b77c0704dc5ad73ea06368"
-         */
-        static __createHash( message, algorithm, to_hex, hmac, secret ) {
-            try {
-                const crypto = require( 'crypto' );
-
-                /* Create the hash algorithm. */
-                const hash = hmac ? crypto.createHmac( algorithm, secret ) :
-                    crypto.createHash( algorithm );
-
-                /* Hash the data. */
-                hash.update( message );
-
-                /* Return the digest. */
-                return hash.digest( to_hex ? 'hex' : 'base64' );
-            }
-            catch ( e ) {
-                return '';
-            }
-        }
-
-        /**
-         * @public
-         * @desc Computes a key-derivation based on the PBKDF2 standard and returns a hex or base64 encoded digest.
-         * @param {string|Buffer|Array} input The input value to hash.
-         * @param {string|Buffer|Array} salt The secret value used to derive the hash.
-         * @param {boolean} [to_hex] Whether to conver the result to a hex string or a Base64 string.
-         * @param {boolean} [is_input_hex] Whether to treat the input as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {boolean} [is_salt_hex] Whether to treat the salt as a hex or Base64 string.
-         *      If undefined, it is interpreted as a UTF-8 string.
-         * @param {PBKDF2Callback} [callback] The callback function if performing an async request.
-         * @param {string} algorithm The name of the hash algorithm to use.
-         * @param {int} key_length The length of the desired key in bytes.
-         * @param {int} iterations The number of recursive iterations to use to produce the resulting hash.
-         * @returns {string} If a callback is not specified, this returns the hex or Base64 result or an empty string on
-         *      failure.
-         * @example
-         * __pbkdf2( 'Hello World!', 'Super Secret', true, undefined, undefined, undefined, 'sha256', 32, 10000 );
-         * // "89205432badb5b1e53c7bb930d428afd0f98e5702c4e549ea2da4cfefe8af254"
-         * @example
-         * __pbkdf2( 'ABC', 'Salty!', true, undefined, undefined, ( e, h ) => { console.log( `Hash: ${h}` ); },
-         *      'sha256', 32, 1000 );
-         * // Hash: f0e110b17b02006bbbcecb8eb295421c69081a6ecda75c94d55d20759dc295b1
-         */
-        static __pbkdf2( input, salt, to_hex, is_input_hex, is_salt_hex, callback, algorithm, key_length, iterations ) {
-            const crypto = require( 'crypto' );
-            let _input, _salt;
-
-            /* Convert necessary data to Buffer objects. */
-            if ( typeof input === 'object' ) {
-                if ( Buffer.isBuffer( input ) )
-                    _input = input;
-                else if ( Array.isArray )
-                    _input = Buffer.from( input );
-                else
-                    _input = Buffer
-                        .from( input, is_input_hex === undefined ? 'utf8' : is_input_hex ? 'hex' : 'base64' );
-            }
-            else if ( typeof input === 'string' )
-                _input = Buffer.from( input, 'utf8' );
-
-            if ( typeof salt === 'object' ) {
-                if ( Buffer.isBuffer( salt ) )
-                    _salt = salt;
-                else if ( Array.isArray )
-                    _salt = Buffer.from( salt );
-                else
-                    _salt = Buffer.from( salt, is_salt_hex === undefined ? 'utf8' : is_salt_hex ? 'hex' : 'base64' );
-            }
-            else if ( typeof salt === 'string' )
-                _salt = Buffer.from( salt, 'utf8' );
-
-            /* For function callbacks, use the async method else use the synchronous method. */
-            if ( typeof callback === 'function' )
-                crypto.pbkdf2( _input, _salt, iterations, key_length, algorithm, ( e, key ) => {
-                    callback( e, !e ? key.toString( to_hex ? 'hex' : 'base64' ) : '' );
-                } );
-            else
-                try {
-                    // noinspection JSUnresolvedFunction
-                    return crypto.pbkdf2Sync( _input, _salt, iterations, key_length, algorithm )
-                        .toString( to_hex ? 'hex' : 'base64' );
-                }
-                catch ( e ) {
-                    throw e;
-                }
-
-            return '';
-        }
 
         /**
          * @public
@@ -6969,9 +6847,8 @@ const discordCrypt = ( () => {
             let _in, _salt;
 
             /* PBKDF2-HMAC-SHA256 Helper. */
-            function PBKDF2_SHA256( input, salt, size, iterations ) {
-                return crypto.pbkdf2Sync( input, salt, iterations, size, 'sha256' );
-            }
+            const PBKDF2_SHA256 = ( input, salt, size, iterations ) =>
+                crypto.pbkdf2Sync( input, salt, iterations, size, 'sha256' );
 
             /**
              * @private
@@ -7001,7 +6878,7 @@ const discordCrypt = ( () => {
                      * @param {int} b The number of bits to rotate [a] to the left by.
                      * @return {number}
                      */
-                    let R = ( a, b ) => {
+                    const R = ( a, b ) => {
                         return ( a << b ) | ( a >>> ( 32 - b ) );
                     };
 
