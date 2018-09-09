@@ -610,6 +610,13 @@ const discordCrypt = ( () => {
     };
 
     /**
+     * @desc Compressed Diceware word list provided by the ETF for passphrase generation.
+     * @type {string}
+     */
+    const DICEWARE_WORD_LIST =
+        `/* ------ DICEWARE PASSPHRASE WORD LIST GOES HERE DURING COMPILATION. DO NOT REMOVE ----- */`;
+
+    /**
      * @protected
      * @class
      * @desc Main plugin prototype.
@@ -5602,6 +5609,32 @@ const discordCrypt = ( () => {
 
             /* Return the full changelog. */
             return changelog_data;
+        }
+
+        /**
+         * @private
+         * @desc Generates a passphrase using the Diceware word list modified by ETF.
+         * @see https://www.eff.org/deeplinks/2016/07/new-wordlists-random-passphrases
+         * @param {number} word_length The number of words to generate.
+         * @return {{passphrase: string, entropy: number}} Returns the passphrase and approximate entropy in bits.
+         */
+        static __generateDicewarePassphrase( word_length ) {
+            const MAX_VALUE = 7775,
+                ENTROPY_PER_WORD = Math.log2( MAX_VALUE ),
+                crypto = require( 'crypto' ),
+                WORDLIST = _discordCrypt.__zlibDecompress( DICEWARE_WORD_LIST ).split( '\r' ).join( '' ).split( '\n' );
+
+            let passphrase = '';
+
+            /* Generate each word. */
+            for( let i = 0; i < word_length; i++ )
+                passphrase += `${WORDLIST[ parseInt( crypto.randomBytes( 4 ).toString( 'hex' ), 16 ) % MAX_VALUE ]} `;
+
+            /* Return the result. */
+            return {
+                passphrase: passphrase.trim(),
+                entropy: ENTROPY_PER_WORD * word_length
+            }
         }
 
         /* ========================================================= */

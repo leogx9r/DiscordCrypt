@@ -280,8 +280,9 @@ class Compiler {
      * @param {string} asset_path The path to the assets directory.
      * @param {string} original_data The original base file data.
      * @param {Object} constants Object containing the tags for each file to replace.
+     * @param {string[]} ignore_list Asset names to exclude from stripping line feeds and spaces.
      */
-    compileAssets( asset_path = './assets', original_data, constants ) {
+    compileAssets( asset_path = './assets', original_data, constants, ignore_list ) {
         /* Read all files in the specified directory. */
         let files = this.fs.readdirSync( asset_path );
 
@@ -299,7 +300,10 @@ class Compiler {
             /* Read the file into a buffer. */
             let data = this.fs.readFileSync( this.path.join( asset_path, file ) ).toString();
 
-            data = data.split( "\r" ).join( "" ).split( "\n" ).join( '' ).split( '    ' ).join( ' ' );
+            data = data.split( "\r" ).join( "" );
+
+            if( ignore_list.indexOf( file_name ) === -1 )
+                data = data.split( "\n" ).join( '' ).split( '    ' ).join( ' ' );
 
             /* Replace the data with the compressed result. */
             original_data = original_data
@@ -365,6 +369,7 @@ class Compiler {
      * @param {string} assets_path The path to the assets directory.
      * @param {boolean} compress Whether to compress the plugin itself.
      * @param {Object} assets_data The asset tags for each file within the assets directory.
+     * @param {string[]} ignore_assets Assets to exclude from compression.
      * @param {string} signature_template The template string used for replacing the built-in verification public key.
      * @param {string} [sign_key_id] Generates a GPG signature on the output file using this key ID.
      * @return {boolean} Returns true on success and false on failure.
@@ -378,6 +383,7 @@ class Compiler {
         assets_path,
         compress,
         assets_data,
+        ignore_assets,
         signature_template,
         sign_key_id
     ) {
@@ -414,7 +420,7 @@ class Compiler {
         }
 
         /* Add all assets. */
-        data = this.compileAssets( assets_path, data, assets_data );
+        data = this.compileAssets( assets_path, data, assets_data, ignore_assets );
 
         /* Handles final output compression, signature generation and writing the output to disk. */
         let finalizeBuild = ( data ) => {
@@ -513,7 +519,12 @@ class Compiler {
                     '/* ----- APPLICATION TOOLBAR GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
                 'unlocker.html':
                     '/* ----- APPLICATION UNLOCKING GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
+                'diceware.list':
+                    '/* ------ DICEWARE PASSPHRASE WORD LIST GOES HERE DURING COMPILATION. DO NOT REMOVE ----- */'
             },
+            assets_ignore_compression: [
+                'diceware.list'
+            ],
             library_info: {
                 'sjcl.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'sha3.js': { requiresNode: true, requiresBrowser: false, minify: true },
@@ -563,6 +574,7 @@ class Compiler {
             args[ 'assets-directory' ] || args[ 'a' ] || defaults.assets,
             args[ 'enable-compression' ] || args[ 'c' ] || defaults.compression,
             defaults.assets_tag,
+            defaults.assets_ignore_compression,
             defaults.signature_template,
             args[ 'sign' ] || args[ 's' ]
         );
