@@ -7,9 +7,7 @@
   "scripts": {
     "build": "node src/build.js -o build",
     "build_signed": "node src/build.js -o build -s B8EC0775960AEB2E4C11F084DA613E753787CE3F -c",
-
     "coverage": "npm run build && node node_modules/.bin/istanbul cover tests/perform-tests.js coverage",
-
     "test": "npm run build && node tests/perform-tests.js",
     "test_hash": "npm run build && node tests/perform-tests.js hash",
     "test_scrypt": "npm run build && node tests/perform-tests.js scrypt",
@@ -22,6 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "crypto": "^1.0.1",
+    "electron": "^2.0.8",
     "form-data": "^2.3.2",
     "fs": "0.0.1-security",
     "mime-types": "^2.1.20",

@@ -1435,8 +1435,6 @@ const discordCrypt = ( () => {
                         .findByUniqueProperties( [ "createMessage", "parse", "unparse" ] ),
                     MessageController: searcher
                         .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
-                    MarkdownParser: searcher
-                        .findByUniqueProperties( [ "parseInline", "defaultParseBlock" ] ),
                     GlobalTypes: searcher
                         .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
                     EventDispatcher: searcher
@@ -1937,6 +1935,7 @@ const discordCrypt = ( () => {
                 return '🚫 **[ ERROR ]** `INVALID PUBLIC KEY !!!`';
 
             /* Validate functions. */
+            // noinspection JSUnresolvedVariable
             if(
                 !_cachedModules.UserStore ||
                 typeof _cachedModules.UserStore.getCurrentUser !== 'function' ||
@@ -2252,8 +2251,8 @@ const discordCrypt = ( () => {
                 /* Encrypt the message. */
                 let msg = _discordCrypt.__symmetricEncrypt(
                     packets[ i ],
-                    primaryPassword,
-                    secondaryPassword,
+                    primary_key,
+                    secondary_key,
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
                     _configFile.paddingMode,
@@ -2464,6 +2463,7 @@ const discordCrypt = ( () => {
                 }
 
                 /* Hash the password. */
+                // noinspection JSUnresolvedFunction
                 _discordCrypt.__scrypt
                 (
                     Buffer.from( password ),
@@ -2567,7 +2567,6 @@ const discordCrypt = ( () => {
          */
         static _onChangeFileButtonClicked() {
             /* Create an input element. */
-            // noinspection JSUnresolvedFunction
             let file = require( 'electron' ).remote.dialog.showOpenDialog( {
                 title: 'Select a file to encrypt and upload',
                 buttonLabel: 'Select',
@@ -2779,6 +2778,7 @@ const discordCrypt = ( () => {
                 }
                 else if ( channels[ id ].type === 1 ) {
                     /* DM */
+                    // noinspection JSUnresolvedVariable
                     let user = users[ channels[ id ].recipients[ 0 ] ];
 
                     /* Indicate this is a DM and give the full user name. */
@@ -2786,11 +2786,13 @@ const discordCrypt = ( () => {
                 }
                 else if ( channels[ id ].type === 3 ) {
                     /* GROUP_DM */
+                    // noinspection JSUnresolvedVariable
                     let max = channels[ id ].recipients.length > 3 ? 3 : channels[ id ].recipients.length,
                         participants = '';
 
                     /* Iterate the maximum number of users we can display. */
                     for( let i = 0; i < max; i++ ) {
+                        // noinspection JSUnresolvedVariable
                         let user = users[ channels[ id ].recipients[ i ] ];
                         participants += `@${user.username}#${user.discriminator} `;
                     }
@@ -2925,7 +2927,7 @@ const discordCrypt = ( () => {
                             await global
                                 .openpgp
                                 .key
-                                .readArmored( _discordCrypt.__zlibDecompress( _signingKey ) )
+                                .readArmored( _discordCrypt.__zlibDecompress( PGP_SIGNING_KEY ) )
                         )
                             .keys[ 0 ]
                             .primaryKey
@@ -3304,6 +3306,7 @@ const discordCrypt = ( () => {
                 dc_save_settings_btn.attr( 'disabled', true );
 
                 /* Hash the password. */
+                // noinspection JSUnresolvedFunction
                 _discordCrypt.__scrypt
                 (
                     Buffer.from( password ),
@@ -3618,6 +3621,7 @@ const discordCrypt = ( () => {
          * @returns {Function}
          */
         static _onCopyCurrentPasswordsButtonClicked() {
+            // noinspection JSUnresolvedVariable
             let currentKeys = _configFile.channels[ _discordCrypt._getChannelId() ],
                 writeText = require( 'electron' ).clipboard.writeText;
 
@@ -3982,7 +3986,9 @@ const discordCrypt = ( () => {
                     }
 
                     /* Read the current hash of the plugin and compare them.. */
+                    // noinspection JSUnresolvedFunction
                     let currentHash = global.sha3.sha3_256( localFile.replace( '\r', '' ) );
+                    // noinspection JSUnresolvedFunction
                     updateInfo.hash = global.sha3.sha3_256( data.replace( '\r', '' ) );
 
                     /* If the hash equals the retrieved one, no update is needed. */
@@ -4241,6 +4247,7 @@ const discordCrypt = ( () => {
                     if ( !dispatcher )
                         continue;
 
+                    // noinspection JSUnresolvedVariable
                     if ( dispatchNames.every( prop => dispatcher._actionHandlers.hasOwnProperty( prop ) ) )
                         return dispatcher;
                 }
@@ -4310,6 +4317,7 @@ const discordCrypt = ( () => {
                         for ( let action in module[ prop ] ) {
 
                             /* Quick sanity check. */
+                            // noinspection JSUnresolvedVariable
                             if ( !action.length || !module._actionHandlers.hasOwnProperty( action ) )
                                 continue;
 
@@ -4340,57 +4348,6 @@ const discordCrypt = ( () => {
 
             /* Return any found module handlers. */
             return dump;
-        }
-
-        /**
-         * @private
-         * @desc Get React component instance of closest owner of DOM element matched by filter.
-         * @author noodlebox
-         * @param {Element} element DOM element to start react component searching.
-         * @param {object} options Filter to match React component by display name.
-         *      If `include` if provided, `exclude` value is ignored.
-         * @param {string[]} options.include Array of names to allow.
-         * @param {string[]} options.exclude Array of names to ignore.
-         * @return {object|null} Closest matched React component instance or null if none is matched.
-         */
-        static _getElementReactOwner(
-            element,
-            {
-                include,
-                exclude = [ "Popout", "Tooltip", "Scroller", "BackgroundFlash" ]
-            } = {}
-        ) {
-            if ( element === undefined )
-                return undefined;
-
-            /**
-             * Get React Internal Instance mounted to DOM element
-             * @author noodlebox
-             * @param {Element} e DOM element to get React Internal Instance from
-             * @return {object|null} Returns React Internal Instance mounted to this element if exists
-             */
-            const getOwnerReactInstance = e => e[ Object.keys( e )
-                .find( k => k.startsWith( "__reactInternalInstance" ) ) ];
-            const excluding = include === undefined;
-            const filter = excluding ? exclude : include;
-
-            function classFilter( owner ) {
-                const name = owner.type.displayName || owner.type.name || null;
-                return ( name !== null && !!( filter.includes( name ) ^ excluding ) );
-            }
-
-            for ( let c = getOwnerReactInstance( element ).return; c !== null && c !== undefined; c = c.return ) {
-                if ( c !== null && c !== undefined )
-                    continue;
-
-                if (
-                    c.stateNode !== null && c.stateNode !== undefined &&
-                    !( c.stateNode instanceof HTMLElement ) && classFilter( c )
-                )
-                    return c.stateNode;
-            }
-
-            return undefined;
         }
 
         /**
@@ -4467,6 +4424,7 @@ const discordCrypt = ( () => {
                             return;
                         }
 
+                        // noinspection JSUnresolvedVariable
                         _cachedModules.EventDispatcher.dispatch( {
                             type: _cachedModules.GlobalTypes.ActionTypes.MESSAGE_SEND_FAILED,
                             messageId: r.body.id,
@@ -4686,10 +4644,12 @@ const discordCrypt = ( () => {
             };
 
             /* Make sure the method is marked as hooked. */
+            // noinspection JSUnusedGlobalSymbols
             what[ methodName ].__monkeyPatched = true;
             what[ methodName ].displayName = `Hooked ${what[ methodName ].displayName || methodName}`;
 
             /* Save the unhook method to the object. */
+            // noinspection JSUnusedGlobalSymbols
             what[ methodName ].unpatch = cancel;
 
             /* Store the cancel callback. */
@@ -4992,6 +4952,7 @@ const discordCrypt = ( () => {
                     return null;
 
                 /* Create a fingerprint for the blob. */
+                // noinspection JSUnresolvedFunction
                 output[ 'fingerprint' ] = global.sha3.sha3_256( msg );
 
                 /* Buffer[0] contains the algorithm type. Reverse it. */
@@ -5126,7 +5087,7 @@ const discordCrypt = ( () => {
          */
         static __clipboardToBuffer() {
             /* Request the clipboard object. */
-            let clipboard = require( 'electron' ).clipboard;
+            let { clipboard } = require( 'electron' );
 
             /* Sanity check. */
             if ( !clipboard )
@@ -5481,6 +5442,7 @@ const discordCrypt = ( () => {
                                 if ( err !== null )
                                     callback( err );
                                 else {
+                                    // noinspection JSUnresolvedVariable
                                     callback(
                                         null,
                                         `${up1_host}/#${encoded_seed}`,
@@ -5545,6 +5507,7 @@ const discordCrypt = ( () => {
                                 if ( err !== null )
                                     callback( err );
                                 else {
+                                    // noinspection JSUnresolvedVariable
                                     callback(
                                         null,
                                         `${up1_host}/#${encoded_seed}`,
@@ -5849,9 +5812,11 @@ const discordCrypt = ( () => {
                 case 20:
                 case 24:
                 case 32:
+                    // noinspection JSUnresolvedFunction
                     hash = global.sha3.sha3_512( key ).slice( 0, keyBytes * 2 );
                     break;
                 case 64:
+                    // noinspection JSUnresolvedFunction
                     hash = global.sha3.sha3_512( key );
                     break;
                 default:
@@ -6034,22 +5999,6 @@ const discordCrypt = ( () => {
                 "⡗⡘⡙⡚⡛⡜⡝⡞⡟⡠⡡⡢⡣⡤⡥⡦⡧⡨⡩⡪⡫⡬⡭⡮⡯⡰⡱⡲⡳⡴⡵⡶⡷⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⢈⢉⢊⢋⢌⢍⢎⢏⢐⢑⢒⢓⢔⢕⢖⢗⢘⢙⢚⢛⢜⢝⢞⢟⢠⢡⢢⢣⢤⢥⢦⢧⢨⢩⢪⢫⢬⢭" +
                 "⢮⢯⢰⢱⢲⢳⢴⢵⢶⢷⢸⢹⢺⢻⢼⢽⢾⢿⣀⣁⣂⣃⣄⣅⣆⣇⣈⣉⣊⣋⣌⣍⣎⣏⣐⣑⣒⣓⣔⣕⣖⣗⣘⣙⣚⣛⣜⣝⣞⣟⣠⣡⣢⣣⣤⣥⣦⣧⣨⣩⣪⣫⣬⣭⣮⣯⣰⣱⣲⣳⣴⣵⣶⣷⣸⣹⣺⣻⣼⣽⣾⣿"
             );
-        }
-
-        /**
-         * @public
-         * @desc Determines if a string has all valid Braille characters according to the result from __getBraille()
-         * @param {string} message The message to validate.
-         * @returns {boolean} Returns true if the message contains only the required character set.
-         */
-        static __isValidBraille( message ) {
-            let c = _discordCrypt.__getBraille();
-
-            for ( let i = 0; i < message.length; i++ )
-                if ( c.indexOf( message[ i ] ) === -1 )
-                    return false;
-
-            return true;
         }
 
         /**
@@ -6410,6 +6359,7 @@ const discordCrypt = ( () => {
 
                 /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
                 if ( _salt.length !== 8 )
+                    // noinspection JSUnresolvedFunction
                     _salt = Buffer.from(
                         global.sha3.sha3_256( _salt ).slice( 0, 16 ),
                         'hex'
@@ -6421,6 +6371,7 @@ const discordCrypt = ( () => {
             }
 
             /* Derive the key length and IV length. */
+            // noinspection JSUnresolvedFunction
             _derived = Buffer.from(
                 global.sha3.kmac_256(
                     _key,
@@ -6505,6 +6456,7 @@ const discordCrypt = ( () => {
             _salt = _message.slice( 0, 8 );
 
             /* Derive the key length and IV length. */
+            // noinspection JSUnresolvedFunction
             _derived = Buffer.from(
                 global.sha3.kmac_256(
                     _key,
@@ -7399,6 +7351,7 @@ const discordCrypt = ( () => {
 
                 /* Only 64 bits is used for a salt. If it's not that length, hash it and use the result. */
                 if ( _salt.length !== 8 )
+                    // noinspection JSUnresolvedFunction
                     _salt = Buffer.from(
                         global.sha3.sha3_256( _salt ).slice( 0, 16 ),
                         'hex'
@@ -7410,6 +7363,7 @@ const discordCrypt = ( () => {
             }
 
             /* Derive the key length and IV length. */
+            // noinspection JSUnresolvedFunction
             _derived = Buffer.from(
                 global.sha3.kmac_256(
                     _key,
@@ -7498,6 +7452,7 @@ const discordCrypt = ( () => {
             _message = _message.slice( 8 );
 
             /* Derive the key length and IV length. */
+            // noinspection JSUnresolvedFunction
             _derived = Buffer.from(
                 global.sha3.kmac_256(
                     _key,
