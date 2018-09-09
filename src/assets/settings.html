@@ -161,6 +161,30 @@
             </div>
 
             <div class="dc-ruler-align">
+                <div class="dc-input-label">Exchange Algorithm:</div>
+                <select class="dc-input-field" id="dc-settings-exchange-mode" title="Exchange Algorithm">
+                    <option value="224">secp224k1</option>
+                    <option value="256">curve25519</option>
+                    <option value="384">secp384r1</option>
+                    <option value="409">sect409k1</option>
+                    <option value="521">secp521r1</option>
+                    <option value="571">sect571k1</option>
+                    <option value="768">modp1</option>
+                    <option value="1024">modp2</option>
+                    <option value="1536">modp5</option>
+                    <option value="2048">modp14</option>
+                    <option value="3072">modp15</option>
+                    <option value="4096">modp16</option>
+                    <option value="6144">modp17</option>
+                    <option value="8192">modp18</option>
+                </select>
+            </div>
+
+            <div class="dc-hint">
+                <p>This indicates the default algorithm used for handshakes.</p>
+            </div>
+
+            <div class="dc-ruler-align">
                 <div class="dc-input-label">Default Encryption Password:</div>
                 <input type="text" class="dc-input-field" id="dc-settings-default-pwd"
                        title="Default Encryption Password"/>

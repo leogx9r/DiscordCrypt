@@ -1327,6 +1327,7 @@ const discordCrypt = ( () => {
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
+            $( '#dc-settings-exchange-mode' ).val( _configFile.exchangeBitSize );
 
             /* Handle clipboard upload button. */
             $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked );
@@ -3270,6 +3271,7 @@ const discordCrypt = ( () => {
 
             /* Update all settings from the settings panel. */
             _configFile.timedMessageExpires = parseInt( $( '#dc-settings-timed-expire' ).val() );
+            _configFile.exchangeBitSize = parseInt( $( '#dc-setting-exchange-mode' ).val() );
             _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
             _configFile.decryptedPrefix = $( '#dc-settings-decrypted-prefix' ).val();
             _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
@@ -3358,6 +3360,7 @@ const discordCrypt = ( () => {
             $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
+            $( '#dc-settings-exchange-mode' ).val( _configFile.exchangeBitSize );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
             $( '#dc-master-password' ).val( '' );
         }

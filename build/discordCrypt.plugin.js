@@ -600,7 +600,7 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const MENU_HTML =
-        `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`;
+        `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`;
 
     /**
      * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
@@ -1238,7 +1238,7 @@ const discordCrypt = ( () => {
 
                         /* Alert the user of the update and changelog. */
                         $( '#dc-overlay' ).css( 'display', 'block' );
-                        $( '#dc-update-overlay' ).css( 'display', 'block' );
+                        $( '#dc-overlay-update' ).css( 'display', 'block' );
 
                         /* Update the version info. */
                         $( '#dc-new-version' ).text(
@@ -1335,6 +1335,7 @@ const discordCrypt = ( () => {
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
+            $( '#dc-settings-exchange-mode' ).val( _configFile.exchangeBitSize );
 
             /* Handle clipboard upload button. */
             $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked );
@@ -3278,6 +3279,7 @@ const discordCrypt = ( () => {
 
             /* Update all settings from the settings panel. */
             _configFile.timedMessageExpires = parseInt( $( '#dc-settings-timed-expire' ).val() );
+            _configFile.exchangeBitSize = parseInt( $( '#dc-setting-exchange-mode' ).val() );
             _configFile.encodeMessageTrigger = $( '#dc-settings-encrypt-trigger' ).val();
             _configFile.decryptedPrefix = $( '#dc-settings-decrypted-prefix' ).val();
             _configFile.encryptBlockMode = $( '#dc-settings-cipher-mode' ).val();
@@ -3366,6 +3368,7 @@ const discordCrypt = ( () => {
             $( '#dc-settings-encrypt-trigger' ).val( _configFile.encodeMessageTrigger );
             $( '#dc-settings-timed-expire' ).val( _configFile.timedMessageExpires );
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
+            $( '#dc-settings-exchange-mode' ).val( _configFile.exchangeBitSize );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
             $( '#dc-master-password' ).val( '' );
         }
@@ -3422,7 +3425,7 @@ const discordCrypt = ( () => {
 
             /* Hide the update and changelog. */
             $( '#dc-overlay' ).css( 'display', 'none' );
-            $( '#dc-update-overlay' ).css( 'display', 'none' );
+            $( '#dc-overlay-update' ).css( 'display', 'none' );
         }
 
         /**
@@ -3447,7 +3450,7 @@ const discordCrypt = ( () => {
 
             /* Hide the update and changelog. */
             $( '#dc-overlay' ).css( 'display', 'none' );
-            $( '#dc-update-overlay' ).css( 'display', 'none' );
+            $( '#dc-overlay-update' ).css( 'display', 'none' );
         }
 
         /**
