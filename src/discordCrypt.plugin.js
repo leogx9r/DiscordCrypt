@@ -565,14 +565,14 @@ const discordCrypt = ( () => {
      * @desc How long after a key-exchange message has been sent should it be ignored in milliseconds.
      * @type {number}
      */
-    const KEY_IGNORE_TIMEOUT = 6 * 60 * 60 * 1000;
+    const KEY_IGNORE_TIMEOUT = 60 * 1000;
 
     /**
      * @private
      * @desc How long after a key exchange message is sent should a client attempt to delete it in minutes.
      * @type {number}
      */
-    const KEY_DELETE_TIMEOUT = 6 * 60;
+    const KEY_DELETE_TIMEOUT = 5;
 
     /**
      * @private
