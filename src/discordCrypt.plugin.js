@@ -1909,13 +1909,13 @@ const discordCrypt = ( () => {
          * @return {MessageMentions}
          */
         static _getMentionsForMessage( message, id ) {
-            /*  */
+            /* Patterns for capturing specific mentions. */
             const user_mentions = /<@!?([0-9]{10,24})>/g,
-                role_mentions = /<@&([0-9]{10,})>/g,
+                role_mentions = /<@&([0-9]{10,24})>/g,
                 everyone_mention = /(?:\s+|^)@everyone(?:\s+|$)/;
 
             /* Actual format as part of a message object. */
-            let mentions = {
+            let result = {
                 mentions: [],
                 mention_roles: [],
                 mention_everyone: false
@@ -1928,9 +1928,8 @@ const discordCrypt = ( () => {
             let props = _discordCrypt._getChannelProps( id );
 
             /* Check if properties were retrieved. */
-            if( !props ) {
-                return mentions;
-            }
+            if( !props )
+                return result;
 
             /* Parse the message into ID based format. */
             message = _cachedModules.MessageCreator.parse( props, message ).content;
@@ -1938,25 +1937,23 @@ const discordCrypt = ( () => {
             /* Check for user tags. */
             if( user_mentions.test( message ) ) {
                 /* Retrieve all user IDs in the parsed message. */
-                mentions.mentions = message
+                result.mentions = message
                     .match( user_mentions )
                     .map( m => {
-                        return {id: m.replace( /[^0-9]/g, '' )}
+                        return { id: m.replace( /[^0-9]/g, '' ) }
                     } );
             }
 
             /* Gather role mentions. */
             if( role_mentions.test( message ) ) {
                 /* Retrieve all role IDs in the parsed message. */
-                mentions.mention_roles = message
-                    .match( role_mentions )
-                    .map( m => m.replace( /[^0-9]/g, '' ) );
+                result.mention_roles = message.match( role_mentions ).map( m => m.replace( /[^0-9]/g, '' ) );
             }
 
             /* Detect if mentioning everyone. */
-            mentions.mention_everyone = everyone_mention.test( message );
+            result.mention_everyone = everyone_mention.test( message );
 
-            return mentions;
+            return result;
         }
 
         /**
