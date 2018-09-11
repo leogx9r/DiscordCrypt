@@ -274,22 +274,92 @@
  */
 
 /**
+ * @typedef {Object} EmbedFooter
+ * @property {string} [text] Footer text.
+ * @property {string} [icon_url] URL of the footer icon.
+ * @property {string} [proxy_icon_url] Alternative URL of the footer icon.
+ */
+
+/**
+ * @typedef {Object} EmbedImage
+ * @property {string} [url] Source url of the image. ( HTTPS links. )
+ * @property {string} [proxy_url] Alternative URL to the image.
+ * @property {number} [height] The height of the image to scale to.
+ * @property {number} [width] The width of the image to scale to.
+ */
+
+/**
+ * @typedef {Object} EmbedThumbnail
+ * @property {string} [url] Source URL of the thumbnail. ( HTTPS links. )
+ * @property {string} [proxy_url] Alternative URL to the thumbnail.
+ * @property {number} [height] The height of the thumbnail to scale to.
+ * @property {number} [width] The width of the thumbnail to scale to.
+ */
+
+/**
+ * @typedef {Object} EmbedVideo
+ * @property {string} [url] Source URL of the video. ( HTTPS links. )
+ * @property {number} [height] The height of the video to scale to.
+ * @property {number} [width] The width of the video to scale to.
+ */
+
+/**
+ * @typedef {Object} EmbedProvider
+ * @property {string} [name] The name of the provider.
+ * @property {string} [url] The URL of the provider.
+ */
+
+/**
+ * @typedef {Object} EmbedAuthor
+ * @property {string} [name] The name of the author.
+ * @property {string} [url] Source URL of the author.
+ * @property {string} [icon_url] URL of the author's profile icon.
+ * @property {string} [proxy_icon_url] Alternative URL of the author's profile icon.
+ */
+
+/**
+ * @typedef {Object} EmbedField
+ * @property {string} [name] The name of the field.
+ * @property {string} [value] The value of the field.
+ * @property {boolean} [inline] Whether this field should be inlined.
+ */
+
+/**
+ * @typedef {Object} Embed
+ * @desc Details an embedded object that may contain markdown or links.
+ * @property {string} [title] Optional title to be used for the embed.
+ * @property {string} [type] Type of the embed. Always "rich" for webhook embeds.
+ * @property {string} [description] Description of the embed.
+ * @property {string} [url] The URL this embed is referencing.
+ * @property {string} [timestamp] The timestamp of this embed.
+ * @property {number} [color] Color code of the embed.
+ * @property {EmbedFooter} [footer] The footer of the embed.
+ * @property {EmbedImage} [image] Image information.
+ * @property {EmbedThumbnail} [thumbnail] Thumbnail information.
+ * @property {EmbedVideo} [video] Video information.
+ * @property {EmbedProvider} [provider] Provider information
+ * @property {EmbedAuthor} [author] Author information
+ * @property {EmbedField[]} [fields] Field information.
+ */
+
+/**
  * @typedef {Object} Message
  * @desc An incoming or outgoing Discord message.
- * @property {Array<Object>} attachments Message attachments, if any.
- * @property {MessageAuthor} author The creator of the message.
+ * @property {Array<Object>} [attachments] Message attachments, if any.
+ * @property {MessageAuthor} [author] The creator of the message.
  * @property {string} channel_id The channel this message belongs to.
- * @property {string} content The raw message content.
+ * @property {string} [content] The raw message content.
  * @property {string} [edited_timestamp] If specified, when this message was edited.
  * @property {string} [guild_id] If this message belongs to a Guild, this is the ID for it.
  * @property {string} id The message's unique ID.
+ * @property {Embed} [embed] Optional embeds for the message.
  * @property {MemberInfo} member The statistics for the author.
- * @property {boolean} mention_everyone Whether this message attempts to mention everyone.
- * @property {string[]} mentions User IDs or roles mentioned in this message.
+ * @property {boolean} [mention_everyone] Whether this message attempts to mention everyone.
+ * @property {string[]} [mentions] User IDs or roles mentioned in this message.
  * @property {string} nonce The unique timestamp/snowflake for this message.
- * @property {boolean} pinned Whether this message was pinned.
+ * @property {boolean} [pinned] Whether this message was pinned.
  * @property {string} timestamp When this message was sent.
- * @property {boolean} tts If this message should use TTS.
+ * @property {boolean} [tts] If this message should use TTS.
  * @property {number} type The type of message this is.
  */
 
@@ -1686,13 +1756,11 @@ const discordCrypt = ( () => {
                     if( mentioned.mention_roles.length )
                         event.methodArguments[ 0 ].message.mention_roles = mentioned.mention_roles;
                     event.methodArguments[ 0 ].message.mention_everyone = mentioned.mention_everyone;
-
-                    event.originalMethod.apply( event.thisObject, event.methodArguments );
                     return;
                 }
 
-                /* Call the original method on failure. */
-                event.callOriginalMethod();
+                /* Call the original method. */
+                event.originalMethod.apply( event.thisObject, event.methodArguments );
             } )();
         }
 
@@ -1838,6 +1906,65 @@ const discordCrypt = ( () => {
             return _configFile.channels[ channel_id ] &&
                 _configFile.channels[ channel_id ].primaryKey &&
                 _configFile.channels[ channel_id ].secondaryKey;
+        }
+
+        /**
+         * @private
+         * @desc Detects and returns all roles & users mentioned in a message.
+         *      Shamelessly "stolen" from BetterDiscord team. Thanks guys. :D
+         * @param {string} message The input message.
+         * @param {string} [id] The channel ID this message will be dispatched to.
+         * @return {MessageMentions}
+         */
+        static _getMentionsForMessage( message, id ) {
+            /*  */
+            const user_mentions = /<@!?([0-9]{10,24})>/g,
+                role_mentions = /<@&([0-9]{10,})>/g,
+                everyone_mention = /(?:\s+|^)@everyone(?:\s+|$)/;
+
+            /* Actual format as part of a message object. */
+            let mentions = {
+                mentions: [],
+                mention_roles: [],
+                mention_everyone: false
+            };
+
+            /* Get the channel's ID. */
+            id = id || _discordCrypt._getChannelId();
+
+            /* Get the channel's properties. */
+            let props = _discordCrypt._getChannelProps( id );
+
+            /* Check if properties were retrieved. */
+            if( !props ) {
+                return mentions;
+            }
+
+            /* Parse the message into ID based format. */
+            message = _cachedModules.MessageCreator.parse( props, message ).content;
+
+            /* Check for user tags. */
+            if( user_mentions.test( message ) ) {
+                /* Retrieve all user IDs in the parsed message. */
+                mentions.mentions = message
+                    .match( user_mentions )
+                    .map( m => {
+                        return {id: m.replace( /[^0-9]/g, '' )}
+                    } );
+            }
+
+            /* Gather role mentions. */
+            if( role_mentions.test( message ) ) {
+                /* Retrieve all role IDs in the parsed message. */
+                mentions.mention_roles = message
+                    .match( role_mentions )
+                    .map( m => m.replace( /[^0-9]/g, '' ) );
+            }
+
+            /* Detect if mentioning everyone. */
+            mentions.mention_everyone = everyone_mention.test( message );
+
+            return mentions;
         }
 
         /**
@@ -2037,65 +2164,6 @@ const discordCrypt = ( () => {
             } )();
 
             return returnValue;
-        }
-
-        /**
-         * @private
-         * @desc Detects and returns all roles & users mentioned in a message.
-         *      Shamelessly "stolen" from BetterDiscord team. Thanks guys. :D
-         * @param {string} message The input message.
-         * @param {string} [id] The channel ID this message will be dispatched to.
-         * @return {MessageMentions}
-         */
-        static _getMentionsForMessage( message, id ) {
-            /*  */
-            const user_mentions = /<@!?([0-9]{10,24})>/g,
-                role_mentions = /<@&([0-9]{10,})>/g,
-                everyone_mention = /(?:\s+|^)@everyone(?:\s+|$)/;
-
-            /* Actual format as part of a message object. */
-            let mentions = {
-                mentions: [],
-                mention_roles: [],
-                mention_everyone: false
-            };
-
-            /* Get the channel's ID. */
-            id = id || _discordCrypt._getChannelId();
-
-            /* Get the channel's properties. */
-            let props = _discordCrypt._getChannelProps( id );
-
-            /* Check if properties were retrieved. */
-            if( !props ) {
-                return mentions;
-            }
-
-            /* Parse the message into ID based format. */
-            message = _cachedModules.MessageCreator.parse( props, message ).content;
-
-            /* Check for user tags. */
-            if( user_mentions.test( message ) ) {
-                /* Retrieve all user IDs in the parsed message. */
-                mentions.mentions = message
-                    .match( user_mentions )
-                    .map( m => {
-                        return {id: m.replace( /[^0-9]/g, '' )}
-                    } );
-            }
-
-            /* Gather role mentions. */
-            if( role_mentions.test( message ) ) {
-                /* Retrieve all role IDs in the parsed message. */
-                mentions.mention_roles = message
-                    .match( role_mentions )
-                    .map( m => m.replace( /[^0-9]/g, '' ) );
-            }
-
-            /* Detect if mentioning everyone. */
-            mentions.mention_everyone = everyone_mention.test( message );
-
-            return mentions;
         }
 
         /**
