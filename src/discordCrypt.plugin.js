@@ -2431,9 +2431,6 @@ const discordCrypt = ( () => {
                     parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
                 ) + msg;
 
-                /* Break up the message into lines. */
-                msg = msg.replace( /(.{32})/g, ( e ) => `${e}\n` );
-
                 /* Return the message and any user text. */
                 return [ {
                     message: `\`${msg}\``
@@ -2462,9 +2459,6 @@ const discordCrypt = ( () => {
                     _configFile.paddingMode,
                     parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
                 ) + msg;
-
-                /* Break up the message into lines. */
-                msg = msg.replace( /(.{32})/g, ( e ) => `${e}\n` );
 
                 /* Add to the result. */
                 result.push( {
@@ -5111,9 +5105,7 @@ const discordCrypt = ( () => {
             rawKey.copy( rawBuffer, 2 + saltLen );
 
             /* Split the message by adding a new line every 32 characters like a standard PGP message. */
-            return (
-                ENCODED_KEY_HEADER + _discordCrypt.__substituteMessage( rawBuffer, true )
-            ).replace( /(.{32})/g, e => `${e}\n` );
+            return  ENCODED_KEY_HEADER + _discordCrypt.__substituteMessage( rawBuffer, true );
         }
 
         /**
