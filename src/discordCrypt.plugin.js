@@ -350,10 +350,12 @@
  * @property {string} [edited_timestamp] If specified, when this message was edited.
  * @property {string} [guild_id] If this message belongs to a Guild, this is the ID for it.
  * @property {string} id The message's unique ID.
- * @property {Embed} [embed] Optional embeds for the message.
+ * @property {Embed} [embed] Optional embed for the outgoing message.
+ * @property {Embed[]} [embeds] Optional embeds for the incoming message.
  * @property {MemberInfo} member The statistics for the author.
  * @property {boolean} [mention_everyone] Whether this message attempts to mention everyone.
  * @property {string[]} [mentions] User IDs or roles mentioned in this message.
+ * @property {string[]} [mention_roles] Role IDs mentioned in the message.
  * @property {string} nonce The unique timestamp/snowflake for this message.
  * @property {boolean} [pinned] Whether this message was pinned.
  * @property {string} timestamp When this message was sent.
@@ -1628,12 +1630,15 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc The event handler that fires whenever a new event occurs in Discord.
+         *      This can be called multiple times for a single event since this hooks:
+         *          dispatch, maybeDispatch and dirtyDispatch.
          * @param {Object} event The event that occurred.
          */
         static _onDispatchEvent( event ) {
             let handled = false;
 
             try {
+                /* Check if a handler exists for the event type and call it. */
                 for( let i = 0; i < _eventHooks.length; i++ )
                     if( event.methodArguments[ 0 ].type === _eventHooks[ i ].type ) {
                         _eventHooks[ i ].callback( event );
@@ -1644,6 +1649,7 @@ const discordCrypt = ( () => {
                 /* Ignore. */
             }
 
+            /* If not handled by a hook, assume the position! ( Pun intended. ) */
             if( !handled )
                 event.callOriginalMethod();
         }
@@ -1694,58 +1700,17 @@ const discordCrypt = ( () => {
          * @return {Promise<void>}
          */
         static _onIncomingMessage( event ) {
-            /**
-             * @type {Message}
-             */
-            let message = event.methodArguments[ 0 ].message;
-            let id = event.methodArguments[ 0 ].channelId || message.channel_id;
-
-            /* Skip if this has no inline-code blocks. */
-            if( !_discordCrypt._isFormattedMessage( message.content ) ) {
-                event.callOriginalMethod();
-                return;
-            }
-
             /* Pretend no message was received till the configuration is unlocked. */
             ( async () => {
                 /* Wait for the configuration file to be loaded. */
                 while( !_configFile )
                     await ( new Promise( r => setTimeout( r, 1000 ) ) );
 
-                /* Use the default password for decryption if one hasn't been defined for this channel. */
-                let primary_key = Buffer.from(
-                    _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
-                        _configFile.channels[ id ].primaryKey :
-                        _configFile.defaultPassword
+                /* Update the original object with any applicable changes. */
+                event.methodArguments[ 0 ].message = _discordCrypt._decryptMessage(
+                    event.methodArguments[ 0 ].channelId || event.methodArguments[ 0 ].message.channel_id,
+                    event.methodArguments[ 0 ].message
                 );
-                let secondary_key = Buffer.from(
-                    _configFile.channels[ id ] && _configFile.channels[ id ].secondaryKey ?
-                        _configFile.channels[ id ].secondaryKey :
-                        _configFile.defaultPassword
-                );
-
-                /* Decrypt the content. */
-                let r = _discordCrypt._parseMessage(
-                    message,
-                    primary_key,
-                    secondary_key,
-                    _configFile.decryptedPrefix
-                );
-
-                /* Assign it to the object if valid. */
-                if( typeof r === 'string' && r.length ) {
-                    /* Calculate any mentions. */
-                    let mentioned = _discordCrypt._getMentionsForMessage( r, id );
-
-                    /* Apply. */
-                    event.methodArguments[ 0 ].message.content = r;
-                    if( mentioned.mentions.length )
-                        event.methodArguments[ 0 ].message.mentions = mentioned.mentions;
-                    if( mentioned.mention_roles.length )
-                        event.methodArguments[ 0 ].message.mention_roles = mentioned.mention_roles;
-
-                    event.methodArguments[ 0 ].message.mention_everyone = mentioned.mention_everyone;
-                }
 
                 /* Call the original method. */
                 event.originalMethod.apply( event.thisObject, event.methodArguments );
@@ -1759,7 +1724,14 @@ const discordCrypt = ( () => {
          * @return {Promise<void>}
          */
         static _onIncomingMessages( event ) {
+            /**
+             * @type {string}
+             */
             let id = event.methodArguments[ 0 ].channelId;
+            /**
+             * @type {Message[]}
+             */
+            let messages = event.methodArguments[ 0  ].messages;
 
             /* Pretend no message was received till the configuration is unlocked. */
             ( async () => {
@@ -1768,57 +1740,20 @@ const discordCrypt = ( () => {
                     await ( new Promise( r => setTimeout( r, 1000 ) ) );
 
                 /* Iterate all messages being received. */
-                for ( let i = 0; i < event.methodArguments[ 0  ].messages.length; i++ ) {
-                    let message = event.methodArguments[ 0 ].messages[ i ];
-
-                    /* Skip if this has no inline-code blocks. */
-                    if ( !_discordCrypt._isFormattedMessage( message.content ) )
-                        continue;
-
-                    /* Use the default password for decryption if one hasn't been defined for this channel. */
-                    let primary_key = Buffer.from(
-                        _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
-                            _configFile.channels[ id ].primaryKey :
-                            _configFile.defaultPassword
-                    );
-                    let secondary_key = Buffer.from(
-                        _configFile.channels[ id ] && _configFile.channels[ id ].secondaryKey ?
-                            _configFile.channels[ id ].secondaryKey :
-                            _configFile.defaultPassword
+                for ( let i = 0; i < messages.length; i++ ) {
+                    /* Attempt to decrypt the message content. */
+                    messages[ i ] = _discordCrypt._decryptMessage(
+                        id,
+                        messages[ i ]
                     );
 
-                    /* Decrypt the content. */
-                    let r = _discordCrypt._parseMessage(
-                        message,
-                        primary_key,
-                        secondary_key,
-                        _configFile.decryptedPrefix
-                    );
-
-                    /* Assign it to the object if valid. */
-                    if ( typeof r === 'string' ) {
-                        /* Make sure the string has an actual length or pretend the message doesn't exist. */
-                        if( !r.length ) {
-                            delete event.methodArguments[ 0 ].messages[ i ];
-                            continue;
-                        }
-
-                        /* Calculate any mentions. */
-                        let mentioned = _discordCrypt._getMentionsForMessage( r, id );
-
-                        event.methodArguments[ 0 ].messages[ i ].content = r;
-                        if ( mentioned.mentions.length )
-                            event.methodArguments[ 0 ].messages[ i ].mentions = mentioned.mentions;
-                        if ( mentioned.mention_roles.length )
-                            event.methodArguments[ 0 ].messages[ i ].mention_roles = mentioned.mention_roles;
-
-                        event.methodArguments[ 0 ].messages[ i ].mention_everyone = mentioned.mention_everyone;
-                    }
+                    /* Make sure the string has an actual length or pretend the message doesn't exist. */
+                    if( !messages[ i ].content.length && !messages[ i ].embeds )
+                        delete messages[ i ];
                 }
 
-                /* Filter out any deleted messages. */
-                event.methodArguments[ 0 ].messages =
-                    event.methodArguments[ 0 ].messages.filter( ( i ) => i );
+                /* Filter out any deleted messages and apply any applicable updates. */
+                event.methodArguments[ 0 ].messages = messages.filter( ( i ) => i );
 
                 /* Call the original method using the modified contents. ( If any. ) */
                 event.originalMethod.apply( event.thisObject, event.methodArguments );
@@ -1901,6 +1836,159 @@ const discordCrypt = ( () => {
                         _discordCrypt._dispatchMessage( cR[ i ].message, message.channelId );
                 }
             } )();
+        }
+
+        /**
+         * @private
+         * @desc Attempts to decrypt a message object with any encrypted content or embeds.
+         * @param {string} id The ID of the message.
+         * @param {Message} message The message object to decrypt.
+         * @return {Message}
+         */
+        static _decryptMessage( id, message ) {
+            /**
+             * @desc Decrypts the message content specified, updates any mentioned users and returns the result.
+             * @param {string} id The ID of the message being decrypted.
+             * @param {string} content The content to decrypt.
+             * @param {Message} message The message object.
+             * @param {string} primary_key The primary key used for decryption.
+             * @param {string} secondary_key The secondary key used for decryption.
+             * @param {string} prefix The prefix to prepend to the message on success.
+             * @return {string|boolean} Returns the decrypted string on success or false on failure.
+             * @private
+             */
+            const _decryptMessageContent = ( id, content, message, primary_key, secondary_key, prefix ) => {
+                let r = _discordCrypt._parseMessage(
+                    content,
+                    message,
+                    primary_key,
+                    secondary_key,
+                    prefix
+                );
+
+                /* Assign it to the object if valid. */
+                if( typeof r === 'string' && r.length ) {
+                    /* Calculate any mentions. */
+                    let notifications = _discordCrypt._getMentionsForMessage( r, id );
+
+                    /* Add any user mentions. */
+                    if( notifications.mentions.length ) {
+                        /* Append to the existing list if necessary. */
+                        if( !message.mentions )
+                            message.mentions = notifications.mentions;
+                        else
+                            message.mentions = message.mentions
+                                .concat( notifications.mentions )
+                                .filter( ( e, i, s ) => i === s.indexOf( e ) );
+                    }
+
+                    /* Add any role mentions. */
+                    if( notifications.mention_roles.length ) {
+                        /* Append to the existing list if necessary. */
+                        if( !message.mention_roles )
+                            message.mention_roles = notifications.mention_roles;
+                        else
+                            message.mention_roles = message.mention_roles
+                                .concat( notifications.mention_roles )
+                                .filter( ( e, i, s ) => i === s.indexOf( e ) );
+                    }
+
+                    /* Update the "@everyone" field if necessary. */
+                    message.mention_everyone = message.mention_everyone || notifications.mention_everyone;
+                }
+
+                return r;
+            };
+
+            /* Use the default password for decryption if one hasn't been defined for this channel. */
+            let primary_key = Buffer.from(
+                _configFile.channels[ id ] && _configFile.channels[ id ].primaryKey ?
+                    _configFile.channels[ id ].primaryKey :
+                    _configFile.defaultPassword
+            );
+            let secondary_key = Buffer.from(
+                _configFile.channels[ id ] && _configFile.channels[ id ].secondaryKey ?
+                    _configFile.channels[ id ].secondaryKey :
+                    _configFile.defaultPassword
+            );
+
+            /* Check if the content is in the valid format. */
+            if( _discordCrypt._isFormattedMessage( message.content ) ) {
+                /* Decrypt the content. */
+                let r = _decryptMessageContent(
+                    id,
+                    message.content.substr( 1, message.content.length - 2 ),
+                    message,
+                    primary_key,
+                    secondary_key,
+                    _configFile.decryptedPrefix
+                );
+
+                /* Update the content if necessary. */
+                if( typeof r === 'string' )
+                    message.content = r;
+            }
+
+            /* Parse any embed available. */
+            for( let i = 0; message.embeds && i < message.embeds.length; i++ ) {
+                /* Decrypt the description. */
+                if(
+                    message.embeds[ i ].description &&
+                    _discordCrypt._isFormattedMessage( message.embeds[ i ].description )
+                ) {
+                    let r = _decryptMessageContent(
+                        id,
+                        message.embeds[ i ].description.substr( 1, message.embeds[ i ].description.length - 2 ),
+                        message,
+                        primary_key,
+                        secondary_key,
+                        _configFile.decryptedPrefix
+                    );
+
+                    /* Apply on success. */
+                    if( typeof r === 'string' )
+                        message.embeds[ i ].description = r;
+                }
+
+                /* Decrypt any embed fields. */
+                for( let j = 0; message.embeds[ i ].fields && j < message.embeds[ i ].fields.length; j++ ) {
+                    /* Skip fields without formatted name. */
+                    if( _discordCrypt._isFormattedMessage( message.embeds[ i ].fields[ j ].name ) ) {
+                        /* Decrypt the name. */
+                        let r = _decryptMessageContent(
+                            id,
+                            message.embeds[ i ].fields[ j ].name.substr( 1, message.content.length - 2 ),
+                            message,
+                            primary_key,
+                            secondary_key,
+                            _configFile.decryptedPrefix
+                        );
+
+                        /* Apply on success. */
+                        if( typeof r === 'string' )
+                            message.embeds[ i ].fields[ j ].name = r;
+                    }
+                    /* Skip fields without formatted value. */
+                    if( _discordCrypt._isFormattedMessage( message.embeds[ i ].fields[ j ].value ) ) {
+                        /* Decrypt the name. */
+                        let r = _decryptMessageContent(
+                            id,
+                            message.embeds[ i ].fields[ j ].value.substr( 1, message.content.length - 2 ),
+                            message,
+                            primary_key,
+                            secondary_key,
+                            _configFile.decryptedPrefix
+                        );
+
+                        /* Apply on success. */
+                        if( typeof r === 'string' )
+                            message.embeds[ i ].fields[ j ].value = r;
+                    }
+                }
+            }
+
+            /* Return the ( possibly modified ) object. */
+            return message;
         }
 
         /**
@@ -2199,16 +2287,15 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Parses a raw message and returns the decrypted result.
-         * @param {Message} message The message object.
+         * @param {string} content The message content to parse.
+         * @param {Message} [message] The message object.
          * @param {string} primary_key The primary key used to decrypt the message.
          * @param {string} secondary_key The secondary key used to decrypt the message.
          * @param {string} [prefix] Messages that are successfully decrypted should have this prefix prepended.
+         * @param {boolean} [allow_key_parsing] Whether to allow key exchange parsing.
          * @return {string|boolean} Returns false if a message isn't in the correct format or the decrypted result.
          */
-        static _parseMessage( message, primary_key, secondary_key, prefix ) {
-            /* Get the message's content. */
-            let content = message.content.substr( 1, message.content.length - 2 );
-
+        static _parseMessage( content, message, primary_key, secondary_key, prefix, allow_key_parsing = true ) {
             /* Skip if the message is <= size of the total header. */
             if ( content.length <= 12 )
                 return false;
@@ -2217,7 +2304,7 @@ const discordCrypt = ( () => {
             let magic = content.slice( 0, 4 );
 
             /* If this is a public key, just add a button and continue. */
-            if ( magic === ENCODED_KEY_HEADER )
+            if ( allow_key_parsing && magic === ENCODED_KEY_HEADER )
                 return _discordCrypt._parseKeyMessage( message, content );
 
             /* Make sure it has the correct header. */
