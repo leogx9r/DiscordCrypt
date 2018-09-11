@@ -13,6 +13,7 @@ Version 2.0.0
 - Added the ability to edit encrypted messages.
 - Added automatic key exchanges.
 - Added the ability to remember encryption modes on a per-channel basis.
+- Added the ability to encrypt and decrypt any attached embeds. ( Example: Quoting plugins. )
 - Simplified the process of key exchanges.
 - Various code optimizations and improvements.
 
