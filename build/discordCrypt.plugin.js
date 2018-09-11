@@ -1849,29 +1849,28 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Attempts to decrypt a message object with any encrypted content or embeds.
-         * @param {string} id The ID of the message.
+         * @param {string} id The channel ID of the message.
          * @param {Message} message The message object to decrypt.
-         * @return {Message}
+         * @return {Message} Returns the passed message object with any decrypted content if applicable.
          */
         static _decryptMessage( id, message ) {
             /**
              * @desc Decrypts the message content specified, updates any mentioned users and returns the result.
-             * @param {string} id The ID of the message being decrypted.
+             * @param {string} id The channel ID of the message being decrypted.
              * @param {string} content The content to decrypt.
              * @param {Message} message The message object.
              * @param {string} primary_key The primary key used for decryption.
              * @param {string} secondary_key The secondary key used for decryption.
-             * @param {string} prefix The prefix to prepend to the message on success.
              * @return {string|boolean} Returns the decrypted string on success or false on failure.
              * @private
              */
-            const _decryptMessageContent = ( id, content, message, primary_key, secondary_key, prefix ) => {
+            const _decryptMessageContent = ( id, content, message, primary_key, secondary_key ) => {
                 let r = _discordCrypt._parseMessage(
                     content,
                     message,
                     primary_key,
                     secondary_key,
-                    prefix
+                    _configFile.decryptedPrefix
                 );
 
                 /* Assign it to the object if valid. */
@@ -1928,8 +1927,7 @@ const discordCrypt = ( () => {
                     message.content.substr( 1, message.content.length - 2 ),
                     message,
                     primary_key,
-                    secondary_key,
-                    _configFile.decryptedPrefix
+                    secondary_key
                 );
 
                 /* Update the content if necessary. */
@@ -1949,8 +1947,7 @@ const discordCrypt = ( () => {
                         message.embeds[ i ].description.substr( 1, message.embeds[ i ].description.length - 2 ),
                         message,
                         primary_key,
-                        secondary_key,
-                        _configFile.decryptedPrefix
+                        secondary_key
                     );
 
                     /* Apply on success. */
@@ -1968,8 +1965,7 @@ const discordCrypt = ( () => {
                             message.embeds[ i ].fields[ j ].name.substr( 1, message.content.length - 2 ),
                             message,
                             primary_key,
-                            secondary_key,
-                            _configFile.decryptedPrefix
+                            secondary_key
                         );
 
                         /* Apply on success. */
@@ -1984,8 +1980,7 @@ const discordCrypt = ( () => {
                             message.embeds[ i ].fields[ j ].value.substr( 1, message.content.length - 2 ),
                             message,
                             primary_key,
-                            secondary_key,
-                            _configFile.decryptedPrefix
+                            secondary_key
                         );
 
                         /* Apply on success. */
