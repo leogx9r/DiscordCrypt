@@ -1741,11 +1741,7 @@ const discordCrypt = ( () => {
                 );
 
                 /* Assign it to the object if valid. */
-                if( typeof r === 'string' ) {
-                    /* Make sure the string has an actual length or pretend the message doesn't exist. */
-                    if( !r.length )
-                        return;
-
+                if( typeof r === 'string' && r.length ) {
                     /* Calculate any mentions. */
                     let mentioned = _discordCrypt._getMentionsForMessage( r, id );
 
@@ -1755,8 +1751,8 @@ const discordCrypt = ( () => {
                         event.methodArguments[ 0 ].message.mentions = mentioned.mentions;
                     if( mentioned.mention_roles.length )
                         event.methodArguments[ 0 ].message.mention_roles = mentioned.mention_roles;
+
                     event.methodArguments[ 0 ].message.mention_everyone = mentioned.mention_everyone;
-                    return;
                 }
 
                 /* Call the original method. */
@@ -1823,6 +1819,7 @@ const discordCrypt = ( () => {
                             event.methodArguments[ 0 ].messages[ i ].mentions = mentioned.mentions;
                         if ( mentioned.mention_roles.length )
                             event.methodArguments[ 0 ].messages[ i ].mention_roles = mentioned.mention_roles;
+
                         event.methodArguments[ 0 ].messages[ i ].mention_everyone = mentioned.mention_everyone;
                     }
                 }
@@ -1843,6 +1840,8 @@ const discordCrypt = ( () => {
          * @return {Promise<void>}
          */
         static _onOutgoingMessage( event ) {
+            let r, cR;
+
             ( async () => {
                 /* Wait till the configuration file has been loaded before parsing any messages. */
                 await ( async () => {
@@ -1850,23 +1849,65 @@ const discordCrypt = ( () => {
                         await ( new Promise( r => setTimeout( r, 1000 ) ) );
                 } )();
 
+                /* Copy the message object to a variable for easier parsing. */
                 let message = event.methodArguments[ 0 ].message;
 
-                let r = _discordCrypt._tryEncryptMessage( message.content, false, message.channelId );
+                /* Try encrypting the message content. */
+                cR = _discordCrypt._tryEncryptMessage( message.content, false, message.channelId );
 
-                if( typeof r === 'boolean' ) {
-                    event.callOriginalMethod();
-                    return;
+                /* Apply the message content if valid. */
+                if( typeof cR !== 'boolean' && cR.length > 0 )
+                    message.content = cR[ 0 ].message;
+
+                /* If this message contains an embed, try encrypting also. */
+                if( message.embed ) {
+                    /* If the message contains a description, encrypt it. */
+                    if( message.embed.description ) {
+                        r = _discordCrypt._tryEncryptMessage( message.embed.description, false, message.channelId );
+
+                        /* If valid, apply the updated result. */
+                        if( typeof r !== 'boolean' && r.length === 1 )
+                            message.embed.description = r[ 0 ].message;
+                    }
+
+                    /* Try encrypting fields if present. */
+                    for( let i = 0; message.embed.fields && i < message.embed.fields.length; i++ ) {
+                        /* First encrypt the field name. */
+                        r = _discordCrypt._tryEncryptMessage(
+                            message.embed.fields[ i ].name,
+                            false,
+                            message.channelId
+                        );
+
+                        /* Apply the result if applicable. */
+                        if( typeof r !== 'boolean' && r.length === 1 )
+                            message.embed.fields[ i ].name = r[ 0 ].message;
+
+                        /* Next encrypt the field value. */
+                        r = _discordCrypt._tryEncryptMessage(
+                            message.embed.fields[ i ].value,
+                            false,
+                            message.channelId
+                        );
+
+                        /* Apply the result if applicable. */
+                        if( typeof r !== 'boolean' && r.length === 1 )
+                            message.embed.fields[ i ].value = r[ 0 ].message;
+
+                    }
                 }
 
-                event.methodArguments[ 0 ].message.content = r[ 0 ].message;
+                /* Update the message object to reflect any changes. */
+                event.methodArguments[ 0 ].message = message;
+
+                /* Call the original dispatching method. */
                 event.originalMethod.apply( event.thisObject, event.methodArguments );
 
-                if( r.length === 1 )
-                    return;
-
-                for( let i = 1; i < r.length; i++ )
-                    _discordCrypt._dispatchMessage( r[ i ].message, message.channelId );
+                /* Dispatch any additional packets containing additional content. */
+                if( cR.length !== 1 ) {
+                    for( let i = 1; i < cR.length; i++ )
+                        _discordCrypt._dispatchMessage( cR[ i ].message, message.channelId );
+                }
             } )();
         }
 
@@ -1917,13 +1958,13 @@ const discordCrypt = ( () => {
          * @return {MessageMentions}
          */
         static _getMentionsForMessage( message, id ) {
-            /*  */
+            /* Patterns for capturing specific mentions. */
             const user_mentions = /<@!?([0-9]{10,24})>/g,
-                role_mentions = /<@&([0-9]{10,})>/g,
+                role_mentions = /<@&([0-9]{10,24})>/g,
                 everyone_mention = /(?:\s+|^)@everyone(?:\s+|$)/;
 
             /* Actual format as part of a message object. */
-            let mentions = {
+            let result = {
                 mentions: [],
                 mention_roles: [],
                 mention_everyone: false
@@ -1936,9 +1977,8 @@ const discordCrypt = ( () => {
             let props = _discordCrypt._getChannelProps( id );
 
             /* Check if properties were retrieved. */
-            if( !props ) {
-                return mentions;
-            }
+            if( !props )
+                return result;
 
             /* Parse the message into ID based format. */
             message = _cachedModules.MessageCreator.parse( props, message ).content;
@@ -1946,25 +1986,23 @@ const discordCrypt = ( () => {
             /* Check for user tags. */
             if( user_mentions.test( message ) ) {
                 /* Retrieve all user IDs in the parsed message. */
-                mentions.mentions = message
+                result.mentions = message
                     .match( user_mentions )
                     .map( m => {
-                        return {id: m.replace( /[^0-9]/g, '' )}
+                        return { id: m.replace( /[^0-9]/g, '' ) }
                     } );
             }
 
             /* Gather role mentions. */
             if( role_mentions.test( message ) ) {
                 /* Retrieve all role IDs in the parsed message. */
-                mentions.mention_roles = message
-                    .match( role_mentions )
-                    .map( m => m.replace( /[^0-9]/g, '' ) );
+                result.mention_roles = message.match( role_mentions ).map( m => m.replace( /[^0-9]/g, '' ) );
             }
 
             /* Detect if mentioning everyone. */
-            mentions.mention_everyone = everyone_mention.test( message );
+            result.mention_everyone = everyone_mention.test( message );
 
-            return mentions;
+            return result;
         }
 
         /**
