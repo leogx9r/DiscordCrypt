@@ -1954,7 +1954,10 @@ const discordCrypt = ( () => {
                         /* Decrypt the name. */
                         let r = _decryptMessageContent(
                             id,
-                            message.embeds[ i ].fields[ j ].name.substr( 1, message.content.length - 2 ),
+                            message.embeds[ i ].fields[ j ].name.substr(
+                                1,
+                                message.embeds[ i ].fields[ j ].name - 2
+                            ),
                             message,
                             primary_key,
                             secondary_key
@@ -1969,7 +1972,10 @@ const discordCrypt = ( () => {
                         /* Decrypt the name. */
                         let r = _decryptMessageContent(
                             id,
-                            message.embeds[ i ].fields[ j ].value.substr( 1, message.content.length - 2 ),
+                            message.embeds[ i ].fields[ j ].value.substr(
+                                1,
+                                message.embeds[ i ].fields[ j ].value.length - 2
+                            ),
                             message,
                             primary_key,
                             secondary_key
