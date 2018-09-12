@@ -1481,6 +1481,9 @@ const discordCrypt = ( () => {
             /* Copy the current passwords to the clipboard. */
             $( '#dc-cpy-pwds-btn' ).click( _discordCrypt._onCopyCurrentPasswordsButtonClicked );
 
+            /* Ask the user about their password generation preferences. */
+            $( '#dc-generate-password-btn' ).click( _discordCrypt._onGeneratePassphraseClicked );
+
             /* Set whether auto-encryption is enabled or disabled. */
             dc_lock_btn.click( _discordCrypt._onForceEncryptButtonClicked );
         }
@@ -3812,6 +3815,40 @@ const discordCrypt = ( () => {
                 $( '#dc-overlay' ).css( 'display', 'none' );
                 $( '#dc-overlay-password' ).css( 'display', 'none' );
             } ), 250 );
+        }
+
+        /**
+         * @private
+         * @desc Prompts the user on their passphrase generation options.
+         */
+        static _onGeneratePassphraseClicked() {
+            global.smalltalk.prompt(
+                'GENERATE A SECURE PASSPHRASE',
+                'Please enter how many words you\'d like this passphrase to have:\n\n',
+                '20'
+            ).then(
+                ( value ) => {
+                    /* Validate the value entered. */
+                    if( typeof value !== 'string' || !value.length || isNaN( value ) ) {
+                        global.smalltalk.alert( 'ERROR', 'Invalid value entered' );
+                        return;
+                    }
+
+                    /* Generate the word list. */
+                    let { entropy, passphrase } = _discordCrypt.__generateDicewarePassphrase( parseInt( value ) );
+
+                    /* Alert the user. */
+                    global.smalltalk.prompt(
+                        `GENERATED A ${parseInt( value )} WORD LONG PASSPHRASE`,
+                        `This passphrase contains approximately <b>${Math.round( entropy )} bits of entropy</b>.\n\n` +
+                        'Please copy your generated passphrase below:\n\n',
+                        passphrase
+                    );
+                },
+                () => {
+                    /* Ignored. */
+                }
+            );
         }
 
         /**

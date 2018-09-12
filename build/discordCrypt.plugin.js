@@ -652,7 +652,7 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const APP_STYLE =
-        `eNrdWelu4zYQfhW1QYAYCA2dPtH916co+oOSKJtdWTIkKscu9t07Q4oSKVGOd9sCbaMctiwO5/jmmxlmnWekfmFNSd+9r15RV4IU9MLL94N3qau6vdKMHdX9ln9hBy+Ir29HL6XZ51NTd1V+8JpTSp/8Z6//Xu+SlfcTv1zrRtBKHL1r3XLB6+rgFfyN5Ucv5+0V9jt4VV2B8FeeizMI9v3Ho3dm/HQW+l3JCnjtHz1RX+XfL4RXOXuTn8PbrGvaujl4OStoV4rjtzWYI+q6FPwK5gwb8arkFSNpWWefTYUaVlLBX5i90HhNBHsTIOmFtzzlJRcg7MzznFW2UwJ0ijYk9G0XkawuUcsX2jwRcqG8UneevYdtuNvndAWWqEceiqIAa2FTQkt+AhUzVgnWgLi6yVlDGprzrj14CW5xpXnOq5N8h94ZDaNpW5edYL3ngjAZvJmgYy+0OYEa6g7ZSIUN3972x+FAC9AJ3OLaMAO3gM4H7+efUWsh6osdTocC0hploTIGhPHcEw2tAIENQxj1DlAS73CpacKhqsWTaUYOgX9n+epwRvB/FHH5urRRokUsS5Da9+7xW4+WpRe0x2XBbdbUZUkEhTuwHMUWZf0Kvu1EjR57Izo70IVKmf5h7btg8N1DHMZJvLdBYiebIeGTJ86M5ijJyOyHPMJrRCcmnWMV/G3kG4SE3g55wn42rfP34Vncy4XzYX340fpPXtoBFioz0fsMV+jqPSeFZGeWfU7rt2fPfHegGaY/SOjxKLNFwdFCaICYdfCGR15Z+pmDFdcroxDwjGlaqzuBpDNhuUSmmo5jmLiZQtGAI6h0j9ecDRTj1G+kPdMcMcOrlgmPhCEyg7yGtVrlEZ8k7xqqLAt9/9LaLhuy3crsZa5BVXqvGYhTpn5kuCvjRyMfbRvRNkCZt4GfvgjJax2uJhbIFywfEuUGfUR0G2TByuVNw5lqoUz92Urn1oMTlWfCWcCItiaaWuMnvcwrbdtX0J8UnJVoTO/affI4Qj6Qki0cjTV1WjRuF3LlBYXBcMDgDZ9JLftugqiE1qoaxTKcazjoFGzGSmDXOkeSBCwMwvgGFJNJ0ZHoKurm0gMNkpg9Efjo2cPfEwPQRIuHdeF37dfvAps0PUU/aiUexzKIr3XQzG5nr6CtXB2N6R5G4TakTuOjTbSPCqvRmrgtGggUaBZSik7Y3cq1ezq/cBa3aY2ysdUwtVARoN3ZabgOLN9dc4gGceBFdZwWvr91Ja4peSsG7nbjGx8hrXgvGRHvV5CW8SbDimtI+ARPmZVLLjQeII2kjtFyXzafc7B87GgrXtPude5sWyWzRgW+I1HCude10juG14C+LcZAR48YTW3XgryWlSwTvYi5mepjy8h7+BvxeBtPciteXTth40DjsgXhoFzDJ7g3WxYIje3kUb51f6bIUKDH7nTsXqfuX2oRZEeDbTSWyURjW5lU0pSVi0OWU+mtv/P3ALUL7KLrqG7cmq4E58ruyeyAipLNskUWpDrvB6D7VDD8AyPdNmnYBbMJpqghkeWtAURvYztru8F3VhlV2+Jw5bD7DMyMjzw+I1nAY1vrqSEroFi4B017rrPAu4Z20snqczDb9RCUcLGtxsictRf2HppWu9e7nUqaKq41n7TJyI49Rc4405pA1km7TPOuVNUYGurIki39COTig4cwC4socpGlIWA9tOEuCX0NdEsgfVNqpoBdb2R3pIXtw/2OhjcKFyaM7E4V5dKKX/rOuKA5+7UokPlwjLvVONlIkYqfudRxdmYwmVzGZz95V6O0qa4z0rnfvpymAKohkHKmXG+OxjKJgxl6NJfEVk8+TGwgfoip1SnbDS/suzI33qnVKqbDSKX7oRlhJn/xlERSH+GCXdrFY5JoaLP5FxnfIWtN3yvOnKVP7yWFEO2lSBYLJOT5nX6BOk6R4l6HgR1Y8I+uFbx4J8McpZW2aXVjVX5svPtbjvFzoVyrEJD2Qsvy6xhgxLZJYaYVsw9NdwxVxEz4r4vBs2Gy2W7TLLbJ0xSmkv/rfVBI0g2jbFEYFB3YumVGcvjxNt4e72rI5gO3zOww9p+3AX6vo5XNqnIXbx1sW4/Rlj1PbTA/MibP8fbRofzgXmtWnaqyWd1llEv+ssenm+AI+G3dCgrtC3thZStH6OlgjNwkOdOo7WuYWgcews8wjeA5O5tCu2UPrINA8zBrH9N4XqcCfzrDYirRhpzwCfDE00Mc4zGYhzPeQxRHSbSXEwjOetKslC5VLhqmYXF0mov2BFODMSDarh3q5ZgctaGRo3s3iu6NztO6o8/HR1sIHuRUp/GkQ0tXHUJZU1iAy6YD2e1Bz3VSZzV5ZA9fdxP6jUMW3yOBPGaZnUbgMYjspH/DSe4XgPuJ/S47YXyV9+enYPnymZz1rwajv0EXfiz6UNRZhxlgH+3ds/KgdWoBzhiVrqrwWBMP4WRH7vwnyN5ZvE2foav0D44+8PUs01HdyPGaDEhJuA0cR4jhUur5AV4/ZKU4d5d0whhRf8SVTDWOLI0devhq7B5ga55nJ65joxk59I2Ew6fLkLGmPtkh3QuUj4Nu6xbt8jS908+X+ou6938DkGHYfwU8dxrW/lCols7r7N7AnhXn9+5WseBlSaBkTcY5sD4OErrb3grwx/+UuAts36drBwk709VG6L9B138EzH8T95kI/B5yuwmXPgQ/Is8ZUs2OfwL/5wDQ`;
+        `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`;
 
     /**
      * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
@@ -1489,6 +1489,9 @@ const discordCrypt = ( () => {
             /* Copy the current passwords to the clipboard. */
             $( '#dc-cpy-pwds-btn' ).click( _discordCrypt._onCopyCurrentPasswordsButtonClicked );
 
+            /* Ask the user about their password generation preferences. */
+            $( '#dc-generate-password-btn' ).click( _discordCrypt._onGeneratePassphraseClicked );
+
             /* Set whether auto-encryption is enabled or disabled. */
             dc_lock_btn.click( _discordCrypt._onForceEncryptButtonClicked );
         }
@@ -1962,7 +1965,10 @@ const discordCrypt = ( () => {
                         /* Decrypt the name. */
                         let r = _decryptMessageContent(
                             id,
-                            message.embeds[ i ].fields[ j ].name.substr( 1, message.content.length - 2 ),
+                            message.embeds[ i ].fields[ j ].name.substr(
+                                1,
+                                message.embeds[ i ].fields[ j ].name - 2
+                            ),
                             message,
                             primary_key,
                             secondary_key
@@ -1977,7 +1983,10 @@ const discordCrypt = ( () => {
                         /* Decrypt the name. */
                         let r = _decryptMessageContent(
                             id,
-                            message.embeds[ i ].fields[ j ].value.substr( 1, message.content.length - 2 ),
+                            message.embeds[ i ].fields[ j ].value.substr(
+                                1,
+                                message.embeds[ i ].fields[ j ].value.length - 2
+                            ),
                             message,
                             primary_key,
                             secondary_key
@@ -3814,6 +3823,40 @@ const discordCrypt = ( () => {
                 $( '#dc-overlay' ).css( 'display', 'none' );
                 $( '#dc-overlay-password' ).css( 'display', 'none' );
             } ), 250 );
+        }
+
+        /**
+         * @private
+         * @desc Prompts the user on their passphrase generation options.
+         */
+        static _onGeneratePassphraseClicked() {
+            global.smalltalk.prompt(
+                'GENERATE A SECURE PASSPHRASE',
+                'Please enter how many words you\'d like this passphrase to have:\n\n',
+                '20'
+            ).then(
+                ( value ) => {
+                    /* Validate the value entered. */
+                    if( typeof value !== 'string' || !value.length || isNaN( value ) ) {
+                        global.smalltalk.alert( 'ERROR', 'Invalid value entered' );
+                        return;
+                    }
+
+                    /* Generate the word list. */
+                    let { entropy, passphrase } = _discordCrypt.__generateDicewarePassphrase( parseInt( value ) );
+
+                    /* Alert the user. */
+                    global.smalltalk.prompt(
+                        `GENERATED A ${parseInt( value )} WORD LONG PASSPHRASE`,
+                        `This passphrase contains approximately <b>${Math.round( entropy )} bits of entropy</b>.\n\n` +
+                        'Please copy your generated passphrase below:\n\n',
+                        passphrase
+                    );
+                },
+                () => {
+                    /* Ignored. */
+                }
+            );
         }
 
         /**
