@@ -9,6 +9,7 @@ Version 2.0.0
 - Removed the ability to send encrypted messages as embeds.
 - Fixed parsing errors related to code blocks and other markdown based formatting.
 - Fixed the message scrolling bug.
+- Fixed the broken link to the support server.
 - Added SHA-3 internally in favor of the older SHA-2 standard.
 - Added the ability to edit encrypted messages.
 - Added automatic key exchanges.
