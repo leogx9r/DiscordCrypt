@@ -5633,7 +5633,7 @@ const discordCrypt = ( () => {
                                     callback(
                                         null,
                                         `${up1_host}/#${encoded_seed}`,
-                                        `${up1_host}/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
+                                        `/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
                                         encoded_seed
                                     );
                                 }
@@ -5698,7 +5698,7 @@ const discordCrypt = ( () => {
                                     callback(
                                         null,
                                         `${up1_host}/#${encoded_seed}`,
-                                        `${up1_host}/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
+                                        `/del?ident=${identity}&delkey=${JSON.parse( body ).delkey}`,
                                         encoded_seed
                                     );
                                 }
