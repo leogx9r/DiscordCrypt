@@ -2801,7 +2801,7 @@ const discordCrypt = ( () => {
 
                     /* Copy the deletion link to the clipboard. */
                     // noinspection JSUnresolvedFunction
-                    require( 'electron' ).clipboard.writeText( `Delete URL: ${deletion_link}` );
+                    require( 'electron' ).clipboard.writeText( `Delete URL: ${_configFile.up1Host} ${deletion_link}` );
                 }
             );
         }
@@ -2871,7 +2871,11 @@ const discordCrypt = ( () => {
 
                     /* Format and send the message. */
                     _discordCrypt._sendEncryptedMessage(
-                        `${file_url}${send_deletion_link ? '\n\nDelete URL: ' + deletion_link : ''}`,
+                        `${file_url}${
+                            send_deletion_link ?
+                                '\n\nDelete URL: ' + _configFile.up1Host + deletion_link :
+                                ''
+                        }`,
                         true,
                         channel_id
                     );
