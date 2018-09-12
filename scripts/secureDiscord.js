@@ -222,6 +222,9 @@ module.exports = ( mainWindowOptions ) => {
             /* Old URLs they may eventually switch back to. */
             'discordapp.com/api/track',
             'discordapp.com/api/v6/track',
+            /* Potential future URLs when Discord upgrades their API. */
+            'discordapp.com/api/v7/science',
+            'discordapp.com/api/v7/track',
 
             /* Various experiments that Discord makes the user participate in. */
             'discordapp.com/api/v6/experiments',
