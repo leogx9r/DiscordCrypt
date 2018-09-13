@@ -431,6 +431,21 @@ class Compiler {
             try {
                 /* Write the file to the output. */
                 this.fs.writeFileSync( output_path, metadata + data );
+
+                /* For flatpak builds, this needs to be copied as symlinks are forbidden. */
+                let FLATPAK_OUTPUT_PATH =
+                    this.path.resolve( `${this.process.env.HOME}/.var/app/com.discordapp.Discord/config` ),
+                    FLATPAK_OUTPUT_FILE = `${FLATPAK_OUTPUT_PATH}/BetterDiscord/plugins/discordCrypt.plugin.js`;
+                if(
+                    this.process.platform === 'linux' &&
+                    this.fs.existsSync( FLATPAK_OUTPUT_PATH )
+                ) {
+                    this.fs.writeFileSync(
+                        FLATPAK_OUTPUT_FILE,
+                        metadata + data
+                    );
+                    console.info( `Created Build File: ${FLATPAK_OUTPUT_FILE}` );
+                }
             }
             catch ( e ) {
                 console.error( `Error building plugin:\n    ${e.toString()}` );

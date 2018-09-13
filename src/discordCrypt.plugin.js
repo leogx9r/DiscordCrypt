@@ -4194,12 +4194,18 @@ const discordCrypt = ( () => {
          * // "C:\Users\John Doe\AppData\Local/BetterDiscord/plugins"
          */
         static _getPluginsPath() {
+            const FLATPAK_PATH = '.var/app/com.discordapp.Discord/config';
+
             const process = require( 'process' );
+            const fs = require( 'fs' );
+
             return `${process.platform === 'win32' ?
                 process.env.APPDATA :
                 process.platform === 'darwin' ?
                     process.env.HOME + '/Library/Preferences' :
-                    process.env.HOME + '/.config'}/BetterDiscord/plugins/`;
+                    fs.existsSync( FLATPAK_PATH ) ?
+                        FLATPAK_PATH :
+                        process.env.HOME + '/.config'}/BetterDiscord/plugins/`;
         }
 
         /**
