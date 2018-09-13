@@ -1471,9 +1471,31 @@ const discordCrypt = ( () => {
                 /* Get the current time. */
                 let now = Date.now();
 
+                /* Remove all expired exchange entries. */
+                for( let i in _globalSessionState ) {
+                    /* Sanity check. */
+                    if( !_globalSessionState[ i ].initiateTime )
+                        continue;
+
+                    /* Check if the exchange has expired. */
+                    if( ( now - _globalSessionState[ i ].initiateTime ) > KEY_IGNORE_TIMEOUT ) {
+                        /* Remove the entry. */
+                        delete _globalSessionState[ i ];
+
+                        /* Alert. */
+                        global.smalltalk.alert(
+                            'KEY EXCHANGE EXPIRED',
+                            `The key exchange for the channel "${i}" has expired. Please retry again.`
+                        );
+                    }
+                }
+
                 /* Skip if the nonce is generate isn't found. */
                 if( typeof _cachedModules.NonceGenerator.extractTimestamp !== 'function' ) {
-                    _discordCrypt.log( 'Cannot run garbage collector because a module couldn\'t be found.', 'warn' );
+                    _discordCrypt.log(
+                        'Cannot clean expired key exchanges because a module couldn\'t be found.',
+                        'warn'
+                    );
                     return;
                 }
 
@@ -2173,6 +2195,7 @@ const discordCrypt = ( () => {
             ) {
                 /* Create the session object. */
                 _globalSessionState[ message.channel_id ] = {};
+                _globalSessionState[ message.channel_id ].initiateTime = Date.now();
 
                 /* Generate a local key pair. */
                 if( remoteKeyInfo.algorithm.toLowerCase() === 'dh' )

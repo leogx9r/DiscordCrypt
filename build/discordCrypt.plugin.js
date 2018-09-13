@@ -478,6 +478,13 @@ const discordCrypt = ( () => {
 
     /**
      * @private
+     * @desc The index of the handler used for garbage collection.
+     * @type {int}
+     */
+    let _garbageCollectorInterval;
+
+    /**
+     * @private
      * @desc The configuration file currently in use. Only valid after decryption of the configuration database.
      * @type {Config|null}
      */
@@ -817,45 +824,8 @@ const discordCrypt = ( () => {
             /* Block tracking and analytics. */
             _discordCrypt._blockTracking();
 
-            /* Setup the timed message handler to trigger every 5 seconds. */
-            _timedMessageInterval = setInterval( () => {
-                /* Get the current time. */
-                let n = Date.now();
-
-                /* Loop over each message. */
-                _configFile.timedMessages.forEach( ( e, i ) => {
-                    /* Skip invalid elements. */
-                    if ( !e || !e.expireTime ) {
-                        /* Delete the index. */
-                        _configFile.timedMessages.splice( i, 1 );
-
-                        /* Update the configuration to the disk. */
-                        _discordCrypt._saveConfig();
-                    }
-
-                    /* Only continue if the message has been expired. */
-                    if ( e.expireTime < n ) {
-                        /* Quickly log. */
-                        _discordCrypt.log( `Deleting timed message "${_configFile.timedMessages[ i ].messageId}"` );
-
-                        try {
-                            /* Delete the message. This will be queued if a rate limit is in effect. */
-                            _discordCrypt._deleteMessage( e.channelId, e.messageId, _cachedModules );
-                        }
-                        catch ( e ) {
-                            /* Log the error that occurred. */
-                            _discordCrypt.log( `${e.messageId}: ${e.toString()}`, 'error' );
-                        }
-
-                        /* Delete the index. */
-                        _configFile.timedMessages.splice( i, 1 );
-
-                        /* Update the configuration to the disk. */
-                        _discordCrypt._saveConfig();
-                    }
-                } );
-
-            }, 5000 );
+            /* Start the garbage collector. */
+            _discordCrypt._initGarbageCollector();
         }
 
         /**
@@ -872,6 +842,9 @@ const discordCrypt = ( () => {
             for( let i = 0; i < _stopCallbacks.length; i++ )
                 _stopCallbacks[ i ]();
             _stopCallbacks = [];
+
+            /* Unload the garbage collector. */
+            clearInterval( _garbageCollectorInterval );
 
             /* Unload the timed message handler. */
             clearInterval( _timedMessageInterval );
@@ -1498,6 +1471,122 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Initializes additional threads needed for purging old data.
+         */
+        static _initGarbageCollector() {
+            /* Set up the garbage collector. */
+            _garbageCollectorInterval = setInterval( () => {
+                /* Get the current time. */
+                let now = Date.now();
+
+                /* Remove all expired exchange entries. */
+                for( let i in _globalSessionState ) {
+                    /* Sanity check. */
+                    if( !_globalSessionState[ i ].initiateTime )
+                        continue;
+
+                    /* Check if the exchange has expired. */
+                    if( ( now - _globalSessionState[ i ].initiateTime ) > KEY_IGNORE_TIMEOUT ) {
+                        /* Remove the entry. */
+                        delete _globalSessionState[ i ];
+
+                        /* Alert. */
+                        global.smalltalk.alert(
+                            'KEY EXCHANGE EXPIRED',
+                            `The key exchange for the channel "${i}" has expired. Please retry again.`
+                        );
+                    }
+                }
+
+                /* Skip if the nonce is generate isn't found. */
+                if( typeof _cachedModules.NonceGenerator.extractTimestamp !== 'function' ) {
+                    _discordCrypt.log(
+                        'Cannot clean expired key exchanges because a module couldn\'t be found.',
+                        'warn'
+                    );
+                    return;
+                }
+
+                /* Iterate all channels stored. */
+                for( let i in _configFile.channels ) {
+                    /* Iterate all IDs being ignored. */
+                    for( let id of _configFile.channels[ i ].ignoreIds ) {
+                        /* Check when the message was sent. . */
+                        let diff_milliseconds = now - _cachedModules.NonceGenerator.extractTimestamp( id );
+
+                        /* Delete the entry if it's greater than the ignore timeout. */
+                        if( diff_milliseconds < 0 || diff_milliseconds > KEY_IGNORE_TIMEOUT ) {
+                            /* Quickly log. */
+                            _discordCrypt.log( `Deleting old key exchange message "${id}"` );
+
+                            /* Remove the entry. */
+                            delete _configFile.channels[ i ].ignoreIds[
+                                _configFile.channels[ i ].ignoreIds.indexOf( id )
+                            ];
+
+                            /* Try deleting the message. It won't be deleted if we didn't send it. */
+                            try {
+                                /* Delete the message. This will be queued if a rate limit is in effect. */
+                                _discordCrypt._deleteMessage( i, id, _cachedModules );
+                            }
+                            catch ( e ) {
+                                /* We can safely ignore this. */
+                            }
+                        }
+                    }
+
+                    /* Remove all empty entries. */
+                    _configFile.channels[ i ].ignoreIds = _configFile.channels[ i ].ignoreIds.filter( e => e );
+                }
+
+                /* Update the configuration to the disk. */
+                _discordCrypt._saveConfig();
+
+            }, 10000 );
+
+            /* Setup the timed message handler to trigger every 5 seconds. */
+            _timedMessageInterval = setInterval( () => {
+                /* Get the current time. */
+                let now = Date.now();
+
+                /* Loop over each message. */
+                _configFile.timedMessages.forEach( ( e, i ) => {
+                    /* Skip invalid elements. */
+                    if ( !e || !e.expireTime ) {
+                        /* Delete the index. */
+                        _configFile.timedMessages.splice( i, 1 );
+
+                        /* Update the configuration to the disk. */
+                        _discordCrypt._saveConfig();
+                    }
+
+                    /* Only continue if the message has been expired. */
+                    if ( e.expireTime < now ) {
+                        /* Quickly log. */
+                        _discordCrypt.log( `Deleting timed message "${_configFile.timedMessages[ i ].messageId}"` );
+
+                        try {
+                            /* Delete the message. This will be queued if a rate limit is in effect. */
+                            _discordCrypt._deleteMessage( e.channelId, e.messageId, _cachedModules );
+                        }
+                        catch ( e ) {
+                            /* Log the error that occurred. */
+                            _discordCrypt.log( `${e.messageId}: ${e.toString()}`, 'warn' );
+                        }
+
+                        /* Delete the index. */
+                        _configFile.timedMessages.splice( i, 1 );
+
+                        /* Update the configuration to the disk. */
+                        _discordCrypt._saveConfig();
+                    }
+                } );
+
+            }, 5000 );
+        }
+
+        /**
+         * @private
          * @desc Sets up the hooking methods required for plugin functionality.
          */
         static _hookSetup() {
@@ -2114,6 +2203,7 @@ const discordCrypt = ( () => {
             ) {
                 /* Create the session object. */
                 _globalSessionState[ message.channel_id ] = {};
+                _globalSessionState[ message.channel_id ].initiateTime = Date.now();
 
                 /* Generate a local key pair. */
                 if( remoteKeyInfo.algorithm.toLowerCase() === 'dh' )
