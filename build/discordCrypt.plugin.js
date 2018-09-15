@@ -3144,7 +3144,17 @@ const discordCrypt = ( () => {
                         .text( 'Delete Keys' ),
                     copy_btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                        .html( 'Copy Keys' );
+                        .text( 'Copy Keys' ),
+                    encrypt_icon = $( '<div>' )
+                        .addClass( 'dc-tooltip' )
+                        .css( 'background-color', 'transparent' )
+                        .html(
+                            Buffer.from(
+                                _configFile.channels[ id ].autoEncrypt ? LOCK_ICON : UNLOCK_ICON,
+                                'base64'
+                            )
+                                .toString( 'utf8' )
+                        );
 
                 /* Handle deletion clicks. */
                 delete_btn.click( function () {
@@ -3181,10 +3191,26 @@ const discordCrypt = ( () => {
                     }, 1000 );
                 } );
 
-                /* Append the button to the Options column. */
-                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( copy_btn );
+                /* Handle toggling states. */
+                encrypt_icon.click( function() {
+                    /* Toggle the encryption state for the channel */
+                    _configFile.channels[ id ].autoEncrypt = !_configFile.channels[ id ].autoEncrypt;
 
-                /* Append the button to the Options column. */
+                    /* Save the configuration. */
+                    _discordCrypt._saveConfig();
+
+                    /* Update the icon. */
+                    encrypt_icon.html(
+                        Buffer.from(
+                            _configFile.channels[ id ].autoEncrypt ? LOCK_ICON : UNLOCK_ICON,
+                            'base64'
+                        )
+                            .toString( 'utf8' ) );
+                } );
+
+                /* Append the buttons to the Options column. */
+                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( encrypt_icon );
+                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( copy_btn );
                 $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( delete_btn );
 
                 /* Append the entire entry to the table. */
