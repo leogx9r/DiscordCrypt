@@ -3504,73 +3504,99 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Opens a file dialog to import a JSON encoded entries file.
+         * @desc Opens a file dialog to export a JSON encoded entries file.
          */
         static _onExportDatabaseButtonClicked() {
-            /* Create an input element. */
-            // noinspection JSUnresolvedFunction
-            let file = require( 'electron' ).remote.dialog.showSaveDialog( {
-                title: 'Export Database',
-                message: 'Select the destination file',
-                buttonLabel: 'Export',
-                filters: [ {
-                    name: 'Database Entries ( *.json )',
-                    extensions: [ 'json' ]
-                } ]
-            } );
+            /* Generate a random captcha to verify the user wants to do this.*/
+            let captcha = _discordCrypt.__generateWordCaptcha();
 
-            /* Ignore if no files was selected. */
-            if ( !file.length )
-                return;
+            /* Alert the user before they do this. */
+            global.smalltalk.prompt(
+                'EXPORT WARNING',
+                'Exporting your database is <b>DANGEROUS</b>.\n\n' +
+                'You should only do this when <u>explicitly</u> directed by the plugin\'s developers.\n\n\n' +
+                '<b>N.B. Exports will NOT be encrypted. Be responsible.</b>\n\n' +
+                'Enter the following and click "OK" to export the database:\n\n\n' +
+                `<p style="text-indent: 20px"><b>${captcha.captcha}</b></p>\n\n`,
+                ''
+            )
+                .then(
+                    ( value ) => {
+                        /* Make sure the user entered the correct passphrase before continuing. */
+                        if( value.toLowerCase().trim() !== captcha.passphrase ) {
+                            setImmediate( _discordCrypt._onExportDatabaseButtonClicked );
+                            return;
+                        }
 
-            /* Get the FS module. */
-            const fs = require( 'fs' );
+                        /* Create an input element. */
+                        // noinspection JSUnresolvedFunction
+                        let file = require( 'electron' ).remote.dialog.showSaveDialog( {
+                            title: 'Export Database',
+                            message: 'Select the destination file',
+                            buttonLabel: 'Export',
+                            filters: [ {
+                                name: 'Database Entries ( *.json )',
+                                extensions: [ 'json' ]
+                            } ]
+                        } );
 
-            /* Cache the button. */
-            let export_btn = $( '#dc-export-database-btn' );
+                        /* Ignore if no files was selected. */
+                        if ( !file.length )
+                            return;
 
-            /* Create the main object for exporting. */
-            let data = { _discordCrypt_entries: [] },
-                entries;
+                        /* Get the FS module. */
+                        const fs = require( 'fs' );
 
-            /* Iterate each entry in the configuration file. */
-            for ( let prop in _configFile.channels ) {
-                let e = _configFile.channels[ prop ];
+                        /* Cache the button. */
+                        let export_btn = $( '#dc-export-database-btn' );
 
-                /* Skip entries without a primary and secondary key. */
-                if( !e || !e.primaryKey || !e.secondaryKey )
-                    continue;
+                        /* Create the main object for exporting. */
+                        let data = { _discordCrypt_entries: [] },
+                            entries;
 
-                /* Insert the entry to the list. */
-                data._discordCrypt_entries.push( {
-                    id: prop,
-                    primary: e.primaryKey,
-                    secondary: e.secondaryKey
-                } );
-            }
+                        /* Iterate each entry in the configuration file. */
+                        for ( let prop in _configFile.channels ) {
+                            let e = _configFile.channels[ prop ];
 
-            /* Update the entry count. */
-            entries = data._discordCrypt_entries.length;
+                            /* Skip entries without a primary and secondary key. */
+                            if( !e || !e.primaryKey || !e.secondaryKey )
+                                continue;
 
-            try {
-                /* Try writing the file. */
-                fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
+                            /* Insert the entry to the list. */
+                            data._discordCrypt_entries.push( {
+                                id: prop,
+                                primary: e.primaryKey,
+                                secondary: e.secondaryKey
+                            } );
+                        }
 
-                /* Update the button's text. */
-                export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
-            }
-            catch ( e ) {
-                /* Log an error. */
-                _discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
+                        /* Update the entry count. */
+                        entries = data._discordCrypt_entries.length;
 
-                /* Update the button's text. */
-                export_btn.text( 'Error: See Console' );
-            }
+                        try {
+                            /* Try writing the file. */
+                            fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
 
-            /* Reset the button's text. */
-            setTimeout( () => {
-                export_btn.text( 'Export Database' );
-            }, 1000 );
+                            /* Update the button's text. */
+                            export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
+                        }
+                        catch ( e ) {
+                            /* Log an error. */
+                            _discordCrypt.log( `Error exporting entries: ${e.toString()}`, 'error' );
+
+                            /* Update the button's text. */
+                            export_btn.text( 'Error: See Console' );
+                        }
+
+                        /* Reset the button's text. */
+                        setTimeout( () => {
+                            export_btn.text( 'Export Database' );
+                        }, 1000 );
+                    },
+                    () => {
+                        /* Ignored. */
+                    }
+                );
         }
 
         /**
@@ -5103,6 +5129,58 @@ const discordCrypt = ( () => {
             }
             catch ( ex ) {
                 console.error( '[DiscordCrypt] - Error logging message ...' );
+            }
+        }
+
+        /**
+         * @private
+         * @desc Builds a random captcha phrase to validate user input.
+         * @param {number} word_count The number of words to use for the captcha.
+         * @return {{passphrase: string, captcha: string}}
+         */
+        static __generateWordCaptcha( word_count = 5 ) {
+            /* Generator for determining which character set to choose from. */
+            const randomBytes = require( 'crypto' ).randomBytes;
+
+            /* Stores the result captcha. */
+            let captcha = '';
+
+            /* This uses a converter to transform the text. */
+            const CONVERTER = [
+                    /* REGULAR */
+                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+
+                    /* SMALLCAPS */
+                    'ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ',
+
+                    /* SUPERSCRIPT */
+                    'ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁνᵂˣʸᶻ'
+                ],
+                ALPHABET = CONVERTER[ 0 ].toLowerCase();
+
+            /* Generate a random passphrase. */
+            let passphrase = _discordCrypt.__generateDicewarePassphrase( word_count );
+
+            /* Split the passphrase into words. */
+            let words = passphrase.passphrase.split( ' ' );
+
+            /* Iterate each word to build the captcha. */
+            for( let i = 0; i < words.length; i++ ) {
+                /* Generate a random sequence to pick the word list from. */
+                let rand = randomBytes( words[ i ].length );
+
+                /* Build a new word using the random word lists. */
+                for( let j = 0; j < words[ i ].length; j++ )
+                    captcha += CONVERTER[ rand[ j ] % CONVERTER.length ][ ALPHABET.indexOf( words[ i ][ j ] ) ];
+
+                /* Add the space. */
+                captcha += ' ';
+            }
+
+            /* Return the captcha and expected values. */
+            return {
+                passphrase: passphrase.passphrase,
+                captcha: captcha.trim(),
             }
         }
 
