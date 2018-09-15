@@ -659,7 +659,7 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const APP_STYLE =
-        `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`;
+        `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`;
 
     /**
      * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
@@ -680,7 +680,7 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const MENU_HTML =
-        `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`;
+        `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`;
 
     /**
      * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
@@ -3062,19 +3062,30 @@ const discordCrypt = ( () => {
 
             /* Iterate over each password in the configuration. */
             for ( let prop in _configFile.channels ) {
-                let name, id = prop;
+                let name = '', icon, id = prop;
 
                 /* Skip channels that don't have an ID. */
                 if ( !channels[ id ] )
                     continue;
+
+                /* Skip channels that don't have a custom password. */
+                if(  !_configFile.channels[ id ].primaryKey || !_configFile.channels[ id ].secondaryKey )
+                    continue;
+
+                /* Choose a default icon. */
+                icon = 'https://cdn.discordapp.com/icons/444361997811974144/74cb26731242af7fdd60a62c29dc7560.png';
 
                 /* Check for the correct channel type. */
                 if ( channels[ id ].type === 0 ) {
                     /* GUILD_TEXT */
                     let guild = guilds[ channels[ id ].guild_id ];
 
-                    /* Resolve the name as a "Guild @ #Channel" format. */
-                    name = `${guild.name} @ #${channels[ id ].name}`;
+                    /* Resolve the name as a "Guild ( #Channel )" format. */
+                    name = `${guild.name} ( #${channels[ id ].name} )`;
+
+                    /* Update the icon. */
+                    if( guild.icon )
+                        icon = `https://cdn.discordapp.com/icons/${channels[ id ].guild_id}/${guild.icon}.png`;
                 }
                 else if ( channels[ id ].type === 1 ) {
                     /* DM */
@@ -3082,40 +3093,58 @@ const discordCrypt = ( () => {
                     let user = users[ channels[ id ].recipients[ 0 ] ];
 
                     /* Indicate this is a DM and give the full user name. */
-                    name = `DM @${user.username}#${user.discriminator}`;
+                    name = `@${user.username}`;
+
+                    /* Update the icon. */
+                    if( user.id && user.avatar )
+                        icon = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
                 }
                 else if ( channels[ id ].type === 3 ) {
                     /* GROUP_DM */
-                    // noinspection JSUnresolvedVariable
-                    let max = channels[ id ].recipients.length > 3 ? 3 : channels[ id ].recipients.length,
-                        participants = '';
 
-                    /* Iterate the maximum number of users we can display. */
-                    for( let i = 0; i < max; i++ ) {
+                    /* Try getting the channel name first. */
+                    if( channels[ id ].name )
+                        name = channels[ id ].name;
+                    else {
                         // noinspection JSUnresolvedVariable
-                        let user = users[ channels[ id ].recipients[ i ] ];
-                        participants += `@${user.username}#${user.discriminator} `;
+                        let max = channels[ id ].recipients.length > 3 ? 3 : channels[ id ].recipients.length,
+                            participants = '';
+
+                        /* Iterate the maximum number of users we can display. */
+                        for( let i = 0; i < max; i++ ) {
+                            // noinspection JSUnresolvedVariable
+                            let user = users[ channels[ id ].recipients[ i ] ];
+                            participants += `@${user.username}#${user.discriminator} `;
+                        }
+
+                        /* List a maximum of three members. */
+                        name = `${participants}`;
                     }
 
-                    /* Indicate this is a DM and give the full user name. */
-                    name = `Group DM ${participants}`;
+                    /* Update the icon. */
+                    if( channels[ id ].icon )
+                        icon = `https://cdn.discordapp.com/channel-icons/${id}/${channels[ id ].icon}.png`;
                 }
                 else
                     continue;
 
-                /* Skip channels that don't have a custom password. */
-                if(  !_configFile.channels[ id ].primaryKey || !_configFile.channels[ id ].secondaryKey )
-                    continue;
-
                 /* Create the elements needed for building the row. */
                 let element =
-                        $( `<tr><td>${id}</td><td>${name}</td><td><div style="display:flex;"></div></td></tr>` ),
+                        $( `<tr>
+                                <td class="dc-ruler-align">
+                                    <div class="dc-icon" style="background-image:url(${icon});"></div>
+                                    <p>${name}</p>
+                                </td>
+                                <td>
+                                    <div style="display:flex;"></div>
+                                </td>
+                            </tr>` ),
                     delete_btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                        .text( 'Delete' ),
+                        .text( 'Delete Keys' ),
                     copy_btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                        .text( 'Copy' );
+                        .html( 'Copy Keys' );
 
                 /* Handle deletion clicks. */
                 delete_btn.click( function () {
@@ -3145,18 +3174,18 @@ const discordCrypt = ( () => {
                         `Primary Key: ${primary}\n\nSecondary Key: ${secondary}`
                     );
 
-                    copy_btn.text( 'Copied Keys' );
+                    copy_btn.text( 'Copied' );
 
                     setTimeout( () => {
-                        copy_btn.text( 'Copy' );
+                        copy_btn.text( 'Copy Keys' );
                     }, 1000 );
                 } );
 
                 /* Append the button to the Options column. */
-                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( copy_btn );
+                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( copy_btn );
 
                 /* Append the button to the Options column. */
-                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( delete_btn );
+                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( delete_btn );
 
                 /* Append the entire entry to the table. */
                 table.append( element );
@@ -4202,18 +4231,27 @@ const discordCrypt = ( () => {
          * // "C:\Users\John Doe\AppData\Local/BetterDiscord/plugins"
          */
         static _getPluginsPath() {
-            const FLATPAK_PATH = '.var/app/com.discordapp.Discord/config';
-
             const process = require( 'process' );
             const fs = require( 'fs' );
 
-            return `${process.platform === 'win32' ?
-                process.env.APPDATA :
-                process.platform === 'darwin' ?
-                    process.env.HOME + '/Library/Preferences' :
-                    fs.existsSync( FLATPAK_PATH ) ?
-                        FLATPAK_PATH :
-                        process.env.HOME + '/.config'}/BetterDiscord/plugins/`;
+            const BETTERDISCORD_PATH = '/BetterDiscord/plugins/';
+            const MAC_PATH = `${process.env.HOME}/Library/Preferences`;
+            const FLATPAK_PATH = '.var/app/com.discordapp.Discord/config';
+            const DEB_PATH = `${process.env.HOME}.config`;
+
+            switch( process.platform ) {
+            case 'win32':
+                return `${process.env.APPDATA}${BETTERDISCORD_PATH}`;
+            case 'darwin':
+                return `${MAC_PATH}${BETTERDISCORD_PATH}`;
+            case 'linux':
+                if( fs.existsSync( FLATPAK_PATH ) )
+                    return `${FLATPAK_PATH}${BETTERDISCORD_PATH}`;
+                return `${DEB_PATH}${BETTERDISCORD_PATH}`;
+            default:
+                _discordCrypt.log( `Unsupported platform detected: ${process.platform} ...`, 'error' );
+                throw 'DEAD';
+            }
         }
 
         /**

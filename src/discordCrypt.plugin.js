@@ -3054,19 +3054,30 @@ const discordCrypt = ( () => {
 
             /* Iterate over each password in the configuration. */
             for ( let prop in _configFile.channels ) {
-                let name, id = prop;
+                let name = '', icon, id = prop;
 
                 /* Skip channels that don't have an ID. */
                 if ( !channels[ id ] )
                     continue;
+
+                /* Skip channels that don't have a custom password. */
+                if(  !_configFile.channels[ id ].primaryKey || !_configFile.channels[ id ].secondaryKey )
+                    continue;
+
+                /* Choose a default icon. */
+                icon = 'https://cdn.discordapp.com/icons/444361997811974144/74cb26731242af7fdd60a62c29dc7560.png';
 
                 /* Check for the correct channel type. */
                 if ( channels[ id ].type === 0 ) {
                     /* GUILD_TEXT */
                     let guild = guilds[ channels[ id ].guild_id ];
 
-                    /* Resolve the name as a "Guild @ #Channel" format. */
-                    name = `${guild.name} @ #${channels[ id ].name}`;
+                    /* Resolve the name as a "Guild ( #Channel )" format. */
+                    name = `${guild.name} ( #${channels[ id ].name} )`;
+
+                    /* Update the icon. */
+                    if( guild.icon )
+                        icon = `https://cdn.discordapp.com/icons/${channels[ id ].guild_id}/${guild.icon}.png`;
                 }
                 else if ( channels[ id ].type === 1 ) {
                     /* DM */
@@ -3074,40 +3085,58 @@ const discordCrypt = ( () => {
                     let user = users[ channels[ id ].recipients[ 0 ] ];
 
                     /* Indicate this is a DM and give the full user name. */
-                    name = `DM @${user.username}#${user.discriminator}`;
+                    name = `@${user.username}`;
+
+                    /* Update the icon. */
+                    if( user.id && user.avatar )
+                        icon = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`;
                 }
                 else if ( channels[ id ].type === 3 ) {
                     /* GROUP_DM */
-                    // noinspection JSUnresolvedVariable
-                    let max = channels[ id ].recipients.length > 3 ? 3 : channels[ id ].recipients.length,
-                        participants = '';
 
-                    /* Iterate the maximum number of users we can display. */
-                    for( let i = 0; i < max; i++ ) {
+                    /* Try getting the channel name first. */
+                    if( channels[ id ].name )
+                        name = channels[ id ].name;
+                    else {
                         // noinspection JSUnresolvedVariable
-                        let user = users[ channels[ id ].recipients[ i ] ];
-                        participants += `@${user.username}#${user.discriminator} `;
+                        let max = channels[ id ].recipients.length > 3 ? 3 : channels[ id ].recipients.length,
+                            participants = '';
+
+                        /* Iterate the maximum number of users we can display. */
+                        for( let i = 0; i < max; i++ ) {
+                            // noinspection JSUnresolvedVariable
+                            let user = users[ channels[ id ].recipients[ i ] ];
+                            participants += `@${user.username}#${user.discriminator} `;
+                        }
+
+                        /* List a maximum of three members. */
+                        name = `${participants}`;
                     }
 
-                    /* Indicate this is a DM and give the full user name. */
-                    name = `Group DM ${participants}`;
+                    /* Update the icon. */
+                    if( channels[ id ].icon )
+                        icon = `https://cdn.discordapp.com/channel-icons/${id}/${channels[ id ].icon}.png`;
                 }
                 else
                     continue;
 
-                /* Skip channels that don't have a custom password. */
-                if(  !_configFile.channels[ id ].primaryKey || !_configFile.channels[ id ].secondaryKey )
-                    continue;
-
                 /* Create the elements needed for building the row. */
                 let element =
-                        $( `<tr><td>${id}</td><td>${name}</td><td><div style="display:flex;"></div></td></tr>` ),
+                        $( `<tr>
+                                <td class="dc-ruler-align">
+                                    <div class="dc-icon" style="background-image:url(${icon});"></div>
+                                    <p>${name}</p>
+                                </td>
+                                <td>
+                                    <div style="display:flex;"></div>
+                                </td>
+                            </tr>` ),
                     delete_btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                        .text( 'Delete' ),
+                        .text( 'Delete Keys' ),
                     copy_btn = $( '<button>' )
                         .addClass( 'dc-button dc-button-small dc-button-inverse' )
-                        .text( 'Copy' );
+                        .html( 'Copy Keys' );
 
                 /* Handle deletion clicks. */
                 delete_btn.click( function () {
@@ -3137,18 +3166,18 @@ const discordCrypt = ( () => {
                         `Primary Key: ${primary}\n\nSecondary Key: ${secondary}`
                     );
 
-                    copy_btn.text( 'Copied Keys' );
+                    copy_btn.text( 'Copied' );
 
                     setTimeout( () => {
-                        copy_btn.text( 'Copy' );
+                        copy_btn.text( 'Copy Keys' );
                     }, 1000 );
                 } );
 
                 /* Append the button to the Options column. */
-                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( copy_btn );
+                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( copy_btn );
 
                 /* Append the button to the Options column. */
-                $( $( element.children()[ 2 ] ).children()[ 0 ] ).append( delete_btn );
+                $( $( element.children()[ 1 ] ).children()[ 0 ] ).append( delete_btn );
 
                 /* Append the entire entry to the table. */
                 table.append( element );
@@ -4194,18 +4223,27 @@ const discordCrypt = ( () => {
          * // "C:\Users\John Doe\AppData\Local/BetterDiscord/plugins"
          */
         static _getPluginsPath() {
-            const FLATPAK_PATH = '.var/app/com.discordapp.Discord/config';
-
             const process = require( 'process' );
             const fs = require( 'fs' );
 
-            return `${process.platform === 'win32' ?
-                process.env.APPDATA :
-                process.platform === 'darwin' ?
-                    process.env.HOME + '/Library/Preferences' :
-                    fs.existsSync( FLATPAK_PATH ) ?
-                        FLATPAK_PATH :
-                        process.env.HOME + '/.config'}/BetterDiscord/plugins/`;
+            const BETTERDISCORD_PATH = '/BetterDiscord/plugins/';
+            const MAC_PATH = `${process.env.HOME}/Library/Preferences`;
+            const FLATPAK_PATH = '.var/app/com.discordapp.Discord/config';
+            const DEB_PATH = `${process.env.HOME}.config`;
+
+            switch( process.platform ) {
+            case 'win32':
+                return `${process.env.APPDATA}${BETTERDISCORD_PATH}`;
+            case 'darwin':
+                return `${MAC_PATH}${BETTERDISCORD_PATH}`;
+            case 'linux':
+                if( fs.existsSync( FLATPAK_PATH ) )
+                    return `${FLATPAK_PATH}${BETTERDISCORD_PATH}`;
+                return `${DEB_PATH}${BETTERDISCORD_PATH}`;
+            default:
+                _discordCrypt.log( `Unsupported platform detected: ${process.platform} ...`, 'error' );
+                throw 'DEAD';
+            }
         }
 
         /**

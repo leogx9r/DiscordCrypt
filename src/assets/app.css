@@ -11,6 +11,15 @@
     z-index: 1000;
     cursor: default;
 }
+.dc-icon {
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    background-size: 30px 30px;
+    border-radius: 50%;
+    margin-right: 10px;
+    height: 30px;
+    width: 30px;
+    float: left;
+}
 .dc-tooltip {
     display: inline-block;
     position: relative;
@@ -52,7 +61,6 @@
 }
 .dc-table {
     border: 1px solid #424549;
-    padding: 5px;
     width: 100%;
 }
 .dc-table > thead {
