@@ -5196,14 +5196,14 @@ const discordCrypt = ( () => {
          */
         static __validatePasswordRequisites( input ) {
             if(
-                input.length < 64 &&
+                input.length < 32 &&
                 !( new RegExp( /^(?=.{8,})(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*\W).*$/g ) ).test( input )
             ) {
                 global.smalltalk.alert(
                     'Invalid Password Input',
                     'Your password <b>must be at least 8 characters</b> long and <u>must</u> contain ' +
                     'a combination of alpha-numeric characters both uppercase and lowercase ( A-Z, a-z, 0-9 ) ' +
-                    'as well as at least one symbol <b>OR</b> be greater than 64 characters for the best security.' +
+                    'as well as at least one symbol <b>OR</b> be greater than 32 characters for the best security.' +
                     '<br/><br/><br/>' +
                     'Please enter a password meeting these requirements.<br/>' +
                     'We recommend you use a password manager like KeePassX or KeePassXC to easily store these.'
