@@ -16,10 +16,9 @@
     * [***Changing The Database Password***](#changing-the-database-password)
     * [***Exchanging Keys***](#exchanging-keys)
         * [*Personal Conversations*](#personal-conversations)
-        * [*Group Conversations And Channels*](#group-conversations-and-channels)
-            * [*Alternative Method*](#alternative-method)
-    * [***Resetting Or Updating Conversation Passwords 
-        Manually***](#resetting-or-updating-conversation-passwords-manually)
+        * [*Channels & Group DMs*](#channels-and-group-dms)
+            * [*Sharing Existing Passwords*](#sharing-existing-passwords)
+    * [***Resetting Or Updating Passwords***](#resetting-or-updating-passwords)
 * [**Best Practices**](#best-practices)
 * [**Debugging**](#debugging)
 * [**Frequently Asked Questions ( FAQs )**](#frequently-asked-questions)
@@ -147,7 +146,7 @@ For installation on specific operating systems, see below:
 #### Windows
 
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) 
-    the plugin file. ( Right Click -> Save As )
+    the plugin file. ( Right Click "**Download**" -> Save As )
 * Save the plugin to the following path: **`%APPDATA%\BetterDiscord\plugins`**.
     * *Example: `C:\Users\Jeremy\AppData\Local\BetterDiscord\plugins\discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
@@ -159,7 +158,7 @@ For installation on specific operating systems, see below:
 #### MacOS
 
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) 
-    the plugin file. ( Right Click -> Save As )
+    the plugin file. ( Right Click "**Download**" -> Save As )
 * Save the plugin to the following path: **`~/Library/Preferences/BetterDiscord/plugins`**.
     * *Example: `/home/jeremy/Library/Preferences/BetterDiscord/plugins/discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
@@ -170,21 +169,30 @@ For installation on specific operating systems, see below:
 
 #### Linux
 
+##### Stable & Canary Versions
+
 *The following instructions are for **Discord Stable/Canary***.
 ( Get it [here](https://discordapp.com/api/download?platform=linux&format=deb) for Debian/Ubuntu. )
 
-The *PTB* or *SNAP* versions have **NOT** been tested.
+The *PTB* or *SNAP* versions are **NOT** supported.
 
 * [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) 
     the plugin file. ( Right Click -> Save As )
 * Save the plugin to the following path: **`~/.config/BetterDiscord/plugins`**.
     * *Example: `/home/jeremy/.config/BetterDiscord/plugins/discordCrypt.plugin.js`*
-    * If you use another version of Discord, install it to the designated BetterDiscord 
-        plugin path for your version.
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
 * Restart Discord by pressing: **`Ctrl + R`**.
 * Enable the plugin in BetterDiscord's plugin settings menu.
 
+##### Flatpak Versions
+
+* [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) 
+    the plugin file. ( Right Click -> Save As )
+* Save the plugin to the following path: **`~/.var/app/com.discordapp.Discord/config/BetterDiscord/plugins`**.
+    * *Example: `/home/jeremy/.var/app/com.discordapp.Discord/config/BetterDiscord/plugins/discordCrypt.plugin.js`*
+* **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
+* Restart Discord by pressing: **`Ctrl + R`**.
+* Enable the plugin in BetterDiscord's plugin settings menu.
  
 
 # Usage
@@ -205,12 +213,15 @@ These icons each offer a different functionality as follows:
     * After uploading, this sets your clipboard to the deletion link for the uploaded file which 
         you may use to either manually delete the file after your colleague has downloaded it 
         or for later deletion.
-    * You are limited to a maximum of 50 MB just as the standard file upload.    
+    * You are limited to a maximum of 50 MB. 
 * **[2] Upload Encrypted File**
     * This opens the file upload menu that you may use to encrypt and upload a file less than 
         50 MB to an Up1 service.
     * You may choose whether to randomize the file name and whether to attach a deletion link 
         to the message.
+    * If sending the deletion link, it will not be in the URL format to avoid accidentally deleting
+        the file. To use that deletion link:
+        * Use the host `https://share.riseup.net/< deletion link >`
     * You are also able to write a message prior to sending the file which will be sent immediately.
         * Standard message limits apply. Messages longer than the maximum length will be split 
             into multiple messages.
@@ -225,27 +236,31 @@ These icons each offer a different functionality as follows:
             with caution.
 * **[4] Enable/Disable Message Encryption**
     * Clicking this button either enables or disables automatic encryption.
-    * Automatic encryption will always encrypt any message sent if passwords are defined for the 
-        current channel.
+    * Automatic encryption will **always** encrypt any message sent
+        **as long as passwords are defined** for the current channel.
     * Clicking this button changes the lock icon to an unlock icon indicating messages sent will 
         not be automatically encrypted.
         * Clicking this icon again re-enables automatic encryption and changes the lock icon back 
             to the default seen above.
+    * This button is channel specific meaning that when you switch channels, it will use 
+        your last setting. By default, automatic message encryption is **disabled**.
 * **[5] Password Settings**
     * This menu allows you to set, change, reset or copy the passwords applied to the 
         current channel.
     * If you reset the current passwords, they will use the default passwords defined in 
         `Plugin Settings`.
     * Using the `Copy Current Passwords` button to the clipboard for sharing.
-* **[6] Key Exchange Menu**
-    * This allows you to manually generate and send public keys to your colleges.
-    * This is also the menu responsible for performing key exchanges.
-    * This is further detailed below.
+* **[6] Passphrase Generator**
+    * This allows you to generate a unique passphrase for whatever reason.
+    * We recommend you use this when you want to send passwords for a non-DM channel.
+    * Passphrases contain roughly _13 bits_ of entropy per word.
+    * You should use a passphrase that is at least **10 words** long.
+    * Word lists are provided by the 
+        [EFF Diceware](https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt) list.
 * **[7] Generate & Send New Public Key**
-    * This simplifies the key exchanging process by manually generating and sending a new 
-        public key to your current channel.
-    * This generates a public key according to the current algorithm and bit length defined in 
-        the `Key Exchange Menu`.
+    * This can **ONLY** be used in DMs.
+    * This button is used to start or generate a new encrypted session between two users.
+    * Once you start a new session with a friend, you can re-generate it at any time.
     * This is further detailed below.
 
  
@@ -273,7 +288,15 @@ Every additional time you start or restart Discord, you'll be prompted with the 
 
 All exchanged keys and passwords are saved to this database and **cannot be recovered** 
     if the master password is lost so be sure to use a strong but memorable one. 
-    ( [Forgot Password?](#what-do-i-do-if-i-forgot-my-master-password?) )
+    ( [Forgot Password?](#frequently-asked-questions) )
+
+Your password for this database **must meet at least one** of the below requirements.
+
+- Your password MUST contain at least one uppercase & lowercase letter, a number and a symbol 
+    and be **at least** 8 characters in length.
+    - Example: `p@s$w0rD`
+- Your password must be **GREATER THAN 32 characters** in length.
+    - Example: `gestation broken directive coveting bony unrevised monogram clapped anchovy unmasking handiness actress`
 
 **N.B. This password is the only thing protecting all others and as such, should be a very 
     strong and unpredictable.**
@@ -281,15 +304,18 @@ All exchanged keys and passwords are saved to this database and **cannot be reco
 
 ### Changing the database password
 
-If you wish to change your master password, you may do so in the `DiscordCrypt Settings` menu.
-    ![settings](images/settings-menu.png)
+If you wish to change your master password, you may do so in the `Plugin Settings` menu.
+    ( ![settings-menu](images/settings-menu.png) )
 
 You can only do this however, after you unlock the database with your previous password.
+
+If you [forgot your password](#frequently-asked-questions) then you will need to reset the 
+    database.
 
 If you enter a password in the `New Master Database Password` field and save your settings, 
     this key will be used to encrypt the database in the future.
 
-![masterpassword](images/master-password.png)
+![master-password](images/master-password.png)
 
 **N.B.** If a key is not entered into this field, it is ignored. Your current password will 
     **NOT** be replaced.
@@ -301,86 +327,58 @@ If you enter a password in the `New Master Database Password` field and save you
 
 While we give users a choice regarding the options they want to use when originally setting up 
     an encrypted conversation via manually setting passwords, we offer a simple way to do it, 
-    using strong cryptography.
+    while still allowing strong cryptography.
 
 This involves using an 
 [asymmetric key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) 
     algorithm which, while allowing you to post information on an insecure channel, allows a 
     strong secret key to be shared between two parties.
 
-Advanced users are free to mess with the configuration, though be aware that we will only 
-    discuss the built-in key exchange feature in this tutorial.
-
- 
 
 #### Personal Conversations
 
-###### Short Explanation
+###### Private Messaging
 
-All it takes is three ( 3 ) clicks.
+To start a secure session with another person, they need to have this plugin installed.
+
+After which, you can start a secure session with them using the following steps:
 
 * Generate a key and send a new public key using the Auto-Key-Exchange button. 
     ( ![s1](images/auto-handshake.png) )
-    * You may skip this step if your partner is generating their key first. Hooray, down 
-        to two ( 2 ) clicks!
-* Once your partner's public key appears, click the `Perform Key Exchange` button in the 
-    message that just appeared at the bottom of the message.
-* After the passwords are generated and the progress bar fully fills, click the 
-    `Apply Generated Passwords` button located at the bottom of the pop-up window.
+* If your partner has the `Automatically Accept Key Exchanges` option switched on, they will 
+    immediately attempt to establish a session with you..
+* If they do not have `Automatically Accept Key Exchanges` enabled, you will need to wait 
+    for them to manually accept the exchange.
 
- 
+![session-establishment](images/session-establishment.png)
 
-###### Longer Explanation
 
-* Go in the channel or conversation you want to set a password for.
-* If you're not sure whether you've sent a key before, go to the `Key Exchange` menu 
-    ( ![1](images/key-exchange.png) ) and then to the `Key Generation` tab.
-    * If both fields are empty, exit the Key Exchange menu by pressing the `[X]` on the top right 
-        ( ![2](images/close-menu.png) ).
-    * If both fields are full of numbers and letters, clicks the `Clear` button, then exit the menu.
-* If you're initiating the key exchange, click on `Generate & Send New Public Key` 
-    ( ![3](images/auto-handshake.png) ) and wait until a public key 
-    [is sent in the chat](images/public-key-message.png).
-* If your friend is initiating the key exchange, simply wait until you see his key appear 
-    in the chat, then click `Perform Key Exchange`.
-    * If you've initiated the exchange, you also need to click this button after your friend 
-        has ( automatically ) shared their key.
-* Once this is done, you should see a window pop up after a few seconds, with a progress bar 
-    at the bottom.
-* Wait until both passwords are generated, then click `Apply Generated Passwords`.
+![session-prompt](images/session-prompt.png)
 
-Voila, your conversation will now be encrypted using keys you've just created.
 
- 
+###### Channels And Group DMs
 
-#### Group Conversations And Channels
+Exchanging keys for a group conversations or channels is more complex and a generally longer 
+    process. You may want to leave your group chat unencrypted if you don't discuss anything 
+    sensitive.
 
-Exchanging keys for a group conversation or a channel is a longer process and a bit more complex.
+* Generate **two** passphrases using the `Generate Secure Passphrase` option. These will 
+    be the keys that will be used to encrypt the channel.
+* Open up your favorite text editor and take note of the passphrases you generated. 
+    Make sure you specify which passphrase will be used as the primary and secondary key.
+* Establish a secure session with every member you want to read encrypted messages 
+    in the group chat. This step is **mandatory** to avoid compromising security.
+* Send these keys to every member that needs them.
+* Switch to the group chat and apply both the primary and secondary key using the 
+    `Password Settings` menu. This must also be done by every peer you sent these keys to.
+* You *may* need to restart the Discord app ( `Ctrl+R` ) after doing this to read old messages.
 
-You may want to leave your group chat unencrypted if you don't discuss anything sensitive.
 
-The process, however, is quite similar to generating keys for a personal conversation.
+###### Sharing Existing Passwords
 
-* First you must decide who in the group will generate keys with you. 
-* Then, you must follow the same steps as if you were generating passwords for a personal 
-    conversation, except you need to stop before clicking `Apply Generated Passwords`.
-* Once you've generated both passwords, you need to copy them using the `Copy Keys & Nuke` button.
-* Open up notepad or your preferred text editor and paste the passwords for later use.
-* As you should only share the passwords securely, you need to exchange keys with every member 
-    of the channel/group.
-    * This means you must create an encrypted, 1-on-1 conversation with every members and 
-        share the passwords.
-* Once you've created a secure channel with every members, individually, you can send the 
-    passwords in an encrypted message. 
-* After the passwords have been shared ( securely ), every user must manually set the 
-    passwords for the channel. ( More on that below. )
-
- 
-
-###### Alternative Method
-
-There is an alternative process for sharing existing passwords with users but it is 
-    **highly** ***unrecommended***.
+You can sharing existing passwords with other users but it is **highly** ***unrecommended***.
+    We recommend you simply generate new keys for the conversation and send these to the user 
+    and every other member. This prevents them from being able to read past messages.
 
 * Switch to the group or channel that currently uses encrypted messages.
 * Open the `Password Settings` menu. ( ![5](images/password-menu.png) )
@@ -388,28 +386,28 @@ There is an alternative process for sharing existing passwords with users but it
     * Please note this copies the keys from your current channel in an **UNENCRYPTED** 
         form to your clipboard.
     * **KEEP THEM SAFE AND DO NOT SAVE THEM**.
-* Paste your clipboard to your partner over an encrypted channel. 
+* Paste your clipboard to your partner **only when you have established a secure session**. 
     ( `Ctrl+V` or `Right Click -> Paste` )
 
  
 
-### Resetting Or Updating Conversation Passwords Manually
+### Resetting Or Updating Passwords
 
 You may one day end up in a situation where you need to manually reset or update the 
     password for the current conversation.
 
-One such situation is when sharing keys for group conversations. If this is the case, 
-    use this method.
+One such situation is when sharing keys for group conversations. ( See Above )
 
 **N.B. We recommend against manually creating a password as we offer a tool to securely 
     generate strong passwords for both parties.**
 
 If it comes to this, you simply need to go to the `Password Settings` menu 
-    ( ![6](images/password-menu.png) ) to apply your passwords.
+    ( ![6](images/password-menu.png) ) to apply or reset your passwords for the channel 
+    you are currently in.
 
 If you are manually updating the passwords to be able to have an encrypted group 
     conversation, simply paste the "Primary Key" in the first field and the 
-    "Secondary Key" in the second field, then press `Save Password`.
+    "Secondary Key" in the second field, then press `Save Passwords`.
 
  
 
@@ -420,8 +418,8 @@ The following tips should be adhered to for maximum privacy between users.
 * Change your master database password frequently.
 * **NEVER** share passwords across unencrypted communications. Always establish a secure 
     connection by means of a key exchange before sending passwords.
-* Change your message keys on a frequent basis. This ensures that even if your current 
-    keys are compromised that an attacker will not be able to read any future messages.
+* Refresh your sessions on frequent basis. This ensures that even if your current 
+    session keys are compromised that an attacker will not be able to read any future messages.
 * Use large key sizes ( preferably the maximum ) when exchanging keys. For Diffie-Hellman, 
     this is 8192 bits or for Elliptic Curve Diffie-Hellman, this is 521/571 bits.
 * Use strong passwords for encrypting your database. Passwords **should be at least 
@@ -436,26 +434,22 @@ The following tips should be adhered to for maximum privacy between users.
     developed in 1998 and is still considered one of the most secure methods of 
     sending and receiving confidential information to this day.
 * If you require absolute secrecy which is not vulnerable to Discord's potential 
-    MiTM attacks, use a strong password generator, encrypt these using PGP and 
+    MiTM attacks, use the built in passphrase generator, encrypt these using PGP and 
     send them to your partner over a non-Discord channel then manually apply these
     keys after you decrypt them.
 * Install the complimentary script [SecureDiscord](scripts/secureDiscord.js) for additional
     protection.
+    * Configurable allowing you to choose which options to use.
     * Sets your user agent to [Tor](https://www.torproject.org/)'s.
     * Sets additional HTTP headers to Tor defaults.
     * Blocks access to known Discord tracking URLs.
+    * Blocks malicious and tracking based URLs using a block list.
     * Removes tracking from any external URL.
     * Removes several fingerprint based headers from requests.
     * Adds an additional [Do-Not-Track](https://en.wikipedia.org/wiki/Do_Not_Track) header 
         to all your requests.
-    * Routes all your traffic through a Tor proxy running on your computer.
-        - If you don't want to do this, remove `socks5://127.0.0.1:9050,` in the file.
-        - Get Tor [here](https://www.torproject.org/download/download.html.en).
-            ( N.B. This requires Tor to be running at 127.0.0.1:9050! )
-        - If required, edit the script to point to the correct address.
-            - By default, requests that fail to be fulfilled are connected to directly.
-            - Disable this by removing the `,direct` part of the string:
-                -    `socks5://127.0.0.1:9050,direct`
+    * Routes all your traffic through a SOCKS proxy running on your computer.
+        - By default, this routes requests over Tor's default address. ( `127.0.0.1:9050` )
 
  
 
@@ -592,59 +586,14 @@ Unfortunately, the core project members have never been good CSS designers as we
 If you however do know how to make an attractive UI, please do create a pull request 
     with your changes!
 
- 
 
-### How do I tag users?
+### How do I send nitro emojis?
 
-As we explained in the [Known Limitations](#known-limitations-and-bugs), tagging users 
-    normally does not work because we cannot notify users of tags after messages 
-    have been decrypted.
+To be able to send nitro-emojis, ( animated & emojis from any guild ) you need to join a 
+    nitro-only emoji server. After which, once you establish a secure session or group 
+    you will be able to select and use these emojis.
 
-We created a workaround for this allowing you to notify whoever you want while still 
-    benefiting from encrypted messages.
-
-The idea behind this is simple:
-
-When you tag users in a message, **DiscordCrypt** will extract the usernames and send 
-    them in an unencrypted form while the rest of the message is encrypted.
-    
-Prior to sending, messages will have the user's discriminator removed from the message.
-
-This way, you can send notifications to tagged users while leaving the original username(s) in 
-    the message intact so as to not lose context.
-
-
-***Be aware that the mentions will display a user's "nickname" on the server,
-    while the embed will retain the original name meaning even though the content of your 
-    message is encrypted, onlookers will still be able to know who the message is intended 
-    for.***
-
-Here's how this looks:
-
-![User Tagging](images/tags.png)
-
-
- 
-
-### How do I send emojis?
-
-This question is quite similar to "How do I tag users?". Using emojis should normally not work 
-    because of the encryption.
-    
-However, not only did we make it so that they are visible, we also gave users the ability to send 
-    emojis they should not be able to use. 
-    ( Including animated ones, without the need to purchase Nitro. )
-    
-If a server added custom emojis for its members to use, you will be able to send those emojis
-    anywhere using encrypted messages. These include animated emojis or non-global emotes that are 
-    restricted to Nitro-only users, even if you don't have a Nitro subscription.
-
-There is however, one caveat:
-
-- Autocomplete does not work for emojis where you do not have end-to-end encryption set up.
-- This means if you don't have custom passwords set up, the emoji picker and autocomplete won't 
-    let you choose the emojis you aren't allowed to use.
-- You can still type the emoji name, ( Example `:discordCrypt:` ) and send them though.
+Autocomplete and the emoji picker works just as if you're a nitro user.
 
  
 
@@ -653,12 +602,8 @@ There is however, one caveat:
 The screen prompting you to unlock your database is necessary for **DiscordCrypt** to 
     function. Without it, you won't be able to send or receive any encrypted messages.
 
-If you wish to stop seeing it, you will simply have to disable the plugin optionally, 
-    click the `Cancel` button to bypass this prompt.
-    
-Should you choose to skip the prompt, a button (that looks like DiscordCrypt's icon) will 
-    remain at the top, you can press it at any time to be prompted to unlock your database 
-    again.
+If you don't want to be bothered to unlock the database every time Discord starts up, you 
+    can disable the plugin in BetterDiscord's settings and enable it only when needed.
 
  
 
@@ -682,7 +627,7 @@ As a result, you will need need to perform a new key exchange with your friends.
 
 While we do not recommend sharing passwords with newcomers, and instead suggest you generate 
     new keys whenever that happens, you can copy the passwords of the current channel and 
-    share them by following [theses steps](#alternative-method).
+    share them by following [theses steps](#sharing-existing-passwords).
 
  
 
@@ -694,10 +639,6 @@ Unless you're generating keys or performing encrypted file uploads, **DiscordCry
 Discord itself can be annoying in that regard as it generally uses a large amount of processing 
     power.
 
-If you believe it is causing issues, you may want to try increasing the 
-    `Encryption Scanning Frequency` in the plugin settings.
-
- 
 
 ### Why is this so complicated?
 
@@ -712,11 +653,6 @@ We've tried to simplify the process as much as possible but once you get used to
 
 **DiscordCrypt** is not ( and sadly cannot be ) perfect, the plugin is limited in the number 
     of features it can provide.
-
-Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messages cannot 
-    undergo the standard post-processing that Discord itself does. An example of this would be 
-    link previews.
-
  
 
 * ***DiscordCrypt's key exchange is vulnerable to Discord's servers being used for 
@@ -727,19 +663,10 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
         key exchange.
         * We discussed this in greater details in the [TECHNICALITIES.md](TECHNICALITIES.md) file.
 
-
-* There is a bug that results in messages not being properly marked as read.
-    * This also creates an issue where Discord won't properly scroll down as you're receiving 
-        new messages.
-    * While we are aware of this bug, we currently don't know how to fix it. Any help would be 
-        greatly appreciated.
-
-
 * Messages are limited to 1820 characters each.
     * Due to additional costs of encryption, messages at maximum size will only be able to 
         display 1820 characters of text..
         * If your message is longer than this, it will be split and sent in multiple messages.
- 
 
 
 * Only text channels are end-to-end encrypted. Voice channels cannot be secured, so what you 
@@ -747,14 +674,6 @@ Some of **DiscordCrypt**'s limitations are due to the fact that decrypted messag
     * Support for encrypted file uploads was added in `v1.0.5`. However we still recommend using 
         [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) to encrypt especially sensitive 
         files before sending them.
-
-
-
-* Tagging users works in a different way when using encrypted messages:
-    * As we use embeds, tagging users in a message should result in them not being notified.
-        * To fix this, every users tagged in a message will receive an unencrypted notification.
-            [Example here](#how-do-i-tag-users?).
-
 
 
 * Searching past messages is impossible.

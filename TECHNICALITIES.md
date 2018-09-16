@@ -59,7 +59,7 @@ Every algorithm used in this plugin is directly provided by NodeJS. The only thi
     implemented are:
 
 * [Cipher Padding Modes](#message-padding)
-* [Scrypt Hashing Algorithm](https://en.wikipedia.org/wiki/Scrypt)
+* [Scrypt Hashing Algorithm](https://en.wikipedia.org/wiki/Scrypt) via Asm.js
 
 **DiscordCrypt** also relies on several libraries which may or may not have been tweaked to work 
     within the Discord client. These are indicated below.
@@ -324,12 +324,11 @@ The [Scrypt](https://en.wikipedia.org/wiki/Scrypt) algorithm is a key-derivative
 designed to be "memory hard" in such a way that it is dependant on access to fast memory. 
     This design choice makes it desirable for use in password-based calculations.
 
-Due to Node's crypto module not natively supporting this, it was manually implemented for 
+Due to Node's crypto module not natively supporting this, it was manually implemented in Asm.js for 
     deriving an AES-256 bit key for encrypting the master database.
 
-The original source for this was taken from [here](https://github.com/ricmoo/scrypt-js) and was 
-    optimized for faster execution as well as tweaked to call the original SHA2-256 method provided 
-    natively by NodeJS. This method also supports async calls and was chosen mainly due to this.
+The original source for this was taken from [here](https://github.com/Tarsnap/scrypt) and was 
+    transpiled to Asm.js for faster execution.
 
 Scrypt uses a total of 6 parameters. Each of these will be described below.
 
@@ -749,8 +748,8 @@ Its derivation is done by using the [Scrypt](#scrypt-hashing-algorithm)
 
 | **Parameter** | **Value** |
 | ------------- | --------- |
-| `N`           | 4096      |
-| `r`           | 8         |
+| `N`           | 16384     |
+| `r`           | 16        |
 | `p`           | 1         |
 | `dkLen`       | 32        |
 
@@ -764,7 +763,7 @@ Please note that this AES-256 bit key also undergoes the OpenSSL process of deri
 
 That is:
 
-- `script_password = scrypt( input: password, salt: whirlpool_hash( password ), N: 4096, r: 8, p: 1, dkLen: 32 )`
+- `script_password = scrypt( input: password, salt: sha3_256( password ), N: 16384, r: 16, p: 1, dkLen: 32 )`
 - `random_salt = crypto.randomBytes( size: 8 )`
 - `derived_length = aes_block_size + aes_256_key_size`
 - `derived_string = SHA3_KMAC( input: scrypt_password, salt: random_salt, length: derived_length )`
@@ -809,8 +808,6 @@ Finally, the authentication tag is assigned to `GCM` and verified which either t
     multi-encryption even though two salts of 64-bits in length are used for key derivation.**
 
 ## Key Exchange Process
-
-![Public Key Message](images/public-key-message.png)
 
 **DiscordCrypt** uses the Diffie-Hellman exchange algorithm to derive a unique 
     [shared secret](https://en.wikipedia.org/wiki/Shared_secret).
