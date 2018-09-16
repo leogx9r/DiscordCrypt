@@ -694,7 +694,9 @@ We've tried to simplify the process as much as possible but once you get used to
         * For a list of known problematic themes and plugins, see
             [here](https://gitlab.com/leogx9r/DiscordCrypt/issues/5).
 
- 
+
+* Messages cannot be encrypted when using the in-game overlay.
+    * This is due to Discord using a separate module to display messages in the overlay. 
 
 # Support And Discussion
 
