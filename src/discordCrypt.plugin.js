@@ -1200,7 +1200,6 @@ const discordCrypt = ( () => {
 
             const pwd_field = $( '#dc-db-password' );
             const unlock_btn = $( '#dc-unlock-database-btn' );
-            const master_status = $( '#dc-master-status' );
             const master_header_message = $( '#dc-header-master-msg' );
             const master_prompt_message = $( '#dc-prompt-master-msg' );
 
@@ -1237,8 +1236,7 @@ const discordCrypt = ( () => {
                     unlock_btn,
                     cfg_exists,
                     pwd_field,
-                    action_msg,
-                    master_status
+                    action_msg
                 )
             );
         }
@@ -2726,10 +2724,9 @@ const discordCrypt = ( () => {
          * @param {boolean} cfg_exists
          * @param {Object} pwd_field
          * @param {string} action_msg
-         * @param {Object} master_status
          * @return {Function}
          */
-        static _onMasterUnlockButtonClicked( unlock_btn, cfg_exists, pwd_field, action_msg, master_status ) {
+        static _onMasterUnlockButtonClicked( unlock_btn, cfg_exists, pwd_field, action_msg ) {
             return () => {
                 /* Disable the button before clicking. */
                 unlock_btn.attr( 'disabled', true );
@@ -2752,88 +2749,74 @@ const discordCrypt = ( () => {
 
                 /* Hash the password. */
                 // noinspection JSUnresolvedFunction
-                _discordCrypt.__scrypt
+                let pwd = global.scrypt.crypto_scrypt
                 (
                     Buffer.from( password ),
                     Buffer.from( global.sha3.sha3_256( password ), 'hex' ),
-                    32,
-                    4096,
-                    8,
+                    16384,
+                    16,
                     1,
-                    ( error, progress, pwd ) => {
-                        if ( error ) {
-                            /* Update the button's text. */
-                            if ( cfg_exists )
-                                unlock_btn.text( 'Invalid Password!' );
-                            else
-                                unlock_btn.text( `Error: ${error}` );
-
-                            /* Clear the text field. */
-                            pwd_field.val( '' );
-
-                            /* Reset the progress bar. */
-                            master_status.css( 'width', '0%' );
-
-                            /* Reset the text of the button after 1 second. */
-                            setTimeout( ( function () {
-                                unlock_btn.text( action_msg );
-                            } ), 1000 );
-
-                            _discordCrypt.log( error.toString(), 'error' );
-                            return true;
-                        }
-
-                        if ( progress )
-                            master_status.css( 'width', `${parseInt( progress * 100 )}%` );
-
-                        if ( pwd ) {
-                            /* To test whether this is the correct password or not, we have to attempt to use it. */
-                            _masterPassword = Buffer.from( pwd, 'hex' );
-
-                            /* Attempt to load the database with this password. */
-                            if ( !_discordCrypt._loadConfig() ) {
-                                _configFile = null;
-
-                                /* Update the button's text. */
-                                if ( cfg_exists )
-                                    unlock_btn.text( 'Invalid Password!' );
-                                else
-                                    unlock_btn.text( 'Failed to create the database!' );
-
-                                /* Clear the text field. */
-                                pwd_field.val( '' );
-
-                                /* Reset the progress bar. */
-                                master_status.css( 'width', '0%' );
-
-                                /* Reset the text of the button after 1 second. */
-                                setTimeout( ( function () {
-                                    unlock_btn.text( action_msg );
-                                } ), 1000 );
-
-                                /* Proceed no further. */
-                                unlock_btn.attr( 'disabled', false );
-                                return false;
-                            }
-
-                            /* We may now call the start() function. */
-                            _self.start();
-
-                            /* And update the button text. */
-                            if ( cfg_exists )
-                                unlock_btn.text( 'Unlocked Successfully!' );
-                            else
-                                unlock_btn.text( 'Created Successfully!' );
-
-                            /* Close the overlay after 1 second. */
-                            setTimeout( ( function () {
-                                $( '#dc-master-overlay' ).remove();
-                            } ), 1000 );
-                        }
-
-                        return false;
-                    }
+                    32
                 );
+
+                if ( pwd ) {
+                    /* To test whether this is the correct password or not, we have to attempt to use it. */
+                    _masterPassword = Buffer.from( pwd );
+
+                    /* Attempt to load the database with this password. */
+                    if ( !_discordCrypt._loadConfig() ) {
+                        _configFile = null;
+
+                        /* Update the button's text. */
+                        if ( cfg_exists )
+                            unlock_btn.text( 'Invalid Password!' );
+                        else
+                            unlock_btn.text( 'Failed to create the database!' );
+
+                        /* Clear the text field. */
+                        pwd_field.val( '' );
+
+                        /* Reset the text of the button after 1 second. */
+                        setTimeout( ( function () {
+                            unlock_btn.text( action_msg );
+                        } ), 1000 );
+
+                        /* Proceed no further. */
+                        unlock_btn.attr( 'disabled', false );
+                    }
+
+                    /* We may now call the start() function. */
+                    _self.start();
+
+                    /* And update the button text. */
+                    if ( cfg_exists )
+                        unlock_btn.text( 'Unlocked Successfully!' );
+                    else
+                        unlock_btn.text( 'Created Successfully!' );
+
+                    /* Close the overlay after 1 second. */
+                    setTimeout( ( function () {
+                        $( '#dc-master-overlay' ).remove();
+                    } ), 1000 );
+                }
+                else {
+
+                    /* Update the button's text. */
+                    if ( cfg_exists )
+                        unlock_btn.text( 'Invalid Password!' );
+                    else
+                        unlock_btn.text( `Error: Scrypt Failed!}` );
+
+                    /* Clear the text field. */
+                    pwd_field.val( '' );
+
+                    /* Reset the text of the button after 1 second. */
+                    setTimeout( ( function () {
+                        unlock_btn.text( action_msg );
+                    } ), 1000 );
+
+                    _discordCrypt.log( error.toString(), 'error' );
+                }
             }
         }
 
@@ -3680,41 +3663,35 @@ const discordCrypt = ( () => {
 
                 /* Hash the password. */
                 // noinspection JSUnresolvedFunction
-                _discordCrypt.__scrypt
+                let pwd = global.scrypt.crypto_scrypt
                 (
                     Buffer.from( password ),
                     Buffer.from( global.sha3.sha3_256( password ), 'hex' ),
-                    32,
-                    4096,
-                    8,
+                    16384,
+                    16,
                     1,
-                    ( error, progress, pwd ) => {
-                        /* Enable the button. */
-                        dc_save_settings_btn.attr( 'disabled', false );
-
-                        if ( error ) {
-                            /* Alert the user. */
-                            global.smalltalk.alert(
-                                'DiscordCrypt Error',
-                                'Error setting the new database password. Check the console for more info.'
-                            );
-
-                            _discordCrypt.log( error.toString(), 'error' );
-
-                            return true;
-                        }
-
-                        if ( pwd ) {
-                            /* Now update the password. */
-                            _masterPassword = Buffer.from( pwd, 'hex' );
-
-                            /* Save the configuration file and update the button text. */
-                            _discordCrypt._saveSettings( dc_save_settings_btn );
-                        }
-
-                        return false;
-                    }
+                    32
                 );
+
+                /* Enable the button. */
+                dc_save_settings_btn.attr( 'disabled', false );
+
+                if ( !pwd || typeof pwd !== 'string' || !pwd.length ) {
+                    /* Alert the user. */
+                    global.smalltalk.alert(
+                        'DiscordCrypt Error',
+                        'Error setting the new database password. Check the console for more info.'
+                    );
+
+                    _discordCrypt.log( error.toString(), 'error' );
+                    return;
+                }
+
+                /* Now update the password. */
+                _masterPassword = Buffer.from( pwd );
+
+                /* Save the configuration file and update the button text. */
+                _discordCrypt._saveSettings( dc_save_settings_btn );
             }
             else {
                 /* Save the configuration file and update the button text. */
@@ -7278,351 +7255,6 @@ const discordCrypt = ( () => {
                 return 2;
             }
         }
-
-        /**
-         * @public
-         * @see https://github.com/ricmoo/scrypt-js
-         * @desc Performs the Scrypt hash function on the given input.
-         * @param {string|Buffer|Array} input The input data to hash.
-         * @param {string|Buffer|Array} salt The unique salt used for hashing.
-         * @param {int} output_length The desired length of the output in bytes.
-         * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
-         * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
-         * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
-         * @param {ScryptCallback} cb Callback function for progress updates.
-         * @returns {boolean} Returns true if successful.
-         */
-        static __scrypt( input, salt, output_length, N = 16384, r = 8, p = 1, cb = null ) {
-            let crypto = require( 'crypto' );
-            let _in, _salt;
-
-            /* PBKDF2-HMAC-SHA256 Helper. */
-            const PBKDF2_SHA256 = ( input, salt, size, iterations ) =>
-                crypto.pbkdf2Sync( input, salt, iterations, size, 'sha256' );
-
-            /**
-             * @private
-             * @desc Mixes rows and blocks via Salsa20/8..
-             * @param {Uint32Array} BY Input/output array.
-             * @param {int} Yi Size of r * 32.
-             * @param {int} r Block size parameter.
-             * @param {Uint32Array} x Salsa20 scratchpad for row mixing.
-             * @param {Uint32Array} _X Salsa20 scratchpad for block mixing.
-             */
-            function ScryptRowMix( BY, Yi, r, x, _X ) {
-                let i, j, k, l;
-
-                for ( i = 0, j = ( 2 * r - 1 ) * 16; i < 16; i++ )
-                    _X[ i ] = BY[ j + i ];
-
-                for ( i = 0; i < 2 * r; i++ ) {
-                    for ( j = 0, k = i * 16; j < 16; j++ )
-                        _X[ j ] ^= BY[ k + j ];
-
-                    for ( j = 0; j < 16; j++ )
-                        x[ j ] = _X[ j ];
-
-                    /**
-                     * @desc Rotates [a] by [b] bits to the left.
-                     * @param {int} a The base value.
-                     * @param {int} b The number of bits to rotate [a] to the left by.
-                     * @return {number}
-                     */
-                    const R = ( a, b ) => {
-                        return ( a << b ) | ( a >>> ( 32 - b ) );
-                    };
-
-                    for ( j = 8; j > 0; j -= 2 ) {
-                        x[ 0x04 ] ^= R( x[ 0x00 ] + x[ 0x0C ], 0x07 );
-                        x[ 0x08 ] ^= R( x[ 0x04 ] + x[ 0x00 ], 0x09 );
-                        x[ 0x0C ] ^= R( x[ 0x08 ] + x[ 0x04 ], 0x0D );
-                        x[ 0x00 ] ^= R( x[ 0x0C ] + x[ 0x08 ], 0x12 );
-                        x[ 0x09 ] ^= R( x[ 0x05 ] + x[ 0x01 ], 0x07 );
-                        x[ 0x0D ] ^= R( x[ 0x09 ] + x[ 0x05 ], 0x09 );
-                        x[ 0x01 ] ^= R( x[ 0x0D ] + x[ 0x09 ], 0x0D );
-                        x[ 0x05 ] ^= R( x[ 0x01 ] + x[ 0x0D ], 0x12 );
-                        x[ 0x0E ] ^= R( x[ 0x0A ] + x[ 0x06 ], 0x07 );
-                        x[ 0x02 ] ^= R( x[ 0x0E ] + x[ 0x0A ], 0x09 );
-                        x[ 0x06 ] ^= R( x[ 0x02 ] + x[ 0x0E ], 0x0D );
-                        x[ 0x0A ] ^= R( x[ 0x06 ] + x[ 0x02 ], 0x12 );
-                        x[ 0x03 ] ^= R( x[ 0x0F ] + x[ 0x0B ], 0x07 );
-                        x[ 0x07 ] ^= R( x[ 0x03 ] + x[ 0x0F ], 0x09 );
-                        x[ 0x0B ] ^= R( x[ 0x07 ] + x[ 0x03 ], 0x0D );
-                        x[ 0x0F ] ^= R( x[ 0x0B ] + x[ 0x07 ], 0x12 );
-                        x[ 0x01 ] ^= R( x[ 0x00 ] + x[ 0x03 ], 0x07 );
-                        x[ 0x02 ] ^= R( x[ 0x01 ] + x[ 0x00 ], 0x09 );
-                        x[ 0x03 ] ^= R( x[ 0x02 ] + x[ 0x01 ], 0x0D );
-                        x[ 0x00 ] ^= R( x[ 0x03 ] + x[ 0x02 ], 0x12 );
-                        x[ 0x06 ] ^= R( x[ 0x05 ] + x[ 0x04 ], 0x07 );
-                        x[ 0x07 ] ^= R( x[ 0x06 ] + x[ 0x05 ], 0x09 );
-                        x[ 0x04 ] ^= R( x[ 0x07 ] + x[ 0x06 ], 0x0D );
-                        x[ 0x05 ] ^= R( x[ 0x04 ] + x[ 0x07 ], 0x12 );
-                        x[ 0x0B ] ^= R( x[ 0x0A ] + x[ 0x09 ], 0x07 );
-                        x[ 0x08 ] ^= R( x[ 0x0B ] + x[ 0x0A ], 0x09 );
-                        x[ 0x09 ] ^= R( x[ 0x08 ] + x[ 0x0B ], 0x0D );
-                        x[ 0x0A ] ^= R( x[ 0x09 ] + x[ 0x08 ], 0x12 );
-                        x[ 0x0C ] ^= R( x[ 0x0F ] + x[ 0x0E ], 0x07 );
-                        x[ 0x0D ] ^= R( x[ 0x0C ] + x[ 0x0F ], 0x09 );
-                        x[ 0x0E ] ^= R( x[ 0x0D ] + x[ 0x0C ], 0x0D );
-                        x[ 0x0F ] ^= R( x[ 0x0E ] + x[ 0x0D ], 0x12 );
-                    }
-
-                    for ( j = 0; j < 16; ++j )
-                        _X[ j ] += x[ j ];
-
-                    /* Copy back the result. */
-                    for ( j = 0, k = Yi + ( i * 16 ); j < 16; j++ )
-                        BY[ j + k ] = _X[ j ];
-                }
-
-                for ( i = 0; i < r; i++ ) {
-                    for ( j = 0, k = Yi + ( i * 2 ) * 16, l = ( i * 16 ); j < 16; j++ )
-                        BY[ l + j ] = BY[ k + j ];
-                }
-
-                for ( i = 0; i < r; i++ ) {
-                    for ( j = 0, k = Yi + ( i * 2 + 1 ) * 16, l = ( i + r ) * 16; j < 16; j++ )
-                        BY[ l + j ] = BY[ k + j ];
-                }
-            }
-
-            /**
-             * @desc Perform the scrypt process in steps and call the callback on intervals.
-             * @param {string|Buffer|Array} input The input data to hash.
-             * @param {string|Buffer|Array} salt The unique salt used for hashing.
-             * @param {int} N The work factor variable. Memory and CPU usage scale linearly with this.
-             * @param {int} r Increases the size of each hash produced by a factor of 2rK-bits.
-             * @param {int} p Parallel factor. Indicates the number of mixing functions to be run simultaneously.
-             * @param {ScryptCallback} cb Callback function for progress updates.
-             * @private
-             */
-            function __perform( input, salt, N, r, p, cb ) {
-                let totalOps, currentOps, lastPercentage;
-                let b = PBKDF2_SHA256( input, salt, p * 128 * r, 1 );
-
-                let B = new Uint32Array( p * 32 * r );
-
-                let XY = new Uint32Array( 64 * r );
-                let V = new Uint32Array( 32 * r * N );
-
-                /* Salsa20 Scratchpad. */
-                let x = new Uint32Array( 16 );
-                /* Block-mix Salsa20 Scratchpad. */
-                let _X = new Uint32Array( 16 );
-
-                /* Initialize the input. */
-                for ( let i = 0; i < B.length; i++ ) {
-                    let j = i * 4;
-                    B[ i ] =
-                        ( ( b[ j + 3 ] & 0xff ) << 24 ) |
-                        ( ( b[ j + 2 ] & 0xff ) << 16 ) |
-                        ( ( b[ j + 1 ] & 0xff ) << 8 ) |
-                        ( ( b[ j ] & 0xff ) << 0 );
-                }
-
-                let Yi = 32 * r;
-
-                totalOps = p * N * 2;
-                currentOps = 0;
-                lastPercentage = null;
-
-                /* Set this to true to abandon the scrypt on the next step. */
-                let stop = false;
-
-                /* State information. */
-                let state = 0, stateCount = 0, i1;
-                let Bi;
-
-                /* How many block-mix salsa8 operations can we do per step? */
-                let limit = parseInt( 1000 / r );
-
-                /* Trick from scrypt-async; if there is a setImmediate shim in place, use it. */
-                let nextTick = ( typeof( setImmediate ) !== 'undefined' ) ? setImmediate : setTimeout;
-
-                const incrementalSMix = function () {
-                    if ( stop ) {
-                        cb( new Error( 'cancelled' ), currentOps / totalOps );
-                        return;
-                    }
-
-                    let steps, i, y, z, currentPercentage;
-                    switch ( state ) {
-                    case 0:
-                        Bi = stateCount * 32 * r;
-                        /* Row mix #1 */
-                        for ( let z = 0; z < Yi; z++ )
-                            XY[ z ] = B[ Bi + z ]
-
-                        /* Move to second row mix. */
-                        state = 1;
-                        i1 = 0;
-                    /* Fall through purposely. */
-                    case 1:
-                        /* Run up to 1000 steps of the first inner S-Mix loop. */
-                        steps = N - i1;
-
-                        if ( steps > limit )
-                            steps = limit;
-
-                        /* Row mix #2 */
-                        for ( i = 0; i < steps; i++ ) {
-                            /* Row mix #3 */
-                            y = ( i1 + i ) * Yi;
-                            z = Yi;
-                            while ( z-- ) V[ z + y ] = XY[ z ];
-
-                            /* Row mix #4 */
-                            ScryptRowMix( XY, Yi, r, x, _X );
-                        }
-
-                        i1 += steps;
-                        currentOps += steps;
-
-                        /* Call the callback with the progress. ( Optionally stopping us. ) */
-                        currentPercentage = parseInt( 1000 * currentOps / totalOps );
-                        if ( currentPercentage !== lastPercentage ) {
-                            stop = cb( null, currentOps / totalOps );
-
-                            if ( stop )
-                                break;
-
-                            lastPercentage = currentPercentage;
-                        }
-
-                        if ( i1 < N )
-                            break;
-
-                        /* Row mix #6 */
-                        i1 = 0;
-                        state = 2;
-                    /* Fall through purposely. */
-                    case 2:
-
-                        /* Run up to 1000 steps of the second inner S-Mix loop. */
-                        steps = N - i1;
-
-                        if ( steps > limit )
-                            steps = limit;
-
-                        for ( i = 0; i < steps; i++ ) {
-                            /* Row mix #8 ( inner ) */
-                            for ( z = 0, y = ( XY[ ( 2 * r - 1 ) * 16 ] & ( N - 1 ) ) * Yi; z < Yi; z++ )
-                                XY[ z ] ^= V[ y + z ];
-                            /* Row mix #9 ( outer ) */
-                            ScryptRowMix( XY, Yi, r, x, _X );
-                        }
-
-                        i1 += steps;
-                        currentOps += steps;
-
-                        /* Call the callback with the progress. ( Optionally stopping us. ) */
-                        currentPercentage = parseInt( 1000 * currentOps / totalOps );
-                        if ( currentPercentage !== lastPercentage ) {
-                            stop = cb( null, currentOps / totalOps );
-
-                            if ( stop )
-                                break;
-
-                            lastPercentage = currentPercentage;
-                        }
-
-                        if ( i1 < N )
-                            break;
-
-                        /* Row mix #10 */
-                        for ( z = 0; z < Yi; z++ )
-                            B[ Bi + z ] = XY[ z ];
-
-                        stateCount++;
-                        if ( stateCount < p ) {
-                            state = 0;
-                            break;
-                        }
-
-                        b = [];
-                        for ( i = 0; i < B.length; i++ ) {
-                            b.push( ( B[ i ] >> 0 ) & 0xff );
-                            b.push( ( B[ i ] >> 8 ) & 0xff );
-                            b.push( ( B[ i ] >> 16 ) & 0xff );
-                            b.push( ( B[ i ] >> 24 ) & 0xff );
-                        }
-
-                        /* Done. Don't break to avoid rescheduling. */
-                        cb(
-                            null,
-                            1.0,
-                            Buffer.from( PBKDF2_SHA256( input, Buffer.from( b ), output_length, 1 ) )
-                        );
-                        return;
-                    default:
-                        cb( new Error( 'invalid state' ), 0 );
-                        return;
-                    }
-
-                    /* Schedule the next steps. */
-                    nextTick( incrementalSMix );
-                };
-
-                incrementalSMix();
-            }
-
-            /* Validate input. */
-            if ( typeof input === 'object' || typeof input === 'string' ) {
-                if ( Array.isArray( input ) )
-                    _in = Buffer.from( input );
-                else if ( Buffer.isBuffer( input ) )
-                    _in = input;
-                else if ( typeof input === 'string' )
-                    _in = Buffer.from( input, 'utf8' );
-                else {
-                    _discordCrypt.log( 'Invalid input parameter type specified!', 'error' );
-                    return false;
-                }
-            }
-
-            /* Validate salt. */
-            if ( typeof salt === 'object' || typeof salt === 'string' ) {
-                if ( Array.isArray( salt ) )
-                    _salt = Buffer.from( salt );
-                else if ( Buffer.isBuffer( salt ) )
-                    _salt = salt;
-                else if ( typeof salt === 'string' )
-                    _salt = Buffer.from( salt, 'utf8' );
-                else {
-                    _discordCrypt.log( 'Invalid salt parameter type specified!', 'error' );
-                    return false;
-                }
-            }
-
-            /* Validate derived key length. */
-            if ( typeof output_length !== 'number' ) {
-                _discordCrypt.log( 'Invalid output_length parameter specified. Must be a numeric value.', 'error' );
-                return false;
-            }
-            else if ( output_length <= 0 || output_length >= 65536 ) {
-                _discordCrypt.log( 'Invalid output_length parameter specified. Must be a numeric value.', 'error' );
-                return false;
-            }
-
-            /* Validate N is a power of 2. */
-            if ( !N || N & ( N - 1 ) !== 0 ) {
-                _discordCrypt.log( 'Parameter N must be a power of 2.', 'error' );
-                return false;
-            }
-
-            /* Perform a non-blocking . */
-            if ( cb !== undefined && cb !== null ) {
-                setTimeout( () => {
-                    __perform( _in, _salt, N, r, p, cb );
-                }, 1 );
-                return true;
-            }
-
-            /* Signal an error. */
-            _discordCrypt.log( 'No callback specified.', 'error' );
-            return false;
-        }
-
 
         /**
          * @public

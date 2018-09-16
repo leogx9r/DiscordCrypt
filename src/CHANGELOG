@@ -5,6 +5,7 @@ Version 2.0.0
 
 - Improved the SecureDiscord plugin. This requires a manual reinstallation.
 - Switched to event based hooks for better functionality.
+- Switched to asm.js version of scrypt hashing for roughly a 3x speed boost.
 - Removed the 'Cancel' button for startup due to the new event-based functionality.
 - Removed the ability to send encrypted messages as embeds.
 - Fixed parsing errors related to code blocks and other markdown based formatting.

@@ -118,7 +118,7 @@ class Compiler {
                 ascii_only: true,
                 beautify: false,
             },
-            warnings: true,
+            warnings: false,
         };
     }
 
@@ -542,6 +542,7 @@ class Compiler {
             ],
             library_info: {
                 'sjcl.js': { requiresNode: true, requiresBrowser: false, minify: true },
+                'scrypt.js': { requiresNode: true, requiresBrowser: false, minify: false },
                 'sha3.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'sidh.js': { requiresNode: false, requiresBrowser: true, minify: false },
                 'smalltalk.js': { requiresNode: false, requiresBrowser: true, minify: true },
