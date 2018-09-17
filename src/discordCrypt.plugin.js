@@ -341,9 +341,20 @@
  */
 
 /**
+ * @typedef {Object} Attachment
+ * @property {string} id Attachment snowflake.
+ * @property {string} filename Attachment file name.
+ * @property {number} size Size of the file in bytes.
+ * @property {string} url Link to the attachment.
+ * @property {string} proxy_url A proxy to the file's URL.
+ * @property {number} [width] Width of the file if it's an image.
+ * @property {number} [height] Height of the file if it's an image.
+ */
+
+/**
  * @typedef {Object} Message
  * @desc An incoming or outgoing Discord message.
- * @property {Array<Object>} [attachments] Message attachments, if any.
+ * @property {Array<Attachment>} [attachments] Message attachments, if any.
  * @property {MessageAuthor} [author] The creator of the message.
  * @property {string} channel_id The channel this message belongs to.
  * @property {string} [content] The raw message content.
@@ -621,6 +632,20 @@ const discordCrypt = ( () => {
         'ISO1', /* ISO-10126 */
         'ISO9', /* ISO-97972 */
     ];
+
+    /**
+     * @private
+     * @desc The default host used to upload encrypted files using the Up1 specification.
+     * @type {string}
+     */
+    const UP1_FILE_HOST = 'https://share.riseup.net';
+
+    /**
+     * @private
+     * @desc The API key used to authenticate against the Up1 host.
+     * @type {string}
+     */
+    const UP1_FILE_HOST_API_KEY = '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs';
 
     /**
      * @private
@@ -928,9 +953,9 @@ const discordCrypt = ( () => {
                 /* How long after a message is sent to remove it. */
                 timedMessageExpires: 0,
                 /* Contains the URL of the Up1 client. */
-                up1Host: 'https://share.riseup.net',
+                up1Host: UP1_FILE_HOST,
                 /* Contains the API key used for transactions with the Up1 host. */
-                up1ApiKey: '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
+                up1ApiKey: UP1_FILE_HOST_API_KEY,
                 /* Current Version. */
                 version: _self.getVersion(),
             };
@@ -4791,8 +4816,7 @@ const discordCrypt = ( () => {
          * @private
          * @desc Sends either an embedded message or an inline message to Discord.
          * @param {string} message The main content to send.
-         * @param {int} [channel_id] If specified, sends the embedded message to this channel instead of the
-         *      current channel.
+         * @param {int} [channel_id] Sends the embedded message to this channel instead of the current channel.
          * @param {number} [timeout] Optional timeout to delete this message in minutes.
          */
         static _dispatchMessage( message, channel_id = null, timeout = null ) {
@@ -5319,13 +5343,21 @@ const discordCrypt = ( () => {
          * @desc Performs an HTTP request returns the result to the callback.
          * @param {string} url The URL of the request.
          * @param {GetResultCallback} callback The callback triggered when the request is complete or an error occurs.
-         * @private
+         * @param {any|null} [encoding] If null is passed the result will be returned as a Buffer otherwise as a string.
          */
-        static __getRequest( url, callback ) {
+        static __getRequest( url, callback, encoding = undefined ) {
             try {
-                require( 'request' )( url, ( error, response, result ) => {
-                    callback( response.statusCode, response.statusMessage, result );
-                } );
+                require( 'request' )(
+                    {
+                        url: url,
+                        gzip: true,
+                        encoding: encoding,
+                        removeRefererHeader: true
+                    },
+                    ( error, response, result ) => {
+                        callback( response.statusCode, response.statusMessage, result );
+                    }
+                );
             }
             catch ( ex ) {
                 callback( -1, ex.toString() );
@@ -5632,7 +5664,7 @@ const discordCrypt = ( () => {
         }
 
         /**
-         * @private
+         * @public
          * @desc Converts a seed to the encryption keys used in the Up1 protocol.
          * @param {string|Buffer|Uint8Array} seed
          * @param {Object} sjcl The loaded Stanford Javascript Crypto Library.
@@ -5721,12 +5753,12 @@ const discordCrypt = ( () => {
         }
 
         /**
+         * @public
          * @desc Decrypts the specified data as per Up1's spec.
          * @param {Buffer} data The encrypted buffer.
          * @param {string} seed A base64-URL encoded string.
          * @param {Object} sjcl The Stanford Javascript Library object.
          * @return {{header: Object, data: Blob}}
-         * @private
          */
         static __up1DecryptBuffer( data, seed, sjcl ) {
             /* Constant as per the Up1 protocol. Every file contains these four bytes: "Up1\0". */
@@ -5785,7 +5817,7 @@ const discordCrypt = ( () => {
         }
 
         /**
-         * @private
+         * @public
          * @desc Performs AES-256 CCM encryption of the given file and converts it to the expected Up1 format.
          * @param {string} file_path The path to the file to encrypt.
          * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
@@ -5973,6 +6005,75 @@ const discordCrypt = ( () => {
                 },
                 randomize_file_name
             );
+        }
+
+        /**
+         * @private
+         * @desc Downloads and decrypts a file uploaded with the Up1 spec.
+         * @param {string|Buffer} seed The seed used to decrypt the file.
+         * @param {string} up1_host The host URL for the Up1 service.
+         * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
+         * @param {function( result: string|object )} callback Callback function to receive either the error string
+         *      or the resulting object.
+         */
+        static __up1DecryptDownload( seed, up1_host, sjcl, callback ) {
+            /* First extract the ID of the file. */
+            let id = sjcl.codec.base64url.fromBits( _discordCrypt.__up1SeedToKey( seed, sjcl ).ident );
+
+            /* Retrieve the file asynchronously. */
+            _discordCrypt.__getRequest(
+                `${up1_host}/i/${id}`,
+                ( statusCode, errorString, result ) => {
+                    /* Ensure no errors occurred. */
+                    if( statusCode !== 200 || errorString !== 'OK' ) {
+                        /* Build a simple HTTP error message and send it to the callback. */
+                        callback( `${statusCode}: ${errorString}` );
+                        return;
+                    }
+
+                    try {
+                        /* Decrypt the buffer and send it to the callback function. */
+                        callback( _discordCrypt.__up1DecryptBuffer( result, seed, sjcl ) );
+                    }
+                    catch( e ) {
+                        /* Pass the exception string to the callback. */
+                        callback( e.toString() );
+                    }
+                },
+                null
+            );
+        }
+
+        /**
+         * @private
+         * @desc Attempts to extract all Up1 links from a given message.
+         * @param {string} input The input message.
+         * @return {Array<string>} Returns an array of all Up1 URLs in the message.
+         */
+        static __up1ExtractValidURLs( input ) {
+            let result = [];
+
+            /* Sanity check. */
+            if( !input || !input.length )
+                return result;
+
+            /* Split up the input into chunks by spaces. */
+            let parts = input.split( ' ' );
+
+            /* Iterate each chunk. */
+            for( let i = 0; i < parts.length; i++ ) {
+                try {
+                    /* Check if the chunk starts with the host prefix and the URL constructor can parse it. */
+                    if( parts[ i ].indexOf( `${UP1_FILE_HOST}/#` ) !== -1 && ( new URL( parts[ i ] ) ) )
+                        result.push( parts[ i ] );
+                }
+                catch( e ) {
+                    /* Ignored. */
+                }
+            }
+
+            /* Return the result. */
+            return result;
         }
 
         /**
