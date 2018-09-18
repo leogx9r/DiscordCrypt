@@ -1681,7 +1681,21 @@ const discordCrypt = ( () => {
                             return patchData.callOriginalMethod();
                         }
                     }
-                )
+                );
+
+                /* Request the image resolver. */
+                let ImageResolver = searcher.findByUniqueProperties( [ 'getImageSrc', 'getSizedImageSrc' ] );
+
+                /* Patch methods responsible for retrieving images to allow passing data URLs for attachments. */
+                const ImageDataSrcPatch = ( patchData ) => {
+                    if(
+                        patchData.methodArguments[ 0 ] &&
+                        patchData.methodArguments[ 0 ].indexOf( 'data:' ) === 0
+                    )
+                        patchData.returnValue = patchData.methodArguments[ 0 ];
+                };
+                _discordCrypt._monkeyPatch( ImageResolver, 'getImageSrc', { after: ImageDataSrcPatch } );
+                _discordCrypt._monkeyPatch( ImageResolver, 'getSizedImageSrc', { after: ImageDataSrcPatch } );
             }
             catch( e ) {
                 _discordCrypt.log( 'Could not hook the required methods. If this is a test, that\'s fine.', 'warn' );
@@ -1698,16 +1712,6 @@ const discordCrypt = ( () => {
             _discordCrypt._monkeyPatch(
                 _cachedModules.EventDispatcher,
                 'dispatch',
-                { instead: _discordCrypt._onDispatchEvent }
-            );
-            _discordCrypt._monkeyPatch(
-                _cachedModules.EventDispatcher,
-                'dirtyDispatch',
-                { instead: _discordCrypt._onDispatchEvent }
-            );
-            _discordCrypt._monkeyPatch(
-                _cachedModules.EventDispatcher,
-                'maybeDispatch',
                 { instead: _discordCrypt._onDispatchEvent }
             );
 
@@ -1827,7 +1831,75 @@ const discordCrypt = ( () => {
                     event.methodArguments[ 0 ].message
                 );
 
-                /* Call the original method. */
+                /* Check if any file upload links are present in the decrypted content. */
+                let attachments = _discordCrypt.__up1ExtractValidUp1URLs( event.methodArguments[ 0 ].message.content );
+
+                /* Call the original method if we don't need to download and decrypt any files. . */
+                if( !attachments.length )
+                    event.originalMethod.apply( event.thisObject, event.methodArguments );
+
+                /* Resolve each attachment. We only do this for messages that can be viewed to save bandwidth. */
+                let resolvedCount = 0;
+                for( let i = 0; i < attachments.length; i++ ) {
+                    /* Slice off the seed. */
+                    let seed = attachments[ i ]
+                        .split( `${_configFile.up1Host}/#` )
+                        .join( '' )
+                        .split( `|${_configFile.encodeMessageTrigger}` )[ 0 ];
+
+                    /* Download and decrypt the blob. */
+                    ( async function() {
+                        await _discordCrypt.__up1DecryptDownload(
+                            seed,
+                            _configFile.up1Host,
+                            global.sjcl,
+                            ( result ) => {
+                                /* Bail on error. */
+                                if( typeof result !== 'object' ) {
+                                    resolvedCount += 1;
+                                    return;
+                                }
+
+                                /* Build the attachment. */
+                                let attachment = {
+                                    id: _discordCrypt._getNonce(),
+                                    filename: result.header.name,
+                                    size: result.blob.size,
+                                    url: attachments[ i ],
+                                };
+
+                                /* If the attachment is an image, get the width and height of it. */
+                                if( result.header.mime.indexOf( 'image/' ) !== -1 ) {
+                                    /* Create a new DataURL image to extract the dimensions from. */
+                                    let img = new Image();
+                                    img.src = `data:${result.header.mime};base64,${result.data.toString( 'base64' )}`;
+
+                                    /* Store the dimensions. */
+                                    attachment.width = img.width;
+                                    attachment.height = img.height;
+
+                                    /* Convert to a compatible data URL. */
+                                    attachment.url = img.src;
+                                }
+
+                                /* Create a new attachment object or add it to the existing array. */
+                                if( !event.methodArguments[ 0 ].message.attachments )
+                                    event.methodArguments[ 0 ].message.attachments = [ attachment ];
+                                else
+                                    event.methodArguments[ 0 ].message.attachments.push( attachment );
+
+                                /* Increment parsed count. */
+                                resolvedCount += 1;
+                            }
+                        );
+                    } )();
+                }
+
+                /* Wait till all attachments have been parsed. */
+                while( resolvedCount !== attachments.length )
+                    await ( new Promise( r => setTimeout( r, 1000 ) ) );
+
+                /* Add the message to the list. */
                 event.originalMethod.apply( event.thisObject, event.methodArguments );
             } )();
         }
@@ -5344,10 +5416,11 @@ const discordCrypt = ( () => {
          * @param {string} url The URL of the request.
          * @param {GetResultCallback} callback The callback triggered when the request is complete or an error occurs.
          * @param {any|null} [encoding] If null is passed the result will be returned as a Buffer otherwise as a string.
+         * @return {Promise<any>}
          */
         static __getRequest( url, callback, encoding = undefined ) {
             try {
-                require( 'request' )(
+                return require( 'request' )(
                     {
                         url: url,
                         gzip: true,
@@ -5355,12 +5428,13 @@ const discordCrypt = ( () => {
                         removeRefererHeader: true
                     },
                     ( error, response, result ) => {
-                        callback( response.statusCode, response.statusMessage, result );
+                        callback( response.statusCode, error || response.statusMessage, result );
                     }
                 );
             }
             catch ( ex ) {
                 callback( -1, ex.toString() );
+                return null;
             }
         }
 
@@ -6015,13 +6089,14 @@ const discordCrypt = ( () => {
          * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
          * @param {function( result: string|object )} callback Callback function to receive either the error string
          *      or the resulting object.
+         * @return {Promise<any>}
          */
         static __up1DecryptDownload( seed, up1_host, sjcl, callback ) {
             /* First extract the ID of the file. */
             let id = sjcl.codec.base64url.fromBits( _discordCrypt.__up1SeedToKey( seed, sjcl ).ident );
 
             /* Retrieve the file asynchronously. */
-            _discordCrypt.__getRequest(
+            return _discordCrypt.__getRequest(
                 `${up1_host}/i/${id}`,
                 ( statusCode, errorString, result ) => {
                     /* Ensure no errors occurred. */
@@ -6050,7 +6125,7 @@ const discordCrypt = ( () => {
          * @param {string} input The input message.
          * @return {Array<string>} Returns an array of all Up1 URLs in the message.
          */
-        static __up1ExtractValidURLs( input ) {
+        static __up1ExtractValidUp1URLs( input ) {
             let result = [];
 
             /* Sanity check. */
