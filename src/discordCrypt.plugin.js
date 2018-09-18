@@ -6087,8 +6087,7 @@ const discordCrypt = ( () => {
          * @param {string|Buffer} seed The seed used to decrypt the file.
          * @param {string} up1_host The host URL for the Up1 service.
          * @param {Object} sjcl The loaded SJCL library providing AES-256 CCM.
-         * @param {function( result: string|object )} callback Callback function to receive either the error string
-         *      or the resulting object.
+         * @param {function} callback Callback function to receive either the error string or the resulting object.
          * @return {Promise<any>}
          */
         static __up1DecryptDownload( seed, up1_host, sjcl, callback ) {
