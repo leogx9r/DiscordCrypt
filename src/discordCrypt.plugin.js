@@ -800,7 +800,8 @@ const discordCrypt = ( () => {
          */
         start() {
             /* Validate location startup. */
-            _discordCrypt._ensureProperStartup();
+            if( !_discordCrypt._ensureProperStartup() )
+                return;
 
             /* Perform idiot-proof check to make sure the user named the plugin `discordCrypt.plugin.js` */
             if ( !_discordCrypt._validPluginName() ) {
@@ -889,7 +890,8 @@ const discordCrypt = ( () => {
          */
         load() {
             /* Validate location startup. */
-            _discordCrypt._ensureProperStartup();
+            if( !_discordCrypt._ensureProperStartup() )
+                return;
 
             /* Freeze the plugin instance if required. */
             if(
@@ -1200,11 +1202,16 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Ensures the client starts up on a non-channel location for proper functioning.
+         * @return {boolean} Returns true if the location is correct.
          */
         static _ensureProperStartup() {
             /* Due to how BD loads the client, we need to start on a non-channel page to properly hook events. */
-            if( [ '/channels/@me', '/activity', '/library', '/store' ].indexOf( window.location.pathname ) === -1 )
+            if( [ '/channels/@me', '/activity', '/library', '/store' ].indexOf( window.location.pathname ) === -1 ) {
                 window.location.pathname = '/channels/@me';
+                return false;
+            }
+
+            return true;
         }
 
         /**
