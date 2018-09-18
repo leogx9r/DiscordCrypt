@@ -8,6 +8,7 @@
 * [**@leogx9r**](https://gitlab.com/leogx9r)
 * [**@SquirrelPerson**](https://google.com)
 * [**@Nyarlathotep**](https://google.com)
+* [**@Bluscream**](https://github.com/Bluscream)
 * [**@shayhelman**](https://twitter.com/shayhelman)
 * [**@TechEdison**](https://gitlab.com/TechEdison)
 * [**@CognacJack**](https://google.com)
