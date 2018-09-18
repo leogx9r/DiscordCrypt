@@ -380,30 +380,35 @@ module.exports = ( mainWindowOptions ) => {
      * @see https://electronjs.org/docs/api/web-request
      */
     const modifyHeaders = ( request ) => {
-        /* Skip encoded data URLs. */
-        if( request.url.indexOf( 'data:image/' ) !== -1 )
-            return;
+        try {
+            /* Skip encoded data URLs. */
+            if( request.url.indexOf( 'data:image/' ) !== -1 )
+                return;
 
-        /* Scan headers for removal or modification. */
-        for( let i in request.requestHeaders ) {
-            let v = options.headerInfo.modify[ i.toLowerCase() ];
-            if( v && request.requestHeaders[ i ] !== v )
-                request.requestHeaders[ i ] = v;
-            else if( options.headerInfo.remove.indexOf( i.toLowerCase() ) !== -1 )
-                delete request.requestHeaders[ i ];
+            /* Scan headers for removal or modification. */
+            for( let i in request.requestHeaders ) {
+                let v = options.headerInfo.modify[ i.toLowerCase() ];
+                if( v && request.requestHeaders[ i ] !== v )
+                    request.requestHeaders[ i ] = v;
+                else if( options.headerInfo.remove.indexOf( i.toLowerCase() ) !== -1 )
+                    delete request.requestHeaders[ i ];
+            }
+
+            /* Add any headers needed. */
+            for( let i in options.headerInfo.insert ) {
+                /* Determine if the header is already present in lowercase form. */
+                let _i = request.requestHeaders.hasOwnProperty( i.toLowerCase() ) ? i.toLowerCase() : i;
+
+                /* Skip if it already exists and the value is as expected. */
+                if( request.requestHeaders[ _i ] === options.headerInfo.insert[ i ] )
+                    continue;
+
+                /* Add the header. */
+                request.requestHeaders[ _i ] = options.headerInfo.insert[ i ];
+            }
         }
-
-        /* Add any headers needed. */
-        for( let i in options.headerInfo.insert ) {
-            /* Determine if the header is already present in lowercase form. */
-            let _i = request.requestHeaders.hasOwnProperty( i.toLowerCase() ) ? i.toLowerCase() : i;
-
-            /* Skip if it already exists and the value is as expected. */
-            if( request.requestHeaders[ _i ] === options.headerInfo.insert[ i ] )
-                continue;
-
-            /* Add the header. */
-            request.requestHeaders[ _i ] = options.headerInfo.insert[ i ];
+        catch( ex ) {
+            log( `Exception: ${ex.toString()}` );
         }
     };
 
@@ -452,57 +457,62 @@ module.exports = ( mainWindowOptions ) => {
             /* Block specific tracking URLs. */
             log( 'Blocking known tracking URLs' );
             mainWnd.webContents.session.webRequest.onBeforeRequest( [ options.targetURLs ], ( details, callback ) => {
-                /* Use the default block list. */
-                let filtered = _filteredHosts.filter( e => details.url.indexOf( e ) !== -1 ).length > 0;
+                try {
+                    /* Use the default block list. */
+                    let filtered = _filteredHosts.filter( e => details.url.indexOf( e ) !== -1 ).length > 0;
 
-                /* Handle link tracking via external URLs if not filtered. */
-                let ext_tracking_pos;
-                if(
-                    !filtered &&
-                    ( ext_tracking_pos = details.url.indexOf( options.urlTrackingPath ), ext_tracking_pos !== -1 )
-                ) {
-                    let part_url = details.url.substr( options.urlTrackingPath.length + ext_tracking_pos );
+                    /* Handle link tracking via external URLs if not filtered. */
+                    let ext_tracking_pos;
+                    if(
+                        !filtered &&
+                        ( ext_tracking_pos = details.url.indexOf( options.urlTrackingPath ), ext_tracking_pos !== -1 )
+                    ) {
+                        let part_url = details.url.substr( options.urlTrackingPath.length + ext_tracking_pos );
 
-                    /* Scroll past the "/" identifier part. */
-                    let link_pos = part_url.indexOf( '/' );
-                    if( link_pos === -1 ) {
-                        callback( { cancel: filtered } );
+                        /* Scroll past the "/" identifier part. */
+                        let link_pos = part_url.indexOf( '/' );
+                        if( link_pos === -1 ) {
+                            callback( { cancel: filtered } );
+                            return;
+                        }
+                        part_url = part_url.substr( link_pos + 1 );
+
+                        /* Make sure it begins with the "http" or "https" */
+                        if( !( part_url.indexOf( 'https' ) === 0 || part_url.indexOf( 'http' ) === 0 ) ) {
+                            callback( { cancel: filtered } );
+                            return;
+                        }
+
+                        let is_https = !part_url.indexOf( 'https' );
+
+                        /* Scroll past the "/" identifier part. */
+                        link_pos = part_url.indexOf( '/' );
+                        if( link_pos === -1 ) {
+                            callback( { cancel: filtered } );
+                            return;
+                        }
+                        part_url = part_url.substr( link_pos + 1 );
+
+                        /* Build the final URL. */
+                        let redirectURL = `${is_https ? 'https' : 'http'}://${part_url}`;
+                        log( `Removed Tracker: ${redirectURL}` );
+
+                        /* Do the redirect. */
+                        callback( {
+                            cancel: false,
+                            redirectURL: redirectURL
+                        } );
                         return;
                     }
-                    part_url = part_url.substr( link_pos + 1 );
 
-                    /* Make sure it begins with the "http" or "https" */
-                    if( !( part_url.indexOf( 'https' ) === 0 || part_url.indexOf( 'http' ) === 0 ) ) {
-                        callback( { cancel: filtered } );
-                        return;
-                    }
+                    if( filtered )
+                        logBlockedTracker( details.url );
 
-                    let is_https = !part_url.indexOf( 'https' );
-
-                    /* Scroll past the "/" identifier part. */
-                    link_pos = part_url.indexOf( '/' );
-                    if( link_pos === -1 ) {
-                        callback( { cancel: filtered } );
-                        return;
-                    }
-                    part_url = part_url.substr( link_pos + 1 );
-
-                    /* Build the final URL. */
-                    let redirectURL = `${is_https ? 'https' : 'http'}://${part_url}`;
-                    log( `Removed Tracker: ${redirectURL}` );
-
-                    /* Do the redirect. */
-                    callback( {
-                        cancel: false,
-                        redirectURL: redirectURL
-                    } );
-                    return;
+                    callback( { cancel: filtered } );
                 }
-
-                if( filtered )
-                    logBlockedTracker( details.url );
-
-                callback( { cancel: filtered } );
+                catch( ex ) {
+                    log( `Exception: ${ex.toString()}` );
+                }
             } );
 
             /* Build the block list. */
