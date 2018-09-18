@@ -48,6 +48,8 @@ const INSTALL_SCRIPT_HEAD =
 
 const INSTALL_SCRIPT_TAIL = `\n\n/*@end @*/\n`;
 
+const METADATA_HEADER = `//META{"name":"discordCrypt"}*//\n\n`;
+
 /**
  * @public
  * @desc Compiles the plugin and adds all necessary _libraries to it.
@@ -411,8 +413,6 @@ class Compiler {
         signature_template,
         sign_key_id
     ) {
-        const metadata = `//META{"name":"discordCrypt"}*//\n\n`;
-
         /* Read the plugin file. */
         let data = this.fs.readFileSync( plugin_path );
 
@@ -450,14 +450,11 @@ class Compiler {
         let finalizeBuild = ( data ) => {
             /* Only do this if we're compressing the plugin. */
             if ( compress )
-                data = this.tryMinify( data, true );
+                data = LICENSE + this.tryMinify( data, true );
 
             try {
                 /* Write the file to the output. */
-                this.fs.writeFileSync(
-                    output_path,
-                    metadata + LICENSE + INSTALL_SCRIPT_HEAD + data + INSTALL_SCRIPT_TAIL
-                );
+                this.fs.writeFileSync( output_path, METADATA_HEADER + INSTALL_SCRIPT_HEAD + data + INSTALL_SCRIPT_TAIL );
 
                 /* For flatpak builds, this needs to be copied as symlinks are forbidden. */
                 let FLATPAK_OUTPUT_PATH =
@@ -469,7 +466,7 @@ class Compiler {
                 ) {
                     this.fs.writeFileSync(
                         FLATPAK_OUTPUT_FILE,
-                        metadata + data
+                        METADATA_HEADER + data
                     );
                     console.info( `Created Build File: ${FLATPAK_OUTPUT_FILE}` );
                 }
