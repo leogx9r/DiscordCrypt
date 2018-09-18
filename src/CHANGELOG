@@ -1,3 +1,9 @@
+Version 2.0.1
+
+- Added the ability to preview Up1 encrypted links as normal attachments.
+- Added a shell script installer for Windows users who try to run the plugin directly.
+- Updated SecureDiscord with a bit more error handling.
+
 Version 2.0.0
 
 - NOTE: Export your database entry & remove the configuration file BEFORE updating to this.
