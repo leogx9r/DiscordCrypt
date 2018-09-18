@@ -145,8 +145,8 @@ For installation on specific operating systems, see below:
 
 #### Windows
 
-* [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) 
-    the plugin file. ( Right Click "**Download**" -> Save As )
+* [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js?inline=false) 
+    the plugin file.
 * Save the plugin to the following path: **`%APPDATA%\BetterDiscord\plugins`**.
     * *Example: `C:\Users\Jeremy\AppData\Local\BetterDiscord\plugins\discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
@@ -157,8 +157,8 @@ For installation on specific operating systems, see below:
 
 #### MacOS
 
-* [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) 
-    the plugin file. ( Right Click "**Download**" -> Save As )
+* [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js?inline=false) 
+    the plugin file.
 * Save the plugin to the following path: **`~/Library/Preferences/BetterDiscord/plugins`**.
     * *Example: `/home/jeremy/Library/Preferences/BetterDiscord/plugins/discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
@@ -176,8 +176,8 @@ For installation on specific operating systems, see below:
 
 The *PTB* or *SNAP* versions are **NOT** supported.
 
-* [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) 
-    the plugin file. ( Right Click -> Save As )
+* [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js?inline=false) 
+    the plugin file.
 * Save the plugin to the following path: **`~/.config/BetterDiscord/plugins`**.
     * *Example: `/home/jeremy/.config/BetterDiscord/plugins/discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
@@ -186,8 +186,8 @@ The *PTB* or *SNAP* versions are **NOT** supported.
 
 ##### Flatpak Versions
 
-* [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js) 
-    the plugin file. ( Right Click -> Save As )
+* [Download](https://gitlab.com/leogx9r/DiscordCrypt/raw/master/build/discordCrypt.plugin.js?inline=false) 
+    the plugin file.
 * Save the plugin to the following path: **`~/.var/app/com.discordapp.Discord/config/BetterDiscord/plugins`**.
     * *Example: `/home/jeremy/.var/app/com.discordapp.Discord/config/BetterDiscord/plugins/discordCrypt.plugin.js`*
 * **Ensure** the file is named exactly as **`discordCrypt.plugin.js`**.
