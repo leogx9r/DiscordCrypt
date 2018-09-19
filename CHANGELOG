@@ -2,7 +2,6 @@ Version 2.0.2
 
 - Minor improvements to the database unlocking speed.
 - Reduced file size further by removing unnecessary assets in libraries.
-- Fixed a bug where update ignoring would fail to calculate fingerprints correctly.
 
 Version 2.0.1
 

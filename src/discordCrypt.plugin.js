@@ -791,7 +791,7 @@ const discordCrypt = ( () => {
          * @returns {string}
          */
         getVersion() {
-            return '2.0.1';
+            return '2.0.2';
         }
 
         /**
@@ -3360,56 +3360,23 @@ const discordCrypt = ( () => {
                 } );
 
                 /* Handle the signatures button clicked. */
-                info_btn.click( async function() {
-                    let key_id = Buffer.from(
-                        (
-                            await global
-                                .openpgp
-                                .key
-                                .readArmored( _discordCrypt.__zlibDecompress( PGP_SIGNING_KEY ) )
-                        )
-                            .keys[ 0 ]
-                            .primaryKey
-                            .fingerprint
-                    )
-                        .toString( 'hex' )
-                        .toUpperCase();
-
-                    global.smalltalk.alert(
-                        'Update Info',
-                        `<strong>Version</strong>: ${updateInfo.version}\n\n` +
-                        `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
-                        `<strong>Key ID</strong>: ${key_id}\n\n` +
-                        `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
-                        '<code class="hljs dc-code-block" style="background: none !important;">' +
-                        `${updateInfo.signature}</code>`
-                    );
-                } );
-
-                /* Handle the signatures button clicked. */
                 info_btn.click( function() {
-                    let size = parseFloat( updateInfo.payload.length / 1024.0 ).toFixed( 3 );
-                    let key_id = Buffer.from(
-                        global
-                            .openpgp
-                            .key
-                            .readArmored( _discordCrypt.__zlibDecompress( PGP_SIGNING_KEY ) )
-                            .keys[ 0 ]
-                            .primaryKey
-                            .fingerprint
-                    )
-                        .toString( 'hex' )
-                        .toUpperCase();
+                    global.openpgp.key.readArmored( _discordCrypt.__zlibDecompress( PGP_SIGNING_KEY ) ).then(
+                        r => {
+                            let key_id = Buffer.from( r.keys[ 0 ].primaryKey.fingerprint )
+                                .toString( 'hex' )
+                                .toUpperCase();
 
-                    global.smalltalk.alert(
-                        'Update Info',
-                        `<strong>Version</strong>: ${updateInfo.version}\n\n` +
-                        `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
-                        `<strong>Size</strong>: ${size} KB\n\n` +
-                        `<strong>Key ID</strong>: ${key_id}\n\n` +
-                        `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
-                        '<code class="hljs dc-code-block" style="background: none !important;">' +
-                        `${updateInfo.signature}</code>`
+                            global.smalltalk.alert(
+                                'Update Info',
+                                `<strong>Version</strong>: ${updateInfo.version}\n\n` +
+                                `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
+                                `<strong>Key ID</strong>: ${key_id}\n\n` +
+                                `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
+                                '<code class="hljs dc-code-block" style="background: none !important;">' +
+                                `${updateInfo.signature}</code>`
+                            );
+                        }
                     );
                 } );
 
@@ -4422,7 +4389,7 @@ const discordCrypt = ( () => {
             /* Update URL and request method. */
             const base_url = 'https://gitlab.com/leogx9r/discordCrypt/raw/master';
             const update_url = `${base_url}/build/${_discordCrypt._getPluginName()}`;
-            const changelog_url = `${base_url}/src/CHANGELOG`;
+            const changelog_url = `${base_url}/CHANGELOG`;
             const signature_url = `${update_url}.sig`;
 
             /**
