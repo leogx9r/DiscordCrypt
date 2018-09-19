@@ -2467,8 +2467,13 @@ const discordCrypt = ( () => {
                     'Do you wish to start a new secure session with them using these parameters?'
                 ).then(
                     () => {
-                        /* The user accepted the request. Handle the key exchange.  */
-                        returnValue = _discordCrypt._handleAcceptedKeyRequest( message, remoteKeyInfo );
+                        /* Make sure the key didn't expire by the time they accepted it. */
+                        if( ( Date.now() - Date.parse( message.timestamp ) ) > KEY_IGNORE_TIMEOUT )
+                            returnValue = '🚫 **[ ERROR ]** SESSION KEY EXPIRED';
+                        else {
+                            /* The user accepted the request. Handle the key exchange.  */
+                            returnValue = _discordCrypt._handleAcceptedKeyRequest( message, remoteKeyInfo );
+                        }
                     },
                     () => {
                         /* The user rejected the request. */
