@@ -5669,8 +5669,8 @@ const discordCrypt = ( () => {
             let mime_type = clipboard.availableFormats();
             let data, tmp = '', name = '', is_file = false;
 
-            /* Loop over each format and try getting the data. */
-            for ( let i = 0; i < mime_type.length; i++ ) {
+            /* Loop over each format backwards and try getting the data. */
+            for ( let i = mime_type.length - 1; i >= 0; i-- ) {
                 let format = mime_type[ i ].split( '/' );
 
                 /* For types, prioritize images. */
@@ -5966,6 +5966,15 @@ const discordCrypt = ( () => {
             let file_name = clipboard.name.length === 0 ?
                 require( 'crypto' ).pseudoRandomBytes( 16 ).toString( 'hex' ) :
                 clipboard.name;
+
+            /* Detect which extension this data type usually has only if the file doesn't have a name. */
+            if( clipboard.name.length === 0 ) {
+                let extension = require( 'mime-types' ).extension( clipboard.mime_type );
+
+                /* Use the correct extension based on the mime-type only if valid. */
+                if( extension && extension.length )
+                    file_name += `.${extension}`;
+            }
 
             /* Encrypt the buffer. */
             this.__up1EncryptBuffer(
