@@ -889,10 +889,6 @@ const discordCrypt = ( () => {
          * @desc Triggered when the script has to load resources. This is called once upon Discord startup.
          */
         load() {
-            /* Validate location startup. */
-            if( !_discordCrypt._ensureProperStartup() )
-                return;
-
             /* Freeze the plugin instance if required. */
             if(
                 global.bdplugins &&
@@ -1202,12 +1198,29 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Ensures the client starts up on a non-channel location for proper functioning.
+         *      If the user is not on a whitelisted channel, the plugin will alert them then
+         *          force-reload the Electron application.
          * @return {boolean} Returns true if the location is correct.
          */
         static _ensureProperStartup() {
+            const electron = require( 'electron' );
+
             /* Due to how BD loads the client, we need to start on a non-channel page to properly hook events. */
             if( [ '/channels/@me', '/activity', '/library', '/store' ].indexOf( window.location.pathname ) === -1 ) {
-                window.location.pathname = '/channels/@me';
+                /* Send a synchronous alert to indicate the importance of this. */
+                electron.ipcRenderer.sendSync(
+                    'ELECTRON_BROWSER_WINDOW_ALERT',
+                    `It seems that Discord has not been loaded on the Games or Friends tab.\n` +
+                    `DiscordCrypt requires Discord to load on the Games or Friends tab to work correctly.\n` +
+                    `I'll reload the client once you click OK so that it starts on the correct tab.\n\n` +
+                    `\tPath: ${window.location.pathname}`,
+                    'DiscordCrypt FATAL ERROR'
+                );
+
+                /* Relaunch the app completely. */
+                electron.remote.app.relaunch();
+                electron.remote.app.exit();
+
                 return false;
             }
 
