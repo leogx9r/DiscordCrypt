@@ -515,6 +515,11 @@ module.exports = ( mainWindowOptions ) => {
                 }
             } );
 
+            /* Prevent redirect hooks that potentially re-add the tracker. */
+            mainWnd.webContents.session.webRequest.onBeforeRedirect = () => {
+                /* Ignored. */
+            };
+
             /* Build the block list. */
             buildBlockList();
             log( typeof window );
