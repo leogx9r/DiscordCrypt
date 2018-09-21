@@ -4048,13 +4048,14 @@ const discordCrypt = ( () => {
         static _onGeneratePassphraseClicked() {
             global.smalltalk.prompt(
                 'GENERATE A SECURE PASSPHRASE',
-                'Please enter how many words you\'d like this passphrase to have:\n\n',
+                'Please enter how many words you\'d like this passphrase to have below.\n' +
+                'Be advised that a minimum word length of <b><u>20</u></b> is recommended.\n\n',
                 '20'
             ).then(
                 ( value ) => {
                     /* Validate the value entered. */
                     if( typeof value !== 'string' || !value.length || isNaN( value ) ) {
-                        global.smalltalk.alert( 'ERROR', 'Invalid value entered' );
+                        global.smalltalk.alert( 'ERROR', 'Invalid number entered' );
                         return;
                     }
 
@@ -4067,6 +4068,14 @@ const discordCrypt = ( () => {
                         `This passphrase contains approximately <b>${Math.round( entropy )} bits of entropy</b>.\n\n` +
                         'Please copy your generated passphrase below:\n\n',
                         passphrase
+                    ).then(
+                        () => {
+                            /* Copy to the clipboard then close. */
+                            require( 'electron' ).clipboard.writeText( passphrase );
+                        },
+                        () => {
+                            /* Ignored. */
+                        }
                     );
                 },
                 () => {
