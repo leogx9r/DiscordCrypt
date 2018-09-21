@@ -4355,7 +4355,6 @@ const discordCrypt = ( () => {
 
             const BETTERDISCORD_PATH = '/BetterDiscord/plugins/';
             const MAC_PATH = `${process.env.HOME}/Library/Preferences`;
-            const FLATPAK_PATH = '.var/app/com.discordapp.Discord/config';
             const DEB_PATH = `${process.env.HOME}.config`;
 
             switch( process.platform ) {
@@ -4364,8 +4363,8 @@ const discordCrypt = ( () => {
             case 'darwin':
                 return `${MAC_PATH}${BETTERDISCORD_PATH}`;
             case 'linux':
-                if( fs.existsSync( FLATPAK_PATH ) )
-                    return `${FLATPAK_PATH}${BETTERDISCORD_PATH}`;
+                if( fs.existsSync( process.env.XDG_CONFIG_HOME ) )
+                    return `${process.env.XDG_CONFIG_HOME}${BETTERDISCORD_PATH}`;
                 return `${DEB_PATH}${BETTERDISCORD_PATH}`;
             default:
                 _discordCrypt.log( `Unsupported platform detected: ${process.platform} ...`, 'error' );
