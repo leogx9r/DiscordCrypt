@@ -725,7 +725,7 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const MENU_HTML =
-        `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`;
+        `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`;
 
     /**
      * @desc These contain all libraries that will be loaded dynamically in the current JS VM.
@@ -1474,6 +1474,9 @@ const discordCrypt = ( () => {
 
             /* Handle Security Settings tab selected. */
             $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked );
+
+            /* Handle About tab selected. */
+            $( '#dc-about-settings-btn' ).click( _discordCrypt._onAboutTabButtonClicked );
 
             /* Handle Automatic Updates button clicked. */
             $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged );
@@ -3007,7 +3010,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Uploads the clipboard's current contents and sends the encrypted link.
-         * @returns {Function}
          */
         static _onUploadEncryptedClipboardButtonClicked() {
             /* Since this is an async operation, we need to backup the channel ID before doing this. */
@@ -3042,7 +3044,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc  Uploads the selected file and sends the encrypted link.
-         * @returns {Function}
          */
         static _onUploadFileButtonClicked() {
             const fs = require( 'original-fs' );
@@ -3171,7 +3172,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Selects the Database Settings tab and loads key info.
-         * @return {Function}
          */
         static _onDatabaseTabButtonClicked() {
             /* Cache the table. */
@@ -3350,7 +3350,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Selects the Security Settings tab and loads all blacklisted updates.
-         * @return {Function}
          */
         static _onSecurityTabButtonClicked() {
             /* Get the table to show blacklisted updates. */
@@ -3440,8 +3439,16 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Selects the About tab.
+         */
+        static _onAboutTabButtonClicked() {
+            /* Select the about tab. */
+            _discordCrypt._setActiveSettingsTab( 3 );
+        }
+
+        /**
+         * @private
          * @desc Toggles the automatic update checking function.
-         * @return {Function}
          */
         static _onAutomaticUpdateCheckboxChanged() {
             /* Set the state. */
@@ -3478,7 +3485,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Checks for updates immediately.
-         * @return {Function}
          */
         static _onCheckForUpdatesButtonClicked() {
             /* Simply call the wrapper, everything else will be handled by this. */
@@ -3488,7 +3494,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Opens a file dialog to import a JSON encoded entries file.
-         * @return {Function}
          */
         static _onImportDatabaseButtonClicked() {
             /* Get the FS module. */
@@ -3695,7 +3700,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Clears all entries in the database.
-         * @return {Function}
          */
         static _onClearDatabaseEntriesButtonClicked() {
             /* Cache the button. */
@@ -3738,7 +3742,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Saves all settings.
-         * @returns {Function}
          */
         static _onSaveSettingsButtonClicked() {
             /* Cache jQuery results. */
@@ -3820,7 +3823,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Resets the user settings to their default values.
-         * @returns {Function}
          */
         static _onResetSettingsButtonClicked() {
             /* Resets the configuration file and update the button text. */
@@ -3899,7 +3901,6 @@ const discordCrypt = ( () => {
          * @private
          * @desc Adds the upper scoped update info to the blacklist, saves the configuration file and
          *      closes the update window.
-         * @return {Function}
          */
         static _onUpdateIgnoreButtonClicked() {
             /* Clear out the needless data which isn't actually needed to validate a blacklisted update. */
@@ -3988,7 +3989,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Saves the entered passwords for the current channel or DM.
-         * @returns {Function}
          */
         static _onSavePasswordsButtonClicked() {
             let save_btn = $( '#dc-save-pwd' ),
@@ -4032,7 +4032,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Resets passwords for the current channel or DM to their defaults.
-         * @returns {Function}
          */
         static _onResetPasswordsButtonClicked() {
             let reset_btn = $( '#dc-reset-pwd' );
@@ -4129,7 +4128,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Copies the passwords from the current channel or DM to the clipboard.
-         * @returns {Function}
          */
         static _onCopyCurrentPasswordsButtonClicked() {
             // noinspection JSUnresolvedVariable
@@ -4161,7 +4159,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Enables or disables automatic message encryption.
-         * @returns {Function}
          */
         static _onForceEncryptButtonClicked() {
             /* Cache jQuery results. */
@@ -4235,6 +4232,10 @@ const discordCrypt = ( () => {
             case 2:
                 $( '#dc-security-settings-btn' ).addClass( 'active' );
                 $( '#dc-security-settings-tab' ).css( 'display', 'block' );
+                break;
+            case 3:
+                $( '#dc-about-settings-btn' ).addClass( 'active' );
+                $( '#dc-about-settings-tab' ).css( 'display', 'block' );
                 break;
             default:
                 break;

@@ -95,6 +95,7 @@
             <button class='dc-tab-link' id="dc-plugin-settings-btn">Plugin Settings</button>
             <button class='dc-tab-link' id="dc-database-settings-btn">Database Settings</button>
             <button class='dc-tab-link' id="dc-security-settings-btn">Security Settings</button>
+            <button class='dc-tab-link' id="dc-about-settings-btn">About</button>
             <button class='dc-tab-link' id="dc-exit-settings-btn" style="float:right;">✖</button>
         </div>
         <div class="tab-content" id="dc-plugin-settings-tab" style="display: block;">
@@ -247,17 +248,6 @@
                     Reset Settings</button>
             </div>
 
-            <div class="dc-ruler-align">
-                <button class="dc-button">
-                    <a style="color: #fff !important;"
-                       href="https://discordapp.com/invite/3uakNmM" target="_blank">Join Support Server</a>
-                </button>
-                <button class="dc-button">
-                    <a style="color: #fff !important;"
-                       href="https://gitlab.com/leogx9r/DiscordCrypt" target="_blank">Visit Source Repository</a>
-                </button>
-            </div>
-
             <br/><br/><br/><br/>
         </div>
         <div class="tab-content" id="dc-database-settings-tab">
@@ -323,6 +313,54 @@
             <br/><br/>
             <div class="dc-ruler-align">
                 <button class="dc-button" id="dc-update-check-btn">Check For Updates</button>
+            </div>
+        </div>
+        <div class="tab-content" id="dc-about-settings-tab">
+            <p style="text-align: center;">
+                <b>About DiscordCrypt</b>
+                <br/>
+                <img src="data:image/png;base64,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" style="width: 64px; height: 64px"/>
+            </p>
+
+            <p><b>License</b></p>
+            <code class="hljs dc-code-block" style="background: none !important;">
+                MIT License<br/>
+                <br/>
+                Copyright (c) 2018 Leonardo Gates<br/>
+                <br/>
+                Permission is hereby granted, free of charge, to any person obtaining a copy<br/>
+                of this software and associated documentation files (the "Software"), to deal<br/>
+                in the Software without restriction, including without limitation the rights<br/>
+                to use, copy, modify, merge, publish, distribute, sublicense, and/or sell<br/>
+                copies of the Software, and to permit persons to whom the Software is<br/>
+                furnished to do so, subject to the following conditions:<br/>
+                <br/>
+                The above copyright notice and this permission notice shall be included in all<br/>
+                copies or substantial portions of the Software.<br/>
+                <br/>
+                THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR<br/>
+                IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,<br/>
+                FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE<br/>
+                AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER<br/>
+                LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,<br/>
+                OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE<br/>
+                SOFTWARE.<br/>
+            </code>
+            <br/><br/>
+
+            <div class="dc-ruler-align">
+                <button class="dc-button">
+                    <a style="color: #fff !important;" href="https://discordapp.com/invite/3uakNmM" target="_blank"
+                       rel="noreferrer">Join Support Server</a>
+                </button>
+                <button class="dc-button">
+                    <a style="color: #fff !important;" href="https://gitlab.com/leogx9r/DiscordCrypt" target="_blank"
+                       rel="noreferrer">Visit Source Repository</a>
+                </button>
+                <button class="dc-button">
+                    <a style="color: #fff !important;" href="https://gitlab.com/leogx9r/DiscordCrypt#introduction"
+                       target="_blank" rel="noreferrer">Donate</a>
+                </button>
             </div>
         </div>
 

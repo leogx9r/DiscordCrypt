@@ -1446,6 +1446,9 @@ const discordCrypt = ( () => {
             /* Handle Security Settings tab selected. */
             $( '#dc-security-settings-btn' ).click( _discordCrypt._onSecurityTabButtonClicked );
 
+            /* Handle About tab selected. */
+            $( '#dc-about-settings-btn' ).click( _discordCrypt._onAboutTabButtonClicked );
+
             /* Handle Automatic Updates button clicked. */
             $( '#dc-automatic-updates-enabled' ).change( _discordCrypt._onAutomaticUpdateCheckboxChanged );
 
@@ -2978,7 +2981,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Uploads the clipboard's current contents and sends the encrypted link.
-         * @returns {Function}
          */
         static _onUploadEncryptedClipboardButtonClicked() {
             /* Since this is an async operation, we need to backup the channel ID before doing this. */
@@ -3013,7 +3015,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc  Uploads the selected file and sends the encrypted link.
-         * @returns {Function}
          */
         static _onUploadFileButtonClicked() {
             const fs = require( 'original-fs' );
@@ -3142,7 +3143,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Selects the Database Settings tab and loads key info.
-         * @return {Function}
          */
         static _onDatabaseTabButtonClicked() {
             /* Cache the table. */
@@ -3321,7 +3321,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Selects the Security Settings tab and loads all blacklisted updates.
-         * @return {Function}
          */
         static _onSecurityTabButtonClicked() {
             /* Get the table to show blacklisted updates. */
@@ -3411,8 +3410,16 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @desc Selects the About tab.
+         */
+        static _onAboutTabButtonClicked() {
+            /* Select the about tab. */
+            _discordCrypt._setActiveSettingsTab( 3 );
+        }
+
+        /**
+         * @private
          * @desc Toggles the automatic update checking function.
-         * @return {Function}
          */
         static _onAutomaticUpdateCheckboxChanged() {
             /* Set the state. */
@@ -3449,7 +3456,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Checks for updates immediately.
-         * @return {Function}
          */
         static _onCheckForUpdatesButtonClicked() {
             /* Simply call the wrapper, everything else will be handled by this. */
@@ -3459,7 +3465,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Opens a file dialog to import a JSON encoded entries file.
-         * @return {Function}
          */
         static _onImportDatabaseButtonClicked() {
             /* Get the FS module. */
@@ -3666,7 +3671,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Clears all entries in the database.
-         * @return {Function}
          */
         static _onClearDatabaseEntriesButtonClicked() {
             /* Cache the button. */
@@ -3709,7 +3713,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Saves all settings.
-         * @returns {Function}
          */
         static _onSaveSettingsButtonClicked() {
             /* Cache jQuery results. */
@@ -3791,7 +3794,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Resets the user settings to their default values.
-         * @returns {Function}
          */
         static _onResetSettingsButtonClicked() {
             /* Resets the configuration file and update the button text. */
@@ -3870,7 +3872,6 @@ const discordCrypt = ( () => {
          * @private
          * @desc Adds the upper scoped update info to the blacklist, saves the configuration file and
          *      closes the update window.
-         * @return {Function}
          */
         static _onUpdateIgnoreButtonClicked() {
             /* Clear out the needless data which isn't actually needed to validate a blacklisted update. */
@@ -3959,7 +3960,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Saves the entered passwords for the current channel or DM.
-         * @returns {Function}
          */
         static _onSavePasswordsButtonClicked() {
             let save_btn = $( '#dc-save-pwd' ),
@@ -4003,7 +4003,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Resets passwords for the current channel or DM to their defaults.
-         * @returns {Function}
          */
         static _onResetPasswordsButtonClicked() {
             let reset_btn = $( '#dc-reset-pwd' );
@@ -4100,7 +4099,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Copies the passwords from the current channel or DM to the clipboard.
-         * @returns {Function}
          */
         static _onCopyCurrentPasswordsButtonClicked() {
             // noinspection JSUnresolvedVariable
@@ -4132,7 +4130,6 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Enables or disables automatic message encryption.
-         * @returns {Function}
          */
         static _onForceEncryptButtonClicked() {
             /* Cache jQuery results. */
@@ -4206,6 +4203,10 @@ const discordCrypt = ( () => {
             case 2:
                 $( '#dc-security-settings-btn' ).addClass( 'active' );
                 $( '#dc-security-settings-tab' ).css( 'display', 'block' );
+                break;
+            case 3:
+                $( '#dc-about-settings-btn' ).addClass( 'active' );
+                $( '#dc-about-settings-tab' ).css( 'display', 'block' );
                 break;
             default:
                 break;
