@@ -99,6 +99,7 @@
  * @desc Contains information given an input public key.
  * @property {number} index The index of the exchange algorithm.
  * @property {string} fingerprint The SHA-256 sum of the public key.
+ * @property {string} canonical_name The canonical name describing the exchange algorithm.
  * @property {string} algorithm The public key's type ( DH | ECDH ) extracted from the metadata.
  * @property {int} bit_length The length, in bits, of the public key's security.
  * @property {Buffer} salt The unique salt for this key.
@@ -2300,7 +2301,7 @@ const discordCrypt = ( () => {
          * @return {string} Returns the resulting message string.
          */
         static _handleAcceptedKeyRequest( message, remoteKeyInfo ) {
-            let encodedKey, algorithm;
+            let encodedKey;
 
             /* If a local key doesn't exist, generate one and send it. */
             if(
@@ -2348,10 +2349,6 @@ const discordCrypt = ( () => {
             /* Save the remote key's information. */
             _globalSessionState[ message.channel_id ].remoteKey = remoteKeyInfo;
 
-            /* Extract the algorithm for later logging. */
-            algorithm = `${_globalSessionState[ message.channel_id ].localKey.algorithm.toUpperCase()}-`;
-            algorithm += `${_globalSessionState[ message.channel_id ].localKey.bit_length}`;
-
             /* Try deriving the key. */
             let keys = _discordCrypt._deriveExchangeKeys( message.channel_id );
 
@@ -2378,7 +2375,7 @@ const discordCrypt = ( () => {
 
             /* Set the new message text. */
             return '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n\n' +
-                `Algorithm: **${algorithm}**\n` +
+                `Algorithm: ${_globalSessionState[ message.channel_id ].localKey.canonical_name}\n` +
                 `Primary Entropy: **${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits**\n` +
                 `Secondary Entropy: **${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits**\n`;
         }
@@ -2447,7 +2444,7 @@ const discordCrypt = ( () => {
                     k = _globalSessionState[ message.channel_id ].localKey;
 
                 return '🔏 **[ SESSION ]** *OUTGOING KEY EXCHANGE*\n\n' +
-                    `Algorithm: **${k.algorithm.toUpperCase()}-${k.bit_length}**\n` +
+                    `Algorithm: ${k.canonical_name}\n` +
                     `Checksum: **${k.fingerprint}**`;
             }
 
@@ -5475,6 +5472,40 @@ const discordCrypt = ( () => {
         }
 
         /**
+         * @private
+         * @desc Returns the canonical name for the given exchange bit length.
+         * @param {number} bit_length One of the supported ECDH or DH bit lengths.
+         * @return {string|null} Returns the canonicalized name on success or null on failure.
+         */
+        static __exchangeBitLengthToCanonicalName( bit_length ) {
+            /* Elliptic Curve Names. */
+            switch( bit_length ) {
+            case 224:
+                return '**secp224k1** - SECG Koblitz Curve Over A 224-Bit Prime Field';
+            case 256:
+                return '**x25519** - High-Speed Curve Over A 256-Bit Prime Field';
+            case 384:
+                return '**secp384r1** - NIST/SECG Curve Over A 384-Bit Prime Field';
+            case 409:
+                return '**sect409k1** - NIST/SECG Curve Over A 409-Bit Binary Field';
+            case 521:
+                return '**secp521r1** - NIST/SECG Curve Over A 521-Bit Prime Field';
+            case 571:
+                return '**sect571k1** - NIST/SECG Curve Over A 571-Bit Binary Field';
+            case 751:
+                return '**sidhp751** - Post-Quantum Supersingular Isogeny Curve Over A 751-Bit Prime Field';
+            default:
+                break;
+            }
+
+            /* Standard Diffie-Hellman. */
+            if( bit_length >= 768 && bit_length <= 8192 )
+                return `Diffie-Hellman ModP-${bit_length}`;
+
+            return null;
+        }
+
+        /**
          * @public
          * @desc Returns the exchange algorithm and bit size for the given metadata as well as a fingerprint.
          * @param {string|Buffer} key_message The encoded metadata to extract the information from.
@@ -5487,7 +5518,7 @@ const discordCrypt = ( () => {
          */
         static __extractExchangeKeyInfo( key_message, header_present = false ) {
             try {
-                let output = [];
+                let output = {};
                 let msg = key_message.replace( /\r?\n|\r/g, '' );
 
                 /* Strip the header if necessary. */
@@ -5511,8 +5542,9 @@ const discordCrypt = ( () => {
                 /* Buffer[0] contains the algorithm type. Reverse it. */
                 output[ 'index' ] = parseInt( msg[ 0 ] );
                 output[ 'bit_length' ] = _discordCrypt.__indexToAlgorithmBitLength( msg[ 0 ] );
-                output[ 'algorithm' ] = _discordCrypt.__indexToExchangeAlgorithmString( msg[ 0 ] )
-                    .split( '-' )[ 0 ].toLowerCase();
+                output[ 'canonical_name' ] = _discordCrypt.__exchangeBitLengthToCanonicalName( output[ 'bit_length' ] );
+                output[ 'algorithm' ] = _discordCrypt.__indexToExchangeAlgorithmString( msg[ 0 ] ).split( '-' )[ 0 ]
+                    .toLowerCase();
 
                 /* Get the salt length. */
                 let salt_len = msg.readInt8( 1 );

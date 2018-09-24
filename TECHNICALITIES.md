@@ -294,7 +294,7 @@ Just as with Diffie-Hellman, one should choose the largest key size for key exch
 The following key sizes in bits are supported:
 
 * 224 Bits ( `secp224k1: SECG curve over a 224 bit prime field.` )
-* *256 Bits* ( `curve25519: NIST curve over a 256 bit prime field.` )
+* *256 Bits* ( `x25519: Unpatented curve over a 256 bit prime field.` )
 * 384 Bits ( `secp384r1: NIST/SECG curve over a 384 bit prime field.` )
 * 409 Bits ( `sect409k1: NIST/SECG curve over a 409 bit binary field.` )
 * 521 Bits ( `secp521r1: NIST/SECG curve over a 521 bit prime field.` )
@@ -303,7 +303,7 @@ The following key sizes in bits are supported:
 
 Please see [here](http://www.secg.org/sec2-v2.pdf) for more information on curve standard parameters.
 
-For information regarding the specifics of Curve25519, see its introductory paper 
+For information regarding the specifics of X25519, see its introductory paper 
     [here](https://cr.yp.to/ecdh/curve25519-20060209.pdf).
 
 With the advancements of quantum computers, the need for 

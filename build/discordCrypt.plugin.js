@@ -121,6 +121,7 @@
  * @desc Contains information given an input public key.
  * @property {number} index The index of the exchange algorithm.
  * @property {string} fingerprint The SHA-256 sum of the public key.
+ * @property {string} canonical_name The canonical name describing the exchange algorithm.
  * @property {string} algorithm The public key's type ( DH | ECDH ) extracted from the metadata.
  * @property {int} bit_length The length, in bits, of the public key's security.
  * @property {Buffer} salt The unique salt for this key.
@@ -704,7 +705,7 @@ const discordCrypt = ( () => {
      * @type {string}
      */
     const APP_STYLE =
-        `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`;
+        `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`;
 
     /**
      * @desc Contains the raw HTML used to inject into the search descriptor providing menu icons.
@@ -966,7 +967,7 @@ const discordCrypt = ( () => {
                 /* Default block operation mode for ciphers. */
                 encryptBlockMode: 'CBC',
                 /* The bit size of the exchange algorithm to use. */
-                exchangeBitSize: 571,
+                exchangeBitSize: 751,
                 /* Default password for servers not set. */
                 defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Decrypted messages have this string prefixed to it. */
@@ -2329,7 +2330,7 @@ const discordCrypt = ( () => {
          * @return {string} Returns the resulting message string.
          */
         static _handleAcceptedKeyRequest( message, remoteKeyInfo ) {
-            let encodedKey, algorithm;
+            let encodedKey;
 
             /* If a local key doesn't exist, generate one and send it. */
             if(
@@ -2377,10 +2378,6 @@ const discordCrypt = ( () => {
             /* Save the remote key's information. */
             _globalSessionState[ message.channel_id ].remoteKey = remoteKeyInfo;
 
-            /* Extract the algorithm for later logging. */
-            algorithm = `${_globalSessionState[ message.channel_id ].localKey.algorithm.toUpperCase()}-`;
-            algorithm += `${_globalSessionState[ message.channel_id ].localKey.bit_length}`;
-
             /* Try deriving the key. */
             let keys = _discordCrypt._deriveExchangeKeys( message.channel_id );
 
@@ -2407,7 +2404,7 @@ const discordCrypt = ( () => {
 
             /* Set the new message text. */
             return '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n\n' +
-                `Algorithm: **${algorithm}**\n` +
+                `Algorithm: ${_globalSessionState[ message.channel_id ].localKey.canonical_name}\n` +
                 `Primary Entropy: **${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits**\n` +
                 `Secondary Entropy: **${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits**\n`;
         }
@@ -2476,7 +2473,7 @@ const discordCrypt = ( () => {
                     k = _globalSessionState[ message.channel_id ].localKey;
 
                 return '🔏 **[ SESSION ]** *OUTGOING KEY EXCHANGE*\n\n' +
-                    `Algorithm: **${k.algorithm.toUpperCase()}-${k.bit_length}**\n` +
+                    `Algorithm: ${k.canonical_name}\n` +
                     `Checksum: **${k.fingerprint}**`;
             }
 
@@ -5504,6 +5501,40 @@ const discordCrypt = ( () => {
         }
 
         /**
+         * @private
+         * @desc Returns the canonical name for the given exchange bit length.
+         * @param {number} bit_length One of the supported ECDH or DH bit lengths.
+         * @return {string|null} Returns the canonicalized name on success or null on failure.
+         */
+        static __exchangeBitLengthToCanonicalName( bit_length ) {
+            /* Elliptic Curve Names. */
+            switch( bit_length ) {
+            case 224:
+                return '**secp224k1** - SECG Koblitz Curve Over A 224-Bit Prime Field';
+            case 256:
+                return '**x25519** - High-Speed Curve Over A 256-Bit Prime Field';
+            case 384:
+                return '**secp384r1** - NIST/SECG Curve Over A 384-Bit Prime Field';
+            case 409:
+                return '**sect409k1** - NIST/SECG Curve Over A 409-Bit Binary Field';
+            case 521:
+                return '**secp521r1** - NIST/SECG Curve Over A 521-Bit Prime Field';
+            case 571:
+                return '**sect571k1** - NIST/SECG Curve Over A 571-Bit Binary Field';
+            case 751:
+                return '**sidhp751** - Post-Quantum Supersingular Isogeny Curve Over A 751-Bit Prime Field';
+            default:
+                break;
+            }
+
+            /* Standard Diffie-Hellman. */
+            if( bit_length >= 768 && bit_length <= 8192 )
+                return `Diffie-Hellman ModP-${bit_length}`;
+
+            return null;
+        }
+
+        /**
          * @public
          * @desc Returns the exchange algorithm and bit size for the given metadata as well as a fingerprint.
          * @param {string|Buffer} key_message The encoded metadata to extract the information from.
@@ -5516,7 +5547,7 @@ const discordCrypt = ( () => {
          */
         static __extractExchangeKeyInfo( key_message, header_present = false ) {
             try {
-                let output = [];
+                let output = {};
                 let msg = key_message.replace( /\r?\n|\r/g, '' );
 
                 /* Strip the header if necessary. */
@@ -5540,8 +5571,9 @@ const discordCrypt = ( () => {
                 /* Buffer[0] contains the algorithm type. Reverse it. */
                 output[ 'index' ] = parseInt( msg[ 0 ] );
                 output[ 'bit_length' ] = _discordCrypt.__indexToAlgorithmBitLength( msg[ 0 ] );
-                output[ 'algorithm' ] = _discordCrypt.__indexToExchangeAlgorithmString( msg[ 0 ] )
-                    .split( '-' )[ 0 ].toLowerCase();
+                output[ 'canonical_name' ] = _discordCrypt.__exchangeBitLengthToCanonicalName( output[ 'bit_length' ] );
+                output[ 'algorithm' ] = _discordCrypt.__indexToExchangeAlgorithmString( msg[ 0 ] ).split( '-' )[ 0 ]
+                    .toLowerCase();
 
                 /* Get the salt length. */
                 let salt_len = msg.readInt8( 1 );
