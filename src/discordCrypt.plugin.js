@@ -792,7 +792,7 @@ const discordCrypt = ( () => {
          * @returns {string}
          */
         getVersion() {
-            return '2.0.3';
+            return '2.0.4';
         }
 
         /**
@@ -2377,7 +2377,7 @@ const discordCrypt = ( () => {
 
             /* Set the new message text. */
             return '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n\n' +
-                `Algorithm: ${_globalSessionState[ message.channel_id ].localKey.canonical_name}\n` +
+                `Algorithm: ${remoteKeyInfo.canonical_name}\n` +
                 `Primary Entropy: **${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits**\n` +
                 `Secondary Entropy: **${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits**\n`;
         }

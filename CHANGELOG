@@ -1,3 +1,8 @@
+Version 2.0.4
+
+- Fixed a bug that caused outgoing key exchanges to fail.
+- Fixed a syntax error in settings in regards to X25519 exchanges.
+
 Version 2.0.3
 
 - Added Post-Quantum key exchange SIDH over a 751 bit prime field.
