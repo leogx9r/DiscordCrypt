@@ -1855,8 +1855,10 @@ const discordCrypt = ( () => {
                 let attachments = _discordCrypt.__up1ExtractValidUp1URLs( event.methodArguments[ 0 ].message.content );
 
                 /* Call the original method if we don't need to download and decrypt any files. . */
-                if( !attachments.length )
+                if( !attachments.length ) {
                     event.originalMethod.apply( event.thisObject, event.methodArguments );
+                    return;
+                }
 
                 /* Resolve each attachment. We only do this for messages that can be viewed to save bandwidth. */
                 let resolvedCount = 0;
