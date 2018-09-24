@@ -5483,26 +5483,26 @@ const discordCrypt = ( () => {
             /* Elliptic Curve Names. */
             switch( bit_length ) {
             case 224:
-                return '**secp224k1** - SECG Koblitz Curve Over A 224-Bit Prime Field';
+                return '`secp224k1`: *SECG Koblitz Curve Over A __224-Bit Prime Field__*';
             case 256:
-                return '**x25519** - High-Speed Curve Over A 256-Bit Prime Field';
+                return '`x25519`: *High-Speed Curve Over A __256-Bit Prime Field__*';
             case 384:
-                return '**secp384r1** - NIST/SECG Curve Over A 384-Bit Prime Field';
+                return '`secp384r1`: *NIST/SECG Curve Over A __384-Bit Prime Field__*';
             case 409:
-                return '**sect409k1** - NIST/SECG Curve Over A 409-Bit Binary Field';
+                return '`sect409k1`: *NIST/SECG Curve Over A __409-Bit Binary Field__*';
             case 521:
-                return '**secp521r1** - NIST/SECG Curve Over A 521-Bit Prime Field';
+                return '`secp521r1`: *NIST/SECG Curve Over A __521-Bit Prime Field__*';
             case 571:
-                return '**sect571k1** - NIST/SECG Curve Over A 571-Bit Binary Field';
+                return '`sect571k1`: *NIST/SECG Curve Over A __571-Bit Binary Field__*';
             case 751:
-                return '**sidhp751** - Post-Quantum Supersingular Isogeny Curve Over A 751-Bit Prime Field';
+                return '`sidhp751`: *Post-Quantum Supersingular Isogeny Curve Over A __751-Bit Prime Field__*';
             default:
                 break;
             }
 
             /* Standard Diffie-Hellman. */
             if( bit_length >= 768 && bit_length <= 8192 )
-                return `Diffie-Hellman ModP-${bit_length}`;
+                return `\`Diffie-Hellman\`: *__${bit_length}-Bits__*`;
 
             return null;
         }
