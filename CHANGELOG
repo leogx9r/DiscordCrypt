@@ -1,3 +1,16 @@
+Version 2.0.3
+
+- Added Post-Quantum key exchange SIDH over a 751 bit prime field.
+- Added an "About" page to better detail miscellaneous information.
+- Added an error dialog explaining why the plugin restarts for users.
+- Added detailed algorithm description to exchange status logs.
+- Improved the efficiency for the SIDH and Scrypt libraries by recompiling them.
+- Updated SecureDiscord to prevent a possible redirect hijack attack.
+- Allowed generated passphrases to automatically be copied to the clipboard when clicking "OK".
+- Fixed a bug where entering the incorrect password when unlocking the database caused a restart.
+- Fixed a duplicate notification bug due to improperly adding the same event twice.
+- Fixed tooltips being hidden due to Discord's update.
+
 Version 2.0.2
 
 - Minor improvements to the database unlocking speed.
