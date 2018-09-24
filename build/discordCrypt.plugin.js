@@ -995,6 +995,7 @@ const discordCrypt = ( () => {
          */
         static _configExists() {
             /* Attempt to parse the configuration file. */
+            // noinspection JSUnresolvedVariable
             let data = bdPluginStorage.get( _self.getName(), 'config' );
 
             /* The returned data must be defined and non-empty. */
@@ -1011,6 +1012,7 @@ const discordCrypt = ( () => {
             _discordCrypt.log( 'Loading configuration file ...' );
 
             /* Attempt to parse the configuration file. */
+            // noinspection JSUnresolvedVariable
             let config = bdPluginStorage.get( _self.getName(), 'config' );
 
             /* Check if the config file exists. */
@@ -1123,6 +1125,7 @@ const discordCrypt = ( () => {
          */
         static _saveConfig() {
             /* Encrypt the message using the master password and save the encrypted data. */
+            // noinspection JSUnresolvedVariable
             bdPluginStorage.set( _self.getName(), 'config', {
                 data:
                     _discordCrypt.__aes256_encrypt_gcm(
@@ -1243,7 +1246,7 @@ const discordCrypt = ( () => {
                     `DiscordCrypt requires Discord to load on the Games or Friends tab to work correctly.\n` +
                     `I'll reload the client once you click OK so that it starts on the correct tab.\n\n` +
                     `\tPath: ${window.location.pathname}`,
-                    'DiscordCrypt FATAL ERROR'
+                    'DiscordCrypt Error'
                 );
 
                 /* Relaunch the app completely. */
@@ -1566,6 +1569,7 @@ const discordCrypt = ( () => {
                 }
 
                 /* Skip if the nonce is generate isn't found. */
+                // noinspection JSUnresolvedVariable
                 if( typeof _cachedModules.NonceGenerator.extractTimestamp !== 'function' ) {
                     _discordCrypt.log(
                         'Cannot clean expired key exchanges because a module couldn\'t be found.',
@@ -1579,6 +1583,7 @@ const discordCrypt = ( () => {
                     /* Iterate all IDs being ignored. */
                     for( let id of _configFile.channels[ i ].ignoreIds ) {
                         /* Check when the message was sent. . */
+                        // noinspection JSUnresolvedFunction
                         let diff_milliseconds = now - _cachedModules.NonceGenerator.extractTimestamp( id );
 
                         /* Delete the entry if it's greater than the ignore timeout. */
@@ -1590,15 +1595,6 @@ const discordCrypt = ( () => {
                             delete _configFile.channels[ i ].ignoreIds[
                                 _configFile.channels[ i ].ignoreIds.indexOf( id )
                             ];
-
-                            /* Try deleting the message. It won't be deleted if we didn't send it. */
-                            try {
-                                /* Delete the message. This will be queued if a rate limit is in effect. */
-                                _discordCrypt._deleteMessage( i, id, _cachedModules );
-                            }
-                            catch ( e ) {
-                                /* We can safely ignore this. */
-                            }
                         }
                     }
 
