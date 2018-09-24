@@ -937,7 +937,7 @@ const discordCrypt = ( () => {
                 /* Default block operation mode for ciphers. */
                 encryptBlockMode: 'CBC',
                 /* The bit size of the exchange algorithm to use. */
-                exchangeBitSize: 571,
+                exchangeBitSize: 751,
                 /* Default password for servers not set. */
                 defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Decrypted messages have this string prefixed to it. */

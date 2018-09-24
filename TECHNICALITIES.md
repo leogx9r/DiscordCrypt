@@ -298,8 +298,8 @@ The following key sizes in bits are supported:
 * 384 Bits ( `secp384r1: NIST/SECG curve over a 384 bit prime field.` )
 * 409 Bits ( `sect409k1: NIST/SECG curve over a 409 bit binary field.` )
 * 521 Bits ( `secp521r1: NIST/SECG curve over a 521 bit prime field.` )
-* 571 Bits ( `sect571k1: NIST/SECG curve over a 571 bit binary field.` ) ( **Default Key Size** )
-* *751 Bits* ( `sidhp751: Post-Quantum Supersingular Isogeny Diffie-Hellman over a 751 bit prime field.` )
+* 571 Bits ( `sect571k1: NIST/SECG curve over a 571 bit binary field.` )
+* *751 Bits* ( `sidhp751: Post-Quantum Supersingular Isogeny Diffie-Hellman over a 751 bit prime field.` ) ( **Default** )
 
 Please see [here](http://www.secg.org/sec2-v2.pdf) for more information on curve standard parameters.
 
