@@ -294,24 +294,29 @@ Just as with Diffie-Hellman, one should choose the largest key size for key exch
 The following key sizes in bits are supported:
 
 * 224 Bits ( `secp224k1: SECG curve over a 224 bit prime field.` )
-* 256 Bits ( `curve25519: NIST curve over a 256 bit prime field.` )
+* *256 Bits* ( `curve25519: NIST curve over a 256 bit prime field.` )
 * 384 Bits ( `secp384r1: NIST/SECG curve over a 384 bit prime field.` )
 * 409 Bits ( `sect409k1: NIST/SECG curve over a 409 bit binary field.` )
 * 521 Bits ( `secp521r1: NIST/SECG curve over a 521 bit prime field.` )
 * 571 Bits ( `sect571k1: NIST/SECG curve over a 571 bit binary field.` ) ( **Default Key Size** )
+* *751 Bits* ( `sidhp751: Post-Quantum Supersingular Isogeny Diffie-Hellman over a 751 bit prime field.` )
 
-Please see [here](http://www.secg.org/sec2-v2.pdf) for more information on curve parameters.
+Please see [here](http://www.secg.org/sec2-v2.pdf) for more information on curve standard parameters.
 
 For information regarding the specifics of Curve25519, see its introductory paper 
     [here](https://cr.yp.to/ecdh/curve25519-20060209.pdf).
 
 With the advancements of quantum computers, the need for 
     [Post-Quantum Cryptography](https://en.wikipedia.org/wiki/Post-quantum_cryptography) is actively 
-    being explored. At this time, we're looking into implementing the quantum-resistant elliptic curve 
-    handshake known as 
-    "[Supersingular Isogeny Diffie-Hellman](https://en.wikipedia.org/wiki/Supersingular_isogeny_key_exchange)"
-
-While this is not immediately available, it is actively being worked on.
+    being explored. Several such methods have already been proposed to be "quantum resistant".
+    
+The curve above defined as [`sidhp751`](https://eprint.iacr.org/2016/413.pdf) is a specially chosen  
+    [supersingular elliptic curve](https://en.wikipedia.org/wiki/Supersingular_elliptic_curve) 
+    with [isogenic](https://en.wikipedia.org/wiki/Supersingular_isogeny_graph) properties used in the familiar 
+    Diffie-Hellman protocol. In post quantum cryptography, 
+    "[Supersingular Isogeny Diffie-Hellman](https://en.wikipedia.org/wiki/Supersingular_isogeny_key_exchange)" 
+    is said to be quantum resistant while still benefiting from the standard ECC property of retaining a  
+    small fingerprint. This curve offers `128 quantum bits` of security.
 
 #### Hash Algorithms
 
