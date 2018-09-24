@@ -7519,9 +7519,6 @@ const discordCrypt = ( () => {
             is_message_hex = undefined,
             one_time_salt = undefined
         ) {
-            /* Size constants for Blowfish. */
-            const keySize = 512, blockSize = 64;
-
             /* Perform the encryption. */
             return _discordCrypt.__encrypt(
                 'bf',
@@ -7531,8 +7528,9 @@ const discordCrypt = ( () => {
                 key,
                 to_hex,
                 is_message_hex,
-                keySize,
-                blockSize,
+                /* Size constants for Blowfish. */
+                512,
+                64,
                 one_time_salt
             );
         }
@@ -7562,9 +7560,6 @@ const discordCrypt = ( () => {
             output_format = 'utf8',
             is_message_hex = undefined
         ) {
-            /* Size constants for Blowfish. */
-            const keySize = 512, blockSize = 64;
-
             /* Return the unpadded message. */
             return _discordCrypt.__decrypt(
                 'bf',
@@ -7574,8 +7569,9 @@ const discordCrypt = ( () => {
                 key,
                 output_format,
                 is_message_hex,
-                keySize,
-                blockSize
+                /* Size constants for Blowfish. */
+                512,
+                64
             );
         }
 
@@ -7606,9 +7602,6 @@ const discordCrypt = ( () => {
             is_message_hex = undefined,
             one_time_salt = undefined
         ) {
-            /* Size constants for AES-256. */
-            const keySize = 256, blockSize = 128;
-
             /* Perform the encryption. */
             return _discordCrypt.__encrypt(
                 'aes-256',
@@ -7618,8 +7611,8 @@ const discordCrypt = ( () => {
                 key,
                 to_hex,
                 is_message_hex,
-                keySize,
-                blockSize,
+                256,
+                128,
                 one_time_salt
             );
         }
@@ -7649,9 +7642,6 @@ const discordCrypt = ( () => {
             output_format = 'utf8',
             is_message_hex = undefined
         ) {
-            /* Size constants for AES-256. */
-            const keySize = 256, blockSize = 128;
-
             /* Return the unpadded message. */
             return _discordCrypt.__decrypt(
                 'aes-256',
@@ -7661,8 +7651,9 @@ const discordCrypt = ( () => {
                 key,
                 output_format,
                 is_message_hex,
-                keySize,
-                blockSize
+                /* Size constants for AES-256. */
+                256,
+                128
             );
         }
 
@@ -7694,17 +7685,15 @@ const discordCrypt = ( () => {
             additional_data = undefined,
             one_time_salt = undefined
         ) {
-            const block_cipher_size = 128, key_size_bits = 256;
-            const cipher_name = 'aes-256-gcm';
             const crypto = require( 'crypto' );
 
             let _message, _key, _iv, _salt, _derived, _encrypt;
 
             /* Pad the message to the nearest block boundary. */
-            _message = _discordCrypt.__padMessage( message, padding_mode, key_size_bits, is_message_hex );
+            _message = _discordCrypt.__padMessage( message, padding_mode, 256, is_message_hex );
 
             /* Get the key as a buffer. */
-            _key = _discordCrypt.__validateKeyIV( key, key_size_bits );
+            _key = _discordCrypt.__validateKeyIV( key, 256 );
 
             /* Check if using a predefined salt. */
             if ( one_time_salt !== undefined ) {
@@ -7734,20 +7723,20 @@ const discordCrypt = ( () => {
                 global.sha3.kmac_256(
                     _key,
                     _salt,
-                    block_cipher_size + key_size_bits,
+                    128 + 256,
                     ENCRYPT_PARAMETER
                 ),
                 'hex'
             );
 
             /* Slice off the IV. */
-            _iv = _derived.slice( 0, block_cipher_size / 8 );
+            _iv = _derived.slice( 0, 128 / 8 );
 
             /* Slice off the key. */
-            _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
+            _key = _derived.slice( 128 / 8, ( 128 / 8 ) + ( 256 / 8 ) );
 
             /* Create the cipher with derived IV and key. */
-            _encrypt = crypto.createCipheriv( cipher_name, _key, _iv );
+            _encrypt = crypto.createCipheriv( 'aes-256-gcm', _key, _iv );
 
             /* Add the additional data if necessary. */
             if ( additional_data !== undefined )
@@ -7792,8 +7781,6 @@ const discordCrypt = ( () => {
             is_message_hex = undefined,
             additional_data = undefined
         ) {
-            const block_cipher_size = 128, key_size_bits = 256;
-            const cipher_name = 'aes-256-gcm';
             const crypto = require( 'crypto' );
 
             /* Buffered parameters. */
@@ -7803,13 +7790,13 @@ const discordCrypt = ( () => {
             _message = _discordCrypt.__validateMessage( message, is_message_hex );
 
             /* Get the key as a buffer. */
-            _key = _discordCrypt.__validateKeyIV( key, key_size_bits );
+            _key = _discordCrypt.__validateKeyIV( key, 256 );
 
             /* Retrieve the auth tag. */
-            _authTag = _message.slice( 0, block_cipher_size / 8 );
+            _authTag = _message.slice( 0, 128 / 8 );
 
             /* Splice the message. */
-            _message = _message.slice( block_cipher_size / 8 );
+            _message = _message.slice( 128 / 8 );
 
             /* Retrieve the 64-bit salt. */
             _salt = _message.slice( 0, 8 );
@@ -7823,20 +7810,20 @@ const discordCrypt = ( () => {
                 global.sha3.kmac_256(
                     _key,
                     _salt,
-                    block_cipher_size + key_size_bits,
+                    128 + 256,
                     ENCRYPT_PARAMETER
                 ),
                 'hex'
             );
 
             /* Slice off the IV. */
-            _iv = _derived.slice( 0, block_cipher_size / 8 );
+            _iv = _derived.slice( 0, 128 / 8 );
 
             /* Slice off the key. */
-            _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
+            _key = _derived.slice( 128 / 8, ( 128 / 8 ) + ( 256 / 8 ) );
 
             /* Create the cipher with IV. */
-            _decrypt = crypto.createDecipheriv( cipher_name, _key, _iv );
+            _decrypt = crypto.createDecipheriv( 'aes-256-gcm', _key, _iv );
 
             /* Set the authentication tag. */
             _decrypt.setAuthTag( _authTag );
@@ -7886,9 +7873,6 @@ const discordCrypt = ( () => {
             is_message_hex = undefined,
             one_time_salt = undefined
         ) {
-            /* Size constants for Camellia-256. */
-            const keySize = 256, blockSize = 128;
-
             /* Perform the encryption. */
             return _discordCrypt.__encrypt(
                 'camellia-256',
@@ -7898,8 +7882,9 @@ const discordCrypt = ( () => {
                 key,
                 to_hex,
                 is_message_hex,
-                keySize,
-                blockSize,
+                /* Size constants for Camellia-256. */
+                256,
+                64,
                 one_time_salt
             );
         }
@@ -7929,9 +7914,6 @@ const discordCrypt = ( () => {
             output_format = 'utf8',
             is_message_hex = undefined
         ) {
-            /* Size constants for Camellia-256. */
-            const keySize = 256, blockSize = 128;
-
             /* Return the unpadded message. */
             return _discordCrypt.__decrypt(
                 'camellia-256',
@@ -7941,8 +7923,9 @@ const discordCrypt = ( () => {
                 key,
                 output_format,
                 is_message_hex,
-                keySize,
-                blockSize
+                /* Size constants for Camellia-256. */
+                256,
+                128
             );
         }
 
@@ -7973,9 +7956,6 @@ const discordCrypt = ( () => {
             is_message_hex = undefined,
             one_time_salt = undefined
         ) {
-            /* Size constants for TripleDES-192. */
-            const keySize = 192, blockSize = 64;
-
             /* Perform the encryption. */
             return _discordCrypt.__encrypt(
                 'des-ede3',
@@ -7985,8 +7965,9 @@ const discordCrypt = ( () => {
                 key,
                 to_hex,
                 is_message_hex,
-                keySize,
-                blockSize,
+                /* Size constants for TripleDES-192. */
+                192,
+                64,
                 one_time_salt
             );
         }
@@ -8016,9 +7997,6 @@ const discordCrypt = ( () => {
             output_format = 'utf8',
             is_message_hex = undefined
         ) {
-            /* Size constants for TripleDES-192. */
-            const keySize = 192, blockSize = 64;
-
             /* Return the unpadded message. */
             return _discordCrypt.__decrypt(
                 'des-ede3',
@@ -8028,8 +8006,9 @@ const discordCrypt = ( () => {
                 key,
                 output_format,
                 is_message_hex,
-                keySize,
-                blockSize
+                /* Size constants for TripleDES-192. */
+                192,
+                64
             );
         }
 
@@ -8060,9 +8039,6 @@ const discordCrypt = ( () => {
             is_message_hex = undefined,
             one_time_salt = undefined
         ) {
-            /* Size constants for IDEA-128. */
-            const keySize = 128, blockSize = 64;
-
             /* Perform the encryption. */
             return _discordCrypt.__encrypt(
                 'idea',
@@ -8072,8 +8048,9 @@ const discordCrypt = ( () => {
                 key,
                 to_hex,
                 is_message_hex,
-                keySize,
-                blockSize,
+                /* Size constants for IDEA-128. */
+                128,
+                64,
                 one_time_salt
             );
         }
@@ -8103,9 +8080,6 @@ const discordCrypt = ( () => {
             output_format = 'utf8',
             is_message_hex = undefined
         ) {
-            /* Size constants for IDEA-128. */
-            const keySize = 128, blockSize = 64;
-
             /* Return the unpadded message. */
             return _discordCrypt.__decrypt(
                 'idea',
@@ -8115,8 +8089,9 @@ const discordCrypt = ( () => {
                 key,
                 output_format,
                 is_message_hex,
-                keySize,
-                blockSize
+                /* Size constants for IDEA-128. */
+                128,
+                64
             );
         }
 
