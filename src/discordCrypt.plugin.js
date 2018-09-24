@@ -6673,7 +6673,7 @@ const discordCrypt = ( () => {
          * @returns {number[]} Returns the bit lengths of all supported ECDH keys.
          */
         static __getECDHBitSizes() {
-            return [ 224, 256, 384, 409, 521, 571 ];
+            return [ 224, 256, 384, 409, 521, 571, 751 ];
         }
 
         /**
@@ -6739,7 +6739,12 @@ const discordCrypt = ( () => {
 
             /* Compute the derived key and return. */
             try {
-                return private_key.computeSecret( public_key, in_form, out_form );
+                if( private_key.hasOwnProperty( 'computeSecret' ) && typeof private_key.computeSecret === 'function' )
+                    return private_key.computeSecret( public_key, in_form, out_form );
+
+                return Buffer.from(
+                    global.sidh.computeSecret( private_key.privateKey, Buffer.from( public_key, in_form ) )
+                ).toString( out_form );
             }
             catch ( e ) {
                 return null;
@@ -6837,6 +6842,7 @@ const discordCrypt = ( () => {
                 groupName = 'sect571k1';
                 break;
             case 256:
+            case 751:
                 break;
             default:
                 return null;
@@ -6844,11 +6850,19 @@ const discordCrypt = ( () => {
 
             /* Create the key object. */
             try {
-                if ( size !== 256 )
+                if ( size !== 256 && size !== 751 )
                     key = require( 'crypto' ).createECDH( groupName );
-                else {
+                else switch( size )
+                {
+                case 751:
+                    key = global.sidh.generateKeys();
+                    break;
+                case 256:
                     key = new global.Curve25519();
                     key.generateKeys( undefined, require( 'crypto' ).randomBytes( 32 ) );
+                    break;
+                default:
+                    return null;
                 }
             }
             catch ( err ) {
