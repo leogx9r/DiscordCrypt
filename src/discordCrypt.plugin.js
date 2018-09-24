@@ -2904,10 +2904,11 @@ const discordCrypt = ( () => {
                         /* Reset the text of the button after 1 second. */
                         setTimeout( ( function () {
                             unlock_btn.text( action_msg );
+                            unlock_btn.attr( 'disabled', false );
                         } ), 1000 );
 
                         /* Proceed no further. */
-                        unlock_btn.attr( 'disabled', false );
+                        return;
                     }
 
                     /* We may now call the start() function. */
