@@ -6739,12 +6739,18 @@ const discordCrypt = ( () => {
 
             /* Compute the derived key and return. */
             try {
-                if( private_key.hasOwnProperty( 'computeSecret' ) && typeof private_key.computeSecret === 'function' )
+                /* Assuming this is a ECDH/DH or Curve25519 object, operate directly on the object.  */
+                if(
+                    private_key.computeSecret &&
+                    typeof private_key.computeSecret === 'function'
+                )
                     return private_key.computeSecret( public_key, in_form, out_form );
 
-                return Buffer.from(
-                    global.sidh.computeSecret( private_key.privateKey, Buffer.from( public_key, in_form ) )
-                ).toString( out_form );
+                /* Assume this is an SIDH key pair and call the method to generate the derived secret. */
+                let ret = global.sidh.computeSecret( Buffer.from( public_key, in_form ), private_key.privateKey );
+
+                /* By default, sidh::computeSecret returns a Buffer. Convert it to string form if necessary. */
+                return out_form ? ret.toString( out_form ) : ret;
             }
             catch ( e ) {
                 return null;
