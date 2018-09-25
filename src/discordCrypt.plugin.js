@@ -722,6 +722,76 @@ const discordCrypt = ( () => {
         `/* ------ DICEWARE PASSPHRASE WORD LIST GOES HERE DURING COMPILATION. DO NOT REMOVE ----- */`;
 
     /**
+     * @desc Proxy to the original file system module that doesn't read ASARs.
+     * @type {module:fs}
+     * @private
+     */
+    let _original_fs = require( 'original-fs' );
+
+    /**
+     * @private
+     * @desc Mime-Types module for resolving file types.
+     * @type {function}
+     */
+    let _mime_types = require( 'mime-types' );
+
+    /**
+     * @private
+     * @desc Form module for manipulating form objects.
+     * @type {FormData}
+     */
+    let _form_data = require( 'form-data' );
+
+    /**
+     * @private
+     * @desc Main electron module to handle the application.
+     * @type {Electron}
+     */
+    let _electron = require( 'electron' );
+
+    /**
+     * @private
+     * @desc Process module for receiving information on the current process.
+     * @type {NodeJS.Process}
+     */
+    let _process = require( 'process' );
+
+    /**
+     * @private
+     * @desc Main crypto module for various methods.
+     * @type {module:crypto}
+     */
+    let _crypto = require( 'crypto' );
+
+    /**
+     * @private
+     * @desc Path module for resolving paths on the disk.
+     * @type {module:path}
+     */
+    let _path = require( 'path' );
+
+    /**
+     * @private
+     * @desc ZLib module for compression and decompression of data.
+     * @type {module:zlib}
+     */
+    let _zlib = require( 'zlib' );
+
+    /**
+     * @private
+     * @desc File system module for access to the disk.
+     * @type {module:fs}
+     */
+    let _fs = require( 'fs' );
+
+    /**
+     * @desc VM module for executing Javascript code and manipulating contexts.
+     * @type {module:vm}
+     * @private
+     */
+    let _vm = require( 'vm' );
+
+    /**
      * @protected
      * @class
      * @desc Main plugin prototype.
@@ -1207,12 +1277,10 @@ const discordCrypt = ( () => {
          * @return {boolean} Returns true if the location is correct.
          */
         static _ensureProperStartup() {
-            const electron = require( 'electron' );
-
             /* Due to how BD loads the client, we need to start on a non-channel page to properly hook events. */
             if( [ '/channels/@me', '/activity', '/library', '/store' ].indexOf( window.location.pathname ) === -1 ) {
                 /* Send a synchronous alert to indicate the importance of this. */
-                electron.ipcRenderer.sendSync(
+                _electron.ipcRenderer.sendSync(
                     'ELECTRON_BROWSER_WINDOW_ALERT',
                     `It seems that Discord has not been loaded on the Games or Friends tab.\n` +
                     `DiscordCrypt requires Discord to load on the Games or Friends tab to work correctly.\n` +
@@ -1222,8 +1290,8 @@ const discordCrypt = ( () => {
                 );
 
                 /* Relaunch the app completely. */
-                electron.remote.app.relaunch();
-                electron.remote.app.exit();
+                _electron.remote.app.relaunch();
+                _electron.remote.app.exit();
 
                 return false;
             }
@@ -2576,8 +2644,6 @@ const discordCrypt = ( () => {
         static _tryEncryptMessage( message, ignore_trigger, channel_id ) {
             /* Add the message signal handler. */
             const escapeCharacters = [ "/" ];
-            const crypto = require( 'crypto' );
-
             let cleaned, id = channel_id || '0';
 
             /* Skip messages starting with pre-defined escape characters. */
@@ -2645,7 +2711,7 @@ const discordCrypt = ( () => {
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
                     _configFile.paddingMode,
-                    parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
+                    parseInt( _crypto.pseudoRandomBytes( 1 )[ 0 ] )
                 ) + msg;
 
                 /* Return the message and any user text. */
@@ -2674,7 +2740,7 @@ const discordCrypt = ( () => {
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
                     _configFile.paddingMode,
-                    parseInt( crypto.pseudoRandomBytes( 1 )[ 0 ] )
+                    parseInt( _crypto.pseudoRandomBytes( 1 )[ 0 ] )
                 ) + msg;
 
                 /* Add to the result. */
@@ -2959,7 +3025,7 @@ const discordCrypt = ( () => {
          */
         static _onChangeFileButtonClicked() {
             /* Create an input element. */
-            let file = require( 'electron' ).remote.dialog.showOpenDialog( {
+            let file = _electron.remote.dialog.showOpenDialog( {
                 title: 'Select a file to encrypt and upload',
                 buttonLabel: 'Select',
                 message: 'Maximum file size is 50 MB',
@@ -3002,8 +3068,7 @@ const discordCrypt = ( () => {
                     _discordCrypt._sendEncryptedMessage( `${file_url}`, true, channel_id );
 
                     /* Copy the deletion link to the clipboard. */
-                    // noinspection JSUnresolvedFunction
-                    require( 'electron' ).clipboard.writeText( `Delete URL: ${deletion_link}` );
+                    _electron.clipboard.writeText( `Delete URL: ${deletion_link}` );
                 }
             );
         }
@@ -3013,8 +3078,6 @@ const discordCrypt = ( () => {
          * @desc  Uploads the selected file and sends the encrypted link.
          */
         static _onUploadFileButtonClicked() {
-            const fs = require( 'original-fs' );
-
             let file_path_field = $( '#dc-file-path' );
             let file_upload_btn = $( '#dc-file-upload-btn' );
             let message_textarea = $( '#dc-file-message-textarea' );
@@ -3032,7 +3095,7 @@ const discordCrypt = ( () => {
             message_textarea.val( '' );
 
             /* Sanity check the file. */
-            if ( !fs.existsSync( file_path_field.val() ) ) {
+            if ( !_original_fs.existsSync( file_path_field.val() ) ) {
                 file_path_field.val( '' );
                 return;
             }
@@ -3272,8 +3335,7 @@ const discordCrypt = ( () => {
                     let secondary = current_keys.secondaryKey || _configFile.defaultPassword;
 
                     /* Write to the clipboard. */
-                    // noinspection JSUnresolvedFunction
-                    require( 'electron' ).clipboard.writeText(
+                    _electron.clipboard.writeText(
                         `Primary Key: ${primary}\n\nSecondary Key: ${secondary}`
                     );
 
@@ -3463,12 +3525,8 @@ const discordCrypt = ( () => {
          * @desc Opens a file dialog to import a JSON encoded entries file.
          */
         static _onImportDatabaseButtonClicked() {
-            /* Get the FS module. */
-            const fs = require( 'fs' );
-
             /* Create an input element. */
-            // noinspection JSUnresolvedFunction
-            let files = require( 'electron' ).remote.dialog.showOpenDialog( {
+            let files = _electron.remote.dialog.showOpenDialog( {
                 title: 'Import Database',
                 message: 'Select the configuration file(s) to import',
                 buttonLabel: 'Import',
@@ -3498,12 +3556,12 @@ const discordCrypt = ( () => {
                     data;
 
                 /* Sanity check. */
-                if ( !fs.statSync( file ).isFile() )
+                if ( !_fs.statSync( file ).isFile() )
                     continue;
 
                 /* Read the file. */
                 try {
-                    data = JSON.parse( fs.readFileSync( file ).toString() );
+                    data = JSON.parse( _fs.readFileSync( file ).toString() );
                 }
                 catch ( e ) {
                     _discordCrypt.log( `Error reading JSON file '${file} ...`, 'warn' );
@@ -3594,8 +3652,7 @@ const discordCrypt = ( () => {
                         }
 
                         /* Create an input element. */
-                        // noinspection JSUnresolvedFunction
-                        let file = require( 'electron' ).remote.dialog.showSaveDialog( {
+                        let file = _electron.remote.dialog.showSaveDialog( {
                             title: 'Export Database',
                             message: 'Select the destination file',
                             buttonLabel: 'Export',
@@ -3608,9 +3665,6 @@ const discordCrypt = ( () => {
                         /* Ignore if no files was selected. */
                         if ( !file.length )
                             return;
-
-                        /* Get the FS module. */
-                        const fs = require( 'fs' );
 
                         /* Cache the button. */
                         let export_btn = $( '#dc-export-database-btn' );
@@ -3640,7 +3694,7 @@ const discordCrypt = ( () => {
 
                         try {
                             /* Try writing the file. */
-                            fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
+                            _fs.writeFileSync( file, JSON.stringify( data, null, '    ' ) );
 
                             /* Update the button's text. */
                             export_btn.text( `Exported (${entries}) ${entries === 1 ? 'Entry' : 'Entries'}` );
@@ -3814,12 +3868,10 @@ const discordCrypt = ( () => {
          * @desc Applies the update & restarts the app by performing changing URLs to /channels/@me.
          */
         static _onUpdateRestartNowButtonClicked() {
-            const replacePath = require( 'path' )
-                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
-            const fs = require( 'fs' );
+            const replacePath = _path.join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
 
             /* Replace the file. */
-            fs.writeFile( replacePath, _updateData.payload, ( err ) => {
+            _fs.writeFile( replacePath, _updateData.payload, ( err ) => {
                 if ( err ) {
                     _discordCrypt.log(
                         "Unable to replace the target plugin. " +
@@ -3839,12 +3891,10 @@ const discordCrypt = ( () => {
          * @desc Applies the update & closes the upload available panel.
          */
         static _onUpdateRestartLaterButtonClicked() {
-            const replacePath = require( 'path' )
-                .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
-            const fs = require( 'fs' );
+            const replacePath = _path.join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
 
             /* Replace the file. */
-            fs.writeFile( replacePath, _updateData.payload, ( err ) => {
+            _fs.writeFile( replacePath, _updateData.payload, ( err ) => {
                 if ( err ) {
                     _discordCrypt.log(
                         "Unable to replace the target plugin. " +
@@ -4079,7 +4129,7 @@ const discordCrypt = ( () => {
                     ).then(
                         () => {
                             /* Copy to the clipboard then close. */
-                            require( 'electron' ).clipboard.writeText( passphrase );
+                            _electron.clipboard.writeText( passphrase );
                         },
                         () => {
                             /* Ignored. */
@@ -4097,18 +4147,18 @@ const discordCrypt = ( () => {
          * @desc Copies the passwords from the current channel or DM to the clipboard.
          */
         static _onCopyCurrentPasswordsButtonClicked() {
-            // noinspection JSUnresolvedVariable
-            let currentKeys = _configFile.channels[ _discordCrypt._getChannelId() ],
-                writeText = require( 'electron' ).clipboard.writeText;
+            let currentKeys = _configFile.channels[ _discordCrypt._getChannelId() ];
 
             /* If no password is currently generated, write the default key. */
             if ( !currentKeys || !currentKeys.primaryKey || !currentKeys.secondaryKey ) {
-                writeText( `Default Password: ${_configFile.defaultPassword}` );
+                _electron.clipboard.writeText( `Default Password: ${_configFile.defaultPassword}` );
                 return;
             }
 
             /* Write to the clipboard. */
-            writeText( `Primary Key: ${currentKeys.primaryKey}\r\n\r\nSecondary Key: ${currentKeys.secondaryKey}` );
+            _electron.clipboard.writeText(
+                `Primary Key: ${currentKeys.primaryKey}\r\n\r\nSecondary Key: ${currentKeys.secondaryKey}`
+            );
 
             /* Alter the button text. */
             $( '#dc-cpy-pwds-btn' ).text( 'Copied Keys To Clipboard!' );
@@ -4333,9 +4383,7 @@ const discordCrypt = ( () => {
          * // False
          */
         static _validPluginName() {
-            return require( 'fs' )
-                .existsSync( require( 'path' )
-                    .join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() ) );
+            return _fs.existsSync( _path.join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() ) );
         }
 
         /**
@@ -4347,24 +4395,21 @@ const discordCrypt = ( () => {
          * // "C:\Users\John Doe\AppData\Local/BetterDiscord/plugins"
          */
         static _getPluginsPath() {
-            const process = require( 'process' );
-            const fs = require( 'fs' );
-
             const BETTERDISCORD_PATH = '/BetterDiscord/plugins/';
-            const MAC_PATH = `${process.env.HOME}/Library/Preferences`;
-            const DEB_PATH = `${process.env.HOME}.config`;
+            const MAC_PATH = `${_process.env.HOME}/Library/Preferences`;
+            const DEB_PATH = `${_process.env.HOME}.config`;
 
-            switch( process.platform ) {
+            switch( _process.platform ) {
             case 'win32':
-                return `${process.env.APPDATA}${BETTERDISCORD_PATH}`;
+                return `${_process.env.APPDATA}${BETTERDISCORD_PATH}`;
             case 'darwin':
                 return `${MAC_PATH}${BETTERDISCORD_PATH}`;
             case 'linux':
-                if( fs.existsSync( process.env.XDG_CONFIG_HOME ) )
-                    return `${process.env.XDG_CONFIG_HOME}${BETTERDISCORD_PATH}`;
+                if( _fs.existsSync( _process.env.XDG_CONFIG_HOME ) )
+                    return `${_process.env.XDG_CONFIG_HOME}${BETTERDISCORD_PATH}`;
                 return `${DEB_PATH}${BETTERDISCORD_PATH}`;
             default:
-                _discordCrypt.log( `Unsupported platform detected: ${process.platform} ...`, 'error' );
+                _discordCrypt.log( `Unsupported platform detected: ${_process.platform} ...`, 'error' );
                 throw 'DEAD';
             }
         }
@@ -4378,12 +4423,10 @@ const discordCrypt = ( () => {
          * @return {boolean} Returns false if the plugin should auto-update.
          */
         static _shouldIgnoreUpdates( version ) {
-            const fs = require( 'fs' );
-            const path = require( 'path' );
-            const plugin_file = path.join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
+            const plugin_file = _path.join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() );
 
-            return fs.existsSync( plugin_file ) &&
-            ( fs.lstatSync( plugin_file ).isSymbolicLink() || version.indexOf( '-debug' ) !== -1 );
+            return _fs.existsSync( plugin_file ) &&
+            ( _fs.lstatSync( plugin_file ).isSymbolicLink() || version.indexOf( '-debug' ) !== -1 );
         }
 
         /**
@@ -4430,6 +4473,7 @@ const discordCrypt = ( () => {
             /* Perform the request. */
             try {
                 /* Download the update. */
+                // noinspection JSIgnoredPromiseFromCall
                 _discordCrypt.__getRequest( update_url, ( statusCode, errorString, data ) => {
                     /* Make sure no error occurred. */
                     if ( statusCode !== 200 ) {
@@ -4453,11 +4497,8 @@ const discordCrypt = ( () => {
                     /* Get the local file. */
                     let localFile = '//META{"name":"discordCrypt"}*//\n';
                     try {
-                        localFile = require( 'fs' ).readFileSync(
-                            require( 'path' ).join(
-                                _discordCrypt._getPluginsPath(),
-                                _discordCrypt._getPluginName()
-                            )
+                        localFile = _fs.readFileSync(
+                            _path.join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() )
                         ).toString().replace( '\r', '' );
                     }
                     catch ( e ) {
@@ -4524,6 +4565,7 @@ const discordCrypt = ( () => {
                         /* Now get the changelog. */
                         try {
                             /* Fetch the changelog from the URL. */
+                            // noinspection JSIgnoredPromiseFromCall
                             _discordCrypt.__getRequest(
                                 changelog_url,
                                 ( statusCode, errorString, changelog ) => {
@@ -4549,6 +4591,7 @@ const discordCrypt = ( () => {
                     /* Try validating the signature. */
                     try {
                         /* Fetch the detached signature. */
+                        // noinspection JSIgnoredPromiseFromCall
                         _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
                             /* Store the signature. */
                             updateInfo.signature = detached_sig;
@@ -5201,9 +5244,6 @@ const discordCrypt = ( () => {
          * @return {{passphrase: string, captcha: string}}
          */
         static __generateWordCaptcha( word_count = 5 ) {
-            /* Generator for determining which character set to choose from. */
-            const randomBytes = require( 'crypto' ).randomBytes;
-
             /* Stores the result captcha. */
             let captcha = '';
 
@@ -5229,7 +5269,7 @@ const discordCrypt = ( () => {
             /* Iterate each word to build the captcha. */
             for( let i = 0; i < words.length; i++ ) {
                 /* Generate a random sequence to pick the word list from. */
-                let rand = randomBytes( words[ i ].length );
+                let rand = _crypto.randomBytes( words[ i ].length );
 
                 /* Build a new word using the random word lists. */
                 for( let j = 0; j < words[ i ].length; j++ )
@@ -5330,7 +5370,7 @@ const discordCrypt = ( () => {
          * @return {string|Buffer} The compressed data.
          */
         static __zlibCompress( data, format = 'base64', outForm ) {
-            let v = require( 'zlib' ).deflateSync(
+            let v = _zlib.deflateSync(
                 Buffer.isBuffer( data ) ? data : Buffer.from( data, format ),
                 { windowBits: 15 }
             );
@@ -5351,7 +5391,7 @@ const discordCrypt = ( () => {
          * @return {string|Buffer} The original data.
          */
         static __zlibDecompress( data, format = 'base64', outForm = 'utf8' ) {
-            let v = require( 'zlib' ).inflateSync(
+            let v = _zlib.inflateSync(
                 Buffer.isBuffer( data ) ? data : Buffer.from( data, format ),
                 { windowBits: 15 }
             );
@@ -5365,8 +5405,6 @@ const discordCrypt = ( () => {
          * @param {LibraryDefinition} libs A list of all libraries to load.
          */
         static __loadLibraries( libs = EXTERNAL_LIBRARIES ) {
-            const vm = require( 'vm' );
-
             /* Inject all compiled libraries based on if they're needed */
             for ( let name in libs ) {
                 let libInfo = libs[ name ];
@@ -5384,7 +5422,7 @@ const discordCrypt = ( () => {
                 if ( libInfo.requiresBrowser || libInfo.requiresNode ) {
                     /* Run in the current context as it operates on currently defined objects. */
                     _discordCrypt.log( `Running ${name} in current VM context ...` );
-                    vm.runInThisContext(
+                    _vm.runInThisContext(
                         code,
                         {
                             filename: name,
@@ -5396,7 +5434,7 @@ const discordCrypt = ( () => {
                     /* Run in a new sandbox and store the result in a global object. */
                     _discordCrypt.log( `Running ${name} in isolated VM context ...` );
                     global[ name.replace( '.js', '' ) ] =
-                        vm.runInNewContext(
+                        _vm.runInNewContext(
                             code,
                             {
                                 filename: name,
@@ -5446,12 +5484,9 @@ const discordCrypt = ( () => {
             const MAX_SALT_LEN = 32;
             const MIN_SALT_LEN = 16;
 
-            /* Required for generating a random salt. */
-            const crypto = require( 'crypto' );
-
             /* Calculate a random salt length. */
             let saltLen = (
-                parseInt( crypto.randomBytes( 1 ).toString( 'hex' ), 16 ) % ( MAX_SALT_LEN - MIN_SALT_LEN )
+                parseInt( _crypto.randomBytes( 1 ).toString( 'hex' ), 16 ) % ( MAX_SALT_LEN - MIN_SALT_LEN )
             ) + MIN_SALT_LEN;
 
             /* Create a blank payload. */
@@ -5464,7 +5499,7 @@ const discordCrypt = ( () => {
             rawBuffer.writeInt8( saltLen, 1 );
 
             /* Generate a random salt and copy it to the buffer. */
-            crypto.randomBytes( saltLen ).copy( rawBuffer, 2 );
+            _crypto.randomBytes( saltLen ).copy( rawBuffer, 2 );
 
             /* Copy the public key to the buffer. */
             rawKey.copy( rawBuffer, 2 + saltLen );
@@ -5661,7 +5696,7 @@ const discordCrypt = ( () => {
          */
         static __getFileMimeType( file_path ) {
             /* Look up the Mime type from the file extension. */
-            let type = require( 'mime-types' ).lookup( require( 'path' ).extname( file_path ) );
+            let type = _mime_types.lookup( _path.extname( file_path ) );
 
             /* Default to an octet stream if it fails. */
             return type === false ? 'application/octet-stream' : type;
@@ -5674,15 +5709,11 @@ const discordCrypt = ( () => {
          */
         static __clipboardToBuffer() {
             /* Request the clipboard object. */
-            let { clipboard } = require( 'electron' );
+            let { clipboard } = _electron;
 
             /* Sanity check. */
             if ( !clipboard )
                 return { mime_type: '', name: '', data: null };
-
-            /* We use original-fs to bypass any file-restrictions ( Eg. ASAR ) for reading. */
-            let fs = require( 'original-fs' ),
-                path = require( 'path' );
 
             /* The clipboard must have at least one type available. */
             // noinspection JSUnresolvedFunction
@@ -5723,18 +5754,17 @@ const discordCrypt = ( () => {
                     break;
                 case 'text':
                     /* Resolve what's in the clipboard. */
-                    // noinspection JSUnresolvedFunction
                     tmp = clipboard.readText();
 
                     try {
                         /* Check if this is a valid file path. */
-                        let stat = fs.statSync( tmp );
+                        let stat = _original_fs.statSync( tmp );
 
                         /* Check if this is a file. */
                         if ( stat.isFile() ) {
                             /* Read the file and store the file name. */
-                            data = fs.readFileSync( tmp );
-                            name = path.basename( tmp );
+                            data = _original_fs.readFileSync( tmp );
+                            name = _path.basename( tmp );
                             is_file = true;
                         }
                         else {
@@ -5806,8 +5836,6 @@ const discordCrypt = ( () => {
          * @param {Buffer} [seed] Optional seed to use for the generation of keys.
          */
         static __up1EncryptBuffer( data, mime_type, file_name, sjcl, callback, seed ) {
-            const crypto = require( 'crypto' );
-
             /* Converts a string to its UTF-16 equivalent in network byte order. */
             function str2ab( /* string */ str ) {
                 /* UTF-16 requires 2 bytes per UTF-8 byte. */
@@ -5840,7 +5868,7 @@ const discordCrypt = ( () => {
                 data = sjcl.codec.bytes.toBits( new Uint8Array( data ) );
 
                 /* Generate a random 512 bit seed and calculate the key and IV from this. */
-                let params = _discordCrypt.__up1SeedToKey( seed || crypto.randomBytes( 64 ), sjcl );
+                let params = _discordCrypt.__up1SeedToKey( seed || _crypto.randomBytes( 64 ), sjcl );
 
                 /* Perform AES-256-CCM encryption on this buffer and return an ArrayBuffer() object. */
                 data = sjcl.mode.ccm.encrypt( new sjcl.cipher.aes( params.key ), data, params.iv );
@@ -5932,19 +5960,15 @@ const discordCrypt = ( () => {
          *      Default: False.
          */
         static __up1EncryptFile( file_path, sjcl, callback, randomize_file_name = false ) {
-            const crypto = require( 'crypto' );
-            const path = require( 'path' );
-            const fs = require( 'original-fs' );
-
             try {
                 /* Make sure the file size is less than 50 MB. */
-                if ( fs.statSync( file_path ).size > 50000000 ) {
+                if ( _original_fs.statSync( file_path ).size > 50000000 ) {
                     callback( 'File size must be < 50 MB.' );
                     return;
                 }
 
                 /* Read the file in an async callback. */
-                fs.readFile( file_path, ( error, file_data ) => {
+                _original_fs.readFile( file_path, ( error, file_data ) => {
                     /* Check for any errors. */
                     if ( error !== null ) {
                         callback( error.toString() );
@@ -5956,8 +5980,8 @@ const discordCrypt = ( () => {
                         file_data,
                         _discordCrypt.__getFileMimeType( file_path ),
                         randomize_file_name ?
-                            crypto.pseudoRandomBytes( 8 ).toString( 'hex' ) + path.extname( file_path ) :
-                            path.basename( file_path ),
+                            _crypto.pseudoRandomBytes( 8 ).toString( 'hex' ) + _path.extname( file_path ) :
+                            _path.basename( file_path ),
                         sjcl,
                         callback
                     )
@@ -5989,12 +6013,12 @@ const discordCrypt = ( () => {
 
             /* Get a real file name, whether it be random or actual. */
             let file_name = clipboard.name.length === 0 ?
-                require( 'crypto' ).pseudoRandomBytes( 16 ).toString( 'hex' ) :
+                _crypto.pseudoRandomBytes( 16 ).toString( 'hex' ) :
                 clipboard.name;
 
             /* Detect which extension this data type usually has only if the file doesn't have a name. */
             if( clipboard.name.length === 0 ) {
-                let extension = require( 'mime-types' ).extension( clipboard.mime_type );
+                let extension = _mime_types.extension( clipboard.mime_type );
 
                 /* Use the correct extension based on the mime-type only if valid. */
                 if( extension && extension.length )
@@ -6015,7 +6039,7 @@ const discordCrypt = ( () => {
                     }
 
                     /* Create a new FormData() object. */
-                    let form = new ( require( 'form-data' ) )();
+                    let form = new ( _form_data )();
 
                     /* Append the ID and the file data to it. */
                     form.append( 'ident', identity );
@@ -6080,7 +6104,7 @@ const discordCrypt = ( () => {
                     }
 
                     /* Create a new FormData() object. */
-                    let form = new ( require( 'form-data' ) )();
+                    let form = new ( _form_data )();
 
                     /* Append the ID and the file data to it. */
                     form.append( 'ident', identity );
@@ -6279,14 +6303,13 @@ const discordCrypt = ( () => {
         static __generateDicewarePassphrase( word_length ) {
             const MAX_VALUE = 7775,
                 ENTROPY_PER_WORD = Math.log2( MAX_VALUE ),
-                crypto = require( 'crypto' ),
                 WORDLIST = _discordCrypt.__zlibDecompress( DICEWARE_WORD_LIST ).split( '\r' ).join( '' ).split( '\n' );
 
             let passphrase = '';
 
             /* Generate each word. */
             for( let i = 0; i < word_length; i++ )
-                passphrase += `${WORDLIST[ parseInt( crypto.randomBytes( 4 ).toString( 'hex' ), 16 ) % MAX_VALUE ]} `;
+                passphrase += `${WORDLIST[ parseInt( _crypto.randomBytes( 4 ).toString( 'hex' ), 16 ) % MAX_VALUE ]} `;
 
             /* Return the result. */
             return {
@@ -6366,8 +6389,6 @@ const discordCrypt = ( () => {
 
             /* Pads a message according to the ISO 10126 format. */
             function __ISO10126( message, paddingBytes, remove ) {
-                const crypto = require( 'crypto' );
-
                 if ( remove === undefined ) {
                     /* Allocate required padding length + message length. */
                     let padded = Buffer.alloc( message.length + paddingBytes );
@@ -6376,7 +6397,7 @@ const discordCrypt = ( () => {
                     message.copy( padded );
 
                     /* Copy random data to the end of the message. */
-                    crypto.randomBytes( paddingBytes - 1 ).copy( padded, message.length );
+                    _crypto.randomBytes( paddingBytes - 1 ).copy( padded, message.length );
 
                     /* Write the padding length at the last byte. */
                     padded.writeUInt8( paddingBytes, message.length + paddingBytes - 1 );
@@ -6461,12 +6482,11 @@ const discordCrypt = ( () => {
          * console.log( __isValidCipher( 'camellia-256-gcm' ) ); // False
          */
         static __isValidCipher( cipher ) {
-            const crypto = require( 'crypto' );
             let isValid = false;
 
             /* Iterate all valid Crypto ciphers and compare the name. */
             let cipher_name = cipher.toLowerCase();
-            crypto.getCiphers().every( ( s ) => {
+            _crypto.getCiphers().every( ( s ) => {
                 /* If the cipher matches, stop iterating. */
                 if ( s === cipher_name ) {
                     isValid = true;
@@ -6834,7 +6854,7 @@ const discordCrypt = ( () => {
 
             /* Create the key object. */
             try {
-                key = require( 'crypto' ).getDiffieHellman( groupName );
+                key = _crypto.getDiffieHellman( groupName );
             }
             catch ( err ) {
                 return null;
@@ -6891,7 +6911,7 @@ const discordCrypt = ( () => {
             /* Create the key object. */
             try {
                 if ( size !== 256 && size !== 751 )
-                    key = require( 'crypto' ).createECDH( groupName );
+                    key = _crypto.createECDH( groupName );
                 else switch( size )
                 {
                 case 751:
@@ -6899,7 +6919,7 @@ const discordCrypt = ( () => {
                     break;
                 case 256:
                     key = new global.Curve25519();
-                    key.generateKeys( undefined, require( 'crypto' ).randomBytes( 32 ) );
+                    key.generateKeys( undefined, _crypto.randomBytes( 32 ) );
                     break;
                 default:
                     return null;
@@ -7041,7 +7061,6 @@ const discordCrypt = ( () => {
             one_time_salt
         ) {
             const cipher_name = `${symmetric_cipher}${block_mode === undefined ? '' : '-' + block_mode}`;
-            const crypto = require( 'crypto' );
 
             /* Buffered parameters. */
             let _message, _key, _iv, _salt, _derived, _encrypt;
@@ -7078,7 +7097,7 @@ const discordCrypt = ( () => {
             }
             else {
                 /* Generate a random salt to derive the key and IV. */
-                _salt = crypto.randomBytes( 8 );
+                _salt = _crypto.randomBytes( 8 );
             }
 
             /* Derive the key length and IV length. */
@@ -7100,7 +7119,7 @@ const discordCrypt = ( () => {
             _key = _derived.slice( block_cipher_size / 8, ( block_cipher_size / 8 ) + ( key_size_bits / 8 ) );
 
             /* Create the cipher with derived IV and key. */
-            _encrypt = crypto.createCipheriv( cipher_name, _key, _iv );
+            _encrypt = _crypto.createCipheriv( cipher_name, _key, _iv );
 
             /* Disable automatic PKCS #7 padding. We do this in-house. */
             _encrypt.setAutoPadding( false );
@@ -7147,7 +7166,6 @@ const discordCrypt = ( () => {
             block_cipher_size = 128
         ) {
             const cipher_name = `${symmetric_cipher}${block_mode === undefined ? '' : '-' + block_mode}`;
-            const crypto = require( 'crypto' );
 
             /* Buffered parameters. */
             let _message, _key, _iv, _salt, _derived, _decrypt;
@@ -7188,7 +7206,7 @@ const discordCrypt = ( () => {
             _message = _message.slice( 8 );
 
             /* Create the cipher with IV. */
-            _decrypt = crypto.createDecipheriv( cipher_name, _key, _iv );
+            _decrypt = _crypto.createDecipheriv( cipher_name, _key, _iv );
 
             /* Disable automatic PKCS #7 padding. We do this in-house. */
             _decrypt.setAutoPadding( false );
@@ -7332,7 +7350,6 @@ const discordCrypt = ( () => {
          */
         static __symmetricDecrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode ) {
             const customizationParameter = new Uint8Array( Buffer.from( 'discordCrypt MAC' ) );
-            const crypto = require( 'crypto' );
 
             /* Performs one of the 5 standard decryption algorithms on the plain text. */
             function handleDecodeSegment(
@@ -7431,7 +7448,7 @@ const discordCrypt = ( () => {
                 );
 
                 /* Compare the tag for validity. */
-                if ( !crypto.timingSafeEqual( computed_tag, tag ) )
+                if ( !_crypto.timingSafeEqual( computed_tag, tag ) )
                     return 1;
 
                 /* Dual decrypt the segment. */
@@ -7685,8 +7702,6 @@ const discordCrypt = ( () => {
             additional_data = undefined,
             one_time_salt = undefined
         ) {
-            const crypto = require( 'crypto' );
-
             let _message, _key, _iv, _salt, _derived, _encrypt;
 
             /* Pad the message to the nearest block boundary. */
@@ -7714,7 +7729,7 @@ const discordCrypt = ( () => {
             }
             else {
                 /* Generate a random salt to derive the key and IV. */
-                _salt = crypto.randomBytes( 8 );
+                _salt = _crypto.randomBytes( 8 );
             }
 
             /* Derive the key length and IV length. */
@@ -7736,7 +7751,7 @@ const discordCrypt = ( () => {
             _key = _derived.slice( 128 / 8, ( 128 / 8 ) + ( 256 / 8 ) );
 
             /* Create the cipher with derived IV and key. */
-            _encrypt = crypto.createCipheriv( 'aes-256-gcm', _key, _iv );
+            _encrypt = _crypto.createCipheriv( 'aes-256-gcm', _key, _iv );
 
             /* Add the additional data if necessary. */
             if ( additional_data !== undefined )
@@ -7781,8 +7796,6 @@ const discordCrypt = ( () => {
             is_message_hex = undefined,
             additional_data = undefined
         ) {
-            const crypto = require( 'crypto' );
-
             /* Buffered parameters. */
             let _message, _key, _iv, _salt, _authTag, _derived, _decrypt;
 
@@ -7823,7 +7836,7 @@ const discordCrypt = ( () => {
             _key = _derived.slice( 128 / 8, ( 128 / 8 ) + ( 256 / 8 ) );
 
             /* Create the cipher with IV. */
-            _decrypt = crypto.createDecipheriv( 'aes-256-gcm', _key, _iv );
+            _decrypt = _crypto.createDecipheriv( 'aes-256-gcm', _key, _iv );
 
             /* Set the authentication tag. */
             _decrypt.setAuthTag( _authTag );
@@ -7840,7 +7853,7 @@ const discordCrypt = ( () => {
             _pt += _decrypt.final( 'hex' );
 
             /* Unpad the message. */
-            _pt = _discordCrypt.__padMessage( _pt, padding_mode, key_size_bits, true, true );
+            _pt = _discordCrypt.__padMessage( _pt, padding_mode, 256, true, true );
 
             /* Return the buffer. */
             return _pt.toString( output_format );
@@ -7884,7 +7897,7 @@ const discordCrypt = ( () => {
                 is_message_hex,
                 /* Size constants for Camellia-256. */
                 256,
-                64,
+                128,
                 one_time_salt
             );
         }
