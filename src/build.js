@@ -138,7 +138,8 @@ class Compiler {
                 dead_code: true,
                 unsafe_Function: true,
                 unsafe_methods: true,
-                unused: false
+                unused: true,
+                passes: 5
             },
             output: {
                 ascii_only: true,
