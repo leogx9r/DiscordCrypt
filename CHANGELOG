@@ -1,3 +1,12 @@
+Version 2.0.5
+
+- Added a guild blacklist that blocks the plugin from working in BetterDiscord and Discord servers.
+- Updated the passphrase generator to use options based on the user's selected security level.
+- Updated the passphrase generator to use a much wider word range.
+- Updated OpenPGP.js to v4.1.0. ( Release September 25th, 2018. )
+- Decreased the security captcha limit when exporting databases.
+- Few code optimizations to improve execution speed.
+
 Version 2.0.4
 
 - Fixed a bug that caused outgoing key exchanges to fail.
