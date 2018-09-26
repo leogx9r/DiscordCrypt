@@ -529,6 +529,76 @@ const discordCrypt = ( () => {
     let _globalSessionState = {};
 
     /**
+     * @desc Proxy to the original file system module that doesn't read ASARs.
+     * @type {module:fs}
+     * @private
+     */
+    let _original_fs = require( 'original-fs' );
+
+    /**
+     * @private
+     * @desc Mime-Types module for resolving file types.
+     * @type {function}
+     */
+    let _mime_types = require( 'mime-types' );
+
+    /**
+     * @private
+     * @desc Form module for manipulating form objects.
+     * @type {FormData}
+     */
+    let _form_data = require( 'form-data' );
+
+    /**
+     * @private
+     * @desc Main electron module to handle the application.
+     * @type {Electron}
+     */
+    let _electron = require( 'electron' );
+
+    /**
+     * @private
+     * @desc Process module for receiving information on the current process.
+     * @type {NodeJS.Process}
+     */
+    let _process = require( 'process' );
+
+    /**
+     * @private
+     * @desc Main crypto module for various methods.
+     * @type {module:crypto}
+     */
+    let _crypto = require( 'crypto' );
+
+    /**
+     * @private
+     * @desc Path module for resolving paths on the disk.
+     * @type {module:path}
+     */
+    let _path = require( 'path' );
+
+    /**
+     * @private
+     * @desc ZLib module for compression and decompression of data.
+     * @type {module:zlib}
+     */
+    let _zlib = require( 'zlib' );
+
+    /**
+     * @private
+     * @desc File system module for access to the disk.
+     * @type {module:fs}
+     */
+    let _fs = require( 'fs' );
+
+    /**
+     * @desc VM module for executing Javascript code and manipulating contexts.
+     * @type {module:vm}
+     * @private
+     */
+    let _vm = require( 'vm' );
+
+    /**
      * @private
      * @desc The original methods of the Object descriptor as well as a prototype to freeze all object's props.
      * @type {{freeze: function, isFrozen: function, getOwnPropertyNames: function, _freeze: function}}
@@ -715,81 +785,17 @@ const discordCrypt = ( () => {
     };
 
     /**
-     * @desc Compressed Diceware word list provided by the ETF for passphrase generation.
+     * @desc Compressed Diceware word list provided by the official Diceware website for passphrase generation.
+     * @see https://world.std.com/~reinhold/diceware.html
      * @type {string}
      */
-    const DICEWARE_WORD_LIST =
-        `/* ------ DICEWARE PASSPHRASE WORD LIST GOES HERE DURING COMPILATION. DO NOT REMOVE ----- */`;
-
-    /**
-     * @desc Proxy to the original file system module that doesn't read ASARs.
-     * @type {module:fs}
-     * @private
-     */
-    let _original_fs = require( 'original-fs' );
-
-    /**
-     * @private
-     * @desc Mime-Types module for resolving file types.
-     * @type {function}
-     */
-    let _mime_types = require( 'mime-types' );
-
-    /**
-     * @private
-     * @desc Form module for manipulating form objects.
-     * @type {FormData}
-     */
-    let _form_data = require( 'form-data' );
-
-    /**
-     * @private
-     * @desc Main electron module to handle the application.
-     * @type {Electron}
-     */
-    let _electron = require( 'electron' );
-
-    /**
-     * @private
-     * @desc Process module for receiving information on the current process.
-     * @type {NodeJS.Process}
-     */
-    let _process = require( 'process' );
-
-    /**
-     * @private
-     * @desc Main crypto module for various methods.
-     * @type {module:crypto}
-     */
-    let _crypto = require( 'crypto' );
-
-    /**
-     * @private
-     * @desc Path module for resolving paths on the disk.
-     * @type {module:path}
-     */
-    let _path = require( 'path' );
-
-    /**
-     * @private
-     * @desc ZLib module for compression and decompression of data.
-     * @type {module:zlib}
-     */
-    let _zlib = require( 'zlib' );
-
-    /**
-     * @private
-     * @desc File system module for access to the disk.
-     * @type {module:fs}
-     */
-    let _fs = require( 'fs' );
-
-    /**
-     * @desc VM module for executing Javascript code and manipulating contexts.
-     * @type {module:vm}
-     * @private
-     */
-    let _vm = require( 'vm' );
+    const DICEWARE_WORD_LIST = _zlib.inflateSync(
+        Buffer.from(
+            `/* ------ DICEWARE PASSPHRASE WORD LIST GOES HERE DURING COMPILATION. DO NOT REMOVE ----- */`,
+            'base64'
+        ),
+        { windowBits: 15 }
+    ).toString( 'utf8' ).split( '\r' ).join( '' ).split( '\n' );
 
     /**
      * @protected
@@ -3630,8 +3636,8 @@ const discordCrypt = ( () => {
          * @desc Opens a file dialog to export a JSON encoded entries file.
          */
         static _onExportDatabaseButtonClicked() {
-            /* Generate a random captcha to verify the user wants to do this.*/
-            let captcha = _discordCrypt.__generateWordCaptcha();
+            /* Generate a random captcha that's easy to solve to verify the user wants to do this.*/
+            let captcha = _discordCrypt.__generateWordCaptcha( { security: 32 } );
 
             /* Alert the user before they do this. */
             global.smalltalk.prompt(
@@ -4106,9 +4112,11 @@ const discordCrypt = ( () => {
         static _onGeneratePassphraseClicked() {
             global.smalltalk.prompt(
                 'GENERATE A SECURE PASSPHRASE',
-                'Please enter how many words you\'d like this passphrase to have below.\n' +
-                'Be advised that a minimum word length of <b><u>20</u></b> is recommended.\n\n',
-                '20'
+                'Please enter the approximate security level you\'d like this passphrase to have below.\n' +
+                'Be advised that a minimum security level of <b><u>128</u></b> bits is recommended.\n\n' +
+                'Read about Security Levels ' +
+                '<a href="https://en.wikipedia.org/wiki/Security_level" target="_blank">here</a>.\n\n',
+                '128'
             ).then(
                 ( value ) => {
                     /* Validate the value entered. */
@@ -4118,12 +4126,16 @@ const discordCrypt = ( () => {
                     }
 
                     /* Generate the word list. */
-                    let { entropy, passphrase } = _discordCrypt.__generateDicewarePassphrase( parseInt( value ) );
+                    let { entropy, passphrase } = _discordCrypt.__generateDicewarePassphrase( {
+                        security: parseInt( value )
+                    } );
 
                     /* Alert the user. */
                     global.smalltalk.prompt(
                         `GENERATED A ${parseInt( value )} WORD LONG PASSPHRASE`,
-                        `This passphrase contains approximately <b>${Math.round( entropy )} bits of entropy</b>.\n\n` +
+                        `This passphrase contains approximately <b>${
+                            parseFloat( entropy ).toFixed( 3 )
+                        } bits</b> of entropy.\n\n` +
                         'Please copy your generated passphrase below:\n\n',
                         passphrase
                     ).then(
@@ -5240,28 +5252,28 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Builds a random captcha phrase to validate user input.
-         * @param {number} word_count The number of words to use for the captcha.
+         * @param {{[words]: number, [security]: number}} options The word length of entropy level desired.
          * @return {{passphrase: string, captcha: string}}
          */
-        static __generateWordCaptcha( word_count = 5 ) {
+        static __generateWordCaptcha( options ) {
             /* Stores the result captcha. */
             let captcha = '';
 
             /* This uses a converter to transform the text. */
             const CONVERTER = [
                     /* REGULAR */
-                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                    `ABCDEFGHIJKLMNOPQRSTUVWXYZ!"#%&'()*+./:;=?@$0123456789`,
 
                     /* SMALLCAPS */
-                    'ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ',
+                    `ABCDEFGHIJKLMNOPQRSTUVWXYZ!"#%&'()*+./:;=?@$0123456789`,
 
                     /* SUPERSCRIPT */
-                    'ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾQᴿˢᵀᵁνᵂˣʸᶻ'
+                    `ᴬᴮᶜᴰᴱᶠᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾᵠᴿˢᵀᵁⱽᵂˣʸᶻᵎ"#%&'⁽⁾*⁺./:;⁼ˀ@$⁰¹²³⁴⁵⁶⁷⁸⁹`
                 ],
                 ALPHABET = CONVERTER[ 0 ].toLowerCase();
 
             /* Generate a random passphrase. */
-            let passphrase = _discordCrypt.__generateDicewarePassphrase( word_count );
+            let passphrase = _discordCrypt.__generateDicewarePassphrase( options );
 
             /* Split the passphrase into words. */
             let words = passphrase.passphrase.split( ' ' );
@@ -6295,26 +6307,38 @@ const discordCrypt = ( () => {
 
         /**
          * @private
-         * @desc Generates a passphrase using the Diceware word list modified by ETF.
-         * @see https://www.eff.org/deeplinks/2016/07/new-wordlists-random-passphrases
-         * @param {number} word_length The number of words to generate.
+         * @desc Generates a passphrase using the Diceware word list.
+         * @param {{[words]: number, [security]: number}} options The word length of entropy level desired.
          * @return {{passphrase: string, entropy: number}} Returns the passphrase and approximate entropy in bits.
          */
-        static __generateDicewarePassphrase( word_length ) {
-            const MAX_VALUE = 7775,
-                ENTROPY_PER_WORD = Math.log2( MAX_VALUE ),
-                WORDLIST = _discordCrypt.__zlibDecompress( DICEWARE_WORD_LIST ).split( '\r' ).join( '' ).split( '\n' );
+        static __generateDicewarePassphrase( options ) {
+            const MAX_WORDS_IN_LIST = DICEWARE_WORD_LIST.length,
+                ENTROPY_PER_WORD = Math.log2( MAX_WORDS_IN_LIST ),
+                DEFAULT_SECURITY_LEVEL_BITS = 128;
 
-            let passphrase = '';
+            let passphrase = '', { words, security } = options || { security: DEFAULT_SECURITY_LEVEL_BITS };
 
-            /* Generate each word. */
-            for( let i = 0; i < word_length; i++ )
-                passphrase += `${WORDLIST[ parseInt( _crypto.randomBytes( 4 ).toString( 'hex' ), 16 ) % MAX_VALUE ]} `;
+            /* Determine the number of words to generate. */
+            if( security && !isNaN( security ) )
+                words = Math.round( security / ENTROPY_PER_WORD );
+            else if( !words || isNaN( words ) )
+                words = Math.round( DEFAULT_SECURITY_LEVEL_BITS / ENTROPY_PER_WORD );
+
+            /* Generate each word by picking a random number from 1-2^32-1 and rounding off to the nearest word. */
+            for( let i = 0; i < words; i++ )
+                passphrase += `${DICEWARE_WORD_LIST[
+                    Math.round(
+                        parseInt(
+                            _crypto.randomBytes( 4 ).toString( 'hex' ),
+                            16
+                        ) / 4294967296.0 * MAX_WORDS_IN_LIST
+                    )
+                ]} `;
 
             /* Return the result. */
             return {
                 passphrase: passphrase.trim(),
-                entropy: ENTROPY_PER_WORD * word_length
+                entropy: ENTROPY_PER_WORD * words
             }
         }
 
