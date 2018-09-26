@@ -585,6 +585,8 @@ class Compiler {
             assets_tag: {
                 'app.css':
                     '/* ----- APPLICATION CSS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
+                'blacklist.json':
+                    '/* ----- BLACKLISTED GUILD IDS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
                 'settings.html':
                     '/* ----- SETTINGS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */',
                 'toolbar.html':

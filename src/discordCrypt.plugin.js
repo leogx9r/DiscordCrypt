@@ -792,6 +792,16 @@ const discordCrypt = ( () => {
         /* ----- LIBRARY DEFINITIONS GO HERE DURING COMPILATION. DO NOT REMOVE. ------ */
     };
 
+    const BLACKLISTED_GUILDS = JSON.parse(
+        _zlib.inflateSync(
+            Buffer.from(
+                `/* ----- BLACKLISTED GUILD IDS GOES HERE DURING COMPILATION. DO NOT REMOVE. ------ */`,
+                'base64'
+            ),
+            { windowBits: 15 }
+        ).toString( 'utf8' )
+    );
+
     /**
      * @desc Compressed Diceware word list provided by the official Diceware website for passphrase generation.
      * @see https://world.std.com/~reinhold/diceware.html
@@ -2657,11 +2667,10 @@ const discordCrypt = ( () => {
          */
         static _tryEncryptMessage( message, ignore_trigger, channel_id ) {
             /* Add the message signal handler. */
-            const escapeCharacters = [ "/" ];
             let cleaned, id = channel_id || '0';
 
             /* Skip messages starting with pre-defined escape characters. */
-            if ( message.substr( 0, 2 ) === "##" || escapeCharacters.indexOf( message[ 0 ] ) !== -1 )
+            if ( message.substr( 0, 2 ) === "##" )
                 return false;
 
             /* If we're not encoding all messages or we don't have a password, strip off the magic string. */
@@ -2693,6 +2702,13 @@ const discordCrypt = ( () => {
             /* Check if we actually have a message ... */
             if ( cleaned.length === 0 )
                 return false;
+
+            /* Get the properties for this channel & skip if we're in a blacklisted guild. */
+            let props = _discordCrypt._getChannelProps( channel_id );
+            if( props.type === 0 && BLACKLISTED_GUILDS.hasOwnProperty( props.guild_id ) ) {
+                _discordCrypt.log( 'Blacklisted Guild. Ignoring outgoing message ...', 'warn' );
+                return false;
+            }
 
             /* Get the passwords. */
             let primary_key = Buffer.from(
@@ -4663,6 +4679,18 @@ const discordCrypt = ( () => {
 
         /**
          * @private
+         * @description Returns the current Guild ID used by Discord.
+         * @returns {string | undefined}
+         * @example
+         * console.log( _discordCrypt._getChannelId() );
+         * // "414714693498014617"
+         */
+        static _getGuildId() {
+            return window.location.pathname.split( '/' ).slice( -2, -1 )[ 0 ];
+        }
+
+        /**
+         * @private
          * @desc Returns functions to locate exported webpack modules.
          * @returns {WebpackModuleSearcher}
          */
@@ -4957,6 +4985,13 @@ const discordCrypt = ( () => {
 
             /* Save the Channel ID. */
             let _channel = channel_id || _discordCrypt._getChannelId();
+
+            /* Get the properties for this channel & skip if we're in a blacklisted guild. */
+            let props = _discordCrypt._getChannelProps( _channel );
+            if( props.type === 0 && BLACKLISTED_GUILDS.hasOwnProperty( props.guild_id ) ) {
+                _discordCrypt.log( 'Blacklisted Guild. Ignoring outgoing message ...', 'warn' );
+                return;
+            }
 
             /* Handles returns for messages. */
             const onDispatchResponse = ( r ) => {
