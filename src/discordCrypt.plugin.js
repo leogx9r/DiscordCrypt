@@ -415,6 +415,14 @@
  */
 
 /**
+ * @typedef {Object} PassphraseOptions
+ * @desc Parameters for generating a passphrase using the Diceware list.
+ * @property {number} [words] The number of words of the desired passphrase to generate.
+ * @property {number} [security] The desired security level in bits.
+ *      This overrides the [words] parameter if specified.
+ */
+
+/**
  * @interface
  * @name PatchData
  * @desc Contains local patch data and state of the function.
@@ -5252,7 +5260,7 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Builds a random captcha phrase to validate user input.
-         * @param {{[words]: number, [security]: number}} options The word length of entropy level desired.
+         * @param {PassphraseOptions} options The word length of entropy level desired.
          * @return {{passphrase: string, captcha: string}}
          */
         static __generateWordCaptcha( options ) {
@@ -6320,7 +6328,7 @@ const discordCrypt = ( () => {
         /**
          * @private
          * @desc Generates a passphrase using the Diceware word list.
-         * @param {{[words]: number, [security]: number}} options The word length of entropy level desired.
+         * @param {PassphraseOptions} options The word length of entropy level desired.
          * @return {{passphrase: string, entropy: number}} Returns the passphrase and approximate entropy in bits.
          */
         static __generateDicewarePassphrase( options ) {
