@@ -138,8 +138,7 @@ class Compiler {
                 dead_code: true,
                 unsafe_Function: true,
                 unsafe_methods: true,
-                unused: true,
-                passes: 5
+                unused: true
             },
             output: {
                 ascii_only: false,
@@ -600,13 +599,13 @@ class Compiler {
             ],
             library_info: {
                 'sjcl.js': { requiresNode: true, requiresBrowser: false, minify: true },
-                'scrypt.js': { requiresNode: true, requiresBrowser: false, minify: false },
+                'scrypt.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'sha3.js': { requiresNode: true, requiresBrowser: false, minify: true },
-                'sidh.js': { requiresNode: false, requiresBrowser: true, minify: false },
+                'sidh.js': { requiresNode: false, requiresBrowser: true, minify: true },
                 'smalltalk.js': { requiresNode: false, requiresBrowser: true, minify: true },
                 'currify.js': { requiresNode: false, requiresBrowser: true, minify: true },
                 'curve25519.js': { requiresNode: true, requiresBrowser: false, minify: true },
-                'openpgp.js': { requiresNode: true, requiresBrowser: true, minify: false },
+                'openpgp.js': { requiresNode: true, requiresBrowser: true, minify: true },
             },
             signature_template: '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */',
             compression: false,
