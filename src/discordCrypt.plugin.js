@@ -5384,7 +5384,13 @@ const discordCrypt = ( () => {
         static __zlibCompress( data, format = 'base64', outForm ) {
             let v = _zlib.deflateSync(
                 Buffer.isBuffer( data ) ? data : Buffer.from( data, format ),
-                { windowBits: 15 }
+                {
+                    level: _zlib.constants.Z_BEST_COMPRESSION,
+                    memLevel: _zlib.constants.Z_BEST_COMPRESSION,
+                    strategy: _zlib.constants.Z_DEFAULT_STRATEGY,
+                    chunkSize: 65536,
+                    windowBits: 15
+                }
             );
 
             return outForm ? v.toString( outForm ) : v;
@@ -5405,7 +5411,13 @@ const discordCrypt = ( () => {
         static __zlibDecompress( data, format = 'base64', outForm = 'utf8' ) {
             let v = _zlib.inflateSync(
                 Buffer.isBuffer( data ) ? data : Buffer.from( data, format ),
-                { windowBits: 15 }
+                {
+                    level: _zlib.constants.Z_BEST_COMPRESSION,
+                    memLevel: _zlib.constants.Z_BEST_COMPRESSION,
+                    strategy: _zlib.constants.Z_DEFAULT_STRATEGY,
+                    chunkSize: 65536,
+                    windowBits: 15
+                }
             );
 
             return outForm ? v.toString( outForm ) : v;

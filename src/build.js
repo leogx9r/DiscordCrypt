@@ -142,7 +142,7 @@ class Compiler {
                 passes: 5
             },
             output: {
-                ascii_only: true,
+                ascii_only: false,
                 beautify: false,
             },
             warnings: false,
@@ -158,8 +158,10 @@ class Compiler {
         return this.zlib.deflateSync(
             data,
             {
-                level: 9,
-                memLevel: 9,
+                level: this.zlib.constants.Z_BEST_COMPRESSION,
+                memLevel: this.zlib.constants.Z_BEST_COMPRESSION,
+                strategy: this.zlib.constants.Z_DEFAULT_STRATEGY,
+                chunkSize: 65536,
                 windowBits: 15
             }
         ).toString( 'base64' );
@@ -238,7 +240,7 @@ class Compiler {
      * @returns {string} Returns a sanitized string containing the library name and the code.
      */
     compileLibraries( library_path = './lib', library_info = {} ) {
-        let libs = {}, count = 0;
+        let libs = {};
         let str = '';
 
         /* Read all files in the specified directory. */
@@ -282,13 +284,12 @@ class Compiler {
 
             /* Add it to the array. */
             libs[ file ] = library_info[ base ];
-            count++;
 
             /* Quick log. */
-            console.info( `Added library: [ ${base} ] ...` );
+            console.info( `Added library: [ ${base} ] - ${
+                parseFloat( library_info[ base ][ 'code' ].length / 1024 ).toFixed( 3 )
+            } KB ...` );
         }
-
-        console.info( `Added ${count} files from the library directory ...` );
 
         /* Construct a sanitized array string. */
         for ( let id in libs )
@@ -296,6 +297,9 @@ class Compiler {
 
         /* Remove the last comma added by the above loop. */
         str = str.trimRight().slice( 0, str.length - 1 - 1 );
+
+        /* Log the total size. */
+        console.info( `======= Total Library Size: ${parseFloat( str.length / 1024 ).toFixed( 3 )} KB =======` );
 
         /* Return the full string. */
         return str;
@@ -311,7 +315,7 @@ class Compiler {
      */
     compileAssets( asset_path = './assets', original_data, constants, ignore_list ) {
         /* Read all files in the specified directory. */
-        let files = this.fs.readdirSync( asset_path );
+        let files = this.fs.readdirSync( asset_path ), total_length = 0;
 
         /* Loop over every file index. */
         for ( let i in files ) {
@@ -332,14 +336,23 @@ class Compiler {
             if( ignore_list.indexOf( file_name ) === -1 )
                 data = data.split( "\n" ).join( '' ).split( '    ' ).join( ' ' );
 
+            /* Compress the buffer. */
+            data = this.compress( data );
+            total_length += data.length;
+
             /* Replace the data with the compressed result. */
             original_data = original_data
                 .split( constants[ file_name ] )
-                .join( this.compress( data ) );
+                .join( data );
 
             /* Quick log. */
-            console.info( `Added asset: [ ${this.path.basename( file )} ] ...` );
+            console.info( `Added asset: [ ${this.path.basename( file )} ] - ${
+                parseFloat( data.length / 1024 ).toFixed( 3 )
+            } KB ...` );
         }
+
+        /* Log the total size. */
+        console.info( `======== Total Asset Size: ${parseFloat( total_length / 1024 ).toFixed( 3 )} KB ========` );
 
         return original_data;
     }
@@ -360,11 +373,13 @@ class Compiler {
             throw new Error( 'Unable to find the key template in the input source.' );
 
         /* Use this key file as the public key. */
-        if( key_file )
+        if( key_file ) {
             /* Read and compress the public key file specified. */
-            return data
-                .split( key_template )
-                .join( this.compress( this.fs.readFileSync( key_file ) ) );
+            let key_data = this.compress( this.fs.readFileSync( key_file ) );
+
+            console.info( `Added signing key [ ${parseFloat( key_data.length / 1024 ).toFixed( 3 )} KB ] ...` );
+            return data.split( key_template ).join( key_data );
+        }
         else {
             /* Assume we're using a fingerprint. Sanity check. */
             if( !key_fingerprint )
@@ -377,6 +392,9 @@ class Compiler {
                     throw new Error( 'Invalid public key retrieved.' );
 
                 /* Add the data & execute the callback. */
+                console.info( `Added signing key [ 0x${key_fingerprint} ] - ${
+                    parseFloat( output.length / 1024 ).toFixed( 3 )
+                } KB ...` );
                 on_complete( data.split( key_template ).join( this.compress( output ) ) );
             } );
         }
@@ -469,7 +487,7 @@ class Compiler {
                         FLATPAK_OUTPUT_FILE,
                         METADATA_HEADER + data
                     );
-                    console.info( `Created Build File: ${FLATPAK_OUTPUT_FILE}` );
+                    console.info( `Copied Build File: [ ${FLATPAK_OUTPUT_FILE} ] ...` );
                 }
             }
             catch ( e ) {
@@ -478,11 +496,11 @@ class Compiler {
             }
 
             /* Signal to the user. */
-            console.info( `Destination File: ${output_path}` );
+            console.info( `Destination File: [ ${output_path} ] ...` );
 
             /* Generate a signature if required. */
             if( sign_key_id ) {
-                console.info( `Generating GPG Signature Using Key: ${sign_key_id} ...` );
+                console.info( `Generating GPG Signature Using Key: [ 0x${sign_key_id} ] ...` );
 
                 let signature_file = this.path.join( output_dir, `${this.path.basename( plugin_path )}.sig` );
 
@@ -495,7 +513,7 @@ class Compiler {
                         /* Check if an error occurred and log it. */
                         if ( !error && !result ) {
                             /* Log the result. */
-                            console.info( `Generated GPG Signature: \`${signature_file}\` ...` );
+                            console.info( `Generated Detached GPG Signature: [ ${signature_file} ] ...` );
 
                             /* Attempt to validate the signature produced. */
                             this.gpg.call(
@@ -509,26 +527,41 @@ class Compiler {
 
                                         /* Log the appropriate response. */
                                         if ( valid )
-                                            console.info( `Verified Signature's Validity !` );
+                                            console.info(
+                                                `\n=============================================\n` +
+                                                `[ OK ] Signature Valid !` +
+                                                `\n=============================================`
+                                            );
                                         else
-                                            console.error( `Invalid Signature Generated ...\n${r.toString()}` );
+                                            console.error(
+                                                `\n=============================================\n` +
+                                                `[ ERROR ] Invalid Signature ...\n${r.toString()}` +
+                                                `\n=============================================`
+                                            );
                                     }
                                     else
-                                        console.error( `Error Generating Signature:\n    Error: ${e}` );
+                                        console.error(
+                                            `\n=============================================\n` +
+                                            `[ ERROR ] Generating Signature\n    Error: ${e}` +
+                                            `\n=============================================`
+                                        );
                                 }
                             );
                         }
                         else
                             console.error(
-                                `Error Generating Signature:\n    Error: ${error}\n    Result: ${result}\n`
+                                `\n=============================================\n` +
+                                `[ ERROR ] Generating Signature:\n    Error: ${error}\n    Result: ${result}\n` +
+                                `\n=============================================`
                             );
                     }
                 )
             }
+            else
+                console.info( `=============================================\n` );
         };
 
         /* If not signing, use the default verification public key file. */
-        console.info( 'Adding default signing key ...' );
         if( !sign_key_id )
             finalizeBuild( this.compileVerificationKey( data, signature_template, './build/signing-key.pub' ) );
         else {
@@ -604,6 +637,8 @@ class Compiler {
             );
             return;
         }
+
+        console.info( `=============================================` );
 
         /* Compile with the arguments provided or defaults. */
         this.compilePlugin(
