@@ -20,7 +20,7 @@
   "license": "MIT",
   "dependencies": {
     "crypto": "^1.0.1",
-    "electron": "^2.0.8",
+    "electron": "^2.0.10",
     "form-data": "^2.3.2",
     "fs": "0.0.1-security",
     "mime-types": "^2.1.20",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "child_process": "^1.0.2",
-    "eslint": "^5.5.0",
+    "eslint": "^5.6.0",
     "eslint-config-defaults": "^9.0.0",
     "gpg": "^0.6.0",
     "istanbul": "^1.0.0-alpha.2",
