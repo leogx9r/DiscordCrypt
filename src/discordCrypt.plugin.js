@@ -2965,7 +2965,7 @@ const discordCrypt = ( () => {
 
                 /* Hash the password. */
                 // noinspection JSUnresolvedFunction
-                let pwd = global.scrypt.crypto_scrypt
+                let pwd = global.scrypt.hash
                 (
                     Buffer.from( password ),
                     Buffer.from( global.sha3.sha3_256( password ), 'hex' ),
@@ -3835,7 +3835,7 @@ const discordCrypt = ( () => {
 
                 /* Hash the password. */
                 // noinspection JSUnresolvedFunction
-                let pwd = global.scrypt.crypto_scrypt
+                let pwd = global.scrypt.hash
                 (
                     Buffer.from( password ),
                     Buffer.from( global.sha3.sha3_256( password ), 'hex' ),

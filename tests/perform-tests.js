@@ -192,7 +192,7 @@ class testRunner {
                 let derivedKey = v.derivedKey;
 
                 /* Passed from the loaded class file. */
-                let key = global.scrypt.crypto_scrypt( password, salt, v.N, v.r, v.p, v.dkLen );
+                let key = global.scrypt.hash( password, salt, v.N, v.r, v.p, v.dkLen );
 
                 /* Once the key has been calculated, check it. */
                 ut.equal( derivedKey, Buffer.from( key ).toString( 'hex' ), 'Derived key check failed.' );
