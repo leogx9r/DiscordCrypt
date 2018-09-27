@@ -4419,7 +4419,13 @@ const discordCrypt = ( () => {
          * // False
          */
         static _validPluginName() {
-            return _fs.existsSync( _path.join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() ) );
+            let path = _path.join( _discordCrypt._getPluginsPath(), _discordCrypt._getPluginName() ),
+                exists = _fs.existsSync( path );
+
+            /* Do a debug log in case for some strange reason the file does exist but still can't be found by the FS. */
+            if( !exists )
+                _discordCrypt.log( `Could not find the plugin's file.\nExpected: "${path}" ...`, 'error' );
+            return exists;
         }
 
         /**
