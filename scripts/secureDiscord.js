@@ -156,7 +156,7 @@ module.exports = ( mainWindowOptions ) => {
             /* Headers to modify if they're present in a request. */
             modify: {
                 /* Tor Specific Headers */
-                'user-agent': 'Mozilla/5.0 (Windows NT 6.1; rv:52.0) Gecko/20100101 Firefox/52.0',
+                'user-agent': 'Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0',
                 'accept-language': 'en-US,en;q=0.5',
                 'accept-encoding': 'gzip, deflate, br'
             },
