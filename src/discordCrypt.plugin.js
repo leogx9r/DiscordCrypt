@@ -457,7 +457,7 @@
  * @desc Use a scoped variable to protect the internal state of the plugin.
  * @type {_discordCrypt}
  */
-const discordCrypt = ( () => {
+const discordCrypt = ( ( ) => {
 
     /**
      * @private
@@ -2200,8 +2200,8 @@ const discordCrypt = ( () => {
              * @param {string} id The channel ID of the message being decrypted.
              * @param {string} content The content to decrypt.
              * @param {Message} message The message object.
-             * @param {string} primary_key The primary key used for decryption.
-             * @param {string} secondary_key The secondary key used for decryption.
+             * @param {string|Buffer} primary_key The primary key used for decryption.
+             * @param {string|Buffer} secondary_key The secondary key used for decryption.
              * @return {string|boolean} Returns the decrypted string on success or false on failure.
              * @private
              */
@@ -2681,7 +2681,7 @@ const discordCrypt = ( () => {
 
             /* Decrypt the message. */
             let dataMsg = _discordCrypt.__symmetricDecrypt( content.replace( /\r?\n|\r/g, '' )
-                .substr( 8 ), primary_key, secondary_key, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ], true );
+                .substr( 8 ), primary_key, secondary_key, metadata[ 0 ], metadata[ 1 ], metadata[ 2 ] );
 
             /* If successfully decrypted, add the prefix if necessary and return the result. */
             if ( ( typeof dataMsg === 'string' || dataMsg instanceof String ) && dataMsg !== "" ) {
@@ -2779,8 +2779,7 @@ const discordCrypt = ( () => {
                     secondary_key,
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
-                    _configFile.paddingMode,
-                    true
+                    _configFile.paddingMode
                 );
 
                 /* Append the header to the message normally. */
@@ -2789,7 +2788,7 @@ const discordCrypt = ( () => {
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
                     _configFile.paddingMode,
-                    parseInt( _crypto.pseudoRandomBytes( 1 )[ 0 ] )
+                    parseInt( _crypto.pseudoRandomBytes( 1 )[ 0 ].toString() )
                 ) + msg;
 
                 /* Return the message and any user text. */
@@ -2808,8 +2807,7 @@ const discordCrypt = ( () => {
                     secondary_key,
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
-                    _configFile.paddingMode,
-                    true
+                    _configFile.paddingMode
                 );
 
                 /* Append the header to the message normally. */
@@ -2818,7 +2816,7 @@ const discordCrypt = ( () => {
                     _configFile.encryptMode,
                     _configFile.encryptBlockMode,
                     _configFile.paddingMode,
-                    parseInt( _crypto.pseudoRandomBytes( 1 )[ 0 ] )
+                    parseInt( _crypto.pseudoRandomBytes( 1 )[ 0 ].toString() )
                 ) + msg;
 
                 /* Add to the result. */
@@ -2834,7 +2832,7 @@ const discordCrypt = ( () => {
          * @desc Sends an encrypted message to the current channel.
          * @param {string} message The unencrypted message to send.
          * @param {boolean} [force_send] Whether to ignore checking for the encryption trigger and always encrypt.
-         * @param {int} [channel_id] If specified, sends the message to this channel instead of the current channel.
+         * @param {string} [channel_id] If specified, sends the message to this channel instead of the current channel.
          * @returns {boolean} Returns false if the message failed to be parsed correctly and 0 on success.
          */
         static _sendEncryptedMessage( message, force_send = false, channel_id = undefined ) {
@@ -3079,8 +3077,6 @@ const discordCrypt = ( () => {
                     setTimeout( ( function () {
                         unlock_btn.text( action_msg );
                     } ), 1000 );
-
-                    _discordCrypt.log( error.toString(), 'error' );
                 }
             }
         }
@@ -3103,6 +3099,7 @@ const discordCrypt = ( () => {
          */
         static _onChangeFileButtonClicked() {
             /* Create an input element. */
+            // noinspection JSCheckFunctionSignatures
             let file = _electron.remote.dialog.showOpenDialog( {
                 title: 'Select a file to encrypt and upload',
                 buttonLabel: 'Select',
@@ -3604,6 +3601,7 @@ const discordCrypt = ( () => {
          */
         static _onImportDatabaseButtonClicked() {
             /* Create an input element. */
+            // noinspection JSCheckFunctionSignatures
             let files = _electron.remote.dialog.showOpenDialog( {
                 title: 'Import Database',
                 message: 'Select the configuration file(s) to import',
@@ -3903,7 +3901,6 @@ const discordCrypt = ( () => {
                         'Error setting the new database password. Check the console for more info.'
                     );
 
-                    _discordCrypt.log( error.toString(), 'error' );
                     return;
                 }
 
@@ -4192,6 +4189,7 @@ const discordCrypt = ( () => {
             ).then(
                 ( value ) => {
                     /* Validate the value entered. */
+                    // noinspection JSCheckFunctionSignatures
                     if( typeof value !== 'string' || !value.length || isNaN( value ) ) {
                         global.smalltalk.alert( 'ERROR', 'Invalid number entered' );
                         return;
@@ -4206,7 +4204,7 @@ const discordCrypt = ( () => {
                     global.smalltalk.prompt(
                         `GENERATED A ${parseInt( value )} WORD LONG PASSPHRASE`,
                         `This passphrase contains approximately <b>${
-                            parseFloat( entropy ).toFixed( 3 )
+                            parseFloat( entropy.toString() ).toFixed( 3 )
                         } bits</b> of entropy.\n\n` +
                         'Please copy your generated passphrase below:\n\n',
                         passphrase
@@ -4406,7 +4404,7 @@ const discordCrypt = ( () => {
 
             /* Retrieve the primary and secondary salts. */
             let primarySalt = _discordCrypt.__binaryCompare( _state.localKey.salt, _state.remoteKey.salt ),
-                secondarySalt = primarySalt.compare( _state.localKey.salt ) === 0 ?
+                secondarySalt = Buffer.compare( primarySalt, _state.localKey.salt ) === 0 ?
                     _state.remoteKey.salt :
                     _state.localKey.salt;
 
@@ -4659,7 +4657,7 @@ const discordCrypt = ( () => {
                             _discordCrypt.__getRequest(
                                 changelog_url,
                                 ( statusCode, errorString, changelog ) => {
-                                    updateInfo.changelog = statusCode == 200 ? changelog : '';
+                                    updateInfo.changelog = statusCode === 200 ? changelog : '';
 
                                     /* Perform the callback. */
                                     on_update_callback( updateInfo );
@@ -4729,18 +4727,6 @@ const discordCrypt = ( () => {
          */
         static _getChannelId() {
             return window.location.pathname.split( '/' ).pop();
-        }
-
-        /**
-         * @private
-         * @description Returns the current Guild ID used by Discord.
-         * @returns {string | undefined}
-         * @example
-         * console.log( _discordCrypt._getChannelId() );
-         * // "414714693498014617"
-         */
-        static _getGuildId() {
-            return window.location.pathname.split( '/' ).slice( -2, -1 )[ 0 ];
         }
 
         /**
@@ -5030,7 +5016,7 @@ const discordCrypt = ( () => {
          * @private
          * @desc Sends either an embedded message or an inline message to Discord.
          * @param {string} message The main content to send.
-         * @param {int} [channel_id] Sends the embedded message to this channel instead of the current channel.
+         * @param {string} [channel_id] Sends the embedded message to this channel instead of the current channel.
          * @param {number} [timeout] Optional timeout to delete this message in minutes.
          */
         static _dispatchMessage( message, channel_id = null, timeout = null ) {
@@ -5086,6 +5072,7 @@ const discordCrypt = ( () => {
 
                     /* Add the message to the TimedMessage array. */
                     if ( _configFile.timedMessages && _configFile.timedMessageExpires > 0 ) {
+                        // noinspection JSCheckFunctionSignatures
                         _configFile.timedMessages.push( {
                             messageId: r.body.id,
                             channelId: _channel,
@@ -5146,13 +5133,13 @@ const discordCrypt = ( () => {
          * @param {string} methodName The name of the target message to be patched.
          * @param {object} options Options object. You should provide at least one of `before`, `after` or `instead`
          *      parameters. Other parameters are optional.
-         * @param {PatchCallback} options.before Callback that will be called before original target
+         * @param {PatchCallback} [options.before] Callback that will be called before original target
          *      method call. You can modify arguments here, so it will be passed to original method.
          *      Can be combined with `after`.
-         * @param {PatchCallback} options.after Callback that will be called after original
+         * @param {PatchCallback} [options.after] Callback that will be called after original
          *      target method call. You can modify return value here, so it will be passed to external code which calls
          *      target method. Can be combined with `before`.
-         * @param {PatchCallback} options.instead Callback that will be called instead of original target method call.
+         * @param {PatchCallback} [options.instead] Callback that will be called instead of original target method call.
          *      You can get access to original method using `originalMethod` parameter if you want to call it,
          *      but you do not have to. Can't be combined with `before` and `after`.
          * @param {boolean} [options.once=false] Set to `true` if you want to automatically unpatch method after
@@ -5404,7 +5391,7 @@ const discordCrypt = ( () => {
         static __binaryCompare( a, b ) {
             /* Do a simple comparison on the buffers. */
             // noinspection JSUnresolvedFunction
-            switch( a.compare( b ) ) {
+            switch( Buffer.compare( a, b ) ) {
             /* b > a */
             case 1:
                 return b;
@@ -5698,6 +5685,7 @@ const discordCrypt = ( () => {
                 output[ 'fingerprint' ] = global.sha3.sha3_256( msg );
 
                 /* Buffer[0] contains the algorithm type. Reverse it. */
+                // noinspection JSCheckFunctionSignatures
                 output[ 'index' ] = parseInt( msg[ 0 ] );
                 output[ 'bit_length' ] = _discordCrypt.__indexToAlgorithmBitLength( msg[ 0 ] );
                 output[ 'canonical_name' ] = _discordCrypt.__exchangeBitLengthToCanonicalName( output[ 'bit_length' ] );
@@ -5712,11 +5700,11 @@ const discordCrypt = ( () => {
                     return null;
 
                 /* Read the public salt. */
-                // noinspection JSUnresolvedFunction
+                // noinspection JSCheckFunctionSignatures
                 output[ 'salt' ] = Buffer.from( msg.subarray( 2, 2 + salt_len ) );
 
                 /* Read the key. */
-                // noinspection JSUnresolvedFunction
+                // noinspection JSCheckFunctionSignatures
                 output[ 'key' ] = Buffer.from( msg.subarray( 2 + salt_len ) );
 
                 return output;
@@ -6029,7 +6017,7 @@ const discordCrypt = ( () => {
 
             /* Scan for the file header. */
             for ( let i = 0; i < file_header.length; i++ ) {
-                if ( _file[ i ] != file_header[ i ] ) {
+                if ( _file[ i ] !== file_header[ i ] ) {
                     has_header = false;
                     break
                 }
@@ -6696,9 +6684,9 @@ const discordCrypt = ( () => {
         /**
          * @public
          * @desc Converts a cipher string to its appropriate index number.
-         * @param {string} primary_cipher The primary cipher.
-         *      This can be either [ 'bf', 'aes', 'camel', 'idea', 'tdes' ].
-         * @param {string} [secondary_cipher] The secondary cipher.
+         * @param {string|int} primary_cipher The primary cipher.
+         *      This can be either [ 'bf', 'aes', 'camel', 'idea', 'tdes' ] or an index which will be returned.
+         * @param {string|int} [secondary_cipher] The secondary cipher.
          *      This can be either [ 'bf', 'aes', 'camel', 'idea', 'tdes' ].
          * @returns {int} Returns the index value of the algorithm.
          */
@@ -6912,9 +6900,10 @@ const discordCrypt = ( () => {
          * @desc Computes a secret key from two ECDH or DH keys. One private and one public.
          * @param {Object} private_key A private key DH or ECDH object from NodeJS's crypto module.
          * @param {string} public_key The public key as a string in Base64 or hex format.
-         * @param {boolean} is_base_64 Whether the public key is a Base64 string. If false, it is assumed to be hex.
-         * @param {boolean} to_base_64 Whether to convert the output secret to Base64.
-         *      If false, it is converted to hex.
+         * @param {boolean} [is_base_64] Whether the public key is a Base64 string.
+         *      If false or undefined, it is assumed to be hex.
+         * @param {boolean} [to_base_64] Whether to convert the output secret to Base64.
+         *      If false or undefined, it is converted to hex.
          * @returns {string|null} Returns a string encoded secret on success or null on failure.
          */
         static __computeExchangeSharedSecret( private_key, public_key, is_base_64, to_base_64 ) {
@@ -6933,7 +6922,10 @@ const discordCrypt = ( () => {
                 )
                     return private_key.computeSecret( public_key, in_form, out_form );
 
-                /* Assume this is an SIDH key pair and call the method to generate the derived secret. */
+                /**
+                 * Assume this is an SIDH key pair and call the method to generate the derived secret.
+                 * @type {Buffer}
+                 */
                 let ret = global.sidh.computeSecret( Buffer.from( public_key, in_form ), private_key.privateKey );
 
                 /* By default, sidh::computeSecret returns a Buffer. Convert it to string form if necessary. */
@@ -7065,8 +7057,10 @@ const discordCrypt = ( () => {
             /* Generate the key if it's valid. */
             if ( key !== undefined && key !== null && typeof key.generateKeys !== 'undefined' && size !== 256 ) {
                 /* Generate a new key if the private key is undefined else set the private key. */
-                if ( private_key === undefined )
+                if ( private_key === undefined )  {
+                    // noinspection JSCheckFunctionSignatures
                     key.generateKeys( 'hex', 'compressed' );
+                }
                 else if ( typeof key.setPrivateKey !== 'undefined' )
                     key.setPrivateKey( private_key );
             }
@@ -7078,12 +7072,12 @@ const discordCrypt = ( () => {
         /**
          * @public
          * @desc Substitutes an input Buffer() object to the Braille equivalent from __getBraille().
-         * @param {string} message The input message to perform substitution on.
-         * @param {boolean} convert Whether the message is to be converted from hex to Braille or from Braille to hex.
+         * @param {string|Buffer} message The input message to perform substitution on.
+         * @param {boolean} [convert] Whether the message is to be converted from hex to Braille or from Braille to hex.
          * @returns {string} Returns the substituted string encoded message.
          * @throws An exception indicating the message contains characters not in the character set.
          */
-        static __substituteMessage( message, convert ) {
+        static __substituteMessage( message, convert = undefined ) {
             /* Target character set. */
             let subset = _discordCrypt.__getBraille();
 
@@ -7117,10 +7111,10 @@ const discordCrypt = ( () => {
         /**
          * @public
          * @desc Encodes the given values as a braille encoded 32-bit word.
-         * @param {int} cipher_index The index of the cipher(s) used to encrypt the message
-         * @param {int} cipher_mode_index The index of the cipher block mode used for the message.
-         * @param {int} padding_scheme_index The index of the padding scheme for the message.
-         * @param {int} pad_byte The padding byte to use.
+         * @param {int|string} cipher_index The index of the cipher(s) used to encrypt the message
+         * @param {int|string} cipher_mode_index The index of the cipher block mode used for the message.
+         * @param {int|string} padding_scheme_index The index of the padding scheme for the message.
+         * @param {int|string} pad_byte The padding byte to use.
          * @returns {string} Returns a substituted UTF-16 string of a braille encoded 32-bit word containing these
          *      options.
          */
@@ -7277,7 +7271,7 @@ const discordCrypt = ( () => {
          *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
          * @param {string|Buffer|Array} message The input ciphertext message to decrypt.
          * @param {string|Buffer|Array} key The key used with the decryption cipher.
-         * @param {boolean} output_format The output format of the plaintext.
+         * @param {string} output_format The output format of the plaintext.
          *      Can be either [ 'utf8', 'latin1', 'hex', 'base64' ]
          * @param {boolean} is_message_hex If true, the message is treated as a hex string, if false, it is treated as
          *      a Base64 string. If undefined, the message is treated as a UTF-8 string.
@@ -7345,6 +7339,7 @@ const discordCrypt = ( () => {
             _decrypt.setAutoPadding( false );
 
             /* Decrypt the cipher text. */
+            // noinspection JSUnresolvedFunction
             let _pt = _decrypt.update( _message, undefined, 'hex' );
             _pt += _decrypt.final( 'hex' );
 
@@ -7359,15 +7354,16 @@ const discordCrypt = ( () => {
          * @public
          * @desc Dual-encrypts a message using symmetric keys and returns the substituted encoded equivalent.
          * @param {string|Buffer} message The input message to encrypt.
-         * @param {Buffer} primary_key The primary key used for the first level of encryption.
-         * @param {Buffer} secondary_key The secondary key used for the second level of encryption.
+         * @param {Buffer|string} primary_key The primary key used for the first level of encryption.
+         * @param {Buffer|string} secondary_key The secondary key used for the second level of encryption.
          * @param {int} cipher_index The cipher index containing the primary and secondary ciphers used for encryption.
          * @param {string} block_mode The block operation mode of the ciphers.
          *      These can be: [ 'CBC', 'CFB', 'OFB' ].
          * @param {string} padding_mode The padding scheme used to pad the message to the block length of the cipher.
          *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
          *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
-         * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
+         * @returns {string|null|number} Returns the encrypted and substituted ciphertext of the message or on failure,
+         *      a number indicating the error code or null on an unknown error
          * @throws An exception indicating the error that occurred.
          */
         static __symmetricEncrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode ) {
@@ -7467,16 +7463,17 @@ const discordCrypt = ( () => {
          * @public
          * @desc Dual-decrypts a message using symmetric keys and returns the substituted encoded equivalent.
          * @param {string|Buffer|Array} message The substituted and encoded input message to decrypt.
-         * @param {Buffer} primary_key The primary key used for the **second** level of decryption.
-         * @param {Buffer} secondary_key The secondary key used for the **first** level of decryption.
+         * @param {Buffer|string} primary_key The primary key used for the **second** level of decryption.
+         * @param {Buffer|string} secondary_key The secondary key used for the **first** level of decryption.
          * @param {int} cipher_index The cipher index containing the primary and secondary ciphers used for decryption.
-         * @param {string} block_mode The block operation mode of the ciphers.
-         *      These can be: [ 'CBC', 'CFB', 'OFB' ].
-         * @param {string} padding_mode The padding scheme used to unpad the message to the block length of the cipher.
-         *      This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ].
-         *      If this is enabled and authentication fails, null is returned.
-         *      This prepends a 64 bit seed used to derive encryption keys from the initial key.
-         * @returns {string|null} Returns the encrypted and substituted ciphertext of the message or null on failure.
+         * @param {string|int} block_mode The block operation mode of the ciphers.
+         *      These can be: [ 'CBC', 'CFB', 'OFB' ] or an index representing them.
+         * @param {string|int} padding_mode The padding scheme used to unpad the message to the block length of the
+         *     cipher. This can be either [ 'ANS1', 'PKC7', 'ISO1', 'ISO9' ] or an index representing them. If this is
+         *     enabled and authentication fails, null is returned. This prepends a 64 bit seed used to derive
+         *     encryption keys from the initial key.
+         * @returns {string|null|number} Returns the encrypted and substituted ciphertext of the message or on failure,
+         *      a number indicating the error code or null on an unknown error.
          * @throws An exception indicating the error that occurred.
          */
         static __symmetricDecrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode ) {
@@ -7559,11 +7556,11 @@ const discordCrypt = ( () => {
                 message = Buffer.from( _discordCrypt.__substituteMessage( message ), 'hex' );
 
                 /* Pull off the first 32 bytes as a buffer. */
-                // noinspection JSUnresolvedFunction
+                // noinspection JSCheckFunctionSignatures
                 let tag = Buffer.from( message.subarray( 0, 32 ) );
 
                 /* Strip off the authentication tag. */
-                // noinspection JSUnresolvedFunction
+                // noinspection JSCheckFunctionSignatures
                 message = Buffer.from( message.subarray( 32 ) );
 
                 /* Compute the HMAC-SHA3-256 of the cipher text as hex. */
@@ -7821,7 +7818,7 @@ const discordCrypt = ( () => {
          *      authentication.
          * @param {string|Buffer|Array} [one_time_salt] If specified, contains the 64-bit salt used to derive an IV and
          *      Key used to encrypt the message.
-         * @returns {Buffer} Returns a Buffer() object containing the resulting ciphertext.
+         * @returns {string|null} Returns a hex or base64 string containing the resulting ciphertext or null on error.
          * @throws An exception indicating the error that occurred.
          */
         static __aes256_encrypt_gcm(

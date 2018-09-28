@@ -25,6 +25,7 @@
     "form-data": "^2.3.2",
     "fs": "0.0.1-security",
     "mime-types": "^2.1.20",
+    "module": "^1.2.5",
     "original-fs": "^1.0.0",
     "path": "^0.12.7",
     "process": "^0.11.10",
