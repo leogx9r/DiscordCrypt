@@ -5501,7 +5501,7 @@ const discordCrypt = ( () => {
                             filename: name,
                             displayErrors: false
                         }
-                    )( exports, require, module, name, __dirname );
+                    )( module.exports, require, module, name, __dirname, process, global, Buffer );
                 }
                 else {
                     /* Run in a new sandbox and store the result in a global object. */
