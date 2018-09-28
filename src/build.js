@@ -607,7 +607,7 @@ class Compiler {
                 'smalltalk.js': { requiresNode: false, requiresBrowser: true, minify: true },
                 'currify.js': { requiresNode: false, requiresBrowser: false, minify: true },
                 'curve25519.js': { requiresNode: true, requiresBrowser: false, minify: true },
-                'openpgp.js': { requiresNode: true, requiresBrowser: true, minify: true },
+                'openpgp.js': { requiresNode: true, requiresBrowser: false, minify: true },
             },
             signature_template: '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */',
             compression: false,
