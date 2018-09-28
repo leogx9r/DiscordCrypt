@@ -736,6 +736,45 @@ class testRunner {
             /* Test will be completed regardless of if an update is found. */
             ut.done();
         };
+
+        /* Password requisite test. */
+        unit_tests.generic_tests[ 'Password Test' ] = ( ut ) => {
+            /* Since alerts don't work for smalltalk, use logging defines. */
+            global.smalltalk = {
+                alert: ( ) => {
+                    /* Ignored. */
+                }
+            };
+
+            /* These should all fail the password test. */
+            /* No Uppercase + Number + Symbol or < 32. */
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'abcdef' ), false );
+            /* No Uppercase + Lowercase + Symbol or < 32. */
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( '123456' ), false );
+            /* No Symbol or < 32. */
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'Abcdef123456' ), false );
+            /* No Uppercase or < 32. */
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'abcdef123456!' ), false );
+            /* No Lowercase or < 32. */
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'ABCDEF123456!@' ), false );
+
+            /* These should all pass the password test. */
+            /* Uppercase + Lowercase + Number + Symbol. */
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'p@$$w0rD' ), true );
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'p@$$w0rD!@#$' ), true );
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'PASSword01234!@#$' ), true );
+            /* Password >= 32. */
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'cDPnnyjbvxXANxBJnymzxnVginoasKQs' ), true );
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'YRTMJSGKNRDBDDUADGEEEMMUTCFBZLPU' ), true );
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( 'DLU9HXXKH36NJVA4E45FBHNJ2DE2LT3SD' ), true );
+            ut.equal( this.discordCrypt.__validatePasswordRequisites( '$=@\\X`~B#6~W@]_68YY()%ZU\\+@A2\\T[' ), true );
+            ut.equal( this.discordCrypt.__validatePasswordRequisites(
+                'distance snagged epic alkaline senior scion lucid similarly botch unhappily wrangle grazing salvage ' +
+                'overjoyed frighten deface'
+            ), true );
+
+            ut.done();
+        };
     }
 
     /**
