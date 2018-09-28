@@ -652,10 +652,58 @@ const discordCrypt = ( () => {
 
     /**
      * @private
-     * @desc The Nothing-Up-My-Sleeve magic for KMAC key derivation.
+     * @desc The Nothing-Up-My-Sleeve magic for KMAC key derivation for message payloads.
+     *      This parameter ( P ) is used when combining the given master key, MK with a 64 bit salt S.
+     *      It produces a unified key and IV such that:
+     *          KEY = KMAC( MK, S, P )
+     *      Where KEY corresponds to a concatenated message key ( mK ) and message IV ( mIV ).
      * @type {Buffer}
      */
     const ENCRYPT_PARAMETER = Buffer.from( 'DiscordCrypt KEY GENERATION PARAMETER' );
+
+    /**
+     * @private
+     * @desc The Nothing-Up-My-Sleeve magic for KMAC authentication tags added to messages.
+     *      This parameter is used when computing the 256-bit authentication tag of a message.
+     *      The parameters used here are:
+     *          Primary Key: PK
+     *          Secondary Key: SK
+     *          Ciphertext Message: M
+     *          Magic Parameter: P
+     *      This produces the authentication tag of the message ( T ) such that:
+     *          T = KMAC( PK || SK, M, P )
+     *      N.B. "||" denotes concatenation.
+     * @type {Uint8Array}
+     */
+    const AUTH_TAG_PARAMETER = new Uint8Array( Buffer.from( 'discordCrypt MAC' ) );
+
+    /**
+     * @private
+     * @desc The Nothing-Up-My-Sleeve magic for the KMAC-256 derivation for the primary key.
+     *      This parameter is used when computing the primary key during a key exchange.
+     *      The parameters used here are:
+     *          Primary Salt: S
+     *          Derived Secret: M
+     *          Magic Parameter: P
+     *      This derives the primary encryption key such that:
+     *          PRIMARY_KEY = KMAC( S, M, P )
+     * @type {Uint8Array}
+     */
+    const PRIMARY_KEY_PARAMETER = new Uint8Array( Buffer.from( 'discordCrypt-primary-secret' ) );
+
+    /**
+     * @private
+     * @desc The Nothing-Up-My-Sleeve magic for the KMAC-256 derivation for the secondary key.
+     *      This parameter is used when computing the secondary key during a key exchange.
+     *      The parameters used here are:
+     *          Secondary Salt: S
+     *          Derived Secret: M
+     *          Magic Parameter: P
+     *      This derives the secondary encryption key such that:
+     *          PRIMARY_KEY = KMAC( S, M, P )
+     * @type {Uint8Array}
+     */
+    const SECONDARY_KEY_PARAMETER = new Uint8Array( Buffer.from( 'discordCrypt-secondary-secret' ) );
 
     /**
      * @private
@@ -4343,10 +4391,6 @@ const discordCrypt = ( () => {
          * @return {{primaryKey: string, secondaryKey: string}|null}
          */
         static _deriveExchangeKeys( channelId, outputBitLength = 2048 ) {
-            /* Defined customization parameters for the KMAC-256 derivation. */
-            const primaryMAC = new Uint8Array( Buffer.from( 'discordCrypt-primary-secret' ) ),
-                secondaryMAC = new Uint8Array( Buffer.from( 'discordCrypt-secondary-secret' ) );
-
             /* Converts a hex-encoded string to a Base64 encoded string. */
             const convert = ( k ) => Buffer.from( k, 'hex' ).toString( 'base64' );
 
@@ -4369,8 +4413,12 @@ const discordCrypt = ( () => {
             /* Calculate the KMACs for the primary and secondary key. */
             // noinspection JSUnresolvedFunction
             return {
-                primaryKey: convert( global.sha3.kmac256( primarySalt, derivedKey, outputBitLength, primaryMAC ) ),
-                secondaryKey: convert( global.sha3.kmac256( secondarySalt, derivedKey, outputBitLength, secondaryMAC ) )
+                primaryKey: convert(
+                    global.sha3.kmac256( primarySalt, derivedKey, outputBitLength, PRIMARY_KEY_PARAMETER )
+                ),
+                secondaryKey: convert(
+                    global.sha3.kmac256( secondarySalt, derivedKey, outputBitLength, SECONDARY_KEY_PARAMETER )
+                )
             }
         }
 
@@ -7323,8 +7371,6 @@ const discordCrypt = ( () => {
          * @throws An exception indicating the error that occurred.
          */
         static __symmetricEncrypt( message, primary_key, secondary_key, cipher_index, block_mode, padding_mode ) {
-            const customizationParameter = new Uint8Array( Buffer.from( 'discordCrypt MAC' ) );
-
             /* Performs one of the 5 standard encryption algorithms on the plain text. */
             function handleEncodeSegment( message, key, cipher, mode, pad ) {
                 switch ( cipher ) {
@@ -7407,7 +7453,7 @@ const discordCrypt = ( () => {
                 new Uint8Array( Buffer.concat( [ primary_key, secondary_key ] ) ),
                 new Uint8Array( Buffer.from( msg, 'hex' ) ),
                 256,
-                customizationParameter
+                AUTH_TAG_PARAMETER
             );
 
             /* Prepend the authentication tag hex string & convert it to Base64. */
