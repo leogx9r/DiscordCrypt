@@ -605,7 +605,6 @@ class Compiler {
                 'sha3.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'sidh.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'smalltalk.js': { requiresNode: false, requiresBrowser: true, minify: true },
-                'currify.js': { requiresNode: false, requiresBrowser: false, minify: true },
                 'curve25519.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'openpgp.js': { requiresNode: true, requiresBrowser: false, minify: true },
             },

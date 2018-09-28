@@ -3568,7 +3568,7 @@ const discordCrypt = ( () => {
             } );
 
             /* Ignore if no files was selected. */
-            if ( !files.length )
+            if ( !files || !files.length )
                 return;
 
             /* Cache the button. */
@@ -3693,7 +3693,7 @@ const discordCrypt = ( () => {
                         } );
 
                         /* Ignore if no files was selected. */
-                        if ( !file.length )
+                        if ( !file || !file.length )
                             return;
 
                         /* Cache the button. */
