@@ -4439,7 +4439,7 @@ const discordCrypt = ( () => {
         static _getPluginsPath() {
             const BETTERDISCORD_PATH = '/BetterDiscord/plugins/';
             const MAC_PATH = `${_process.env.HOME}/Library/Preferences`;
-            const DEB_PATH = `${_process.env.HOME}.config`;
+            const DEB_PATH = `${_process.env.HOME}/.config`;
 
             switch( _process.platform ) {
             case 'win32':
