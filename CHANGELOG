@@ -1,3 +1,8 @@
+Version 2.0.6
+
+- Fixed a bug that caused an error with Debian Linux builds of Discord.
+- Further optimized the Scrypt library to decrease the plugin's size.
+
 Version 2.0.5
 
 - Added a guild blacklist that blocks the plugin from working in BetterDiscord and Discord servers.
