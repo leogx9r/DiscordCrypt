@@ -470,9 +470,12 @@ class Compiler {
             if ( compress )
                 data = LICENSE + this.tryMinify( data, true );
 
+            /* Build the full file in memory. */
+            data = METADATA_HEADER + INSTALL_SCRIPT_HEAD + data + INSTALL_SCRIPT_TAIL;
+
             try {
                 /* Write the file to the output. */
-                this.fs.writeFileSync( output_path, METADATA_HEADER + INSTALL_SCRIPT_HEAD + data + INSTALL_SCRIPT_TAIL );
+                this.fs.writeFileSync( output_path, data );
 
                 /* For flatpak builds, this needs to be copied as symlinks are forbidden. */
                 let FLATPAK_OUTPUT_PATH =
@@ -495,7 +498,9 @@ class Compiler {
             }
 
             /* Signal to the user. */
-            console.info( `Destination File: [ ${output_path} ] ...` );
+            console.info(
+                `Destination File: [ ${output_path} ] - ${parseFloat( data.length / 1024 ).toFixed( 3 )} KB ...`
+            );
 
             /* Generate a signature if required. */
             if( sign_key_id ) {
