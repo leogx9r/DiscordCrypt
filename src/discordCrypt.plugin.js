@@ -5496,12 +5496,12 @@ const discordCrypt = ( () => {
                     /* Run in the current context as it operates on currently defined objects. */
                     _discordCrypt.log( `Running ${name} in current VM context ...` );
                     _vm.runInThisContext(
-                        code,
+                        require( 'module' ).wrap( code ),
                         {
                             filename: name,
                             displayErrors: false
                         }
-                    );
+                    )( exports, require, module, name, __dirname );
                 }
                 else {
                     /* Run in a new sandbox and store the result in a global object. */

@@ -656,16 +656,22 @@ class testRunner {
                         /* Generate both keys. */
                         let keyA = generator( algorithms[ i ].key_lengths[ j ] );
                         let keyB = generator( algorithms[ i ].key_lengths[ j ] );
+                        let keyAPub = !keyA.publicKey ?
+                            keyA.getPublicKey( 'hex' ) :
+                            Buffer.from( keyA.publicKey ).toString( 'hex' );
+                        let keyBPub = !keyA.publicKey ?
+                            keyB.getPublicKey( 'hex' ) :
+                            Buffer.from( keyB.publicKey ).toString( 'hex' );
 
                         /* Perform a key exchange and get the shared secret. */
                         let secretA =
                             this.discordCrypt
-                                .__computeExchangeSharedSecret( keyA, keyB.getPublicKey( 'hex' ), false, true );
+                                .__computeExchangeSharedSecret( keyA, keyBPub, false, true );
 
                         /* Get the secret for both keys. */
                         let secretB =
                             this.discordCrypt
-                                .__computeExchangeSharedSecret( keyB, keyA.getPublicKey( 'hex' ), false, true );
+                                .__computeExchangeSharedSecret( keyB, keyAPub, false, true );
 
                         /* Ensure the secrets match. */
                         ut.equal(
