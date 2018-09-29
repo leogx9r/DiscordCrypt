@@ -97,13 +97,13 @@ For Windows and Linux operating systems, we recommend you use
     [`Kleopatra`](https://www.openpgp.org/software/kleopatra/) for verifying signatures and for 
     MacOS, we recommend [`GnuPG for OS X`](https://gnupg.org/download/index.html).
 
-The signature for each release is located [here](build/discordCrypt.plugin.js.sig). 
+The signature for each release is located [here](build/discordCrypt.plugin.js.asc). 
     Please read the manual for your specific client to determine how to verify signatures.
 
 If everything goes well, you'll notice output similar to below:
 
 ```
-$ gpg --verify build/discordCrypt.plugin.js.sig
+$ gpg --verify build/discordCrypt.plugin.js.asc
 gpg: assuming signed data in `build/discordCrypt.plugin.js'
 gpg: Signature made Fri 1 Jun 2018 00:00:01 AM 00 using RSA key ID 3787CE3F
 gpg: Good signature from "DiscordCrypt (DiscordCrypt Signing Key)"

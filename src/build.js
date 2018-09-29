@@ -356,51 +356,6 @@ class Compiler {
         return original_data;
     }
 
-    /**
-     * @desc Adds the public key used for update verification to the plugin.
-     * @param {string} data The input to operate on.
-     * @param {string} key_template Template string to replace on the input file.
-     * @param {string} [key_file] Optional path to the key file to use.
-     * @param {string} [key_fingerprint] Optional fingerprint to use if no key file is specified.
-     * @param {function} [on_complete] Callback function to execute after the key data has been
-     *      added if using a key fingerprint.
-     * @return {string} Returns the output data if not on an async call.
-     */
-    compileVerificationKey( data, key_template, key_file, key_fingerprint, on_complete ) {
-        /* Make sure the key template exists. */
-        if( data.indexOf( key_template ) === -1 )
-            throw new Error( 'Unable to find the key template in the input source.' );
-
-        /* Use this key file as the public key. */
-        if( key_file ) {
-            /* Read and compress the public key file specified. */
-            let key_data = this.compress( this.fs.readFileSync( key_file ) );
-
-            console.info( `Added signing key [ ${parseFloat( key_data.length / 1024 ).toFixed( 3 )} KB ] ...` );
-            return data.split( key_template ).join( key_data );
-        }
-        else {
-            /* Assume we're using a fingerprint. Sanity check. */
-            if( !key_fingerprint )
-                throw new Error( 'Undefined public key file and key fingerprint.' );
-
-            /* Request the public key for this fingerprint in the key store. */
-            this.getPublicKey( key_fingerprint, true, ( output ) => {
-                /* Ensure the public key actually begins with a valid header. */
-                if( output.indexOf( '-----BEGIN PGP PUBLIC KEY BLOCK-----' ) === -1 )
-                    throw new Error( 'Invalid public key retrieved.' );
-
-                /* Add the data & execute the callback. */
-                console.info( `Added signing key [ 0x${key_fingerprint} ] - ${
-                    parseFloat( output.length / 1024 ).toFixed( 3 )
-                } KB ...` );
-                on_complete( data.split( key_template ).join( this.compress( output ) ) );
-            } );
-        }
-
-        return '';
-    }
-
 
     /**
      * @private
@@ -414,7 +369,6 @@ class Compiler {
      * @param {boolean} compress Whether to compress the plugin itself.
      * @param {Object} assets_data The asset tags for each file within the assets directory.
      * @param {string[]} ignore_assets Assets to exclude from compression.
-     * @param {string} signature_template The template string used for replacing the built-in verification public key.
      * @param {string} [sign_key_id] Generates a GPG signature on the output file using this key ID.
      * @return {boolean} Returns true on success and false on failure.
      */
@@ -428,7 +382,6 @@ class Compiler {
         compress,
         assets_data,
         ignore_assets,
-        signature_template,
         sign_key_id
     ) {
         /* Read the plugin file. */
@@ -464,117 +417,129 @@ class Compiler {
         /* Add all assets. */
         data = this.compileAssets( assets_path, data, assets_data, ignore_assets );
 
-        /* Handles final output compression, signature generation and writing the output to disk. */
-        let finalizeBuild = ( data ) => {
-            /* Only do this if we're compressing the plugin. */
-            if ( compress )
-                data = LICENSE + this.tryMinify( data, true );
+        /* Only do this if we're compressing the plugin. */
+        if ( compress )
+            data = LICENSE + this.tryMinify( data, true );
 
-            /* Build the full file in memory. */
-            data = METADATA_HEADER + INSTALL_SCRIPT_HEAD + data + INSTALL_SCRIPT_TAIL;
+        /* Build the full file in memory. */
+        data = METADATA_HEADER + INSTALL_SCRIPT_HEAD + data + INSTALL_SCRIPT_TAIL;
 
-            try {
-                /* Write the file to the output. */
-                this.fs.writeFileSync( output_path, data );
+        try {
+            /* Write the file to the output. */
+            this.fs.writeFileSync( output_path, data );
 
-                /* For flatpak builds, this needs to be copied as symlinks are forbidden. */
-                let FLATPAK_OUTPUT_PATH =
+            /* For flatpak builds, this needs to be copied as symlinks are forbidden. */
+            let FLATPAK_OUTPUT_PATH =
                     this.path.resolve( `${this.process.env.HOME}/.var/app/com.discordapp.Discord/config` ),
-                    FLATPAK_OUTPUT_FILE = `${FLATPAK_OUTPUT_PATH}/BetterDiscord/plugins/discordCrypt.plugin.js`;
-                if(
-                    this.process.platform === 'linux' &&
-                    this.fs.existsSync( FLATPAK_OUTPUT_PATH )
-                ) {
-                    this.fs.writeFileSync(
-                        FLATPAK_OUTPUT_FILE,
-                        METADATA_HEADER + data
-                    );
-                    console.info( `Copied Build File: [ ${FLATPAK_OUTPUT_FILE} ] ...` );
-                }
+                FLATPAK_OUTPUT_FILE = `${FLATPAK_OUTPUT_PATH}/BetterDiscord/plugins/discordCrypt.plugin.js`;
+            if(
+                this.process.platform === 'linux' &&
+                this.fs.existsSync( FLATPAK_OUTPUT_PATH )
+            ) {
+                this.fs.writeFileSync(
+                    FLATPAK_OUTPUT_FILE,
+                    METADATA_HEADER + data
+                );
+                console.info( `Copied Build File: [ ${FLATPAK_OUTPUT_FILE} ] ...` );
             }
-            catch ( e ) {
-                console.error( `Error building plugin:\n    ${e.toString()}` );
-                return;
-            }
+        }
+        catch ( e ) {
+            console.error( `Error building plugin:\n    ${e.toString()}` );
+            return false;
+        }
 
-            /* Signal to the user. */
-            console.info(
-                `Destination File: [ ${output_path} ] - ${parseFloat( data.length / 1024 ).toFixed( 3 )} KB ...`
-            );
+        /* Signal to the user. */
+        console.info(
+            `Destination File: [ ${output_path} ] - ${parseFloat( data.length / 1024 ).toFixed( 3 )} KB ...`
+        );
 
-            /* Generate a signature if required. */
-            if( sign_key_id ) {
-                console.info( `Generating GPG Signature Using Key: [ 0x${sign_key_id} ] ...` );
+        /* Generate a signature if required. */
+        if( sign_key_id ) {
+            /* Generating both sets of signatures requires us to load Curve25519. The easiest way is via DiscordCrypt. */
+            let { discordCrypt } = require( `../${output_path}` );
+            discordCrypt.__loadLibraries();
 
-                let signature_file = this.path.join( output_dir, `${this.path.basename( plugin_path )}.sig` );
+            console.info( `Generating GPG Signature Using Key: [ 0x${sign_key_id} ] ...` );
 
-                /* Generate the signature. */
-                this.gpg.callStreaming(
-                    output_path,
-                    signature_file,
-                    [ '-a', '-b', '--default-key', sign_key_id ],
-                    ( error, result ) => {
-                        /* Check if an error occurred and log it. */
-                        if ( !error && !result ) {
-                            /* Log the result. */
-                            console.info( `Generated Detached GPG Signature: [ ${signature_file} ] ...` );
+            let gpg_signature_file = this.path.join( output_dir, `${this.path.basename( plugin_path )}.asc` );
+            let update_signature_file = this.path.join( output_dir, `${this.path.basename( plugin_path )}.sig.bin` );
 
-                            /* Attempt to validate the signature produced. */
-                            this.gpg.call(
-                                '',
-                                [ '--logger-fd', '1', '--verify', signature_file, output_path ],
-                                ( e, r ) => {
-                                    /* Check if an error occurred and log it. */
-                                    if ( !e && r && r.length ) {
-                                        /* Test the output for the "Good signature" message from GPG. */
-                                        let valid = ( new RegExp( /good signature/i ) ).exec( r.toString() ) !== null;
+            /* Generate the GPG signature. */
+            this.gpg.callStreaming(
+                output_path,
+                gpg_signature_file,
+                [ '-a', '-b', '--default-key', sign_key_id ],
+                ( error, result ) => {
+                    /* Check if an error occurred and log it. */
+                    if ( !error && !result ) {
+                        /* Log the result. */
+                        console.info( `Generated Detached GPG Signature: [ ${gpg_signature_file} ] ...` );
 
-                                        /* Log the appropriate response. */
-                                        if ( valid )
-                                            console.info(
-                                                `\n=============================================\n` +
-                                                `[ OK ] Signature Valid !\n` +
-                                                r.toString() +
-                                                `=============================================`
-                                            );
-                                        else
-                                            console.error(
-                                                `\n=============================================\n` +
-                                                `[ ERROR ] Invalid Signature ...\n${r.toString()}` +
-                                                `\n=============================================`
-                                            );
-                                    }
+                        /* Attempt to validate the signature produced. */
+                        this.gpg.call(
+                            '',
+                            [ '--logger-fd', '1', '--verify', gpg_signature_file, output_path ],
+                            ( e, r ) => {
+                                /* Check if an error occurred and log it. */
+                                if ( !e && r && r.length ) {
+                                    /* Test the output for the "Good signature" message from GPG. */
+                                    let valid = ( new RegExp( /good signature/i ) ).exec( r.toString() ) !== null;
+
+                                    /* Log the appropriate response. */
+                                    if ( valid )
+                                        console.info(
+                                            `\n=============================================\n` +
+                                            `[ OK ] Signature Valid !\n` +
+                                            r.toString() +
+                                            `=============================================`
+                                        );
                                     else
                                         console.error(
                                             `\n=============================================\n` +
-                                            `[ ERROR ] Generating Signature\n    Error: ${e}` +
+                                            `[ ERROR ] Invalid Signature ...\n${r.toString()}` +
                                             `\n=============================================`
                                         );
                                 }
-                            );
-                        }
-                        else
-                            console.error(
-                                `\n=============================================\n` +
-                                `[ ERROR ] Generating Signature:\n    Error: ${error}\n    Result: ${result}\n` +
-                                `\n=============================================`
-                            );
+                                else
+                                    console.error(
+                                        `\n=============================================\n` +
+                                        `[ ERROR ] Generating Signature\n    Error: ${e}` +
+                                        `\n=============================================`
+                                    );
+                            }
+                        );
                     }
-                )
-            }
-            else
-                console.info( `=============================================\n` );
-        };
+                    else
+                        console.error(
+                            `\n=============================================\n` +
+                            `[ ERROR ] Generating Signature:\n    Error: ${error}\n    Result: ${result}\n` +
+                            `\n=============================================`
+                        );
+                }
+            );
 
-        /* If not signing, use the default verification public key file. */
-        if( !sign_key_id )
-            finalizeBuild( this.compileVerificationKey( data, signature_template, './build/signing-key.pub' ) );
-        else {
-            /* Extract the public key for this fingerprint used and add it. */
-            this.compileVerificationKey( data, signature_template, null, sign_key_id, ( data ) => {
-                finalizeBuild( data );
-            } );
+            /* Make sure the private key exists. */
+            if( !this.fs.existsSync( `${plugin_path}.key` ) ) {
+                console.log(
+                    'Warning: Could not find the Ed25519 private key to generate an update signature!!!',
+                    'warn'
+                );
+                return true;
+            }
+
+            /* Load the private key into a new Curve25519 object. */
+            let curveKey = new global.Curve25519();
+            curveKey.setPrivateKey(
+                Buffer.from(
+                    this.fs.readFileSync( `${plugin_path}.key` ).toString( 'utf8' ),
+                    'base64'
+                )
+            );
+
+            console.log( JSON.stringify(curveKey, null, ' ') );
         }
+        else
+            console.info( `=============================================\n` );
 
         return true;
     }
@@ -612,9 +577,7 @@ class Compiler {
                 'sidh.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'smalltalk.js': { requiresNode: false, requiresBrowser: true, minify: true },
                 'curve25519.js': { requiresNode: true, requiresBrowser: false, minify: true },
-                'openpgp.js': { requiresNode: true, requiresBrowser: false, minify: true },
             },
-            signature_template: '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */',
             compression: false,
             plugin: './src/discordCrypt.plugin.js',
             assets: './src/assets',
@@ -657,7 +620,6 @@ class Compiler {
             args[ 'enable-compression' ] || args[ 'c' ] || defaults.compression,
             defaults.assets_tag,
             defaults.assets_ignore_compression,
-            defaults.signature_template,
             args[ 'sign' ] || args[ 's' ]
         );
     }

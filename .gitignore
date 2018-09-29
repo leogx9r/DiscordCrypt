@@ -68,4 +68,8 @@ typings/
 # PHPStorm configuration files
 .idea
 
+# Private key.
+src/*.key
+
+# Private notes.
 TODO

@@ -776,10 +776,10 @@ const discordCrypt = ( ( ) => {
 
     /**
      * @private
-     * @desc Stores the compressed PGP public key used for update verification.
+     * @desc Stores the base64 encoded Ed25519 public key used for update verification.
      * @type {string}
      */
-    const PGP_SIGNING_KEY = '/* KEY USED FOR UPDATE VERIFICATION GOES HERE. DO NOT REMOVE. */';
+    const ED25519_SIGNING_KEY = 'RGqTzo1dadMTGA7FTu8pIeIfZKTfIIM5BThvtvpTt0I=';
 
     /**
      * @desc The Base64 encoded SVG containing the unlocked status icon.
@@ -3510,22 +3510,13 @@ const discordCrypt = ( ( ) => {
 
                 /* Handle the signatures button clicked. */
                 info_btn.click( function() {
-                    global.openpgp.key.readArmored( _discordCrypt.__zlibDecompress( PGP_SIGNING_KEY ) ).then(
-                        r => {
-                            let key_id = Buffer.from( r.keys[ 0 ].primaryKey.fingerprint )
-                                .toString( 'hex' )
-                                .toUpperCase();
-
-                            global.smalltalk.alert(
-                                'Update Info',
-                                `<strong>Version</strong>: ${updateInfo.version}\n\n` +
-                                `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
-                                `<strong>Key ID</strong>: ${key_id}\n\n` +
-                                `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
-                                '<code class="hljs dc-code-block" style="background: none !important;">' +
-                                `${updateInfo.signature}</code>`
-                            );
-                        }
+                    global.smalltalk.alert(
+                        'Update Info',
+                        `<strong>Version</strong>: ${updateInfo.version}\n\n` +
+                        `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
+                        `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
+                        '<code class="hljs dc-code-block" style="background: none !important;">' +
+                        `${updateInfo.signature}</code>`
                     );
                 } );
 
@@ -4688,18 +4679,14 @@ const discordCrypt = ( ( ) => {
                             /* Store the signature. */
                             updateInfo.signature = detached_sig;
 
-                            /* Validate the signature then continue. */
-                            let r = _discordCrypt.__validatePGPSignature(
-                                updateInfo.payload,
-                                updateInfo.signature,
-                                _discordCrypt.__zlibDecompress( PGP_SIGNING_KEY )
+                            /* Validate the signature then execute the callback. */
+                            tryResolveChangelog(
+                                _discordCrypt.__validateEd25519Signature(
+                                    updateInfo.payload,
+                                    updateInfo.signature,
+                                    Buffer.from( ED25519_SIGNING_KEY, 'base64' )
+                                )
                             );
-
-                            /* This returns a Promise if valid or false if invalid. */
-                            if( r )
-                                r.then( ( valid_signature ) => tryResolveChangelog( valid_signature ) );
-                            else
-                                tryResolveChangelog( false );
                         } );
                     }
                     catch( e ) {
@@ -5436,27 +5423,6 @@ const discordCrypt = ( ( ) => {
             }
 
             return true;
-        }
-
-        /**
-         * @private
-         * @desc Verifies an OpenPGP signed message using the public key provided.
-         * @param {string} message The raw message.
-         * @param {string} signature The ASCII-armored signature in a detached form.
-         * @param {string} public_key The ASCII-armored public key.
-         * @return {boolean} Returns true if the message is valid.
-         */
-        static async __validatePGPSignature( message, signature, public_key ) {
-            if( typeof global === 'undefined' || !global.openpgp )
-                return false;
-
-            let options = {
-                message: global.openpgp.message.fromText( message ),
-                signature: await global.openpgp.signature.readArmored( signature ),
-                publicKeys: ( await global.openpgp.key.readArmored( public_key ) ).keys
-            };
-
-            return global.openpgp.verify( options ).then( ( validity ) => validity.signatures[ 0 ].valid );
         }
 
         /**
