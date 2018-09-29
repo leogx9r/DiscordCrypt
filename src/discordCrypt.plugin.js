@@ -1413,7 +1413,7 @@ const discordCrypt = ( ( ) => {
                 let code = e.keyCode || e.which;
 
                 /* Execute on ENTER/RETURN only. */
-                if ( code !== 13 )
+                if ( code !== 13 || unlock_btn.attr( 'disabled' ) )
                     return;
 
                 unlock_btn.click();
@@ -2990,6 +2990,10 @@ const discordCrypt = ( ( ) => {
          */
         static _onMasterUnlockButtonClicked( unlock_btn, cfg_exists, pwd_field, action_msg ) {
             return () => {
+                /* Skip on empty passwords. */
+                if( !pwd_field.val().length )
+                    return;
+
                 /* Disable the button before clicking. */
                 unlock_btn.attr( 'disabled', true );
 
