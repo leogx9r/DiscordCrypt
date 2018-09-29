@@ -533,8 +533,9 @@ class Compiler {
                                         if ( valid )
                                             console.info(
                                                 `\n=============================================\n` +
-                                                `[ OK ] Signature Valid !` +
-                                                `\n=============================================`
+                                                `[ OK ] Signature Valid !\n` +
+                                                r.toString() +
+                                                `=============================================`
                                             );
                                         else
                                             console.error(
