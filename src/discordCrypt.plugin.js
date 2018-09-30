@@ -633,7 +633,7 @@ const discordCrypt = ( ( ) => {
      * @desc The branch name used for receiving updates.
      * @type {string}
      */
-    const UPDATE_BRANCH = 'master';
+    const UPDATE_BRANCH = 'development';
 
     /**
      * @private
