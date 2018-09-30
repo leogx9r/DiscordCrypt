@@ -107,6 +107,11 @@ class Compiler {
         this.process = require( 'process' );
 
         /**
+         * @desc Cache the crypto module wrapper for Ed25519 signature generation.
+         */
+        this.crypto = require( 'crypto' );
+
+        /**
          * @desc Cache the ZLIB module for compression.
          * @type {zlib}
          */
@@ -459,12 +464,35 @@ class Compiler {
             let { discordCrypt } = require( `../${output_path}` );
             discordCrypt.__loadLibraries();
 
-            console.info( `Generating GPG Signature Using Key: [ 0x${sign_key_id} ] ...` );
-
-            let gpg_signature_file = this.path.join( output_dir, `${this.path.basename( plugin_path )}.asc` );
             let update_signature_file = this.path.join( output_dir, `${this.path.basename( plugin_path )}.sig.bin` );
 
+            /* Load the private key into a new Curve25519 object. */
+            let curveKey = new global.Curve25519();
+            curveKey.setPrivateKey(
+                Buffer.from(
+                    this.fs.readFileSync( `${plugin_path}.key` ).toString( 'utf8' ),
+                    'base64'
+                )
+            );
+
+            /* Now we produce a detached 512-bit binary signature using Ed25519. */
+            let detachedSignature = curveKey.sign(
+                Buffer.from( data ),
+                this.crypto.randomBytes( 64 )
+            );
+
+            /* Write the signature to the file. */
+            this.fs.writeFileSync( update_signature_file, detachedSignature );
+
+            /* Finally log the produced signature. */
+            console.log( `Generated Ed25519 Signature: [ ${update_signature_file} ]` );
+            console.log( `->    0x${detachedSignature.toString( 'hex' ).toUpperCase()}` );
+
+            /* Generate the GPG signature for manual verification. */
+            console.info( `Generating GPG Signature Using Key: [ 0x${sign_key_id} ] ...` );
+
             /* Generate the GPG signature. */
+            let gpg_signature_file = this.path.join( output_dir, `${this.path.basename( plugin_path )}.asc` );
             this.gpg.callStreaming(
                 output_path,
                 gpg_signature_file,
@@ -489,7 +517,6 @@ class Compiler {
                                     if ( valid )
                                         console.info(
                                             `\n=============================================\n` +
-                                            `[ OK ] Signature Valid !\n` +
                                             r.toString() +
                                             `=============================================`
                                         );
@@ -526,17 +553,6 @@ class Compiler {
                 );
                 return true;
             }
-
-            /* Load the private key into a new Curve25519 object. */
-            let curveKey = new global.Curve25519();
-            curveKey.setPrivateKey(
-                Buffer.from(
-                    this.fs.readFileSync( `${plugin_path}.key` ).toString( 'utf8' ),
-                    'base64'
-                )
-            );
-
-            console.log( JSON.stringify(curveKey, null, ' ') );
         }
         else
             console.info( `=============================================\n` );

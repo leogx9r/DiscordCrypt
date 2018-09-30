@@ -113,7 +113,7 @@
  * @property {string} payload The raw update payload.
  * @property {boolean} valid The signature was marked as valid.
  * @property {string} hash Checksum of the update data.
- * @property {string} signature The signed PGP signature for the update payload.
+ * @property {Buffer} signature The signed Ed25519 signature for the update payload.
  * @property {string} changelog Reported changes that occurred during this update.
  */
 
@@ -628,6 +628,12 @@ const discordCrypt = ( ( ) => {
             _Object.freeze( object );
         }
     };
+
+    /**
+     * @desc The branch name used for receiving updates.
+     * @type {string}
+     */
+    const UPDATE_BRANCH = 'master';
 
     /**
      * @private
@@ -4531,10 +4537,10 @@ const discordCrypt = ( ( ) => {
          */
         static _checkForUpdate( on_update_callback, blacklisted_updates ) {
             /* Update URL and request method. */
-            const base_url = 'https://gitlab.com/leogx9r/discordCrypt/raw/master';
-            const update_url = `${base_url}/build/${_discordCrypt._getPluginName()}`;
-            const changelog_url = `${base_url}/CHANGELOG`;
-            const signature_url = `${update_url}.sig`;
+            const repo_url = `https://gitlab.com/leogx9r/discordCrypt/raw/${UPDATE_BRANCH}`;
+            const update_url = `${repo_url}/build/${_discordCrypt._getPluginName()}`;
+            const changelog_url = `${repo_url}/CHANGELOG`;
+            const signature_url = `${update_url}.sig.bin`;
 
             /**
              * @desc Local update information.
@@ -4556,7 +4562,6 @@ const discordCrypt = ( ( ) => {
             /* Perform the request. */
             try {
                 /* Download the update. */
-                // noinspection JSIgnoredPromiseFromCall
                 _discordCrypt.__getRequest( update_url, ( statusCode, errorString, data ) => {
                     /* Make sure no error occurred. */
                     if ( statusCode !== 200 ) {
@@ -4648,7 +4653,6 @@ const discordCrypt = ( ( ) => {
                         /* Now get the changelog. */
                         try {
                             /* Fetch the changelog from the URL. */
-                            // noinspection JSIgnoredPromiseFromCall
                             _discordCrypt.__getRequest(
                                 changelog_url,
                                 ( statusCode, errorString, changelog ) => {
@@ -4674,8 +4678,10 @@ const discordCrypt = ( ( ) => {
                     /* Try validating the signature. */
                     try {
                         /* Fetch the detached signature. */
-                        // noinspection JSIgnoredPromiseFromCall
                         _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
+                            if( statusCode !== 200 )
+                                throw `Request Failed: ${statusCode}`;
+
                             /* Store the signature. */
                             updateInfo.signature = detached_sig;
 
@@ -5266,12 +5272,10 @@ const discordCrypt = ( ( ) => {
             };
 
             /* Make sure the method is marked as hooked. */
-            // noinspection JSUnusedGlobalSymbols
             what[ methodName ].__monkeyPatched = true;
             what[ methodName ].displayName = `Hooked ${what[ methodName ].displayName || methodName}`;
 
             /* Save the unhook method to the object. */
-            // noinspection JSUnusedGlobalSymbols
             what[ methodName ].unpatch = cancel;
 
             /* Store the cancel callback. */
@@ -5321,6 +5325,29 @@ const discordCrypt = ( ( ) => {
             }
             catch ( ex ) {
                 console.error( '[DiscordCrypt] - Error logging message ...' );
+            }
+        }
+
+        /**
+         * @private
+         * @desc Verifies an Ed25519 signature.
+         * @param {string|Buffer|Uint8Array} payload The raw payload.
+         * @param {Buffer|Uint8Array} signature The detached 512-bit signature.
+         * @param {Buffer|Uint8Array} key The raw 256-bit public key.
+         * @return {boolean} Returns true if the signature is valid for the given message.
+         */
+        static __validateEd25519Signature( payload, signature, key ) {
+            /* Create a new curve object and set the public key. */
+            let curve = new global.Curve25519();
+            curve.setPublicKey( Buffer.from( key ) );
+
+            try {
+                /* Attempt to verify the signature. */
+                return curve.verify( Buffer.from( payload ), Buffer.from( signature ) );
+            }
+            catch ( ex ) {
+                /* Return false on any errors. */
+                return false;
             }
         }
 
@@ -5381,7 +5408,6 @@ const discordCrypt = ( ( ) => {
          */
         static __binaryCompare( a, b ) {
             /* Do a simple comparison on the buffers. */
-            // noinspection JSUnresolvedFunction
             switch( Buffer.compare( a, b ) ) {
             /* b > a */
             case 1:
@@ -5582,7 +5608,7 @@ const discordCrypt = ( ( ) => {
             /* Copy the public key to the buffer. */
             rawKey.copy( rawBuffer, 2 + saltLen );
 
-            /* Split the message by adding a new line every 32 characters like a standard PGP message. */
+            /* Add the message header and return the encoded message. */
             return  ENCODED_KEY_HEADER + _discordCrypt.__substituteMessage( rawBuffer, true );
         }
 
@@ -5795,12 +5821,10 @@ const discordCrypt = ( ( ) => {
                 return { mime_type: '', name: '', data: null };
 
             /* The clipboard must have at least one type available. */
-            // noinspection JSUnresolvedFunction
             if ( clipboard.availableFormats().length === 0 )
                 return { mime_type: '', name: '', data: null };
 
             /* Get all available formats. */
-            // noinspection JSUnresolvedFunction
             let mime_type = clipboard.availableFormats();
             let data, tmp = '', name = '', is_file = false;
 
@@ -5814,17 +5838,14 @@ const discordCrypt = ( ( ) => {
                     /* Convert the image type. */
                     switch ( format[ 1 ].toLowerCase() ) {
                     case 'png':
-                        // noinspection JSUnresolvedFunction
                         data = clipboard.readImage().toPNG();
                         break;
                     case 'bmp':
                     case 'bitmap':
-                        // noinspection JSUnresolvedFunction
                         data = clipboard.readImage().toBitmap();
                         break;
                     case 'jpg':
                     case 'jpeg':
-                        // noinspection JSUnresolvedFunction
                         data = clipboard.readImage().toJPEG( 100 );
                         break;
                     default:
@@ -7096,12 +7117,10 @@ const discordCrypt = ( ( ) => {
 
             /* Parse the next 8 bits. */
             if ( typeof cipher_mode_index === 'string' )
-                // noinspection JSUnresolvedFunction
                 cipher_mode_index = [ 'cbc', 'cfb', 'ofb' ].indexOf( cipher_mode_index.toLowerCase() );
 
             /* Parse the next 8 bits. */
             if ( typeof padding_scheme_index === 'string' )
-                // noinspection JSUnresolvedFunction
                 padding_scheme_index = [ 'pkc7', 'ans2', 'iso1', 'iso9' ].indexOf( padding_scheme_index.toLowerCase() );
 
             /* Buffered word. */
