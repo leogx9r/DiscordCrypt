@@ -3493,6 +3493,26 @@ const discordCrypt = ( ( ) => {
          * @desc Selects the Security Settings tab and loads all blacklisted updates.
          */
         static _onSecurityTabButtonClicked() {
+            /**
+             * @desc Formats an input string or array into a hex string.
+             * @param {string|Buffer|Uint8Array} input The input buffer.
+             * @param {boolean} align Whether to break the line every 16 bytes.
+             * @return {string}
+             */
+            const __binaryFormat = ( input, align ) => {
+                let ret = '';
+
+                if( !Buffer.isBuffer( input ) )
+                    input = Buffer.from( input );
+
+                input = Array.prototype.map.call( input, x => `00${x.toString( 16 ).toUpperCase()}`.slice( -2 ) );
+
+                for( let i = 0; i < input.length; i++ )
+                    ret += `${align && i && i % 16 === 0 ? "\n" : ''}${input[ i ]} `;
+
+                return ret.trim();
+            };
+
             /* Get the table to show blacklisted updates. */
             let table = $( '#dc-update-blacklist-entries' );
 
@@ -3547,9 +3567,10 @@ const discordCrypt = ( ( ) => {
                         'Update Info',
                         `<strong>Version</strong>: ${updateInfo.version}\n\n` +
                         `<strong>Verified</strong>: ${updateInfo.valid ? 'Yes' : 'No'}\n\n` +
-                        `<strong>Hash</strong>: ${updateInfo.hash}\n\n` +
+                        `<strong>Hash</strong>: ${updateInfo.hash.toUpperCase()}\n\n` +
+                        `<strong>Signature</strong>:\n` +
                         '<code class="hljs dc-code-block" style="background: none !important;">' +
-                        `${updateInfo.signature}</code>`
+                        `\n${__binaryFormat( updateInfo.signature, true )}\n</code>`
                     );
                 } );
 
@@ -4708,8 +4729,11 @@ const discordCrypt = ( ( ) => {
                         _discordCrypt.__getRequest(
                             signature_url,
                             ( statusCode, errorString, detached_sig ) => {
-                                if( statusCode !== 200 )
-                                    throw `Request Failed: ${statusCode}`;
+                                /* Skip on error. */
+                                if( statusCode !== 200 ) {
+                                    tryResolveChangelog( false );
+                                    return;
+                                }
 
                                 /* Store the signature. */
                                 updateInfo.signature = detached_sig;
