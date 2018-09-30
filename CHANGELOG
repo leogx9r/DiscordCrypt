@@ -1,3 +1,12 @@
+Version 2.1.0
+
+- Removed OpenPGP.js library for an overall smaller plugin size.
+- Fixed uncaught errors that occurred when not responding to dialog prompts.
+- Fixed a bug in the Curve25519 library that prevent private keys from being imported.
+- Ignored updates now show clearer information when viewing them.
+- Database unlocking no longer occurs if the password field is blank.
+- Switched from updates using PGP signatures to the built in Ed25519 signatures.
+
 Version 2.0.6
 
 - Fixed a bug that caused an error with Debian Linux builds of Discord.
