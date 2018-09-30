@@ -112,15 +112,20 @@ gpg: Good signature from "DiscordCrypt (DiscordCrypt Signing Key)"
 The above depends on the client you use but you must always look for a 
     "*Good*", "*OK*" or "*Valid*" signature.
 
-Please note, you will need to import the PGP signing key located [here](build/signing-key.pub) 
+Please note, you will need to import the PGP signing key located [here](build/pgp_signing_key.asc) 
     and **NOT** the binary Ed25519 signature `discordCrypt.plugin.sig.bin` to verify signatures.
 
-Finally, you should manually verify that the signing key you import above matches the 
+Finally, you should manually verify that the signing key you imported above matches the 
     information below:
 
 ```
 Key ID: 3787CE3F 
-Fingerprint: B8EC 0775 960A EB2E 4C11 F084 DA61 3E75 3787 CE3F 
+Key ID ( Long ): 0xB8EC0775960AEB2E4C11F084DA613E753787CE3F
+Fingerprint: B8EC 0775 960A EB2E 4C11 F084 DA61 3E75 3787 CE3F
+
+Key Server: hkp://keys.gnupg.net OR hkp://pgp.mit.edu
+UID: DiscordCrypt (DiscordCrypt Signing Key)
+Hash: 0xDA613E753787CE3F
 ```
 
 **N.B** The plugin self-verifies every update so you only ever need to verify these 
