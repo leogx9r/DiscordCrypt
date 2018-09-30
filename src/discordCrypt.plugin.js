@@ -633,7 +633,7 @@ const discordCrypt = ( ( ) => {
      * @desc The branch name used for receiving updates.
      * @type {string}
      */
-    const UPDATE_BRANCH = 'development';
+    const UPDATE_BRANCH = 'master';
 
     /**
      * @private
@@ -4678,22 +4678,26 @@ const discordCrypt = ( ( ) => {
                     /* Try validating the signature. */
                     try {
                         /* Fetch the detached signature. */
-                        _discordCrypt.__getRequest( signature_url, ( statusCode, errorString, detached_sig ) => {
-                            if( statusCode !== 200 )
-                                throw `Request Failed: ${statusCode}`;
+                        _discordCrypt.__getRequest(
+                            signature_url,
+                            ( statusCode, errorString, detached_sig ) => {
+                                if( statusCode !== 200 )
+                                    throw `Request Failed: ${statusCode}`;
 
-                            /* Store the signature. */
-                            updateInfo.signature = detached_sig;
+                                /* Store the signature. */
+                                updateInfo.signature = detached_sig;
 
-                            /* Validate the signature then execute the callback. */
-                            tryResolveChangelog(
-                                _discordCrypt.__validateEd25519Signature(
-                                    updateInfo.payload,
-                                    updateInfo.signature,
-                                    Buffer.from( ED25519_SIGNING_KEY, 'base64' )
-                                )
-                            );
-                        } );
+                                /* Validate the signature then execute the callback. */
+                                tryResolveChangelog(
+                                    _discordCrypt.__validateEd25519Signature(
+                                        updateInfo.payload,
+                                        updateInfo.signature,
+                                        Buffer.from( ED25519_SIGNING_KEY, 'base64' )
+                                    )
+                                );
+                            },
+                            null
+                        );
                     }
                     catch( e ) {
                         _discordCrypt.log( `Unable to validate the update signature: ${e}`, 'warn' );
