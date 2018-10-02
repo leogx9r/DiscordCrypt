@@ -4204,10 +4204,10 @@ const discordCrypt = ( ( ) => {
             global.smalltalk.prompt(
                 'GENERATE A SECURE PASSPHRASE',
                 'Please enter the approximate security level you\'d like this passphrase to have below.\n' +
-                'Be advised that a minimum security level of <b><u>128</u></b> bits is recommended.\n\n' +
+                'Be advised that a minimum security level of <b><u>192</u></b> bits is recommended.\n\n' +
                 'Read about Security Levels ' +
                 '<a href="https://en.wikipedia.org/wiki/Security_level" target="_blank">here</a>.\n\n',
-                '128'
+                '192'
             ).then(
                 ( value ) => {
                     /* Validate the value entered. */
