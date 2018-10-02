@@ -859,7 +859,7 @@ const discordCrypt = ( ( ) => {
     /**
      * @desc Compressed Diceware word list provided by the official Diceware website for passphrase generation.
      * @see https://world.std.com/~reinhold/diceware.html
-     * @type {string}
+     * @type {string[]}
      */
     const DICEWARE_WORD_LIST = _zlib.inflateSync(
         Buffer.from(
@@ -4224,11 +4224,20 @@ const discordCrypt = ( ( ) => {
 
                     /* Alert the user. */
                     global.smalltalk.prompt(
-                        `GENERATED A ${parseInt( value )} WORD LONG PASSPHRASE`,
-                        `This passphrase contains approximately <b>${
+                        `GENERATED A PASSPHRASE WITH ${parseInt( value )} BITS OF SECURITY`,
+                        `This passphrase contains <b>${
                             parseFloat( entropy.toString() ).toFixed( 3 )
-                        } bits</b> of entropy.\n\n` +
-                        'Please copy your generated passphrase below:\n\n',
+                        } bits</b> of entropy and was generated using a word list containing <b>${
+                            DICEWARE_WORD_LIST.length
+                        }</b> words.\n\n\n` +
+                        `How long would this take a supercomputer to crack ?\n\n` +
+                        'Assume a supercomputer can guess 1 <i>nonillion</i> passwords per second. ' +
+                        '( 1,000,000,000,000,000,000,000,000,000,000x or 10^30 ):\n\n' +
+                        'It would take it about ' +
+                        `${
+                            _discordCrypt.__exponentialString( Math.pow( 2, entropy ) / 1e30 / 31536000 )
+                        } <b>years</b> to crack.\n\n\n` +
+                        'Here\'s your passphrase:\n\n',
                         passphrase
                     ).then(
                         () => {
@@ -5354,6 +5363,38 @@ const discordCrypt = ( ( ) => {
             catch ( ex ) {
                 console.error( '[DiscordCrypt] - Error logging message ...' );
             }
+        }
+
+        /**
+         * @private
+         * @desc Converts an exponential represented number to the long string interpretation.
+         * @param {Number} number The input number.
+         * @returns {string}
+         */
+        static __exponentialString( number ) {
+            let segments = number.toExponential().replace( '.' , '' ).split( /e/i ),
+                suffix = '',
+                num = segments[ 0 ],
+                magnitude = Number( segments[ 1 ] );
+
+            if( magnitude >= 0 && num.length > magnitude ) {
+                magnitude += 1;
+                return `${num.substring( 0, magnitude )}.${num.substring( magnitude )}`;
+            }
+
+            if( magnitude < 0 ) {
+                while( ++magnitude )
+                    suffix += '0';
+
+                return `0.${suffix}${num}`;
+            }
+
+            magnitude = ( magnitude - num.length ) + 1;
+
+            while( magnitude > suffix.length )
+                suffix += '0';
+
+            return num + suffix;
         }
 
         /**
