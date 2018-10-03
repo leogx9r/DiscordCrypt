@@ -145,14 +145,16 @@ module.exports = ( mainWindowOptions ) => {
          * @type {{insert: Object, modify: Object, remove: string[]}}
          */
         headerInfo: {
-            /* Headers to add to every request. */
+            /* Headers to add to every request. If it already exists, the value is modified to those below. */
             insert: {
+                /* NOTE: Tor has removed this header in the most recent versions. */
                 /* @see https://en.wikipedia.org/wiki/Do_Not_Track */
                 //'DNT': '1',
+
                 /* @see https://www.w3.org/TR/upgrade-insecure-requests */
                 'Upgrade-Insecure-Requests': '1'
             },
-            /* Headers to modify if they're present in a request. */
+            /* Headers to modify if they're present in a request. Does not add them if they do not exist. */
             modify: {
                 /* Tor Specific Headers */
                 'user-agent': 'Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0',
@@ -161,18 +163,41 @@ module.exports = ( mainWindowOptions ) => {
             },
             /* Headers to remove if they're present in a request. */
             remove: [
-                'via',
+                /* Remove referrers from outgoing requests. */
                 'referer',
+
+                /* Caching Headers. Can be used for request correlation. */
+                'etag',
+                'date',
+                'if-match',
+                'if-range',
                 'if-none-match',
+                'if-modified-since',
+                'if-unmodified-since',
+
+                /* Discord's Non-Standard Fields. Commonly used for tracking and reporting information. */
                 'x-debug',
                 'x-track',
                 'x-rpc-proxy',
                 'x-fingerprint',
                 'x-debug-options',
-                'x-forwarded-for',
                 'x-failed-requests',
                 'x-super-properties',
                 'x-context-properties',
+
+                /* Proxy Headers. Can be used to reveal the real IP address of the host. */
+                'via',
+                'vary',
+                'x-forwarded-for',
+                'x-forwarded-host',
+                'x-forwarded-proto',
+                'x-requested-with',
+
+                /* Known Tracking Headers. May not necessarily be present or used by Discord. */
+                'x-uidh',
+                'x-csrf-token',
+                'x-request-id',
+                'x-correlation-id'
             ]
         },
         /**
