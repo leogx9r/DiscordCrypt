@@ -63,7 +63,6 @@
  *          - Routes all traffic over Tor ( Requires Tor to be running on 127.0.0.1:9050 )
  *          - Blocks access to known Discord tracking URLs.
  *          - Adds additional block lists.
- *          - Adds Do-Not-Track & Upgrade-Insecure-Requests headers.
  *          - Removes Discord tracking from any external URL.
  *          - Removes several fingerprint based headers from requests.
  *          - Logs all interactions that occurs.
@@ -149,7 +148,7 @@ module.exports = ( mainWindowOptions ) => {
             /* Headers to add to every request. */
             insert: {
                 /* @see https://en.wikipedia.org/wiki/Do_Not_Track */
-                'DNT': '1',
+                //'DNT': '1',
                 /* @see https://www.w3.org/TR/upgrade-insecure-requests */
                 'Upgrade-Insecure-Requests': '1'
             },
