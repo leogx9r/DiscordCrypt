@@ -4092,6 +4092,68 @@ const discordCrypt = ( ( ) => {
          * @desc Opens the password editor menu.
          */
         static _onOpenPasswordMenuButtonClicked() {
+            /* Resolve all users, guilds and channels the current user is a part of. */
+            // noinspection JSUnresolvedFunction
+            let users = _cachedModules.UserStore.getUsers(),
+                guilds = _cachedModules.GuildStore.getGuilds(),
+                channels = _cachedModules.ChannelStore.getChannels();
+
+            let channel_name = $( '#dc-password-channel-name' );
+
+            /* Get the ID for the channel being viewed. */
+            let id = _discordCrypt._getChannelId();
+
+            do {
+                /* Skip channels that don't have an ID. */
+                if ( !channels[ id ] || [ 0, 1, 3 ].indexOf( channels[ id ].type ) === -1 ) {
+                    channel_name.text( 'Unknown' );
+                    break;
+                }
+
+                /* Check for the correct channel type. */
+                if ( channels[ id ].type === 0 ) {
+                    /* GUILD_TEXT */
+                    let guild = guilds[ channels[ id ].guild_id ];
+
+                    /* Resolve the name as a "Guild ( #Channel )" format. */
+                    channel_name.text( `${guild.name} ( #${channels[ id ].name} )` );
+                    break;
+                }
+                else if ( channels[ id ].type === 1 ) {
+                    /* DM */
+                    // noinspection JSUnresolvedVariable
+                    let user = users[ channels[ id ].recipients[ 0 ] ];
+
+                    /* Indicate this is a DM and give the full user name. */
+                    channel_name.text( `@${user.username}` );
+                    break;
+                }
+
+                /* GROUP_DM */
+
+                /* Try getting the channel name first. */
+                if ( channels[ id ].name )
+                    channel_name.text( channels[ id ].name );
+                else {
+                    // noinspection JSUnresolvedVariable
+                    let max = channels[ id ].recipients.length > 3 ? 3 : channels[ id ].recipients.length,
+                        participants = '';
+
+                    /* Iterate the maximum number of users we can display. */
+                    for ( let i = 0; i < max; i++ ) {
+                        // noinspection JSUnresolvedVariable
+                        let user = users[ channels[ id ].recipients[ i ] ];
+                        participants += `@${user.username}#${user.discriminator} `;
+                    }
+
+                    /* List a maximum of three members. */
+                    channel_name.text( `${participants}` );
+                }
+            }
+            // eslint-disable-next-line
+            while( false );
+
+            /* Show the password field. */
             $( '#dc-overlay' ).css( 'display', 'block' );
             $( '#dc-overlay-password' ).css( 'display', 'block' );
         }
