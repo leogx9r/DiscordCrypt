@@ -1079,8 +1079,6 @@ const discordCrypt = ( ( ) => {
                 channels: {},
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
-                /* How often to scan for encrypted messages. */
-                encryptScanDelay: 1000,
                 /* Default encryption mode. */
                 encryptMode: 7, /* AES(Camellia) */
                 /* Default block operation mode for ciphers. */
