@@ -1091,8 +1091,6 @@ const discordCrypt = ( ( ) => {
                 defaultPassword: "⠓⣭⡫⣮⢹⢮⠖⣦⠬⢬⣸⠳⠜⣍⢫⠳⣂⠙⣵⡘⡕⠐⢫⢗⠙⡱⠁⡷⠺⡗⠟⠡⢴⢖⢃⡙⢺⣄⣑⣗⢬⡱⣴⠮⡃⢏⢚⢣⣾⢎⢩⣙⠁⣶⢁⠷⣎⠇⠦⢃⠦⠇⣩⡅",
                 /* Decrypted messages have this string prefixed to it. */
                 decryptedPrefix: "🔐 ",
-                /* Decrypted messages have this color. */
-                decryptedColor: "green",
                 /* Default padding mode for blocks. */
                 paddingMode: 'PKC7',
                 /* Internal message list for time expiration. */
