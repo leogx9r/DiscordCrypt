@@ -32,16 +32,16 @@
 ![Encrypted Message](images/encrypted-message.png)
  
 - Supports Windows, MAC and Linux. ( No mobile support, sorry! )
-- All messages in DMs, group DMs and channels are end-to-end encrypted. ( More below. )
+- All messages in DMs, group DMs and channels may be configured to be end-to-end encrypted.
 - Uses a dual encryption mode with multiple ciphers. ( Defaults to AES-256 and Camellia-256 )
-- Optional timed messages which are deleted after a certain period passes.
-- Emojis ( including animated ) are supported even if you're not a nitro user.
+- Optional timed messages are supported which are deleted after a certain period passes.
+- Emojis ( including animated ) are supported even if you're not a Nitro user.
 - Encrypted database with a password of your choosing protects all your keys.
-- Ability to backup and restore all passwords in the database.
-- Strong and automatic key exchanges for easily starting secure sessions your friends.
+- Ability to backup, restore and manage all passwords in the database.
+- Strong and automatic key exchanges for DMs allowing you to easily secure sessions your friends.
 - Supports encrypted file uploads up to 50 MB which are automatically deleted after 7 days.
-- Automatic updates which are verified ensures you always get the latest features.
-- Blocks various tracking elements used by Discord via SecureDiscord. ( Experiments, voice reports etc. )
+- Automatic signed updates ensures you always get the latest features while staying secure.
+- Blocks various known tracking elements used by Discord via SecureDiscord.
 - Designed to provide the maximum security and privacy.
 - Extensively tested for reliability and stability.
 
@@ -128,11 +128,16 @@ UID: DiscordCrypt (DiscordCrypt Signing Key)
 Hash: 0xDA613E753787CE3F
 ```
 
-**N.B** The plugin self-verifies every update so you only ever need to verify these 
-    signatures once upon your first installation.
+The plugin self-verifies every update so you only ever need to verify the above PGP signatures once upon your first 
+    installation. Updates get verified using an [Ed25519](https://en.wikipedia.org/wiki/EdDSA) signature.
+    
+The public key for this signature is:
 
+```
+Hex: 44 6A 93 CE 8D 5D 69 D3 13 18 0E C5 4E EF 29 21 E2 1F 64 A4 DF 20 83 39 05 38 6F B6 FA 53 B7 42
+Base64: RGqTzo1dadMTGA7FTu8pIeIfZKTfIIM5BThvtvpTt0I=
+```
 
- 
 
 # Installation
 
@@ -217,7 +222,8 @@ These icons each offer a different functionality as follows:
         to the file to the current channel.
     * After uploading, this sets your clipboard to the deletion link for the uploaded file which 
         you may use to either manually delete the file after your colleague has downloaded it 
-        or for later deletion.
+        or for later deletion. To use that deletion link:
+        * Use the host `https://share.riseup.net/< deletion link >`
     * You are limited to a maximum of 50 MB. 
 * **[2] Upload Encrypted File**
     * This opens the file upload menu that you may use to encrypt and upload a file less than 
@@ -239,6 +245,8 @@ These icons each offer a different functionality as follows:
         passwords.
         * Note that exported entries are **NOT ENCRYPTED** and as such should be handled 
             with caution.
+    * The ability to restore ignored updates or manually checking for updates may be done within 
+        the "**Security Settings**" sub-menu.
 * **[4] Enable/Disable Message Encryption**
     * Clicking this button either enables or disables automatic encryption.
     * Automatic encryption will **always** encrypt any message sent
@@ -250,8 +258,8 @@ These icons each offer a different functionality as follows:
     * This button is channel specific meaning that when you switch channels, it will use 
         your last setting. By default, automatic message encryption is **disabled**.
 * **[5] Password Settings**
-    * This menu allows you to set, change, reset or copy the passwords applied to the 
-        current channel.
+    * This menu allows you to set, modify, reset or copy the passwords applied to the 
+        current channel being viewed.
     * If you reset the current passwords, they will use the default passwords defined in 
         `Plugin Settings`.
     * Using the `Copy Current Passwords` button to the clipboard for sharing.
@@ -299,7 +307,7 @@ Your password for this database **must meet at least one** of the below requirem
 
 - Your password MUST contain at least one uppercase & lowercase letter, a number and a symbol 
     and be **at least** 8 characters in length.
-    - Example: `p@s$w0rD`
+    - Example: `p@s$w0rD` ( **PLEASE DO NOT USE SOMETHING THIS.** )
 - Your password must be **GREATER THAN 32 characters** in length.
     - Example: `gestation broken directive coveting bony unrevised monogram clapped anchovy unmasking handiness actress`
 
@@ -332,11 +340,11 @@ If you enter a password in the `New Master Database Password` field and save you
 
 While we give users a choice regarding the options they want to use when originally setting up 
     an encrypted conversation via manually setting passwords, we offer a simple way to do it, 
-    while still allowing strong cryptography.
+    while still enforcing strong cryptography methods.
 
 This involves using an 
 [asymmetric key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) 
-    algorithm which, while allowing you to post information on an insecure channel, allows a 
+    algorithm which, while allowing you to send information via an insecure channel, allows a 
     strong secret key to be shared between two parties.
 
 
@@ -426,15 +434,16 @@ The following tips should be adhered to for maximum privacy between users.
 * Refresh your sessions on frequent basis. This ensures that even if your current 
     session keys are compromised that an attacker will not be able to read any future messages.
 * Use large key sizes ( preferably the maximum ) when exchanging keys. For Diffie-Hellman, 
-    this is 8192 bits or for Elliptic Curve Diffie-Hellman, this is 521/571 bits.
-* Use strong passwords for encrypting your database. Passwords **should be at least 
+    this is 8192 bits or for Elliptic Curve Diffie-Hellman, this is 521/571 bits. Prefer 
+    Post-Quantum exchange algorithms such as **Supersingular Isogeny Diffie-Hellman**.
+* Use strong passwords for encrypting your database. Passwords **musst be at least 
     8 characters long and contain a combination of alphanumeric ( ***A-Z***, ***0-9*** ) 
-    and symbolic characters**.
+    and symbolic characters or be greater than 32 characters total**.
     * We recommend using a [password manager](https://en.wikipedia.org/wiki/Password_manager) 
-        such as [KeePassX](https://www.keepassx.org/)/[KeePassXC](https://keepassxc.org/), 
-        [OnePass](https://masterpassword.app/) or [LastPass](https://www.lastpass.com) 
-        to generate and safely store strong passwords though we strongly prefer the 
-        KeePass app variants ourselves.
+        such as [KeePassX](https://www.keepassx.org/)/[KeePassXC](https://keepassxc.org/) or
+        [BitWarden](https://bitwarden.com/) to generate and safely store strong passwords 
+        though we strongly prefer the KeePass app variants ourselves due to the fact that 
+        the database remains completely in the user's control and not in the cloud.
 * Use AES as either the primary or secondary ciphers for encryption. AES is a cipher 
     developed in 1998 and is still considered one of the most secure methods of 
     sending and receiving confidential information to this day.
@@ -442,6 +451,12 @@ The following tips should be adhered to for maximum privacy between users.
     MiTM attacks, use the built in passphrase generator, encrypt these using PGP and 
     send them to your partner over a non-Discord channel then manually apply these
     keys after you decrypt them.
+* [Assess your risks](https://ssd.eff.org/en/module/assessing-your-risks) and practice 
+    [operational security](https://en.wikipedia.org/wiki/Operations_security). Encryption is 
+    merely a tool which must be used properly to be effective.
+* Look into alternative communication methods. If you don't need to use Discord, **don't**.
+    Good alternative messaging apps include [Signal](https://signal.org/), [Wire](https://wire.com/),
+    [Riot](https://about.riot.im/) and [Pidgin](https://pidgin.im/) + [OTR](https://otr.cypherpunks.ca/).
 * Install the complimentary script [SecureDiscord](scripts/secureDiscord.js) for additional
     protection.
     * Configurable allowing you to choose which options to use.
@@ -596,9 +611,11 @@ If you however do know how to make an attractive UI, please do create a pull req
 
 To be able to send nitro-emojis, ( animated & emojis from any guild ) you need to join a 
     nitro-only emoji server. After which, once you establish a secure session or group 
-    you will be able to select and use these emojis.
+    you will be able to select and use these emojis. You can optionally use the message 
+    encryption suffix to send the emoji automatically. Example: `:discordCrypt:|ENC`.
 
-Autocomplete and the emoji picker works just as if you're a nitro user.
+Autocomplete and the emoji picker works just as if you're a nitro user **only** if you've 
+    established a secure session first.
 
  
 
@@ -609,6 +626,19 @@ The screen prompting you to unlock your database is necessary for **DiscordCrypt
 
 If you don't want to be bothered to unlock the database every time Discord starts up, you 
     can disable the plugin in BetterDiscord's settings and enable it only when needed.
+    
+
+### Why does the plugin have to start on the friends or games tab ?
+
+
+Due to the way Discord caches messages, any previously parsed message won't be able to be 
+    easily edited. This means if you view an encrypted channel before you unlock your database, 
+    you will not be able to see any previous messages prior to unlocking it. You will only be 
+    able to view messages you send or receive after this is done.
+
+To avoid unnecessarily confusing users due to some messages not being decrypted, 
+    we've decided to force the client to reload on the Friends tab if the plugin loads when 
+    the client is viewing a channel or DM. 
 
  
 
@@ -618,13 +648,13 @@ You can reset your database ( and thus your configuration ) by deleting the file
     `DiscordCrypt.config.json` located in the same directory as the plugin that you went to 
     during [installation](#installation).
 
-Doing this will reset your configuration and allow you to enter a new password. 
-    Be aware that by resetting your configuration, you will lose the passwords of all of 
-    your encrypted conversations.
+**Doing this will reset your configuration** and allow you to enter a new password. 
+    Be aware that by resetting your configuration, **you will lose the passwords of all of 
+    your encrypted conversations** and as such, will be unable to read any previous messages.
 
 As a result, you will need need to perform a new key exchange with your friends. 
     If you're part of an encrypted group/channel conversation, you will need to generate 
-    new keys or ask someone to send your the passwords securely.
+    new keys or ask someone to send you the passwords securely.
 
  
 
@@ -639,10 +669,10 @@ While we do not recommend sharing passwords with newcomers, and instead suggest 
 ### Why is DiscordCrypt's CPU usage so high?
 
 Unless you're generating keys or performing encrypted file uploads, **DiscordCrypt** should not 
-    be CPU heavy.
+    be resource-heavy.
 
-Discord itself can be annoying in that regard as it generally uses a large amount of processing 
-    power.
+Discord itself can be annoying in that regard as it generally uses a large amount of resources as 
+    all Electron applications [tend to](https://josephg.com/blog/electron-is-flash-for-the-desktop/).
 
 
 ### Why is this so complicated?
@@ -651,6 +681,9 @@ Unfortunately, implementing privacy and message encryption in this manner is dif
 
 We've tried to simplify the process as much as possible but once you get used to it, it becomes 
     much easier.
+
+If you still feel confused or want to know something specific, 
+    [join our support server](https://discord.gg/3uakNmM) and we'll try to help you out when we're free.
 
  
 
@@ -669,14 +702,13 @@ We've tried to simplify the process as much as possible but once you get used to
         * We discussed this in greater details in the [TECHNICALITIES.md](TECHNICALITIES.md) file.
 
 * Messages are limited to 1820 characters each.
-    * Due to additional costs of encryption, messages at maximum size will only be able to 
-        display 1820 characters of text..
+    * Due to additional costs of encryption and verification, messages at maximum size will 
+        only be able to display 1820 characters of text..
         * If your message is longer than this, it will be split and sent in multiple messages.
 
 
-* Only text channels are end-to-end encrypted. Voice channels cannot be secured, so what you 
-    verbally say in them could still be recorded by Discord.
-    * Support for encrypted file uploads was added in `v1.0.5`. However we still recommend using 
+* Voice channels cannot be secured, so what you verbally say in them could still be recorded by Discord.
+    Only text messages and file uploads are end-to-end encrypted. However we still recommend using 
         [PGP](https://en.wikipedia.org/wiki/Pretty_Good_Privacy) to encrypt especially sensitive 
         files before sending them.
 
@@ -692,7 +724,7 @@ We've tried to simplify the process as much as possible but once you get used to
  
 
 
-* Some third-party plugins may conflict with **DiscordCrypt**.
+* Some third-party BetterDiscord plugins may conflict with **DiscordCrypt**.
     * One such example discovered so far is the plugin `OldTitleBar` by DevilBro. This plugin 
         causes **DiscordCrypt**'s icons to be unclickable.
         * We do not plan to fix this, but feel free to contribute if you wish to do so yourself.
@@ -701,7 +733,8 @@ We've tried to simplify the process as much as possible but once you get used to
 
 
 * Messages cannot be encrypted when using the in-game overlay.
-    * This is due to Discord using a separate module to display messages in the overlay. 
+    * This is due to Discord using a separate module to display messages in the overlay that is 
+        unrelated to the Desktop app. 
 
 # Support And Discussion
 
@@ -709,7 +742,7 @@ If you've discovered a bug in the plugin, feel free to create an issue after rea
     [contribution guide](CONTRIBUTING.md). Please be as detailed as possible when submitting 
     your issues.
 
-We also have a [Discord Server](https://discord.me/discordcrypt) for any discussion 
-    related to **DiscordCrypt** and for general support.
+We also have a [Discord Server](https://discord.gg/3uakNmM) for any discussion 
+    related to **DiscordCrypt** and for general user support.
 
  
