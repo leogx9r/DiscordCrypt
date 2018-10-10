@@ -7153,9 +7153,7 @@ const discordCrypt = ( ( ) => {
 
             /* Create the key object. */
             try {
-                if ( size !== 256 && size !== 751 )
-                    key = _crypto.createECDH( groupName );
-                else switch( size )
+                switch( size )
                 {
                 case 751:
                     key = global.sidh.generateKeys();
@@ -7165,7 +7163,8 @@ const discordCrypt = ( ( ) => {
                     key.generateKeys( undefined, _crypto.randomBytes( 32 ) );
                     break;
                 default:
-                    return null;
+                    key = _crypto.createECDH( groupName );
+                    break;
                 }
             }
             catch ( err ) {
