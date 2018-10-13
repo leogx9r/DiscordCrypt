@@ -7917,7 +7917,6 @@ const discordCrypt = ( ( ) => {
             );
         }
 
-        /*  */
         /**
          * @public
          * @desc AES-256 decrypts a message in GCM mode.
