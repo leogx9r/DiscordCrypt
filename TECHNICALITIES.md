@@ -64,7 +64,6 @@ Every algorithm used in this plugin is directly provided by NodeJS. The only thi
 **DiscordCrypt** also relies on several libraries which may or may not have been tweaked to work 
     within the Discord client. These are indicated below.
 
-* [OpenPGP.js](https://openpgpjs.org) ( License: [LGPL](https://www.gnu.org/copyleft/lesser.html) )
 * [SJCL](https://crypto.stanford.edu/sjcl) ( License: [BSD](https://opensource.org/licenses/BSD-2-Clause) )
 * [SIDH.js](https://github.com/cyph/sidh.js) ( License: [MIT](https://opensource.org/licenses/MIT) )
 * [Currify](https://www.npmjs.com/package/currify) ( License: [MIT](https://opensource.org/licenses/MIT) )
@@ -77,15 +76,15 @@ Every algorithm used in this plugin is directly provided by NodeJS. The only thi
 The following ciphers are currently supported by **DiscordCrypt**.
 
  * [Camellia-256](https://en.wikipedia.org/wiki/Camellia_(cipher)) ( **Default Primary Cipher** ) 
-    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.camellia256_encrypt)  ]
+    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/module-discordCrypt-_discordCrypt.html#.__camellia256_encrypt)  ]
  * [AES-256 ( Rijndael )](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard) ( **Default Secondary Cipher** )
-    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.aes256_encrypt)  ]
+    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/module-discordCrypt-_discordCrypt.html#.__aes256_encrypt)  ]
  * [TripleDES-192](https://en.wikipedia.org/wiki/Triple_DES)
-    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.tripledes192_encrypt)  ]
+    [  [Source](https://leogx9r.gitlab.io/DiscordCrypt/module-discordCrypt-_discordCrypt.html#.__tripledes192_encrypt)  ]
  * [IDEA-128](https://en.wikipedia.org/wiki/International_Data_Encryption_Algorithm)
-    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.idea128_encrypt) ]
+    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/module-discordCrypt-_discordCrypt.html#.__idea128_encrypt) ]
  * [Blowfish-512](https://en.wikipedia.org/wiki/Blowfish_(cipher))
-    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.blowfish512_encrypt) ]
+    [ [Source](https://leogx9r.gitlab.io/DiscordCrypt/module-discordCrypt-_discordCrypt.html#.__blowfish512_encrypt) ]
 
 ##### Cipher Modes
 
@@ -117,7 +116,7 @@ The following padding schemes are supported:
 * [ISO 97971](https://en.wikipedia.org/wiki/Padding_(cryptography)#ISO/IEC_7816-4)
 
 These methods have all been manually implemented 
-    [here](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.__padMessage).
+    [here](https://leogx9r.gitlab.io/DiscordCrypt/module-discordCrypt-_discordCrypt.html#.__padMessage).
 
 #### Key Exchanges
 
@@ -310,12 +309,12 @@ With the advancements of quantum computers, the need for
     [Post-Quantum Cryptography](https://en.wikipedia.org/wiki/Post-quantum_cryptography) is actively 
     being explored. Several such methods have already been proposed to be "quantum resistant".
     
-The curve above defined as [`sidhp751`](https://eprint.iacr.org/2016/413.pdf) is a specially chosen  
+The curve above defined as [`sidhp751`](https://eprint.iacr.org/2016/413.pdf) is a specially chosen 
     [supersingular elliptic curve](https://en.wikipedia.org/wiki/Supersingular_elliptic_curve) 
     with [isogenic](https://en.wikipedia.org/wiki/Supersingular_isogeny_graph) properties used in the familiar 
     Diffie-Hellman protocol. In post quantum cryptography, 
     "[Supersingular Isogeny Diffie-Hellman](https://en.wikipedia.org/wiki/Supersingular_isogeny_key_exchange)" 
-    is said to be quantum resistant while still benefiting from the standard ECC property of retaining a  
+    is said to be quantum resistant while still benefiting from the standard ECC property of retaining a 
     small fingerprint. This curve offers `128 quantum bits` of security.
 
 #### Hash Algorithms
@@ -413,8 +412,7 @@ Scrypt uses a total of 6 parameters. Each of these will be described below.
     For 𝑁 = 16384 and 𝑟 = 8 that would be 16 MiB. It scales linearly with 𝑁 and 𝑟, and some 
     implementations or APIs might cause internal copying doubling the requirement.
 
-You may find the actual implementation of it 
-    [here](https://leogx9r.gitlab.io/DiscordCrypt/-_discordCrypt.html#.scrypt).
+You may find the actual implementation of it [here](lib/scrypt.js).
 
 ##### SHA3 Hashing Algorithm
 
@@ -854,42 +852,41 @@ A brief overview of the possible attack mechanisms we **ARE** aware of but unfor
 
 > This is perhaps the biggest caveat we're aware of.
 > 
-> Since NodeJS's modules are used to provide most of the core 
-> functionality of this plugin, we place heavy reliance on its ability to be secure. 
-> As such, any potential security 
+> Since NodeJS's modules are used to provide most of the core functionality of this plugin,
+> we place heavy reliance on its ability to be secure. As such, any potential security 
 > flaws affecting this module will directly affect the security of the plugin.
 >
 > This caveat also includes Discord manually compromising the `crypto` module between releases.
 
-* **Possible Imperfections In The Implementation Of Cipher Padding Schemes** 
+* **Remote/Local Code Injection**
 
-> As these padding schemes have been manually implemented and not audited by any security teams, 
-> there does exist the possibility that due to this, possible flaws in their 
-> implementation may lead to weakened or even broken security, however unlikely this event may be.
-
-* **Vulnerable Storage Of The Password Database**
-
-> BetterDiscord unfortunately allows anyone with console or JavaScript executing permissions to 
-> directly view the internal structures of any plugin.
+> BetterDiscord unfortunately has no restrictions in what plugins are able to do. Plugins 
+> may be able to remotely log your keystrokes within Javascript and this offers a serious 
+> security risk.
 >
-> These include access to all variables, methods and configurations used as well as the ability 
-> to replace them at will.
+> Aside from the BetterDiscord side, remote javascript delivered by Discord themselves may also 
+> engage in keystroke logging which can theoretically record your master database password or 
+> be able to read messages in clear text after they are decrypted and phone home with this 
+> information.
 >
-> As the database is stored in an unencrypted fashion once the master password unlocks it, it is 
-> possible for someone to steal your passwords.
+> While we are fully aware of these issues, we're generally unable to do much about it.
+> As such, we can only issue security advisories and advice.
 >
-> While we are fully aware of this, we're generally unable to do much about it. As such, we can 
-> only issue security advisories.
->
-> These being:
+> Please:
 >
 > - Don't use plugins that have an "auto-update" mechanism allowing possible drive-by attacks 
-    to reveal your database.
+    to reveal your database or decrypted message unless the developers are trusted and have 
+    taken proper operational security.
+> - If possible, disable Discord's client from performing binary updates. This can prevent 
+    them from modifying or injecting code that can compromise the security of your communications.
 > - Change old conversation passwords frequently to avoid compromised passwords from revealing 
     much information.
+> - Use the built-in passphrase generator with a security level of at least 192 bits when  
+    manually creating passwords.
 > - Be very cautious when installing BetterDiscord forks as they might contain malicious code.
+> - Only download BetterDiscord plugins from the official Plugin Repository within the 
+    official BetterDiscord server.
 > - Always audit the code for any plugin you install for malicious activity.
-> - Refrain from installing plugins that you do not trust.
 
 * **Man In The Middle Attacks**
 
