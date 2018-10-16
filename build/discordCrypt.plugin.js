@@ -2545,7 +2545,7 @@ const discordCrypt = ( ( ) => {
             _discordCrypt._saveConfig();
 
             /* Set the new message text. */
-            return '🔏 **[ SESSION ]** *ESTABLISHED NEW SESSION* !!!\n\n' +
+            return '🔏 **[ SESSION ]** **✓** *ESTABLISHED NEW SESSION* !!!\n\n' +
                 `Algorithm: ${remoteKeyInfo.canonical_name}\n` +
                 `Primary Entropy: **${_discordCrypt.__entropicBitLength( keys.primaryKey )} Bits**\n` +
                 `Secondary Entropy: **${_discordCrypt.__entropicBitLength( keys.secondaryKey )} Bits**\n`;
@@ -5776,19 +5776,19 @@ const discordCrypt = ( ( ) => {
             /* Elliptic Curve Names. */
             switch( bit_length ) {
             case 224:
-                return '`secp224k1`: *SECG Koblitz Curve Over A __224-Bit Prime Field__*';
+                return '`secp224k1` » *SECG Koblitz Curve Over A __224-Bit Prime Field__*';
             case 256:
-                return '`x25519`: *High-Speed Curve Over A __256-Bit Prime Field__*';
+                return '`x25519` » *High-Speed Curve Over A __256-Bit Prime Field__*';
             case 384:
-                return '`secp384r1`: *NIST/SECG Curve Over A __384-Bit Prime Field__*';
+                return '`secp384r1` » *NIST/SECG Curve Over A __384-Bit Prime Field__*';
             case 409:
-                return '`sect409k1`: *NIST/SECG Curve Over A __409-Bit Binary Field__*';
+                return '`sect409k1` » *NIST/SECG Curve Over A __409-Bit Binary Field__*';
             case 521:
-                return '`secp521r1`: *NIST/SECG Curve Over A __521-Bit Prime Field__*';
+                return '`secp521r1` » *NIST/SECG Curve Over A __521-Bit Prime Field__*';
             case 571:
-                return '`sect571k1`: *NIST/SECG Curve Over A __571-Bit Binary Field__*';
+                return '`sect571k1` » *NIST/SECG Curve Over A __571-Bit Binary Field__*';
             case 751:
-                return '`sidhp751`: *Post-Quantum Supersingular Isogeny Curve Over A __751-Bit Prime Field__*';
+                return '`sidhp751` » *Post-Quantum Supersingular Isogeny Curve Over A __751-Bit Prime Field__*';
             default:
                 break;
             }
@@ -7180,9 +7180,7 @@ const discordCrypt = ( ( ) => {
 
             /* Create the key object. */
             try {
-                if ( size !== 256 && size !== 751 )
-                    key = _crypto.createECDH( groupName );
-                else switch( size )
+                switch( size )
                 {
                 case 751:
                     key = global.sidh.generateKeys();
@@ -7192,7 +7190,8 @@ const discordCrypt = ( ( ) => {
                     key.generateKeys( undefined, _crypto.randomBytes( 32 ) );
                     break;
                 default:
-                    return null;
+                    key = _crypto.createECDH( groupName );
+                    break;
                 }
             }
             catch ( err ) {
@@ -7945,7 +7944,6 @@ const discordCrypt = ( ( ) => {
             );
         }
 
-        /*  */
         /**
          * @public
          * @desc AES-256 decrypts a message in GCM mode.
