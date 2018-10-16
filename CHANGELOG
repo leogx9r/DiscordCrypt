@@ -2,10 +2,10 @@ Version 2.1.1
 
 - Updated SecureDiscord script to use Tor's Accept-Encoding, compression parameter and remove DNT as per Tor.
 - Added a few more headers to SecureDiscord for removal in the event they're ever used.
-- Increased the minimum recommended passphrase security level to 192 bits. ( 15 words. )
-- Reverted to the old EFF diceware list due to the larger list being too cryptic.
-- Added the channel's name to the password settings menu.
 - Split the description manual into a dedicated user manual and feature introduction.
+- Reverted to the old EFF diceware list due to the larger list being too cryptic.
+- Increased the minimum recommended passphrase security level to 192 bits. ( 15 words. )
+- Added the channel's name to the password settings menu.
 
 Version 2.1.0
 
