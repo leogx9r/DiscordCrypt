@@ -1110,12 +1110,17 @@ const discordCrypt = ( ( ) => {
          * @returns {boolean} Returns true if the configuration file exists.
          */
         static _configExists() {
-            /* Attempt to parse the configuration file. */
-            // noinspection JSUnresolvedVariable
-            let data = bdPluginStorage.get( _self.getName(), 'config' );
+            let path = _discordCrypt._getConfigPath();
+
+            /* Make sure the file exists. */
+            if( !_fs.existsSync( path ) )
+                return false;
+
+            /* Check the length of the configuration.. */
+            let data = _fs.readFileSync( path );
 
             /* The returned data must be defined and non-empty. */
-            return data && data !== null && data !== '';
+            return data && data !== null && data.toString() !== '';
         }
 
         /**
@@ -1127,12 +1132,8 @@ const discordCrypt = ( ( ) => {
         static _loadConfig() {
             _discordCrypt.log( 'Loading configuration file ...' );
 
-            /* Attempt to parse the configuration file. */
-            // noinspection JSUnresolvedVariable
-            let config = bdPluginStorage.get( _self.getName(), 'config' );
-
             /* Check if the config file exists. */
-            if ( !config || config === null || config === '' ) {
+            if ( !_discordCrypt._configExists() ) {
                 /* File doesn't exist, create a new one. */
                 _configFile = _discordCrypt._getDefaultConfig();
 
@@ -1147,7 +1148,13 @@ const discordCrypt = ( ( ) => {
                 /* Try parsing the decrypted data. */
                 _configFile = JSON.parse(
                     _discordCrypt.__zlibDecompress(
-                        _discordCrypt.__aes256_decrypt_gcm( config.data, _masterPassword, 'PKC7', 'base64', false ),
+                        _discordCrypt.__aes256_decrypt_gcm(
+                            JSON.parse( _fs.readFileSync( _discordCrypt._getConfigPath() ).toString() ).config.data,
+                            _masterPassword,
+                            'PKC7',
+                            'base64',
+                            false
+                        ),
                         'base64',
                         'utf8'
                     )
@@ -1241,19 +1248,21 @@ const discordCrypt = ( ( ) => {
          */
         static _saveConfig() {
             /* Encrypt the message using the master password and save the encrypted data. */
-            // noinspection JSUnresolvedVariable
-            bdPluginStorage.set( _self.getName(), 'config', {
-                data:
-                    _discordCrypt.__aes256_encrypt_gcm(
-                        _discordCrypt.__zlibCompress(
-                            JSON.stringify( _configFile ),
-                            'utf8'
-                        ),
-                        _masterPassword,
-                        'PKC7',
-                        false
-                    )
-            } );
+            _fs.writeFileSync(
+                _discordCrypt._getConfigPath(),
+                JSON.stringify(
+                    {
+                        config: {
+                            data: _discordCrypt.__aes256_encrypt_gcm(
+                                _discordCrypt.__zlibCompress( JSON.stringify( _configFile ), 'utf8' ),
+                                _masterPassword,
+                                'PKC7',
+                                false
+                            )
+                        }
+                    }
+                )
+            );
         }
 
         /**
@@ -4569,7 +4578,7 @@ const discordCrypt = ( ( ) => {
          * @returns {string} The expected path ( which may not exist ) to BetterDiscord's plugin directory.
          * @example
          * console.log( _discordCrypt._getPluginsPath() );
-         * // "C:\Users\John Doe\AppData\Local/BetterDiscord/plugins"
+         * // "C:\Users\John Doe\AppData\Local/BetterDiscord/plugins/"
          */
         static _getPluginsPath() {
             const BETTERDISCORD_PATH = '/BetterDiscord/plugins/';
@@ -4589,6 +4598,15 @@ const discordCrypt = ( ( ) => {
                 _discordCrypt.log( `Unsupported platform detected: ${_process.platform} ...`, 'error' );
                 throw 'DEAD';
             }
+        }
+
+        /**
+         * @private
+         * @desc Returns the system path to the configuration: "< plugin path >/DiscordCrypt.config.json"
+         * @returns {string}
+         */
+        static _getConfigPath() {
+            return `${_discordCrypt._getPluginsPath()}${_self.getName()}.config.json`;
         }
 
         /**
