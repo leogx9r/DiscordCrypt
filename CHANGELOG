@@ -1,3 +1,7 @@
+Version 2.1.2
+
+- Updated to avoid using deprecated API in BBD v0.3.0.
+
 Version 2.1.1
 
 - Updated SecureDiscord script to use Tor's Accept-Encoding, compression parameter and remove DNT as per Tor.
