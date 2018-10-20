@@ -123,6 +123,7 @@ module.exports = {
             "except-parens"
         ],
         "no-confusing-arrow": "error",
+        "no-constant-condition": "off",
         "no-continue": "off",
         "no-console": "off",
         "no-div-regex": "error",
@@ -196,7 +197,7 @@ module.exports = {
         "no-unexpected-multiline": "off",
         "no-unmodified-loop-condition": "off",
         "no-unneeded-ternary": "error",
-        "no-use-before-define": "error",
+        "no-use-before-define": "off",
         "no-useless-call": "error",
         "no-useless-computed-key": "error",
         "no-useless-concat": "error",

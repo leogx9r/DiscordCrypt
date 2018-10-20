@@ -65,6 +65,7 @@ Every algorithm used in this plugin is directly provided by NodeJS. The only thi
     within the Discord client. These are indicated below.
 
 * [SJCL](https://crypto.stanford.edu/sjcl) ( License: [BSD](https://opensource.org/licenses/BSD-2-Clause) )
+* [BigInteger.js](https://github.com/peterolson/BigInteger.js) ( License: [UNLICENSE](https://unlicense.org/) )
 * [SIDH.js](https://github.com/cyph/sidh.js) ( License: [MIT](https://opensource.org/licenses/MIT) )
 * [Currify](https://www.npmjs.com/package/currify) ( License: [MIT](https://opensource.org/licenses/MIT) )
 * [JS-SHA3](https://www.npmjs.com/package/js-sha3) ( License: [MIT](https://opensource.org/licenses/MIT) )

@@ -587,6 +587,7 @@ class Compiler {
                 'diceware.list'
             ],
             library_info: {
+                'biginterger.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'sjcl.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'scrypt.js': { requiresNode: true, requiresBrowser: false, minify: true },
                 'sha3.js': { requiresNode: true, requiresBrowser: false, minify: true },

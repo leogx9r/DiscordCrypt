@@ -75,9 +75,7 @@
 /**
  * @typedef {Object} CachedModules
  * @desc Cached Webpack modules for internal access.
- * @property {Object} NonceGenerator Internal nonce generator used for generating unique IDs from the current time.
  * @property {Object} ChannelStore Internal channel resolver for retrieving a list of all channels available.
- * @property {Object} GlobalTypes Internal message action types and constants for events.
  * @property {Object} GuildStore Internal Guild resolver for retrieving a list of all guilds currently in.
  * @property {Object} MessageCreator Internal message parser that's used to translate tags to Discord symbols.
  * @property {Object} MessageController Internal message controller used to receive, send and delete messages.
@@ -641,6 +639,13 @@ const discordCrypt = ( ( ) => {
      * @type {number}
      */
     const MAX_ENCODED_DATA = 1820;
+
+    /**
+     * @private
+     * @desc The starting point that Discord uses for its timestamp calculations.
+     * @type {number}
+     */
+    const DISCORD_EPOCH = 0x14AA2CAB000;
 
     /**
      * @private
@@ -1691,23 +1696,12 @@ const discordCrypt = ( ( ) => {
                     }
                 }
 
-                /* Skip if the nonce is generate isn't found. */
-                // noinspection JSUnresolvedVariable
-                if( typeof _cachedModules.NonceGenerator.extractTimestamp !== 'function' ) {
-                    _discordCrypt.log(
-                        'Cannot clean expired key exchanges because a module couldn\'t be found.',
-                        'warn'
-                    );
-                    return;
-                }
-
                 /* Iterate all channels stored. */
                 for( let i in _configFile.channels ) {
                     /* Iterate all IDs being ignored. */
                     for( let id of _configFile.channels[ i ].ignoreIds ) {
                         /* Check when the message was sent. . */
-                        // noinspection JSUnresolvedFunction
-                        let diff_milliseconds = now - _cachedModules.NonceGenerator.extractTimestamp( id );
+                        let diff_milliseconds = now - _discordCrypt._extractTimestamp( id );
 
                         /* Delete the entry if it's greater than the ignore timeout. */
                         if( diff_milliseconds < 0 || diff_milliseconds > KEY_IGNORE_TIMEOUT ) {
@@ -1794,14 +1788,10 @@ const discordCrypt = ( ( ) => {
 
                 /* Resolve and cache all modules needed. */
                 _cachedModules = {
-                    NonceGenerator: searcher
-                        .findByUniqueProperties( [ "extractTimestamp", "fromTimestamp" ] ),
                     MessageCreator: searcher
                         .findByUniqueProperties( [ "createMessage", "parse", "unparse" ] ),
                     MessageController: searcher
                         .findByUniqueProperties( [ "sendClydeError", "sendBotMessage" ] ),
-                    GlobalTypes: searcher
-                        .findByUniqueProperties( [ "ActionTypes", "ActivityTypes" ] ),
                     EventDispatcher: searcher
                         .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
                     MessageQueue: searcher
@@ -4533,12 +4523,11 @@ const discordCrypt = ( ( ) => {
 
         /**
          * @private
-         * @desc Generates a nonce according to Discord's internal EPOCH. ( 14200704e5 )
+         * @desc Generates a nonce according to Discord's internal EPOCH based on the current time.
          * @return {string} The string representation of the integer nonce.
          */
         static _getNonce() {
-            // noinspection JSUnresolvedFunction
-            return _cachedModules.NonceGenerator.fromTimestamp( Date.now() );
+            return _discordCrypt._fromTimestamp( Date.now() );
         }
 
         /**
@@ -5159,14 +5148,14 @@ const discordCrypt = ( ( ) => {
                         _discordCrypt.log( `Error sending message: ${r.status}`, 'error' );
 
                         /* Sanity check. */
-                        if ( _cachedModules.EventDispatcher === null || _cachedModules.GlobalTypes === null ) {
+                        if ( _cachedModules.EventDispatcher === null ) {
                             _discordCrypt.log( 'Could not locate the EventDispatcher module!', 'error' );
                             return;
                         }
 
                         // noinspection JSUnresolvedVariable
                         _cachedModules.EventDispatcher.dispatch( {
-                            type: _cachedModules.GlobalTypes.ActionTypes.MESSAGE_SEND_FAILED,
+                            type: "MESSAGE_SEND_FAILED",
                             messageId: r.body.id,
                             channelId: _channel
                         } );
@@ -5439,6 +5428,27 @@ const discordCrypt = ( ( ) => {
             catch ( ex ) {
                 console.error( '[DiscordCrypt] - Error logging message ...' );
             }
+        }
+
+        /**
+         * @private
+         * @desc Converts a Discord timestamp to a Unix timestamp.
+         * @param {number} timestamp The base timestamp.
+         * @returns {string} String based number.
+         */
+        static _extractTimestamp( timestamp ) {
+            return global.bigInt( timestamp ).shiftRight( 22 ).toJSNumber() + DISCORD_EPOCH;
+        }
+
+        /**
+         * @private
+         * @desc Converts a Unix timestamp to a Discord timestamp.
+         * @param {number} timestamp The Unix timestamp.
+         * @returns {string} String based number.
+         */
+        static _fromTimestamp( timestamp ) {
+            let diff = timestamp - DISCORD_EPOCH;
+            return diff <= 0 ? "0" : global.bigInt( diff ).shiftLeft( 22 ).toString();
         }
 
         /**
