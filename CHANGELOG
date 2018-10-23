@@ -1,3 +1,7 @@
+Version 2.2.0
+
+- Changed Ed25519 update signing key as per notice. ( You may use GPG to manually verify the file. )
+
 Version 2.1.2
 
 - Updated to avoid using deprecated API in BBD v0.3.0.

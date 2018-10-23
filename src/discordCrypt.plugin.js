@@ -790,7 +790,7 @@ const discordCrypt = ( ( ) => {
      * @desc Stores the base64 encoded Ed25519 public key used for update verification.
      * @type {string}
      */
-    const ED25519_SIGNING_KEY = 'RGqTzo1dadMTGA7FTu8pIeIfZKTfIIM5BThvtvpTt0I=';
+    const ED25519_SIGNING_KEY = 'GTs+VoJSQC6e0GDTVRcskIVBhdqphUwqwrxqp64gXEQ=';
 
     /**
      * @desc The Base64 encoded SVG containing the unlocked status icon.
@@ -945,7 +945,7 @@ const discordCrypt = ( ( ) => {
          * @returns {string}
          */
         getVersion() {
-            return '2.1.2';
+            return '2.2.0';
         }
 
         /**
@@ -1044,12 +1044,15 @@ const discordCrypt = ( ( ) => {
          */
         load() {
             /* Freeze the plugin instance if required. */
+            // noinspection JSUnresolvedVariable
             if(
                 global.bdplugins &&
                 global.bdplugins[ this.getName() ] &&
                 global.bdplugins[ this.getName() ].plugin
             ) {
+                // noinspection JSUnresolvedVariable
                 Object.freeze( bdplugins[ this.getName() ] );
+                // noinspection JSUnresolvedVariable
                 Object.freeze( bdplugins[ this.getName() ].plugin );
             }
 
