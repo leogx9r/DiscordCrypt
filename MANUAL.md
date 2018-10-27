@@ -17,6 +17,7 @@
         * [*Channels & Group DMs*](#channels-and-group-dms)
             * [*Sharing Existing Passwords*](#sharing-existing-passwords)
     * [***Resetting Or Updating Passwords***](#resetting-or-updating-passwords)
+    * [***Configuring Settings***](#configuring-settings)
 * [**Best Practices**](#best-practices)
 * [**Debugging**](#debugging)
 * [**Frequently Asked Questions ( FAQs )**](#frequently-asked-questions)
@@ -366,6 +367,45 @@ If you are manually updating the passwords to be able to have an encrypted group
     "Secondary Key" in the second field, then press `Save Passwords`.
 
 
+## Configuring Settings
+
+Settings can be configured within the *Plugin Settings* menu accessed via the toolbar.
+
+These settings are classified by type:
+
+* Plugin Settings
+   - These are the general settings regarding how the plugin is to used.
+   - You may configure which algorithms you want to use to encrypt messages or perform key exchanges but the 
+        default options are generally considered the best.
+   - The default password here is used to encrypt messages when you do not have a custom password set.
+        - **N.B.** The default password here should *NEVER* be used to encrypt any confidential message as 
+            this offers ***NO*** protection.
+   - The message prefix can be used to indicate which messages were decrypted.
+        - You may want to remove this prefix to have messages appear normally.
+        - **N.B.** Removing this prefix makes it impossible to tell whether a message was encrypted or not!
+   - This menu also allows you to configure timed messages. ( Or rather how long till a message is deleted. )
+   - Finally, you can change your master database password here.
+        - **N.B.** Make sure you click the `Save Settings` button after changing anything in this menu!
+
+* Database Settings
+    - This menu offers you the ability to view all passwords saved in the database as well as delete them 
+        individually.
+    - You may also use this to backup or restore your passwords saved.
+        - **N.B.** *Passwords exported are **UNENCRYPTED** and should never be left on the disk longer than 
+            necessary!*
+
+* Security Settings
+    - Allows you to view any blacklisted updates and information contained within them.
+    - You may also remove any blacklists from this list to update to that specific version.
+    - This menu also allows you to configure whether to automatically check for updates.
+        - **N.B.** It is highly recommend you leave this turned on as plugin updates are verified and may 
+            contain critical vulnerability fixes. Security advisories will be posted in the support server 
+            whenever this occurs.
+    - Finally, you may manually check for updates in this tab if you disabled automatic checking or if you 
+        haven't yet received an update notification. ( By default, updates are checked for on an hourly interval. )
+
+* About
+    - Lists the plugin's license and various resource links for users.
 
 # Best Practices
 
