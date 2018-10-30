@@ -38,37 +38,41 @@
  */
 
 /**
- * @desc Enhance Discord's desktop app for privacy.
- *      Usage:
- *
- *
- *      1.) Save This File As:
- *          < discord_desktop_core >/app/secureDiscord.js
- *
- *      2.) Edit The File:
- *          < discord_desktop_core >/app/mainScreen.js
- *
- *          Instead Of Line:
- *              mainWindow = new _electron.BrowserWindow(mainWindowOptions);
- *
- *          Replace With:
- *              mainWindow = require( './secureDiscord.js' )( mainWindowOptions );
- *
- *     3.) Configure the options below to change functionality of the plugin.
- *
- *     Features:
- *          - Blocks various tracking and ad URLs via a subscription list.
- *          - Sets your user agent to Tor's.
- *          - Sets additional HTTP headers to Tor defaults.
- *          - Routes all traffic over Tor ( Requires Tor to be running on 127.0.0.1:9050 )
- *          - Blocks access to known Discord tracking URLs.
- *          - Adds additional block lists.
- *          - Removes Discord tracking from any external URL.
- *          - Removes several fingerprint based headers from requests.
- *          - Logs all interactions that occurs.
- *
- *
- * @param {MainWindowOptions} mainWindowOptions Main BrowserWindow object created upon Discord's main loading event.
+ ********************************************************************************************
+ * @desc Enhance Discord's desktop app for privacy.                                         *
+ ********************************************************************************************
+ *                                I N S T A L L A T I O N                                   *
+ ********************************************************************************************
+ *      1.) Save This File As:                                                              *
+ *              < discord_desktop_core >/app/secureDiscord.js                               *
+ ********************************************************************************************
+ *      2.) Edit The File:                                                                  *
+ *              < discord_desktop_core >/app/mainScreen.js                                  *
+ *                                                                                          *
+ *              Instead Of Line:                                                            *
+ *                  mainWindow = new _electron.BrowserWindow(mainWindowOptions);            *
+ *                                                                                          *
+ *              Replace With:                                                               *
+ *                  mainWindow = require( './secureDiscord.js' )( mainWindowOptions );      *
+ ********************************************************************************************
+ *     3.) Configure the options below to change functionality of the plugin.               *
+ *                                                                                          *
+ *     Features:                                                                            *
+ *                                                                                          *
+ *          - Blocks various tracking and ad URLs via a subscription list.                  *
+ *          - Sets your user agent to Tor's.                                                *
+ *          - Sets additional HTTP headers to Tor defaults.                                 *
+ *          - Routes all traffic over Tor ( Requires Tor to be running on 127.0.0.1:9050 )  *
+ *          - Blocks access to known Discord tracking URLs.                                 *
+ *          - Adds additional block lists.                                                  *
+ *          - Removes Discord tracking from any external URL.                               *
+ *          - Removes several fingerprint based headers from requests.                      *
+ *          - Logs all interactions that occurs.                                            *
+ *                                                                                          *
+ ********************************************************************************************
+ * @param {MainWindowOptions} mainWindowOptions Main BrowserWindow object created upon      *
+ *      Discord's main loading event.                                                       *
+ ********************************************************************************************
  */
 module.exports = ( mainWindowOptions ) => {
     /**

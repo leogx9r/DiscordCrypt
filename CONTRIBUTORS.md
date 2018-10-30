@@ -8,6 +8,7 @@
 * [**@leogx9r**](https://gitlab.com/leogx9r)
 * [**@SquirrelPerson**](https://google.com)
 * [**@Nyarlathotep**](https://google.com)
+* [**@CHEF-KOCH**](https://twitter.com/CHEF-KOCH)
 * [**@Bluscream**](https://github.com/Bluscream)
 * [**@shayhelman**](https://twitter.com/shayhelman)
 * [**@Alpa**](https://github.com/AlpaGit)
