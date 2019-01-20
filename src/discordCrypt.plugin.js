@@ -2751,9 +2751,9 @@ const discordCrypt = ( ( ) => {
             if ( cleaned.length === 0 )
                 return false;
 
-            /* Remove prefix from message (quick fix for duplicate prefixes when editing) */
-            if ( prefix && prefix !== "" && cleaned.indexOf(prefix) === 0 )
-                cleaned = cleaned.substr(prefix.length);
+            /* Remove any existing prefixes from the message when editing. */
+            if ( prefix && prefix !== "" && cleaned.indexOf( prefix ) === 0 )
+                cleaned = cleaned.substr( prefix.length );
 
             /* Get the properties for this channel & skip if we're in a blacklisted guild. */
             let props = _discordCrypt._getChannelProps( channel_id );
