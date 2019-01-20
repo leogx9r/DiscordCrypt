@@ -73,3 +73,6 @@ src/*.key
 
 # Private notes.
 TODO
+
+# Visual Studio Code configuration
+.vscode
