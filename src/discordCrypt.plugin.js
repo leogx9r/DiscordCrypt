@@ -905,7 +905,7 @@ const discordCrypt = ( ( ) => {
              * @desc Used to find the search toolbar to inject all option buttons.
              * @type {string}
              */
-            this._searchUiClass = '.search .search-bar';
+            this._searchUiClass = '.da-search .da-searchBar';
 
             /* ============================================ */
         }
@@ -945,7 +945,7 @@ const discordCrypt = ( ( ) => {
          * @returns {string}
          */
         getVersion() {
-            return '2.2.0';
+            return '2.2.1';
         }
 
         /**

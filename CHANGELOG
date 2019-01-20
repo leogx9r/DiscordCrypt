@@ -1,3 +1,7 @@
+Version 2.2.1
+
+- Fix missing toolbar due to Discord's update.
+
 Version 2.2.0
 
 - Changed Ed25519 update signing key as per notice. ( You may use GPG to manually verify the file. )
