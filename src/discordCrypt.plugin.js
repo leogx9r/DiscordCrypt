@@ -2133,7 +2133,7 @@ const discordCrypt = ( ( ) => {
                 let message = event.methodArguments[ 0 ].message;
 
                 /* Try encrypting the message content. */
-                cR = _discordCrypt._tryEncryptMessage( message.content, false, message.channelId );
+                cR = _discordCrypt._tryEncryptMessage( message.content, false, message.channelId, _configFile.decryptedPrefix );
 
                 /* Apply the message content if valid. */
                 if( typeof cR !== 'boolean' && cR.length > 0 )
@@ -2713,7 +2713,7 @@ const discordCrypt = ( ( ) => {
          * @return {Array<{message: string}>|boolean} Returns one or multiple packets containing the encrypted text.
          *      Returns false on failure.
          */
-        static _tryEncryptMessage( message, ignore_trigger, channel_id ) {
+        static _tryEncryptMessage( message, ignore_trigger, channel_id, prefix ) {
             /* Add the message signal handler. */
             let cleaned, id = channel_id || '0';
 
@@ -2750,6 +2750,10 @@ const discordCrypt = ( ( ) => {
             /* Check if we actually have a message ... */
             if ( cleaned.length === 0 )
                 return false;
+
+            /* Remove prefix from message (quick fix for duplicate prefixes when editing) */
+            if ( prefix && prefix !== "" && cleaned.indexOf(prefix) === 0 )
+                cleaned = cleaned.substr(prefix.length);
 
             /* Get the properties for this channel & skip if we're in a blacklisted guild. */
             let props = _discordCrypt._getChannelProps( channel_id );
@@ -2840,7 +2844,8 @@ const discordCrypt = ( ( ) => {
             let packets = _discordCrypt._tryEncryptMessage(
                 message,
                 force_send,
-                channel_id || _discordCrypt._getChannelId()
+                channel_id || _discordCrypt._getChannelId(),
+                _configFile.decryptedPrefix
             );
 
             /* Check if an error occurred. */
