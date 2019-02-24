@@ -1088,7 +1088,7 @@ const discordCrypt = ( ( ) => {
                 /* Defines what needs to be typed at the end of a message to encrypt it. */
                 encodeMessageTrigger: "ENC",
                 /* Default encryption mode. */
-                encryptMode: 7, /* AES(Camellia) */
+                encryptMode: 6, /* AES(AES) */
                 /* Default block operation mode for ciphers. */
                 encryptBlockMode: 'CBC',
                 /* The bit size of the exchange algorithm to use. */
