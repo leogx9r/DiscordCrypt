@@ -2738,8 +2738,9 @@ const discordCrypt = ( ( ) => {
                 if ( message[ message.length - 1 ] !== _configFile.encodeMessageTrigger )
                     return false;
 
-                /* Use the first part of the message. */
-                cleaned = message[ 0 ];
+                /* Pop off the message trigger, use the concatenated string array as the message. */
+                message.pop();
+                cleaned = message.join("|");
             }
             /* Make sure we have a valid password. */
             else {
