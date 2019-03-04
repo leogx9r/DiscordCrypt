@@ -1128,7 +1128,7 @@ const discordCrypt = ( ( ) => {
             let data = _fs.readFileSync( path );
 
             /* The returned data must be defined and non-empty. */
-            return data && data !== null && data.toString() !== '';
+            return data && data.toString() !== '';
         }
 
         /**
@@ -2710,6 +2710,7 @@ const discordCrypt = ( ( ) => {
          * @param {boolean} ignore_trigger Whether to ignore checking for Config::encodeMessageTrigger and
          *      always encrypt.
          * @param {string} channel_id The channel ID to send this message to.
+         * @param {string} [prefix] Removes the specified string from the beginning of messages before encrypting.
          * @return {Array<{message: string}>|boolean} Returns one or multiple packets containing the encrypted text.
          *      Returns false on failure.
          */
@@ -2740,7 +2741,7 @@ const discordCrypt = ( ( ) => {
 
                 /* Pop off the message trigger, use the concatenated string array as the message. */
                 message.pop();
-                cleaned = message.join("|");
+                cleaned = message.join( "|" );
             }
             /* Make sure we have a valid password. */
             else {
