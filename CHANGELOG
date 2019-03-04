@@ -1,3 +1,8 @@
+Version 2.2.2
+
+- Changed the default encryption algorithm to use dual-AES for newcomers.
+- Fixed a bug where improperly handling the encrypted suffix can sometimes lead to messages being cut short.
+
 Version 2.2.1
 
 - Fix missing toolbar due to Discord's update.
