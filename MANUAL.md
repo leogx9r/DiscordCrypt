@@ -666,7 +666,7 @@ We've tried to simplify the process as much as possible but once you get used to
     much easier.
 
 If you still feel confused or want to know something specific,
-    [join our support server](https://discord.gg/3uakNmM) and we'll try to help you out when we're free.
+    [join our support server](https://discord.gg/ChD2e3K) and we'll try to help you out when we're free.
 
 
 
