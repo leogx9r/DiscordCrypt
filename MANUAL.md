@@ -725,7 +725,7 @@ If you've discovered a bug in the plugin, feel free to create an issue after rea
     [contribution guide](CONTRIBUTING.md). Please be as detailed as possible when submitting
     your issues.
 
-We also have a [Discord Server](https://discord.gg/3uakNmM) for any discussion
+We also have a [Discord Server](https://discord.gg/ChD2e3K) for any discussion
     related to **DiscordCrypt™** and for general user support.
 
 
