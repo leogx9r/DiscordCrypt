@@ -945,7 +945,7 @@ const discordCrypt = ( ( ) => {
          * @returns {string}
          */
         getVersion() {
-            return '2.2.3';
+            return '2.2.4';
         }
 
         /**
@@ -1255,22 +1255,29 @@ const discordCrypt = ( ( ) => {
          * @desc Saves the configuration file with the current password using AES-256 in GCM mode.
          */
         static _saveConfig() {
-            /* Encrypt the message using the master password and save the encrypted data. */
-            _fs.writeFileSync(
-                _discordCrypt._getConfigPath(),
-                JSON.stringify(
-                    {
-                        config: {
-                            data: _discordCrypt.__aes256_encrypt_gcm(
-                                _discordCrypt.__zlibCompress( JSON.stringify( _configFile ), 'utf8' ),
-                                _masterPassword,
-                                'PKC7',
-                                false
-                            )
+            try {
+                /* Encrypt the configuration using the master password and save the encrypted data to a temporary file. */
+                _fs.writeFileSync(
+                    _discordCrypt._getConfigPath() + '.temp',
+                    JSON.stringify(
+                        {
+                            config: {
+                                data: _discordCrypt.__aes256_encrypt_gcm(
+                                    _discordCrypt.__zlibCompress( JSON.stringify( _configFile ), 'utf8' ),
+                                    _masterPassword,
+                                    'PKC7',
+                                    false
+                                )
+                            }
                         }
-                    }
-                )
-            );
+                    )
+                );
+
+                /* If the file write was successful, overwrite the main configuration file. */
+                _fs.renameSync( _discordCrypt._getConfigPath() + '.temp', _discordCrypt._getConfigPath() );
+            } catch ( ex ) {
+                _discordCrypt.log( ex, 'warn' );
+            }
         }
 
         /**
