@@ -1,3 +1,7 @@
+Version 2.2.4
+
+- Fixed configuration file corruption when Discord or the PC crashes.
+
 Version 2.2.3
 
 - Fixed broken Support Server invite link.
