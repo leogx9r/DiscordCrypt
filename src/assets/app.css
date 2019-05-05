@@ -332,6 +332,6 @@ ul.dc-list-red { color: #ff0000; }
     box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
 }
 
-.da-headerBar{
+.da-title {
 	overflow: visible;
 }
