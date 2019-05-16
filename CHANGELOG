@@ -1,3 +1,7 @@
+Version 2.2.5
+
+- Fixed tooltips from being cutoff due to a Discord update.
+
 Version 2.2.4
 
 - Fixed configuration file corruption when Discord or the PC crashes.
