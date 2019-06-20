@@ -1,3 +1,7 @@
+Version 2.2.6
+
+- Fixed loading error with exports due to BetterDiscord update.
+
 Version 2.2.5
 
 - Fixed tooltips from being cutoff due to a Discord update.
