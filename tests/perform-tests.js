@@ -68,7 +68,7 @@ class testRunner {
         ).on( 'exit', () => {
 
             /* Import the built file. */
-            this.discordCrypt = require( '../build/discordCrypt.plugin.js' );
+            this.discordCrypt = require( '../build/discordCrypt.plugin.js' ).discordCrypt;
 
             /* Create an instance. */
             this.discordCrypt_instance = new ( this.discordCrypt )();
