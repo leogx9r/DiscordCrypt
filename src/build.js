@@ -461,7 +461,7 @@ class Compiler {
         /* Generate a signature if required. */
         if( sign_key_id ) {
             /* Generating both sets of signatures requires us to load Curve25519. The easiest way is via DiscordCrypt. */
-            let { discordCrypt } = require( `../${output_path}` );
+            let discordCrypt = require( `../${output_path}` );
             discordCrypt.__loadLibraries();
 
             let update_signature_file = this.path.join( output_dir, `${this.path.basename( plugin_path )}.sig.bin` );
