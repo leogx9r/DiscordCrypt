@@ -8405,6 +8405,3 @@ const discordCrypt = ( ( ) => {
 
 /* Also freeze the method. */
 Object.freeze( discordCrypt );
-
-/* Required for code coverage reports. */
-module.exports = { discordCrypt };
