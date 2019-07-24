@@ -945,7 +945,7 @@ const discordCrypt = ( ( ) => {
          * @returns {string}
          */
         getVersion() {
-            return '2.2.6';
+            return '2.2.7';
         }
 
         /**
@@ -1570,8 +1570,9 @@ const discordCrypt = ( ( ) => {
                 dc_svg.attr( 'class', 'dc-svg' );
             }
 
-            /* Inject the settings. */
-            $( document.body ).prepend( _discordCrypt.__zlibDecompress( MENU_HTML ) );
+            /* Inject the settings if they haven't been already. */
+            if( !$( '#dc-overlay' ).length )
+                $( document.body ).prepend( _discordCrypt.__zlibDecompress( MENU_HTML ) );
 
             /* Also by default, set the about tab to be shown. */
             _discordCrypt._setActiveSettingsTab( 0 );
