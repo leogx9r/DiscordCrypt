@@ -33,7 +33,7 @@ The plugin achieves this by using
 
 The source code is completely free / libre and open source
     ( [**FLOSS**](https://en.wikipedia.org/wiki/Free_and_open-source_software) ) and licensed under
-    the [**MIT License**](LICENSE) so feel free to have a look or modify it as you see fit!
+    the [**GPLv3 License**](LICENSE.md) so feel free to have a look or modify it as you see fit!
 
 If you'd like an in-depth explanation of its inner workings, click [here](TECHNICALITIES.md).
 
@@ -44,7 +44,7 @@ If you wish to use a web browser instead of Discord's native application, we rec
 Contributions are welcome! Be sure to read [our guidelines](CONTRIBUTING.md) before submitting
     your changes.
 
-Also, while this project is licensed under the MIT, if you feel generous and wish to buy the
+Also, while this project is licensed under GPL, if you feel generous and wish to buy the
     creators and maintainers coffee, we'll happily accept.
 
 
