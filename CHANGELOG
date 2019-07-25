@@ -1,3 +1,7 @@
+Version 2.3.0
+
+- Re-licensed the project under the GPL v3.
+
 Version 2.2.7
 
 - Fixed a problem causing duplicate settings injection thus lagging the client.
