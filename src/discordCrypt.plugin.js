@@ -938,7 +938,7 @@ const discordCrypt = ( ( ) => {
          * @returns {string}
          */
         getVersion() {
-            return '2.3.0';
+            return '2.3.1';
         }
 
         /**
@@ -3918,11 +3918,11 @@ const discordCrypt = ( ( ) => {
                 /* Enable the button. */
                 dc_save_settings_btn.attr( 'disabled', false );
 
-                if ( !pwd || typeof pwd !== 'string' || !pwd.length ) {
+                if ( !pwd || !pwd.length ) {
                     /* Alert the user. */
                     global.smalltalk.alert(
                         'DiscordCrypt Error',
-                        'Error setting the new database password. Check the console for more info.'
+                        'Password hash generation failed, check console for errors.'
                     );
 
                     return;
