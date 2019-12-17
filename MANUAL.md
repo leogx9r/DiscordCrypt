@@ -556,6 +556,7 @@ For visual proof of this, please see:
 * [Initial E2E Request Denied](images/discord-end-to-end-denied.png)
 * [Refusal For User Data Deletion](images/discord-refuses-to-delete-user-data.png)
 * [Government Requests For User Data](images/discord-requests-for-user-data.png)
+* [Discord Issued Subpoena For Users' Identities](https://www.courtlistener.com/docket/16508004/5/the-pokemon-company-international-inc-v-does-1-3/) [Discussion Here](https://old.reddit.com/r/privacy/comments/eajw3u/the_pokemon_company_was_given_green_light_to/)
 
 We highly disapprove of their ideals as we believe their actions violate every human's
     right to privacy.
@@ -567,6 +568,9 @@ While this plugin does not support, nor plan to support end-to-end voice encrypt
     messages and uploaded files via the encrypted file uploading interface **should**
     be safe and secure from prying eyes.
 
+Be advised that any other information you give to Discord, for example, your email,
+payment information, IP address (by logging into Discord without a VPN/Tor) etc, are
+**NOT** protected nor can they be.
 
 
 ### Why does the plugin's source look so weird?

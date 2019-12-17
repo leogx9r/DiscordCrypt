@@ -20,10 +20,10 @@
   "license": "GPLv3",
   "dependencies": {
     "electron": "^2.0.18",
-    "form-data": "^2.3.3",
-    "mime-types": "^2.1.24",
+    "form-data": "^2.5.1",
+    "mime-types": "^2.1.25",
     "module": "^1.2.5",
-    "original-fs": "^1.0.0",
+    "original-fs": "^1.1.0",
     "process": "^0.11.10",
     "request": "^2.88.0"
   },
@@ -32,7 +32,7 @@
     "eslint-config-defaults": "^9.0.0",
     "gpg": "^0.6.0",
     "istanbul": "^1.0.0-alpha.2",
-    "jsdoc": "^3.6.2",
+    "jsdoc": "^3.6.3",
     "minimist": "^1.2.0",
     "nodeunit": "^0.11.3",
     "tui-jsdoc-template": "^1.2.2",
