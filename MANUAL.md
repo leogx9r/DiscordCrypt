@@ -167,7 +167,7 @@ These icons each offer a different functionality as follows:
     * After uploading, this sets your clipboard to the deletion link for the uploaded file which
         you may use to either manually delete the file after your colleague has downloaded it
         or for later deletion. To use that deletion link:
-        * Use the host `https://share.riseup.net/< deletion link >`
+        * Use the host `https://pastebin.synalabs.hosting/< deletion link >`
     * You are limited to a maximum of 50 MB.
 * **[2] Upload Encrypted File**
     * This opens the file upload menu that you may use to encrypt and upload a file less than
@@ -176,7 +176,7 @@ These icons each offer a different functionality as follows:
         to the message.
     * If sending the deletion link, it will not be in the URL format to avoid accidentally deleting
         the file. To use that deletion link:
-        * Use the host `https://share.riseup.net/< deletion link >`
+        * Use the host `https://pastebin.synalabs.hosting/< deletion link >`
     * You are also able to write a message prior to sending the file which will be sent immediately.
         * Standard message limits apply. Messages longer than the maximum length will be split
             into multiple messages.

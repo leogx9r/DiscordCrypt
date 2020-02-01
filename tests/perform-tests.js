@@ -771,7 +771,7 @@ class testRunner {
     }
 
     /**
-     * @desc Adds general file uploading test to the Riseup service.
+     * @desc Adds general file uploading test to the Up1 service.
      * @param {Array} unit_tests An array of unit tests to run.
      */
     addEncryptedFileTests( unit_tests ) {
@@ -800,8 +800,8 @@ class testRunner {
         unit_tests.generic_tests[ 'Encrypted File Upload' ] = ( ut ) => {
             this.discordCrypt.__up1UploadFile(
                 './tests/test-generator.js',
-                'https://share.riseup.net',
-                '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
+                'https://pastebin.synalabs.hosting',
+                '4034a170b4517897238b58ecbe902dee187bf890',
                 global.sjcl,
                 ( error, file_url, deletion_link, seed ) => {
                     /* Succeeds only if the error is null. */
@@ -824,8 +824,8 @@ class testRunner {
         /* Clipboard upload test. */
         unit_tests.generic_tests[ 'Encrypted Clipboard Upload' ] = ( ut ) => {
             this.discordCrypt.__up1UploadClipboard(
-                'https://share.riseup.net',
-                '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs',
+                'https://pastebin.synalabs.hosting',
+                '4034a170b4517897238b58ecbe902dee187bf890',
                 global.sjcl,
                 ( error, file_url, deletion_link, seed ) => {
                     /* Succeeds only if the error is null. */

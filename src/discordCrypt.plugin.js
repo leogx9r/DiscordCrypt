@@ -769,14 +769,14 @@ const discordCrypt = ( ( ) => {
      * @desc The default host used to upload encrypted files using the Up1 specification.
      * @type {string}
      */
-    const UP1_FILE_HOST = 'https://share.riseup.net';
+    const UP1_FILE_HOST = 'https://pastebin.synalabs.hosting';
 
     /**
      * @private
      * @desc The API key used to authenticate against the Up1 host.
      * @type {string}
      */
-    const UP1_FILE_HOST_API_KEY = '59Mnk5nY6eCn4bi9GvfOXhMH54E7Bh6EMJXtyJfs';
+    const UP1_FILE_HOST_API_KEY = '4034a170b4517897238b58ecbe902dee187bf890';
 
     /**
      * @private
@@ -938,7 +938,7 @@ const discordCrypt = ( ( ) => {
          * @returns {string}
          */
         getVersion() {
-            return '2.3.1';
+            return '2.3.2';
         }
 
         /**
@@ -2414,9 +2414,6 @@ const discordCrypt = ( ( ) => {
             /* Check if properties were retrieved. */
             if( !props )
                 return result;
-
-            /* Parse the message into ID based format. */
-            message = _cachedModules.MessageCreator.parse( props, message ).content;
 
             /* Check for user tags. */
             if( user_mentions.test( message ) ) {
