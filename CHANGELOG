@@ -2,7 +2,6 @@ Version 2.3.2
 
 - Fixed the message loading issue present due to an API change on Discord's side.
 - Switched from Riseup.net's Up1 service to https://pastebin.synalabs.hosting due to Riseup going private.
-- N.B This is introduces a regression: Message mentioning and role mentioning will be broken. ( To be fixed later. )
 
 Version 2.3.1
 
