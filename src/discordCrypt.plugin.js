@@ -2415,9 +2415,6 @@ const discordCrypt = ( ( ) => {
             if( !props )
                 return result;
 
-            /* Parse the message into ID based format. */
-            message = _cachedModules.MessageCreator.parse( props, message ).content;
-
             /* Check for user tags. */
             if( user_mentions.test( message ) ) {
                 /* Retrieve all user IDs in the parsed message. */
