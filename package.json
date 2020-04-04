@@ -33,7 +33,7 @@
     "gpg": "^0.6.0",
     "istanbul": "^1.0.0-alpha.2",
     "jsdoc": "^3.6.3",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.3",
     "nodeunit": "^0.11.3",
     "tui-jsdoc-template": "^1.2.2",
     "uglify-es": "^3.3.10"
