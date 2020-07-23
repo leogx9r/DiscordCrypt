@@ -1799,7 +1799,7 @@ const discordCrypt = ( ( ) => {
                     EventDispatcher: searcher
                         .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
                     MessageQueue: searcher
-                        .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
+                        .findByUniqueProperties( [ "enqueue", "handleSend", "handleEdit" ] ),
                     UserStore: searcher
                         .findByUniqueProperties( [ "getUser", "getUsers", "findByTag", 'getCurrentUser' ] ),
                     GuildStore: searcher
@@ -5188,7 +5188,7 @@ const discordCrypt = ( ( ) => {
             /* Create the message object and dispatch it to the queue. */
             _cachedModules.MessageQueue.original_enqueue(
                 {
-                    type: 'send',
+                    type: 0/*send*/,
                     message: {
                         channelId: _channel,
                         nonce: _discordCrypt._getNonce(),
