@@ -938,7 +938,7 @@ const discordCrypt = ( ( ) => {
          * @returns {string}
          */
         getVersion() {
-            return '2.3.2';
+            return '2.3.3';
         }
 
         /**
@@ -1563,9 +1563,29 @@ const discordCrypt = ( ( ) => {
                 dc_svg.attr( 'class', 'dc-svg' );
             }
 
+            /* Handle clipboard upload button. */
+            $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked );
+
+            /* Handle file button clicked. */
+            $( '#dc-file-btn' ).click( _discordCrypt._onFileMenuButtonClicked );
+
+            /* Quickly generate and send a public key. */
+            $( '#dc-quick-exchange-btn' ).click( _discordCrypt._onQuickHandshakeButtonClicked );
+
+            /* Show the overlay when clicking the password button. */
+            dc_passwd_btn.click( _discordCrypt._onOpenPasswordMenuButtonClicked );
+            
+            /* Ask the user about their password generation preferences. */
+            $( '#dc-generate-password-btn' ).click( _discordCrypt._onGeneratePassphraseClicked );
+
+            /* Set whether auto-encryption is enabled or disabled. */
+            dc_lock_btn.click( _discordCrypt._onForceEncryptButtonClicked );
+
             /* Inject the settings if they haven't been already. */
-            if( !$( '#dc-overlay' ).length )
-                $( document.body ).prepend( _discordCrypt.__zlibDecompress( MENU_HTML ) );
+            if( $( '#dc-overlay' ).length !== 0 )
+                return;
+
+            $( document.body ).prepend( _discordCrypt.__zlibDecompress( MENU_HTML ) );
 
             /* Also by default, set the about tab to be shown. */
             _discordCrypt._setActiveSettingsTab( 0 );
@@ -1582,12 +1602,6 @@ const discordCrypt = ( ( ) => {
             $( '#dc-settings-decrypted-prefix' ).val( _configFile.decryptedPrefix );
             $( '#dc-settings-default-pwd' ).val( _configFile.defaultPassword );
             $( '#dc-settings-exchange-mode' ).val( _configFile.exchangeBitSize );
-
-            /* Handle clipboard upload button. */
-            $( '#dc-clipboard-upload-btn' ).click( _discordCrypt._onUploadEncryptedClipboardButtonClicked );
-
-            /* Handle file button clicked. */
-            $( '#dc-file-btn' ).click( _discordCrypt._onFileMenuButtonClicked );
 
             /* Handle alter file path button. */
             $( '#dc-select-file-path-btn' ).click( _discordCrypt._onChangeFileButtonClicked );
@@ -1646,12 +1660,6 @@ const discordCrypt = ( ( ) => {
             /* Handle Ignore-Update button clicking. */
             $( '#dc-ignore-update-btn' ).click( _discordCrypt._onUpdateIgnoreButtonClicked );
 
-            /* Quickly generate and send a public key. */
-            $( '#dc-quick-exchange-btn' ).click( _discordCrypt._onQuickHandshakeButtonClicked );
-
-            /* Show the overlay when clicking the password button. */
-            dc_passwd_btn.click( _discordCrypt._onOpenPasswordMenuButtonClicked );
-
             /* Update the password for the user once clicked. */
             $( '#dc-save-pwd' ).click( _discordCrypt._onSavePasswordsButtonClicked );
 
@@ -1663,12 +1671,6 @@ const discordCrypt = ( ( ) => {
 
             /* Copy the current passwords to the clipboard. */
             $( '#dc-cpy-pwds-btn' ).click( _discordCrypt._onCopyCurrentPasswordsButtonClicked );
-
-            /* Ask the user about their password generation preferences. */
-            $( '#dc-generate-password-btn' ).click( _discordCrypt._onGeneratePassphraseClicked );
-
-            /* Set whether auto-encryption is enabled or disabled. */
-            dc_lock_btn.click( _discordCrypt._onForceEncryptButtonClicked );
         }
 
         /**
@@ -1799,7 +1801,7 @@ const discordCrypt = ( ( ) => {
                     EventDispatcher: searcher
                         .findByUniqueProperties( [ "dispatch", "maybeDispatch", "dirtyDispatch" ] ),
                     MessageQueue: searcher
-                        .findByUniqueProperties( [ "enqueue", "handleSend", "handleResponse" ] ),
+                        .findByUniqueProperties( [ "enqueue", "handleSend", "handleEdit" ] ),
                     UserStore: searcher
                         .findByUniqueProperties( [ "getUser", "getUsers", "findByTag", 'getCurrentUser' ] ),
                     GuildStore: searcher
@@ -3106,15 +3108,15 @@ const discordCrypt = ( ( ) => {
          * @private
          * @desc Opens the file menu selection.
          */
-        static _onChangeFileButtonClicked() {
+        static async _onChangeFileButtonClicked() {
             /* Create an input element. */
             // noinspection JSCheckFunctionSignatures
-            let file = _electron.remote.dialog.showOpenDialog( {
+            let file = (await _electron.remote.dialog.showOpenDialog( {
                 title: 'Select a file to encrypt and upload',
                 buttonLabel: 'Select',
                 message: 'Maximum file size is 50 MB',
                 properties: [ 'openFile', 'showHiddenFiles', 'treatPackageAsDirectory' ]
-            } );
+            } )).filePaths;
 
             /* Ignore if no file was selected. */
             if ( !file.length || !file[ 0 ].length )
@@ -5188,7 +5190,7 @@ const discordCrypt = ( ( ) => {
             /* Create the message object and dispatch it to the queue. */
             _cachedModules.MessageQueue.original_enqueue(
                 {
-                    type: 'send',
+                    type: 0/*send*/,
                     message: {
                         channelId: _channel,
                         nonce: _discordCrypt._getNonce(),
