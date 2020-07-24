@@ -1,3 +1,9 @@
+Version 2.3.3
+
+- Fixed broken message enqueue due to Discord update.
+- Fixed file uploads.
+- Thanks to An0/King Of Salt for this release.
+
 Version 2.3.2
 
 - Fixed the message loading issue present due to an API change on Discord's side.
