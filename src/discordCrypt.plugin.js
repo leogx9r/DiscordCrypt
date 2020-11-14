@@ -1807,7 +1807,7 @@ const discordCrypt = ( ( ) => {
                     GuildStore: searcher
                         .findByUniqueProperties( [ "getGuild", "getGuilds" ] ),
                     ChannelStore: searcher
-                        .findByUniqueProperties( [ "getChannel", "getChannels", "getDMFromUserId", 'getDMUserIds' ] ),
+                        .findByUniqueProperties( [ "getChannel", "getAllChannels", "getDMFromUserId", 'getDMUserIds' ] ),
                 };
 
                 /* Throw an error if a cached module can't be found. */
@@ -2551,13 +2551,13 @@ const discordCrypt = ( ( ) => {
                 !_cachedModules.UserStore ||
                 typeof _cachedModules.UserStore.getCurrentUser !== 'function' ||
                 typeof _cachedModules.UserStore.getUser !== 'function' ||
-                typeof _cachedModules.ChannelStore.getChannels !== 'function'
+                typeof _cachedModules.ChannelStore.getAllChannels !== 'function'
             )
                 return '🚫 **[ ERROR ]** `CANNOT RESOLVE DEPENDENCY MODULE !!!`';
 
             /* Make sure that this key wasn't somehow sent in a guild or group DM. */
             // noinspection JSUnresolvedFunction
-            let channels = _cachedModules.ChannelStore.getChannels();
+            let channels = _cachedModules.ChannelStore.getAllChannels();
             if( channels && channels[ message.channel_id ] && channels[ message.channel_id ].type !== 1 )
                 return '🚫 **[ ERROR ]** `INCOMING KEY EXCHANGE FROM A NON-DM !!!`';
 
@@ -3300,7 +3300,7 @@ const discordCrypt = ( ( ) => {
             // noinspection JSUnresolvedFunction
             let users = _cachedModules.UserStore.getUsers(),
                 guilds = _cachedModules.GuildStore.getGuilds(),
-                channels = _cachedModules.ChannelStore.getChannels();
+                channels = _cachedModules.ChannelStore.getAllChannels();
 
             /* Iterate over each password in the configuration. */
             for ( let prop in _configFile.channels ) {
@@ -4101,7 +4101,7 @@ const discordCrypt = ( ( ) => {
             // noinspection JSUnresolvedFunction
             let users = _cachedModules.UserStore.getUsers(),
                 guilds = _cachedModules.GuildStore.getGuilds(),
-                channels = _cachedModules.ChannelStore.getChannels();
+                channels = _cachedModules.ChannelStore.getAllChannels();
 
             let channel_name = $( '#dc-password-channel-name' );
 
