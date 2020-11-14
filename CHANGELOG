@@ -1,3 +1,7 @@
+Version 2.3.4
+
+- Updated for newest Discord version
+
 Version 2.3.3
 
 - Fixed broken message enqueue due to Discord update.
