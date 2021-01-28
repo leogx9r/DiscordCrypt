@@ -19,7 +19,7 @@
   "author": "leogx9r",
   "license": "GPLv3",
   "dependencies": {
-    "electron": "^2.0.18",
+    "electron": "^9.4.0",
     "form-data": "^2.5.1",
     "mime-types": "^2.1.25",
     "module": "^1.2.5",
